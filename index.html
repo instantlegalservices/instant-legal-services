@@ -567,28 +567,74 @@ National Legal Network | Legal Assistance Across India
 </footer>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+const SUPABASE_URL = "https://odqebkdzkjfxzyzbrndt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 
-function clientSubmit(event){
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 
-event.preventDefault();
+async function clientSubmit(event) {
+    event.preventDefault();
 
-document.getElementById("clientSuccess").style.display="block";
+    const form = event.target;
+    const fields = form.elements;
 
-event.target.reset();
+    const { error } = await supabaseClient
+        .from("client_requirements")
+        .insert([{
+            client_name: fields[0].value,
+            mobile: fields[1].value,
+            state: fields[2].value,
+            district_city: fields[3].value,
+            legal_matter: fields[4].value,
+            brief_requirement: fields[5].value
+        }]);
 
+    if (error) {
+        alert("Unable to submit your requirement. Please try again.");
+        console.error(error);
+        return;
+    }
+
+    document.getElementById("clientSuccess").style.display = "block";
+    form.reset();
 }
 
-function advocateSubmit(event){
 
-event.preventDefault();
+async function advocateSubmit(event) {
+    event.preventDefault();
 
-document.getElementById("advocateSuccess").style.display="block";
+    const form = event.target;
+    const fields = form.elements;
 
-event.target.reset();
+    const { error } = await supabaseClient
+        .from("advocate_registrations")
+        .insert([{
+            advocate_name: fields[0].value,
+            mobile: fields[1].value,
+            email: fields[2].value,
+            enrollment_number: fields[3].value,
+            state_bar_council: fields[4].value,
+            practice_state: fields[5].value,
+            district_court: fields[6].value,
+            primary_practice_area: fields[7].value,
+            years_of_practice: fields[8].value
+        }]);
 
+    if (error) {
+        alert("Unable to submit registration. Please try again.");
+        console.error(error);
+        return;
+    }
+
+    document.getElementById("advocateSuccess").style.display = "block";
+    form.reset();
 }
-
 </script>
 
 </body>
