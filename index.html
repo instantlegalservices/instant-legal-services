@@ -1796,7 +1796,7 @@ const filePath =
 const {error:uploadError} =
 await supabaseClient
 .storage
-.from("advocate-photos")
+.from("advocate-photo")
 .upload(
 filePath,
 selectedAdvocatePhoto,
