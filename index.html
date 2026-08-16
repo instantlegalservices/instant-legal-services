@@ -1644,12 +1644,12 @@ return;
 }
 
 
-/* MAX 5 MB */
+/* MAX 2 MB - matches Supabase bucket file size limit */
 
-if(file.size > 5 * 1024 * 1024){
+if(file.size > 2 * 1024 * 1024){
 
 errorBox.innerText =
-"Photo size must be less than 5 MB.";
+"Photo size must be less than 2 MB.";
 
 errorBox.style.display = "block";
 
@@ -1826,12 +1826,16 @@ throw new Error(
 const {data:publicUrlData} =
 supabaseClient
 .storage
-.from("advocate-photos")
+.from("advocate-photo")
 .getPublicUrl(filePath);
 
 
 const photoUrl =
 publicUrlData.publicUrl;
+
+if(!photoUrl){
+    throw new Error("Unable to create public photo URL.");
+}
 
 
 /* =====================================
