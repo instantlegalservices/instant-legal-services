@@ -898,6 +898,27 @@ footer strong{color:var(--gold2);}
   footer{padding-bottom:105px;}
 }
 
+
+
+/* =========================================
+   PUBLIC VERIFIED ADVOCATE NETWORK
+========================================= */
+.verified-network{background:#0d1016;}
+.verified-network-intro{max-width:780px;margin:0 auto 28px;color:#aeb4bf;font-size:15px;}
+.advocate-network-toolbar{max-width:1100px;margin:0 auto 24px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.advocate-network-toolbar input,.advocate-network-toolbar select{max-width:330px;background:#11151d;}
+.public-advocate-grid{max-width:1100px;margin:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:18px;text-align:left;}
+.public-advocate-card{background:#151922;border:1px solid #292d36;border-radius:16px;padding:20px;transition:transform .2s,border-color .2s,box-shadow .2s;}
+.public-advocate-card:hover{transform:translateY(-3px);border-color:#e5a93d;box-shadow:0 12px 30px rgba(0,0,0,.22);}
+.public-advocate-photo{width:86px;height:86px;border-radius:50%;object-fit:cover;border:2px solid #e5a93d;background:#0b0d12;display:block;margin:0 auto 14px;}
+.public-advocate-card h3{text-align:center;font-size:18px;margin-bottom:4px;}
+.public-advocate-badge{display:block;width:max-content;margin:0 auto 14px;padding:4px 9px;border-radius:999px;background:rgba(229,169,61,.10);color:#e5a93d;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
+.public-advocate-meta{display:grid;gap:8px;color:#b9bec8;font-size:13px;}
+.public-advocate-meta strong{color:#fff;}
+.public-network-empty{grid-column:1/-1;text-align:center;color:#aeb4bf;padding:30px;border:1px dashed #383e49;border-radius:14px;}
+.public-network-note{max-width:900px;margin:24px auto 0;color:#7f8794;font-size:12px;text-align:center;}
+@media(max-width:700px){.verified-network{padding-left:5%;padding-right:5%;}.advocate-network-toolbar input,.advocate-network-toolbar select{max-width:none;width:100%;}.public-advocate-grid{grid-template-columns:1fr;}}
+
 </style>
 </head>
 
@@ -912,6 +933,7 @@ INSTANT <span>LEGAL SERVICES</span>
 <nav id="mainNav">
 <a href="#services">Services</a>
 <a href="#network">Network</a>
+<a href="#verified-advocates">Verified Advocates</a>
 <a href="#about">About Us</a>
 <a href="#client">Find Legal Help</a>
 <a href="#advocate">Join Network</a>
@@ -1855,6 +1877,36 @@ class="error">
 </div>
 
 
+
+
+
+<!-- VERIFIED ADVOCATE NETWORK -->
+<section class="section verified-network" id="verified-advocates">
+    <h2>Verified Legal Network</h2>
+    <p class="verified-network-intro">
+        Explore advocates approved by Instant Legal Services for participation in its
+        professional legal network. Public information is limited to professional profile details;
+        private contact information is not displayed here.
+    </p>
+
+    <div class="advocate-network-toolbar">
+        <input type="search" id="publicAdvocateSearch"
+               placeholder="Search advocate, court or practice area..."
+               autocomplete="off">
+        <select id="publicAdvocateState">
+            <option value="">All Practice States</option>
+        </select>
+    </div>
+
+    <div id="publicAdvocateGrid" class="public-advocate-grid">
+        <div class="public-network-empty">Loading verified advocates...</div>
+    </div>
+
+    <p class="public-network-note">
+        Advocate contact details are intentionally not displayed publicly. For legal assistance,
+        contact Instant Legal Services on the official Call / WhatsApp number shown on this website.
+    </p>
+</section>
 
 <!-- PUBLIC CONTACT -->
 <div class="public-contact">
@@ -3637,6 +3689,109 @@ function checkAccessQuery(){
     }
 }
 
+
+
+/* =========================================
+   PUBLIC VERIFIED ADVOCATE NETWORK
+========================================= */
+let publicAdvocates = [];
+
+function normalizeText(value){
+    return String(value || "").trim().toLowerCase();
+}
+
+function renderPublicAdvocates(){
+    const grid = document.getElementById("publicAdvocateGrid");
+    if(!grid) return;
+
+    const search = normalizeText(document.getElementById("publicAdvocateSearch")?.value);
+    const state = normalizeText(document.getElementById("publicAdvocateState")?.value);
+
+    const filtered = publicAdvocates.filter(a => {
+        const haystack = normalizeText([
+            a.advocate_name,
+            a.practice_state,
+            a.district_court,
+            a.primary_practice_area
+        ].join(" "));
+        const matchesSearch = !search || haystack.includes(search);
+        const matchesState = !state || normalizeText(a.practice_state) === state;
+        return matchesSearch && matchesState;
+    });
+
+    if(!filtered.length){
+        grid.innerHTML = `<div class="public-network-empty">
+            No verified advocates found for the selected search.
+        </div>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(a => {
+        const photo = a.photo_url || a.profile_photo_url || "";
+        const photoHtml = photo
+            ? `<img class="public-advocate-photo" src="${escapeHtml(photo)}" alt="${escapeHtml(a.advocate_name || "Advocate")}" loading="lazy">`
+            : `<div class="public-advocate-photo" aria-hidden="true"></div>`;
+
+        return `
+            <article class="public-advocate-card">
+                ${photoHtml}
+                <h3>${escapeHtml(a.advocate_name || "Advocate")}</h3>
+                <span class="public-advocate-badge">Verified Network Member</span>
+                <div class="public-advocate-meta">
+                    <div><strong>Practice Area:</strong> ${escapeHtml(a.primary_practice_area || "Legal Practice")}</div>
+                    <div><strong>District / Court:</strong> ${escapeHtml(a.district_court || "-")}</div>
+                    <div><strong>Practice State:</strong> ${escapeHtml(a.practice_state || "-")}</div>
+                    <div><strong>Experience:</strong> ${escapeHtml(String(a.years_of_practice ?? "-"))} years</div>
+                </div>
+            </article>
+        `;
+    }).join("");
+}
+
+async function loadPublicAdvocates(){
+    const grid = document.getElementById("publicAdvocateGrid");
+    if(!grid) return;
+
+    const {data,error} = await supabaseClient
+        .from("public_advocate_directory")
+        .select("id,advocate_name,practice_state,district_court,primary_practice_area,years_of_practice,photo_url,profile_photo_url")
+        .order("advocate_name",{ascending:true});
+
+    if(error){
+        console.error("Public advocate directory error:",error);
+        grid.innerHTML = `<div class="public-network-empty">
+            Verified advocate directory is temporarily unavailable. Please contact Instant Legal Services.
+        </div>`;
+        return;
+    }
+
+    publicAdvocates = data || [];
+
+    const stateSelect = document.getElementById("publicAdvocateState");
+    if(stateSelect){
+        const states = [...new Set(publicAdvocates.map(a => String(a.practice_state || "").trim()).filter(Boolean))]
+            .sort((a,b) => a.localeCompare(b));
+        stateSelect.innerHTML = `<option value="">All Practice States</option>` +
+            states.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+    }
+
+    renderPublicAdvocates();
+}
+
+/* Public directory filters */
+document.addEventListener("input", function(event){
+    if(event.target && event.target.id === "publicAdvocateSearch"){
+        renderPublicAdvocates();
+    }
+});
+
+document.addEventListener("change", function(event){
+    if(event.target && event.target.id === "publicAdvocateState"){
+        renderPublicAdvocates();
+    }
+});
+
+
 /* =========================================
    LOGOUT
 ========================================= */
@@ -3785,6 +3940,7 @@ showAdminLogin();
 
 checkSession();
 checkAccessQuery();
+loadPublicAdvocates();
 
 document.addEventListener("change", function(event){
     if(event.target && event.target.id === "edit_assigned_advocate_id"){
