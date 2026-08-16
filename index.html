@@ -53,7 +53,7 @@ nav a{
 }
 
 .hero{
-    padding:85px 6%;
+    padding:80px 6%;
     text-align:center;
     background:linear-gradient(135deg,#11151d,#17120d);
 }
@@ -223,10 +223,6 @@ footer{
     font-size:13px;
 }
 
-.hidden{
-    display:none;
-}
-
 .success{
     background:#16351f;
     border:1px solid #357a46;
@@ -237,30 +233,286 @@ footer{
     display:none;
 }
 
-@media(max-width:700px){
+/* ADMIN LOGIN */
 
-    header{
-        padding:16px 5%;
-    }
+.admin-section{
+    background:#0b0d12;
+    display:none;
+}
 
-    nav{
-        display:none;
-    }
+.login-box{
+    max-width:500px;
+    margin:auto;
+    background:#151922;
+    padding:30px;
+    border:1px solid #292d36;
+    border-radius:14px;
+}
 
-    .hero{
-        padding:65px 5%;
-    }
+.login-box h2{
+    text-align:center;
+    color:#e5a93d;
+    margin-bottom:10px;
+}
+
+.error{
+    background:#3b1717;
+    border:1px solid #8c3838;
+    color:#ffb7b7;
+    padding:12px;
+    border-radius:8px;
+    margin-top:15px;
+    display:none;
+}
+
+/* DASHBOARD */
+
+.dashboard{
+    display:none;
+    background:#090b10;
+    padding:45px 4%;
+}
+
+.dashboard-header{
+    max-width:1200px;
+    margin:auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    margin-bottom:30px;
+}
+
+.dashboard-header h2{
+    color:#e5a93d;
+    font-size:32px;
+}
+
+.dashboard-user{
+    color:#aeb4bf;
+    font-size:14px;
+}
+
+.stats{
+    max-width:1200px;
+    margin:auto;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+    margin-bottom:25px;
+}
+
+.stat{
+    background:#151922;
+    border:1px solid #292d36;
+    border-radius:12px;
+    padding:22px;
+}
+
+.stat-title{
+    color:#9299a6;
+    font-size:14px;
+}
+
+.stat-number{
+    font-size:34px;
+    font-weight:bold;
+    margin-top:8px;
+}
+
+.filters{
+    max-width:1200px;
+    margin:auto;
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:12px;
+    margin-bottom:25px;
+}
+
+.leads-box{
+    max-width:1200px;
+    margin:auto;
+    background:#151922;
+    border:1px solid #292d36;
+    border-radius:14px;
+    overflow:hidden;
+}
+
+.leads-title{
+    padding:20px;
+    border-bottom:1px solid #292d36;
+    color:#e5a93d;
+    font-weight:bold;
+}
+
+.table-wrap{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1000px;
+}
+
+th{
+    background:#11151d;
+    color:#e5a93d;
+    padding:15px;
+    text-align:left;
+    font-size:13px;
+}
+
+td{
+    padding:14px;
+    border-top:1px solid #292d36;
+    color:#e4e6ea;
+    font-size:13px;
+    vertical-align:top;
+}
+
+.status-badge,
+.priority-badge{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:bold;
+}
+
+.status-new{
+    background:#243a59;
+    color:#9dc7ff;
+}
+
+.status-contacted{
+    background:#40351b;
+    color:#ffd77a;
+}
+
+.status-progress{
+    background:#273e31;
+    color:#9de0ad;
+}
+
+.status-closed{
+    background:#333;
+    color:#ccc;
+}
+
+.priority-high{
+    background:#4b1d1d;
+    color:#ffaaaa;
+}
+
+.priority-normal{
+    background:#333;
+    color:#ddd;
+}
+
+.priority-low{
+    background:#20392b;
+    color:#a9e8ba;
+}
+
+.action-btn{
+    padding:7px 10px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    background:#e5a93d;
+    color:#111;
+    font-weight:bold;
+    margin:2px;
+}
+
+.logout-btn{
+    padding:10px 18px;
+    border:1px solid #555;
+    border-radius:8px;
+    background:#252a34;
+    color:#fff;
+    cursor:pointer;
+}
+
+.empty{
+    text-align:center;
+    padding:40px;
+    color:#9299a6;
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:500;
+    padding:20px;
+}
+
+.modal-box{
+    width:100%;
+    max-width:600px;
+    max-height:90vh;
+    overflow-y:auto;
+    background:#151922;
+    border:1px solid #444b57;
+    border-radius:14px;
+    padding:25px;
+}
+
+.modal-box h3{
+    color:#e5a93d;
+    margin-bottom:20px;
+}
+
+.close{
+    float:right;
+    background:none;
+    border:none;
+    color:#fff;
+    font-size:24px;
+    cursor:pointer;
+}
+
+@media(max-width:800px){
 
     .hero h1{
         font-size:34px;
     }
 
-    .hero p{
-        font-size:16px;
+    .stats{
+        grid-template-columns:repeat(2,1fr);
     }
 
-    .section{
-        padding:50px 5%;
+    .filters{
+        grid-template-columns:1fr;
+    }
+
+    .dashboard{
+        padding:35px 4%;
+    }
+
+    .dashboard-header{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+}
+
+@media(max-width:500px){
+
+    .stats{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .stat{
+        padding:15px;
+    }
+
+    .stat-number{
+        font-size:28px;
     }
 
     .form-box{
@@ -283,10 +535,13 @@ INSTANT <span>LEGAL SERVICES</span>
 <a href="#network">Network</a>
 <a href="#client">Client</a>
 <a href="#advocate">Advocate</a>
+<a href="#admin">Admin</a>
 </nav>
 
 </header>
 
+
+<!-- HERO -->
 
 <section class="hero">
 
@@ -316,6 +571,8 @@ Join Our Legal Network
 </section>
 
 
+<!-- SERVICES -->
+
 <section class="section" id="services">
 
 <h2>Legal Services</h2>
@@ -324,50 +581,32 @@ Join Our Legal Network
 
 <div class="card">
 <h3>Criminal Law</h3>
-<p>
-Bail, Anticipatory Bail, Criminal Defence,
-NDPS and related criminal matters.
-</p>
+<p>Bail, Anticipatory Bail, Criminal Defence, NDPS and related criminal matters.</p>
 </div>
 
 <div class="card">
 <h3>Family & Matrimonial</h3>
-<p>
-Divorce, maintenance, custody and
-matrimonial disputes.
-</p>
+<p>Divorce, maintenance, custody and matrimonial disputes.</p>
 </div>
 
 <div class="card">
 <h3>Civil & Property</h3>
-<p>
-Property disputes, recovery, injunction
-and civil litigation.
-</p>
+<p>Property disputes, recovery, injunction and civil litigation.</p>
 </div>
 
 <div class="card">
 <h3>Commercial & Corporate</h3>
-<p>
-Business disputes, contracts and
-corporate legal assistance.
-</p>
+<p>Business disputes, contracts and corporate legal assistance.</p>
 </div>
 
 <div class="card">
 <h3>Consumer Matters</h3>
-<p>
-Assistance relating to consumer
-disputes and claims.
-</p>
+<p>Assistance relating to consumer disputes and claims.</p>
 </div>
 
 <div class="card">
 <h3>Cheque Bounce</h3>
-<p>
-Legal assistance relating to
-Negotiable Instruments Act matters.
-</p>
+<p>Legal assistance relating to Negotiable Instruments Act matters.</p>
 </div>
 
 </div>
@@ -375,14 +614,16 @@ Negotiable Instruments Act matters.
 </section>
 
 
+<!-- NETWORK -->
+
 <section class="section network" id="network">
 
 <h2>National Legal Network</h2>
 
 <p class="network-text">
-Our objective is to build a structured network of
-advocates with location and practice-area based
-legal assistance across India.
+Our objective is to build a structured network of advocates
+with location and practice-area based legal assistance
+across India.
 </p>
 
 <div class="buttons">
@@ -396,6 +637,8 @@ Become a Network Advocate
 </section>
 
 
+<!-- CLIENT FORM -->
+
 <section class="section action-section" id="client">
 
 <div class="form-box">
@@ -407,16 +650,20 @@ Submit your basic requirement and we will help
 connect you with an appropriate legal professional.
 </p>
 
-<form onsubmit="clientSubmit(event)">
+<form id="clientForm">
 
 <label>Full Name</label>
-<input type="text" required placeholder="Enter your name">
+<input type="text" id="client_name" required placeholder="Enter your name">
 
 <label>Mobile Number</label>
-<input type="tel" required placeholder="Enter mobile number">
+<input type="tel" id="client_mobile" required
+       pattern="[0-9]{10}"
+       maxlength="10"
+       placeholder="10 digit mobile number">
 
 <label>State</label>
-<select required>
+<select id="client_state" required>
+
 <option value="">Select State</option>
 <option>Uttar Pradesh</option>
 <option>Delhi</option>
@@ -428,13 +675,17 @@ connect you with an appropriate legal professional.
 <option>Bihar</option>
 <option>Uttarakhand</option>
 <option>Other</option>
+
 </select>
 
 <label>District / City</label>
-<input type="text" required placeholder="District or City">
+<input type="text" id="client_district_city"
+       required
+       placeholder="District or City">
 
 <label>Legal Matter</label>
-<select required>
+<select id="client_legal_matter" required>
+
 <option value="">Select Matter</option>
 <option>Criminal</option>
 <option>Bail / Anticipatory Bail</option>
@@ -445,35 +696,39 @@ connect you with an appropriate legal professional.
 <option>Consumer</option>
 <option>Commercial / Corporate</option>
 <option>Other</option>
+
 </select>
 
 <label>Brief Requirement</label>
-<textarea
+
+<textarea id="client_brief"
 required
-placeholder="Briefly describe your legal requirement">
-</textarea>
+placeholder="Briefly describe your legal requirement"></textarea>
 
 <button class="btn primary full" type="submit">
 Submit Requirement
 </button>
 
 <div id="clientSuccess" class="success">
-Your requirement has been recorded for this demo.
-The secure client-management system will be connected
-in the next stage.
+Your requirement has been submitted successfully.
+Our team will contact you shortly.
 </div>
+
+<div id="clientError" class="error"></div>
 
 </form>
 
 <p class="note">
 Do not enter confidential documents, passwords or highly
-sensitive information in this demo form.
+sensitive information in this form.
 </p>
 
 </div>
 
 </section>
 
+
+<!-- ADVOCATE FORM -->
 
 <section class="section" id="advocate">
 
@@ -486,25 +741,37 @@ Advocates can submit their professional details
 for network consideration.
 </p>
 
-<form onsubmit="advocateSubmit(event)">
+<form id="advocateForm">
 
 <label>Advocate Name</label>
-<input type="text" required placeholder="Full name">
+<input type="text" id="advocate_name" required placeholder="Full name">
 
 <label>Mobile Number</label>
-<input type="tel" required placeholder="Mobile number">
+<input type="tel" id="advocate_mobile"
+       required
+       pattern="[0-9]{10}"
+       maxlength="10"
+       placeholder="Mobile number">
 
 <label>Email</label>
-<input type="email" required placeholder="Professional email">
+<input type="email" id="advocate_email"
+       required
+       placeholder="Professional email">
 
 <label>Enrollment Number</label>
-<input type="text" required placeholder="Bar Council enrollment number">
+<input type="text" id="enrollment_number"
+       required
+       placeholder="Bar Council enrollment number">
 
 <label>State Bar Council</label>
-<input type="text" required placeholder="State Bar Council">
+<input type="text" id="state_bar_council"
+       required
+       placeholder="State Bar Council">
 
 <label>Practice State</label>
-<select required>
+
+<select id="practice_state" required>
+
 <option value="">Select State</option>
 <option>Uttar Pradesh</option>
 <option>Delhi</option>
@@ -516,13 +783,20 @@ for network consideration.
 <option>Bihar</option>
 <option>Uttarakhand</option>
 <option>Other</option>
+
 </select>
 
 <label>District / Court</label>
-<input type="text" required placeholder="District / Court">
+
+<input type="text"
+       id="district_court"
+       required
+       placeholder="District / Court">
 
 <label>Primary Practice Area</label>
-<select required>
+
+<select id="primary_practice_area" required>
+
 <option value="">Select Practice Area</option>
 <option>Criminal Law</option>
 <option>NDPS</option>
@@ -532,31 +806,269 @@ for network consideration.
 <option>Consumer</option>
 <option>NI Act</option>
 <option>Other</option>
+
 </select>
 
 <label>Years of Practice</label>
-<input type="number" min="0" max="70" required>
+
+<input type="number"
+       id="years_of_practice"
+       min="0"
+       max="70"
+       required>
 
 <button class="btn primary full" type="submit">
 Submit Advocate Registration
 </button>
 
 <div id="advocateSuccess" class="success">
-Your advocate registration has been recorded for
-this demo. Verification and advocate dashboard will
-be added in the next stage.
+Your advocate registration has been submitted.
+Our team will review the details.
 </div>
+
+<div id="advocateError" class="error"></div>
 
 </form>
 
 <p class="note">
-Registration does not itself constitute verification or
-guarantee of empanelment.
+Registration does not itself constitute verification
+or guarantee of empanelment.
 </p>
 
 </div>
 
 </section>
+
+
+<!-- ADMIN LOGIN -->
+
+<section class="section admin-section" id="admin">
+
+<div class="login-box">
+
+<h2>Admin Login</h2>
+
+<p class="intro">
+Authorized access only.
+</p>
+
+<form id="loginForm">
+
+<label>Email</label>
+
+<input type="email"
+       id="login_email"
+       required
+       placeholder="Admin email">
+
+<label>Password</label>
+
+<input type="password"
+       id="login_password"
+       required
+       placeholder="Password">
+
+<button class="btn primary full" type="submit">
+Login to CRM
+</button>
+
+<div id="loginError" class="error"></div>
+
+</form>
+
+</div>
+
+</section>
+
+
+<!-- CRM DASHBOARD -->
+
+<section class="dashboard" id="dashboard">
+
+<div class="dashboard-header">
+
+<div>
+
+<h2>Client CRM Dashboard</h2>
+
+<div class="dashboard-user">
+Logged in: <span id="loggedUser"></span>
+</div>
+
+</div>
+
+<button class="logout-btn" onclick="logout()">
+Logout
+</button>
+
+</div>
+
+
+<div class="stats">
+
+<div class="stat">
+<div class="stat-title">Total Leads</div>
+<div class="stat-number" id="totalLeads">0</div>
+</div>
+
+<div class="stat">
+<div class="stat-title">New</div>
+<div class="stat-number" id="newLeads">0</div>
+</div>
+
+<div class="stat">
+<div class="stat-title">Payment Pending</div>
+<div class="stat-number" id="pendingPayments">0</div>
+</div>
+
+<div class="stat">
+<div class="stat-title">High Priority</div>
+<div class="stat-number" id="highPriority">0</div>
+</div>
+
+</div>
+
+
+<div class="filters">
+
+<input type="text"
+       id="searchLead"
+       placeholder="Search client, mobile, city or matter..."
+       oninput="renderLeads()">
+
+<select id="statusFilter" onchange="renderLeads()">
+
+<option value="">All Status</option>
+<option value="New">New</option>
+<option value="Contacted">Contacted</option>
+<option value="In Progress">In Progress</option>
+<option value="Closed">Closed</option>
+
+</select>
+
+<select id="priorityFilter" onchange="renderLeads()">
+
+<option value="">All Priority</option>
+<option value="High">High</option>
+<option value="Normal">Normal</option>
+<option value="Low">Low</option>
+
+</select>
+
+</div>
+
+
+<div class="leads-box">
+
+<div class="leads-title">
+<span id="leadCount">0</span> lead(s) loaded.
+</div>
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+<th>Client</th>
+<th>Mobile</th>
+<th>Location</th>
+<th>Matter</th>
+<th>Status</th>
+<th>Payment</th>
+<th>Priority</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="leadTableBody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- EDIT MODAL -->
+
+<div class="modal" id="editModal">
+
+<div class="modal-box">
+
+<button class="close" onclick="closeModal()">×</button>
+
+<h3>Update Client Lead</h3>
+
+<input type="hidden" id="edit_id">
+
+<label>Status</label>
+
+<select id="edit_status">
+
+<option>New</option>
+<option>Contacted</option>
+<option>In Progress</option>
+<option>Closed</option>
+
+</select>
+
+<label>Payment Status</label>
+
+<select id="edit_payment_status">
+
+<option>Pending</option>
+<option>Paid</option>
+<option>Partial</option>
+<option>Not Applicable</option>
+
+</select>
+
+<label>Priority</label>
+
+<select id="edit_priority">
+
+<option>High</option>
+<option>Normal</option>
+<option>Low</option>
+
+</select>
+
+<label>Assigned Advocate</label>
+
+<input type="text"
+       id="edit_assigned_advocate"
+       placeholder="Advocate name">
+
+<label>Follow-up Date</label>
+
+<input type="date"
+       id="edit_follow_up_date">
+
+<label>Internal Notes</label>
+
+<textarea id="edit_internal_notes"
+          placeholder="Internal CRM notes"></textarea>
+
+<button class="btn primary full"
+        onclick="saveLeadUpdate()">
+
+Save Changes
+
+</button>
+
+<div id="updateError" class="error"></div>
+
+</div>
+
+</div>
 
 
 <footer>
@@ -570,71 +1082,746 @@ National Legal Network | Legal Assistance Across India
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const SUPABASE_URL = "https://odqebkdzkjfxzyzbrndt.supabase.co";
-const SUPABASE_KEY = "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 
-const supabaseClient = supabase.createClient(
+/* =========================================
+   SUPABASE CONNECTION
+========================================= */
+
+const SUPABASE_URL =
+"https://odqebkdzkjfxzyzbrndt.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+
+const supabaseClient =
+supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
 
-async function clientSubmit(event) {
+
+/* =========================================
+   GLOBAL DATA
+========================================= */
+
+let allLeads = [];
+
+
+/* =========================================
+   CLIENT SUBMISSION
+========================================= */
+
+document.getElementById("clientForm")
+.addEventListener("submit", async function(event){
+
     event.preventDefault();
 
-    const form = event.target;
-    const fields = form.elements;
+    const success =
+        document.getElementById("clientSuccess");
 
-    const { error } = await supabaseClient
+    const errorBox =
+        document.getElementById("clientError");
+
+    success.style.display = "none";
+    errorBox.style.display = "none";
+
+    const mobile =
+        document.getElementById("client_mobile").value.trim();
+
+    if(!/^[0-9]{10}$/.test(mobile)){
+        errorBox.innerText =
+        "Please enter a valid 10 digit mobile number.";
+        errorBox.style.display = "block";
+        return;
+    }
+
+    const lead = {
+
+        client_name:
+        document.getElementById("client_name").value.trim(),
+
+        mobile: mobile,
+
+        state:
+        document.getElementById("client_state").value,
+
+        district_city:
+        document.getElementById("client_district_city").value.trim(),
+
+        legal_matter:
+        document.getElementById("client_legal_matter").value,
+
+        brief_requirement:
+        document.getElementById("client_brief").value.trim(),
+
+        status: "New",
+
+        payment_status: "Pending",
+
+        priority: "Normal"
+
+    };
+
+
+    const {error} =
+        await supabaseClient
         .from("client_requirements")
-        .insert([{
-            client_name: fields[0].value,
-            mobile: fields[1].value,
-            state: fields[2].value,
-            district_city: fields[3].value,
-            legal_matter: fields[4].value,
-            brief_requirement: fields[5].value
-        }]);
+        .insert([lead]);
 
-    if (error) {
-        alert("Database Error: " + error.message);
+
+    if(error){
+
         console.error(error);
+
+        errorBox.innerText =
+        "Unable to submit requirement: " +
+        error.message;
+
+        errorBox.style.display = "block";
+
         return;
     }
 
-    document.getElementById("clientSuccess").style.display = "block";
-    form.reset();
-}
+
+    success.style.display = "block";
+
+    document.getElementById("clientForm").reset();
+
+});
 
 
-async function advocateSubmit(event) {
+/* =========================================
+   ADVOCATE REGISTRATION
+========================================= */
+
+document.getElementById("advocateForm")
+.addEventListener("submit", async function(event){
+
     event.preventDefault();
 
-    const form = event.target;
-    const fields = form.elements;
+    const success =
+        document.getElementById("advocateSuccess");
 
-    const { error } = await supabaseClient
+    const errorBox =
+        document.getElementById("advocateError");
+
+    success.style.display = "none";
+    errorBox.style.display = "none";
+
+
+    const registration = {
+
+        advocate_name:
+        document.getElementById("advocate_name").value.trim(),
+
+        mobile:
+        document.getElementById("advocate_mobile").value.trim(),
+
+        email:
+        document.getElementById("advocate_email").value.trim(),
+
+        enrollment_number:
+        document.getElementById("enrollment_number").value.trim(),
+
+        state_bar_council:
+        document.getElementById("state_bar_council").value.trim(),
+
+        practice_state:
+        document.getElementById("practice_state").value,
+
+        district_court:
+        document.getElementById("district_court").value.trim(),
+
+        primary_practice_area:
+        document.getElementById("primary_practice_area").value,
+
+        years_of_practice:
+        Number(document.getElementById("years_of_practice").value)
+
+    };
+
+
+    const {error} =
+        await supabaseClient
         .from("advocate_registrations")
-        .insert([{
-            advocate_name: fields[0].value,
-            mobile: fields[1].value,
-            email: fields[2].value,
-            enrollment_number: fields[3].value,
-            state_bar_council: fields[4].value,
-            practice_state: fields[5].value,
-            district_court: fields[6].value,
-            primary_practice_area: fields[7].value,
-            years_of_practice: fields[8].value
-        }]);
+        .insert([registration]);
 
-    if (error) {
-        alert("Unable to submit registration. Please try again.");
+
+    if(error){
+
         console.error(error);
+
+        errorBox.innerText =
+        "Unable to submit registration: " +
+        error.message;
+
+        errorBox.style.display = "block";
+
         return;
     }
 
-    document.getElementById("advocateSuccess").style.display = "block";
-    form.reset();
+
+    success.style.display = "block";
+
+    document.getElementById("advocateForm").reset();
+
+});
+
+
+/* =========================================
+   ADMIN LOGIN
+========================================= */
+
+document.getElementById("loginForm")
+.addEventListener("submit", async function(event){
+
+    event.preventDefault();
+
+    const errorBox =
+        document.getElementById("loginError");
+
+    errorBox.style.display = "none";
+
+
+    const email =
+        document.getElementById("login_email").value.trim();
+
+    const password =
+        document.getElementById("login_password").value;
+
+
+    const {data,error} =
+        await supabaseClient.auth.signInWithPassword({
+
+            email: email,
+            password: password
+
+        });
+
+
+    if(error){
+
+        errorBox.innerText =
+        "Login failed: " + error.message;
+
+        errorBox.style.display = "block";
+
+        return;
+    }
+
+
+    document.getElementById("admin")
+        .style.display = "none";
+
+    document.getElementById("dashboard")
+        .style.display = "block";
+
+    document.getElementById("loggedUser")
+        .innerText = data.user.email;
+
+    document.getElementById("dashboard")
+        .scrollIntoView({behavior:"smooth"});
+
+
+    loadLeads();
+
+});
+
+
+/* =========================================
+   LOAD CRM LEADS
+========================================= */
+
+async function loadLeads(){
+
+    const {data,error} =
+        await supabaseClient
+        .from("client_requirements")
+        .select("*")
+        .order("created_at",{ascending:false});
+
+
+    if(error){
+
+        console.error(error);
+
+        alert(
+        "Unable to load CRM leads: " +
+        error.message
+        );
+
+        return;
+    }
+
+
+    allLeads = data || [];
+
+    updateStats();
+
+    renderLeads();
+
 }
+
+
+/* =========================================
+   UPDATE STATISTICS
+========================================= */
+
+function updateStats(){
+
+    document.getElementById("totalLeads")
+        .innerText = allLeads.length;
+
+
+    document.getElementById("newLeads")
+        .innerText =
+        allLeads.filter(
+            x => (x.status || "New") === "New"
+        ).length;
+
+
+    document.getElementById("pendingPayments")
+        .innerText =
+        allLeads.filter(
+            x => (x.payment_status || "Pending") === "Pending"
+        ).length;
+
+
+    document.getElementById("highPriority")
+        .innerText =
+        allLeads.filter(
+            x => (x.priority || "Normal") === "High"
+        ).length;
+
+}
+
+
+/* =========================================
+   RENDER LEADS
+========================================= */
+
+function renderLeads(){
+
+    const search =
+        document.getElementById("searchLead")
+        .value.toLowerCase().trim();
+
+    const status =
+        document.getElementById("statusFilter")
+        .value;
+
+    const priority =
+        document.getElementById("priorityFilter")
+        .value;
+
+
+    const filtered =
+        allLeads.filter(lead => {
+
+            const searchable = (
+
+                (lead.client_name || "") + " " +
+                (lead.mobile || "") + " " +
+                (lead.district_city || "") + " " +
+                (lead.state || "") + " " +
+                (lead.legal_matter || "") + " " +
+                (lead.brief_requirement || "")
+
+            ).toLowerCase();
+
+
+            const searchMatch =
+                !search ||
+                searchable.includes(search);
+
+
+            const statusMatch =
+                !status ||
+                (lead.status || "New") === status;
+
+
+            const priorityMatch =
+                !priority ||
+                (lead.priority || "Normal") === priority;
+
+
+            return (
+                searchMatch &&
+                statusMatch &&
+                priorityMatch
+            );
+
+        });
+
+
+    document.getElementById("leadCount")
+        .innerText = filtered.length;
+
+
+    const tbody =
+        document.getElementById("leadTableBody");
+
+
+    if(filtered.length === 0){
+
+        tbody.innerHTML = `
+        <tr>
+        <td colspan="9" class="empty">
+        No leads found.
+        </td>
+        </tr>
+        `;
+
+        return;
+    }
+
+
+    tbody.innerHTML =
+        filtered.map(lead => {
+
+            const date =
+                lead.created_at
+                ? new Date(lead.created_at)
+                    .toLocaleString("en-IN")
+                : "-";
+
+
+            const currentStatus =
+                lead.status || "New";
+
+
+            const currentPriority =
+                lead.priority || "Normal";
+
+
+            const statusClass =
+                getStatusClass(currentStatus);
+
+
+            const priorityClass =
+                getPriorityClass(currentPriority);
+
+
+            return `
+
+            <tr>
+
+            <td>${escapeHtml(date)}</td>
+
+            <td>
+                <strong>
+                ${escapeHtml(lead.client_name || "-")}
+                </strong>
+            </td>
+
+            <td>
+                ${escapeHtml(lead.mobile || "-")}
+            </td>
+
+            <td>
+                ${escapeHtml(lead.district_city || "-")}
+                <br>
+                <small>
+                ${escapeHtml(lead.state || "")}
+                </small>
+            </td>
+
+            <td>
+                ${escapeHtml(lead.legal_matter || "-")}
+            </td>
+
+            <td>
+                <span class="status-badge ${statusClass}">
+                ${escapeHtml(currentStatus)}
+                </span>
+            </td>
+
+            <td>
+                ${escapeHtml(
+                    lead.payment_status || "Pending"
+                )}
+            </td>
+
+            <td>
+                <span class="priority-badge ${priorityClass}">
+                ${escapeHtml(currentPriority)}
+                </span>
+            </td>
+
+            <td>
+
+                <button
+                class="action-btn"
+                onclick="openEdit(${lead.id})">
+                Manage
+                </button>
+
+            </td>
+
+            </tr>
+
+            `;
+
+        }).join("");
+
+}
+
+
+/* =========================================
+   STATUS / PRIORITY CSS
+========================================= */
+
+function getStatusClass(status){
+
+    if(status === "Contacted")
+        return "status-contacted";
+
+    if(status === "In Progress")
+        return "status-progress";
+
+    if(status === "Closed")
+        return "status-closed";
+
+    return "status-new";
+}
+
+
+function getPriorityClass(priority){
+
+    if(priority === "High")
+        return "priority-high";
+
+    if(priority === "Low")
+        return "priority-low";
+
+    return "priority-normal";
+}
+
+
+/* =========================================
+   OPEN EDIT MODAL
+========================================= */
+
+function openEdit(id){
+
+    const lead =
+        allLeads.find(x => Number(x.id) === Number(id));
+
+
+    if(!lead) return;
+
+
+    document.getElementById("edit_id")
+        .value = lead.id;
+
+
+    document.getElementById("edit_status")
+        .value = lead.status || "New";
+
+
+    document.getElementById("edit_payment_status")
+        .value = lead.payment_status || "Pending";
+
+
+    document.getElementById("edit_priority")
+        .value = lead.priority || "Normal";
+
+
+    document.getElementById("edit_assigned_advocate")
+        .value = lead.assigned_advocate || "";
+
+
+    document.getElementById("edit_follow_up_date")
+        .value = lead.follow_up_date || "";
+
+
+    document.getElementById("edit_internal_notes")
+        .value = lead.internal_notes || "";
+
+
+    document.getElementById("updateError")
+        .style.display = "none";
+
+
+    document.getElementById("editModal")
+        .style.display = "flex";
+
+}
+
+
+/* =========================================
+   CLOSE MODAL
+========================================= */
+
+function closeModal(){
+
+    document.getElementById("editModal")
+        .style.display = "none";
+
+}
+
+
+/* =========================================
+   SAVE LEAD UPDATE
+========================================= */
+
+async function saveLeadUpdate(){
+
+    const id =
+        document.getElementById("edit_id").value;
+
+
+    const updateData = {
+
+        status:
+        document.getElementById("edit_status").value,
+
+        payment_status:
+        document.getElementById("edit_payment_status").value,
+
+        priority:
+        document.getElementById("edit_priority").value,
+
+        assigned_advocate:
+        document.getElementById("edit_assigned_advocate")
+        .value.trim(),
+
+        follow_up_date:
+        document.getElementById("edit_follow_up_date")
+        .value || null,
+
+        internal_notes:
+        document.getElementById("edit_internal_notes")
+        .value.trim()
+
+    };
+
+
+    const {error} =
+        await supabaseClient
+        .from("client_requirements")
+        .update(updateData)
+        .eq("id", id);
+
+
+    if(error){
+
+        console.error(error);
+
+        const box =
+            document.getElementById("updateError");
+
+        box.innerText =
+            "Update failed: " + error.message;
+
+        box.style.display = "block";
+
+        return;
+    }
+
+
+    closeModal();
+
+    await loadLeads();
+
+}
+
+
+/* =========================================
+   LOGOUT
+========================================= */
+
+async function logout(){
+
+    await supabaseClient.auth.signOut();
+
+    document.getElementById("dashboard")
+        .style.display = "none";
+
+    document.getElementById("admin")
+        .style.display = "block";
+
+    document.getElementById("admin")
+        .scrollIntoView({behavior:"smooth"});
+
+}
+
+
+/* =========================================
+   CHECK EXISTING SESSION
+========================================= */
+
+async function checkSession(){
+
+    const {data} =
+        await supabaseClient.auth.getSession();
+
+
+    if(data.session){
+
+        document.getElementById("admin")
+            .style.display = "none";
+
+        document.getElementById("dashboard")
+            .style.display = "block";
+
+        document.getElementById("loggedUser")
+            .innerText =
+            data.session.user.email;
+
+        loadLeads();
+
+    }
+
+}
+
+
+/* =========================================
+   ESCAPE HTML
+========================================= */
+
+function escapeHtml(value){
+
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================================
+   INITIALIZE
+========================================= */
+
+checkSession();
+
+
+/* =========================================
+   SHOW ADMIN LOGIN WHEN #admin IS OPENED
+========================================= */
+
+function showAdminLogin(){
+
+    document.getElementById("admin")
+        .style.display = "block";
+
+}
+
+window.addEventListener("hashchange",function(){
+
+    if(location.hash === "#admin"){
+        showAdminLogin();
+    }
+
+});
+
+if(location.hash === "#admin"){
+    showAdminLogin();
+}
+
 </script>
 
 </body>
