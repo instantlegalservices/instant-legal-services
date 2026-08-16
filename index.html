@@ -10,6 +10,7 @@
 content="Instant Legal Services - National Legal Network connecting clients with advocates across India.">
 
 <style>
+
 *{
     box-sizing:border-box;
     margin:0;
@@ -40,8 +41,7 @@ header{
     font-weight:bold;
 }
 
-.logo span,
-.gold{
+.logo span{
     color:#e5a93d;
 }
 
@@ -137,8 +137,15 @@ nav a{
     font-size:14px;
 }
 
-.action-section{
+.action-section,
+.network{
     background:#11151d;
+}
+
+.network-text{
+    max-width:750px;
+    margin:auto;
+    color:#aeb4bf;
 }
 
 .form-box{
@@ -198,29 +205,16 @@ textarea:focus{
     margin-top:22px;
 }
 
+.full:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
 .note{
     margin-top:15px;
     color:#8f96a3;
     font-size:12px;
     text-align:center;
-}
-
-.network{
-    background:#11151d;
-}
-
-.network-text{
-    max-width:750px;
-    margin:auto;
-    color:#aeb4bf;
-}
-
-footer{
-    background:#080a0e;
-    padding:30px;
-    text-align:center;
-    color:#8f96a3;
-    font-size:13px;
 }
 
 .success{
@@ -233,7 +227,52 @@ footer{
     display:none;
 }
 
-/* ADMIN LOGIN */
+.error{
+    background:#3b1717;
+    border:1px solid #8c3838;
+    color:#ffb7b7;
+    padding:12px;
+    border-radius:8px;
+    margin-top:15px;
+    display:none;
+}
+
+/* PHOTO UPLOAD */
+
+.photo-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:8px;
+}
+
+.photo-actions .btn{
+    margin:0;
+}
+
+.photo-preview{
+    display:none;
+    margin-top:18px;
+    text-align:center;
+}
+
+.photo-preview img{
+    width:150px;
+    height:150px;
+    object-fit:cover;
+    border-radius:12px;
+    border:2px solid #e5a93d;
+    display:block;
+    margin:auto;
+}
+
+.photo-preview-text{
+    color:#aeb4bf;
+    font-size:12px;
+    margin-top:8px;
+}
+
+/* ADMIN */
 
 .admin-section{
     background:#0b0d12;
@@ -253,16 +292,6 @@ footer{
     text-align:center;
     color:#e5a93d;
     margin-bottom:10px;
-}
-
-.error{
-    background:#3b1717;
-    border:1px solid #8c3838;
-    color:#ffb7b7;
-    padding:12px;
-    border-radius:8px;
-    margin-top:15px;
-    display:none;
 }
 
 /* DASHBOARD */
@@ -441,6 +470,8 @@ td{
     color:#9299a6;
 }
 
+/* MODAL */
+
 .modal{
     position:fixed;
     inset:0;
@@ -477,6 +508,16 @@ td{
     cursor:pointer;
 }
 
+/* FOOTER */
+
+footer{
+    background:#080a0e;
+    padding:30px;
+    text-align:center;
+    color:#8f96a3;
+    font-size:13px;
+}
+
 @media(max-width:800px){
 
     .hero h1{
@@ -503,6 +544,14 @@ td{
 
 @media(max-width:500px){
 
+    header{
+        padding:16px 5%;
+    }
+
+    nav{
+        display:none;
+    }
+
     .stats{
         grid-template-columns:1fr 1fr;
     }
@@ -518,7 +567,16 @@ td{
     .form-box{
         padding:22px;
     }
+
+    .photo-actions{
+        flex-direction:column;
+    }
+
+    .photo-actions .btn{
+        width:100%;
+    }
 }
+
 </style>
 </head>
 
@@ -581,32 +639,50 @@ Join Our Legal Network
 
 <div class="card">
 <h3>Criminal Law</h3>
-<p>Bail, Anticipatory Bail, Criminal Defence, NDPS and related criminal matters.</p>
+<p>
+Bail, Anticipatory Bail, Criminal Defence,
+NDPS and related criminal matters.
+</p>
 </div>
 
 <div class="card">
 <h3>Family & Matrimonial</h3>
-<p>Divorce, maintenance, custody and matrimonial disputes.</p>
+<p>
+Divorce, maintenance, custody and
+matrimonial disputes.
+</p>
 </div>
 
 <div class="card">
 <h3>Civil & Property</h3>
-<p>Property disputes, recovery, injunction and civil litigation.</p>
+<p>
+Property disputes, recovery, injunction
+and civil litigation.
+</p>
 </div>
 
 <div class="card">
 <h3>Commercial & Corporate</h3>
-<p>Business disputes, contracts and corporate legal assistance.</p>
+<p>
+Business disputes, contracts and
+corporate legal assistance.
+</p>
 </div>
 
 <div class="card">
 <h3>Consumer Matters</h3>
-<p>Assistance relating to consumer disputes and claims.</p>
+<p>
+Assistance relating to consumer
+disputes and claims.
+</p>
 </div>
 
 <div class="card">
 <h3>Cheque Bounce</h3>
-<p>Legal assistance relating to Negotiable Instruments Act matters.</p>
+<p>
+Legal assistance relating to
+Negotiable Instruments Act matters.
+</p>
 </div>
 
 </div>
@@ -653,15 +729,27 @@ connect you with an appropriate legal professional.
 <form id="clientForm">
 
 <label>Full Name</label>
-<input type="text" id="client_name" required placeholder="Enter your name">
+
+<input
+type="text"
+id="client_name"
+required
+placeholder="Enter your name">
+
 
 <label>Mobile Number</label>
-<input type="tel" id="client_mobile" required
-       pattern="[0-9]{10}"
-       maxlength="10"
-       placeholder="10 digit mobile number">
+
+<input
+type="tel"
+id="client_mobile"
+required
+pattern="[0-9]{10}"
+maxlength="10"
+placeholder="10 digit mobile number">
+
 
 <label>State</label>
+
 <select id="client_state" required>
 
 <option value="">Select State</option>
@@ -678,12 +766,18 @@ connect you with an appropriate legal professional.
 
 </select>
 
+
 <label>District / City</label>
-<input type="text" id="client_district_city"
-       required
-       placeholder="District or City">
+
+<input
+type="text"
+id="client_district_city"
+required
+placeholder="District or City">
+
 
 <label>Legal Matter</label>
+
 <select id="client_legal_matter" required>
 
 <option value="">Select Matter</option>
@@ -699,28 +793,42 @@ connect you with an appropriate legal professional.
 
 </select>
 
+
 <label>Brief Requirement</label>
 
-<textarea id="client_brief"
+<textarea
+id="client_brief"
 required
 placeholder="Briefly describe your legal requirement"></textarea>
 
-<button class="btn primary full" type="submit">
+
+<button
+class="btn primary full"
+type="submit">
+
 Submit Requirement
+
 </button>
 
+
 <div id="clientSuccess" class="success">
+
 Your requirement has been submitted successfully.
 Our team will contact you shortly.
+
 </div>
+
 
 <div id="clientError" class="error"></div>
 
 </form>
 
+
 <p class="note">
-Do not enter confidential documents, passwords or highly
-sensitive information in this form.
+
+Do not enter confidential documents, passwords
+or highly sensitive information in this form.
+
 </p>
 
 </div>
@@ -737,36 +845,62 @@ sensitive information in this form.
 <h2>Join Our Legal Network</h2>
 
 <p class="intro">
+
 Advocates can submit their professional details
 for network consideration.
+
 </p>
+
 
 <form id="advocateForm">
 
+
 <label>Advocate Name</label>
-<input type="text" id="advocate_name" required placeholder="Full name">
+
+<input
+type="text"
+id="advocate_name"
+required
+placeholder="Full name">
+
 
 <label>Mobile Number</label>
-<input type="tel" id="advocate_mobile"
-       required
-       pattern="[0-9]{10}"
-       maxlength="10"
-       placeholder="Mobile number">
+
+<input
+type="tel"
+id="advocate_mobile"
+required
+pattern="[0-9]{10}"
+maxlength="10"
+placeholder="10 digit mobile number">
+
 
 <label>Email</label>
-<input type="email" id="advocate_email"
-       required
-       placeholder="Professional email">
+
+<input
+type="email"
+id="advocate_email"
+required
+placeholder="Professional email">
+
 
 <label>Enrollment Number</label>
-<input type="text" id="enrollment_number"
-       required
-       placeholder="Bar Council enrollment number">
+
+<input
+type="text"
+id="enrollment_number"
+required
+placeholder="Bar Council enrollment number">
+
 
 <label>State Bar Council</label>
-<input type="text" id="state_bar_council"
-       required
-       placeholder="State Bar Council">
+
+<input
+type="text"
+id="state_bar_council"
+required
+placeholder="State Bar Council">
+
 
 <label>Practice State</label>
 
@@ -786,12 +920,15 @@ for network consideration.
 
 </select>
 
+
 <label>District / Court</label>
 
-<input type="text"
-       id="district_court"
-       required
-       placeholder="District / Court">
+<input
+type="text"
+id="district_court"
+required
+placeholder="District / Court">
+
 
 <label>Primary Practice Area</label>
 
@@ -809,30 +946,111 @@ for network consideration.
 
 </select>
 
+
 <label>Years of Practice</label>
 
-<input type="number"
-       id="years_of_practice"
-       min="0"
-       max="70"
-       required>
+<input
+type="number"
+id="years_of_practice"
+min="0"
+max="70"
+required>
 
-<button class="btn primary full" type="submit">
-Submit Advocate Registration
+
+<!-- PHOTO -->
+
+<label>Advocate Photo</label>
+
+<div class="photo-actions">
+
+<button
+type="button"
+class="btn secondary"
+onclick="document.getElementById('camera_photo').click()">
+
+📷 Take Photo
+
 </button>
 
-<div id="advocateSuccess" class="success">
-Your advocate registration has been submitted.
-Our team will review the details.
+
+<button
+type="button"
+class="btn secondary"
+onclick="document.getElementById('gallery_photo').click()">
+
+🖼️ Choose from Gallery
+
+</button>
+
 </div>
 
-<div id="advocateError" class="error"></div>
+
+<input
+type="file"
+id="camera_photo"
+accept="image/*"
+capture="environment"
+style="display:none;">
+
+
+<input
+type="file"
+id="gallery_photo"
+accept="image/*"
+style="display:none;">
+
+
+<div
+id="photoPreview"
+class="photo-preview">
+
+<img
+id="previewImage"
+alt="Advocate Photo Preview">
+
+<div class="photo-preview-text">
+
+Photo selected successfully
+
+</div>
+
+</div>
+
+
+<button
+class="btn primary full"
+type="submit">
+
+Submit Advocate Registration
+
+</button>
+
+
+<div
+id="advocateSuccess"
+class="success">
+
+Your advocate registration and photo have been
+submitted successfully. Our team will review
+the details.
+
+</div>
+
+
+<div
+id="advocateError"
+class="error">
+</div>
+
 
 </form>
 
+
 <p class="note">
+
 Registration does not itself constitute verification
 or guarantee of empanelment.
+
 </p>
 
 </div>
@@ -842,7 +1060,9 @@ or guarantee of empanelment.
 
 <!-- ADMIN LOGIN -->
 
-<section class="section admin-section" id="admin">
+<section
+class="section admin-section"
+id="admin">
 
 <div class="login-box">
 
@@ -852,27 +1072,40 @@ or guarantee of empanelment.
 Authorized access only.
 </p>
 
+
 <form id="loginForm">
 
 <label>Email</label>
 
-<input type="email"
-       id="login_email"
-       required
-       placeholder="Admin email">
+<input
+type="email"
+id="login_email"
+required
+placeholder="Admin email">
+
 
 <label>Password</label>
 
-<input type="password"
-       id="login_password"
-       required
-       placeholder="Password">
+<input
+type="password"
+id="login_password"
+required
+placeholder="Password">
 
-<button class="btn primary full" type="submit">
+
+<button
+class="btn primary full"
+type="submit">
+
 Login to CRM
+
 </button>
 
-<div id="loginError" class="error"></div>
+
+<div
+id="loginError"
+class="error">
+</div>
 
 </form>
 
@@ -883,7 +1116,9 @@ Login to CRM
 
 <!-- CRM DASHBOARD -->
 
-<section class="dashboard" id="dashboard">
+<section
+class="dashboard"
+id="dashboard">
 
 <div class="dashboard-header">
 
@@ -892,13 +1127,21 @@ Login to CRM
 <h2>Client CRM Dashboard</h2>
 
 <div class="dashboard-user">
-Logged in: <span id="loggedUser"></span>
-</div>
+
+Logged in:
+<span id="loggedUser"></span>
 
 </div>
 
-<button class="logout-btn" onclick="logout()">
+</div>
+
+
+<button
+class="logout-btn"
+onclick="logout()">
+
 Logout
+
 </button>
 
 </div>
@@ -907,23 +1150,62 @@ Logout
 <div class="stats">
 
 <div class="stat">
-<div class="stat-title">Total Leads</div>
-<div class="stat-number" id="totalLeads">0</div>
+
+<div class="stat-title">
+Total Leads
 </div>
 
-<div class="stat">
-<div class="stat-title">New</div>
-<div class="stat-number" id="newLeads">0</div>
+<div
+class="stat-number"
+id="totalLeads">
+0
 </div>
 
-<div class="stat">
-<div class="stat-title">Payment Pending</div>
-<div class="stat-number" id="pendingPayments">0</div>
 </div>
 
+
 <div class="stat">
-<div class="stat-title">High Priority</div>
-<div class="stat-number" id="highPriority">0</div>
+
+<div class="stat-title">
+New
+</div>
+
+<div
+class="stat-number"
+id="newLeads">
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-title">
+Payment Pending
+</div>
+
+<div
+class="stat-number"
+id="pendingPayments">
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-title">
+High Priority
+</div>
+
+<div
+class="stat-number"
+id="highPriority">
+0
+</div>
+
 </div>
 
 </div>
@@ -931,27 +1213,59 @@ Logout
 
 <div class="filters">
 
-<input type="text"
-       id="searchLead"
-       placeholder="Search client, mobile, city or matter..."
-       oninput="renderLeads()">
+<input
+type="text"
+id="searchLead"
+placeholder="Search client, mobile, city or matter..."
+oninput="renderLeads()">
 
-<select id="statusFilter" onchange="renderLeads()">
 
-<option value="">All Status</option>
-<option value="New">New</option>
-<option value="Contacted">Contacted</option>
-<option value="In Progress">In Progress</option>
-<option value="Closed">Closed</option>
+<select
+id="statusFilter"
+onchange="renderLeads()">
+
+<option value="">
+All Status
+</option>
+
+<option value="New">
+New
+</option>
+
+<option value="Contacted">
+Contacted
+</option>
+
+<option value="In Progress">
+In Progress
+</option>
+
+<option value="Closed">
+Closed
+</option>
 
 </select>
 
-<select id="priorityFilter" onchange="renderLeads()">
 
-<option value="">All Priority</option>
-<option value="High">High</option>
-<option value="Normal">Normal</option>
-<option value="Low">Low</option>
+<select
+id="priorityFilter"
+onchange="renderLeads()">
+
+<option value="">
+All Priority
+</option>
+
+<option value="High">
+High
+</option>
+
+<option value="Normal">
+Normal
+</option>
+
+<option value="Low">
+Low
+</option>
 
 </select>
 
@@ -961,8 +1275,12 @@ Logout
 <div class="leads-box">
 
 <div class="leads-title">
-<span id="leadCount">0</span> lead(s) loaded.
+
+<span id="leadCount">0</span>
+lead(s) loaded.
+
 </div>
+
 
 <div class="table-wrap">
 
@@ -986,7 +1304,9 @@ Logout
 
 </thead>
 
-<tbody id="leadTableBody"></tbody>
+
+<tbody id="leadTableBody">
+</tbody>
 
 </table>
 
@@ -999,15 +1319,30 @@ Logout
 
 <!-- EDIT MODAL -->
 
-<div class="modal" id="editModal">
+<div
+class="modal"
+id="editModal">
 
 <div class="modal-box">
 
-<button class="close" onclick="closeModal()">×</button>
+<button
+class="close"
+onclick="closeModal()">
 
-<h3>Update Client Lead</h3>
+×
 
-<input type="hidden" id="edit_id">
+</button>
+
+
+<h3>
+Update Client Lead
+</h3>
+
+
+<input
+type="hidden"
+id="edit_id">
+
 
 <label>Status</label>
 
@@ -1020,6 +1355,7 @@ Logout
 
 </select>
 
+
 <label>Payment Status</label>
 
 <select id="edit_payment_status">
@@ -1031,6 +1367,7 @@ Logout
 
 </select>
 
+
 <label>Priority</label>
 
 <select id="edit_priority">
@@ -1041,30 +1378,42 @@ Logout
 
 </select>
 
+
 <label>Assigned Advocate</label>
 
-<input type="text"
-       id="edit_assigned_advocate"
-       placeholder="Advocate name">
+<input
+type="text"
+id="edit_assigned_advocate"
+placeholder="Advocate name">
+
 
 <label>Follow-up Date</label>
 
-<input type="date"
-       id="edit_follow_up_date">
+<input
+type="date"
+id="edit_follow_up_date">
+
 
 <label>Internal Notes</label>
 
-<textarea id="edit_internal_notes"
-          placeholder="Internal CRM notes"></textarea>
+<textarea
+id="edit_internal_notes"
+placeholder="Internal CRM notes"></textarea>
 
-<button class="btn primary full"
-        onclick="saveLeadUpdate()">
+
+<button
+class="btn primary full"
+onclick="saveLeadUpdate()">
 
 Save Changes
 
 </button>
 
-<div id="updateError" class="error"></div>
+
+<div
+id="updateError"
+class="error">
+</div>
 
 </div>
 
@@ -1074,12 +1423,15 @@ Save Changes
 <footer>
 
 © 2026 Instant Legal Services.<br>
-National Legal Network | Legal Assistance Across India
+
+National Legal Network |
+Legal Assistance Across India
 
 </footer>
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 
 <script>
 
@@ -1106,164 +1458,520 @@ supabase.createClient(
 
 let allLeads = [];
 
+let selectedAdvocatePhoto = null;
+
 
 /* =========================================
    CLIENT SUBMISSION
 ========================================= */
 
-document.getElementById("clientForm")
-.addEventListener("submit", async function(event){
+document
+.getElementById("clientForm")
+.addEventListener(
+"submit",
+async function(event){
 
-    event.preventDefault();
-
-    const success =
-        document.getElementById("clientSuccess");
-
-    const errorBox =
-        document.getElementById("clientError");
-
-    success.style.display = "none";
-    errorBox.style.display = "none";
-
-    const mobile =
-        document.getElementById("client_mobile").value.trim();
-
-    if(!/^[0-9]{10}$/.test(mobile)){
-        errorBox.innerText =
-        "Please enter a valid 10 digit mobile number.";
-        errorBox.style.display = "block";
-        return;
-    }
-
-    const lead = {
-
-        client_name:
-        document.getElementById("client_name").value.trim(),
-
-        mobile: mobile,
-
-        state:
-        document.getElementById("client_state").value,
-
-        district_city:
-        document.getElementById("client_district_city").value.trim(),
-
-        legal_matter:
-        document.getElementById("client_legal_matter").value,
-
-        brief_requirement:
-        document.getElementById("client_brief").value.trim(),
-
-        status: "New",
-
-        payment_status: "Pending",
-
-        priority: "Normal"
-
-    };
+event.preventDefault();
 
 
-    const {error} =
-        await supabaseClient
-        .from("client_requirements")
-        .insert([lead]);
+const success =
+document.getElementById("clientSuccess");
+
+const errorBox =
+document.getElementById("clientError");
 
 
-    if(error){
-
-        console.error(error);
-
-        errorBox.innerText =
-        "Unable to submit requirement: " +
-        error.message;
-
-        errorBox.style.display = "block";
-
-        return;
-    }
+success.style.display = "none";
+errorBox.style.display = "none";
 
 
-    success.style.display = "block";
+const mobile =
+document
+.getElementById("client_mobile")
+.value
+.trim();
 
-    document.getElementById("clientForm").reset();
+
+if(!/^[0-9]{10}$/.test(mobile)){
+
+errorBox.innerText =
+"Please enter a valid 10 digit mobile number.";
+
+errorBox.style.display = "block";
+
+return;
+
+}
+
+
+const lead = {
+
+client_name:
+document
+.getElementById("client_name")
+.value
+.trim(),
+
+mobile:mobile,
+
+state:
+document
+.getElementById("client_state")
+.value,
+
+district_city:
+document
+.getElementById("client_district_city")
+.value
+.trim(),
+
+legal_matter:
+document
+.getElementById("client_legal_matter")
+.value,
+
+brief_requirement:
+document
+.getElementById("client_brief")
+.value
+.trim(),
+
+status:"New",
+
+payment_status:"Pending",
+
+priority:"Normal"
+
+};
+
+
+const {error} =
+await supabaseClient
+.from("client_requirements")
+.insert([lead]);
+
+
+if(error){
+
+console.error(error);
+
+errorBox.innerText =
+"Unable to submit requirement: "
++ error.message;
+
+errorBox.style.display = "block";
+
+return;
+
+}
+
+
+success.style.display = "block";
+
+document
+.getElementById("clientForm")
+.reset();
 
 });
+
+
+/* =========================================
+   PHOTO SELECTION - CAMERA
+========================================= */
+
+document
+.getElementById("camera_photo")
+.addEventListener(
+"change",
+function(){
+
+if(this.files && this.files[0]){
+
+handleAdvocatePhoto(
+this.files[0]
+);
+
+}
+
+});
+
+
+/* =========================================
+   PHOTO SELECTION - GALLERY
+========================================= */
+
+document
+.getElementById("gallery_photo")
+.addEventListener(
+"change",
+function(){
+
+if(this.files && this.files[0]){
+
+handleAdvocatePhoto(
+this.files[0]
+);
+
+}
+
+});
+
+
+/* =========================================
+   HANDLE PHOTO
+========================================= */
+
+function handleAdvocatePhoto(file){
+
+const errorBox =
+document.getElementById("advocateError");
+
+
+errorBox.style.display = "none";
+
+
+if(!file.type.startsWith("image/")){
+
+errorBox.innerText =
+"Please select an image file.";
+
+errorBox.style.display = "block";
+
+selectedAdvocatePhoto = null;
+
+return;
+
+}
+
+
+/* MAX 5 MB */
+
+if(file.size > 5 * 1024 * 1024){
+
+errorBox.innerText =
+"Photo size must be less than 5 MB.";
+
+errorBox.style.display = "block";
+
+selectedAdvocatePhoto = null;
+
+return;
+
+}
+
+
+selectedAdvocatePhoto = file;
+
+
+const reader =
+new FileReader();
+
+
+reader.onload =
+function(event){
+
+document
+.getElementById("previewImage")
+.src =
+event.target.result;
+
+document
+.getElementById("photoPreview")
+.style.display =
+"block";
+
+};
+
+
+reader.readAsDataURL(file);
+
+}
 
 
 /* =========================================
    ADVOCATE REGISTRATION
 ========================================= */
 
-document.getElementById("advocateForm")
-.addEventListener("submit", async function(event){
+document
+.getElementById("advocateForm")
+.addEventListener(
+"submit",
+async function(event){
 
-    event.preventDefault();
-
-    const success =
-        document.getElementById("advocateSuccess");
-
-    const errorBox =
-        document.getElementById("advocateError");
-
-    success.style.display = "none";
-    errorBox.style.display = "none";
+event.preventDefault();
 
 
-    const registration = {
+const success =
+document.getElementById(
+"advocateSuccess"
+);
 
-        advocate_name:
-        document.getElementById("advocate_name").value.trim(),
-
-        mobile:
-        document.getElementById("advocate_mobile").value.trim(),
-
-        email:
-        document.getElementById("advocate_email").value.trim(),
-
-        enrollment_number:
-        document.getElementById("enrollment_number").value.trim(),
-
-        state_bar_council:
-        document.getElementById("state_bar_council").value.trim(),
-
-        practice_state:
-        document.getElementById("practice_state").value,
-
-        district_court:
-        document.getElementById("district_court").value.trim(),
-
-        primary_practice_area:
-        document.getElementById("primary_practice_area").value,
-
-        years_of_practice:
-        Number(document.getElementById("years_of_practice").value)
-
-    };
+const errorBox =
+document.getElementById(
+"advocateError"
+);
 
 
-    const {error} =
-        await supabaseClient
-        .from("advocate_registrations")
-        .insert([registration]);
+success.style.display = "none";
+errorBox.style.display = "none";
 
 
-    if(error){
+/* PHOTO REQUIRED */
 
-        console.error(error);
+if(!selectedAdvocatePhoto){
 
-        errorBox.innerText =
-        "Unable to submit registration: " +
-        error.message;
+errorBox.innerText =
+"Please upload your advocate photo.";
 
-        errorBox.style.display = "block";
+errorBox.style.display = "block";
 
-        return;
-    }
+return;
+
+}
 
 
-    success.style.display = "block";
+/* MOBILE */
 
-    document.getElementById("advocateForm").reset();
+const mobile =
+document
+.getElementById("advocate_mobile")
+.value
+.trim();
+
+
+if(!/^[0-9]{10}$/.test(mobile)){
+
+errorBox.innerText =
+"Please enter a valid 10 digit mobile number.";
+
+errorBox.style.display = "block";
+
+return;
+
+}
+
+
+/* SUBMIT BUTTON */
+
+const submitButton =
+document.querySelector(
+"#advocateForm button[type='submit']"
+);
+
+
+submitButton.disabled = true;
+
+submitButton.innerText =
+"Uploading Photo...";
+
+
+try{
+
+
+/* =====================================
+   CREATE UNIQUE PHOTO NAME
+===================================== */
+
+const extension =
+selectedAdvocatePhoto.name
+.split(".")
+.pop()
+.toLowerCase();
+
+
+const fileName =
+crypto.randomUUID()
++ "."
++ extension;
+
+
+const filePath =
+"pending/" + fileName;
+
+
+/* =====================================
+   UPLOAD PHOTO
+===================================== */
+
+const {error:uploadError} =
+await supabaseClient
+.storage
+.from("advocate-photos")
+.upload(
+filePath,
+selectedAdvocatePhoto,
+{
+cacheControl:"3600",
+upsert:false,
+contentType:
+selectedAdvocatePhoto.type
+}
+);
+
+
+if(uploadError){
+
+throw new Error(
+"Photo upload failed: "
++ uploadError.message
+);
+
+}
+
+
+/* =====================================
+   PUBLIC PHOTO URL
+===================================== */
+
+const {data:publicUrlData} =
+supabaseClient
+.storage
+.from("advocate-photos")
+.getPublicUrl(filePath);
+
+
+const photoUrl =
+publicUrlData.publicUrl;
+
+
+/* =====================================
+   ADVOCATE DATA
+===================================== */
+
+const registration = {
+
+advocate_name:
+document
+.getElementById("advocate_name")
+.value
+.trim(),
+
+mobile:mobile,
+
+email:
+document
+.getElementById("advocate_email")
+.value
+.trim(),
+
+enrollment_number:
+document
+.getElementById("enrollment_number")
+.value
+.trim(),
+
+state_bar_council:
+document
+.getElementById("state_bar_council")
+.value
+.trim(),
+
+practice_state:
+document
+.getElementById("practice_state")
+.value,
+
+district_court:
+document
+.getElementById("district_court")
+.value
+.trim(),
+
+primary_practice_area:
+document
+.getElementById("primary_practice_area")
+.value,
+
+years_of_practice:
+Number(
+document
+.getElementById("years_of_practice")
+.value
+),
+
+photo_url:
+photoUrl
+
+};
+
+
+/* =====================================
+   SAVE ADVOCATE REGISTRATION
+===================================== */
+
+submitButton.innerText =
+"Saving Registration...";
+
+
+const {error} =
+await supabaseClient
+.from("advocate_registrations")
+.insert([registration]);
+
+
+if(error){
+
+throw new Error(
+"Registration failed: "
++ error.message
+);
+
+}
+
+
+/* =====================================
+   SUCCESS
+===================================== */
+
+success.innerText =
+"Your advocate registration and photo have been submitted successfully. Our team will review the details.";
+
+success.style.display =
+"block";
+
+
+document
+.getElementById("advocateForm")
+.reset();
+
+
+selectedAdvocatePhoto = null;
+
+
+document
+.getElementById("photoPreview")
+.style.display =
+"none";
+
+
+document
+.getElementById("previewImage")
+.src = "";
+
+
+}
+
+catch(error){
+
+console.error(error);
+
+errorBox.innerText =
+error.message ||
+"Unable to submit registration.";
+
+errorBox.style.display =
+"block";
+
+}
+
+finally{
+
+submitButton.disabled = false;
+
+submitButton.innerText =
+"Submit Advocate Registration";
+
+}
 
 });
 
@@ -1272,58 +1980,90 @@ document.getElementById("advocateForm")
    ADMIN LOGIN
 ========================================= */
 
-document.getElementById("loginForm")
-.addEventListener("submit", async function(event){
+document
+.getElementById("loginForm")
+.addEventListener(
+"submit",
+async function(event){
 
-    event.preventDefault();
-
-    const errorBox =
-        document.getElementById("loginError");
-
-    errorBox.style.display = "none";
+event.preventDefault();
 
 
-    const email =
-        document.getElementById("login_email").value.trim();
-
-    const password =
-        document.getElementById("login_password").value;
-
-
-    const {data,error} =
-        await supabaseClient.auth.signInWithPassword({
-
-            email: email,
-            password: password
-
-        });
+const errorBox =
+document.getElementById(
+"loginError"
+);
 
 
-    if(error){
-
-        errorBox.innerText =
-        "Login failed: " + error.message;
-
-        errorBox.style.display = "block";
-
-        return;
-    }
+errorBox.style.display =
+"none";
 
 
-    document.getElementById("admin")
-        .style.display = "none";
-
-    document.getElementById("dashboard")
-        .style.display = "block";
-
-    document.getElementById("loggedUser")
-        .innerText = data.user.email;
-
-    document.getElementById("dashboard")
-        .scrollIntoView({behavior:"smooth"});
+const email =
+document
+.getElementById("login_email")
+.value
+.trim();
 
 
-    loadLeads();
+const password =
+document
+.getElementById("login_password")
+.value;
+
+
+const {data,error} =
+await supabaseClient
+.auth
+.signInWithPassword({
+
+email:email,
+
+password:password
+
+});
+
+
+if(error){
+
+errorBox.innerText =
+"Login failed: "
++ error.message;
+
+errorBox.style.display =
+"block";
+
+return;
+
+}
+
+
+document
+.getElementById("admin")
+.style.display =
+"none";
+
+
+document
+.getElementById("dashboard")
+.style.display =
+"block";
+
+
+document
+.getElementById("loggedUser")
+.innerText =
+data.user.email;
+
+
+document
+.getElementById("dashboard")
+.scrollIntoView({
+behavior:"smooth"
+});
+
+
+loadLeads();
 
 });
 
@@ -1334,31 +2074,37 @@ document.getElementById("loginForm")
 
 async function loadLeads(){
 
-    const {data,error} =
-        await supabaseClient
-        .from("client_requirements")
-        .select("*")
-        .order("created_at",{ascending:false});
+const {data,error} =
+await supabaseClient
+.from("client_requirements")
+.select("*")
+.order(
+"created_at",
+{ascending:false}
+);
 
 
-    if(error){
+if(error){
 
-        console.error(error);
+console.error(error);
 
-        alert(
-        "Unable to load CRM leads: " +
-        error.message
-        );
+alert(
+"Unable to load CRM leads: "
++ error.message
+);
 
-        return;
-    }
+return;
+
+}
 
 
-    allLeads = data || [];
+allLeads =
+data || [];
 
-    updateStats();
 
-    renderLeads();
+updateStats();
+
+renderLeads();
 
 }
 
@@ -1369,29 +2115,43 @@ async function loadLeads(){
 
 function updateStats(){
 
-    document.getElementById("totalLeads")
-        .innerText = allLeads.length;
+document
+.getElementById("totalLeads")
+.innerText =
+allLeads.length;
 
 
-    document.getElementById("newLeads")
-        .innerText =
-        allLeads.filter(
-            x => (x.status || "New") === "New"
-        ).length;
+document
+.getElementById("newLeads")
+.innerText =
+allLeads.filter(
+x =>
+(x.status || "New")
+===
+"New"
+).length;
 
 
-    document.getElementById("pendingPayments")
-        .innerText =
-        allLeads.filter(
-            x => (x.payment_status || "Pending") === "Pending"
-        ).length;
+document
+.getElementById("pendingPayments")
+.innerText =
+allLeads.filter(
+x =>
+(x.payment_status || "Pending")
+===
+"Pending"
+).length;
 
 
-    document.getElementById("highPriority")
-        .innerText =
-        allLeads.filter(
-            x => (x.priority || "Normal") === "High"
-        ).length;
+document
+.getElementById("highPriority")
+.innerText =
+allLeads.filter(
+x =>
+(x.priority || "Normal")
+===
+"High"
+).length;
 
 }
 
@@ -1402,199 +2162,298 @@ function updateStats(){
 
 function renderLeads(){
 
-    const search =
-        document.getElementById("searchLead")
-        .value.toLowerCase().trim();
-
-    const status =
-        document.getElementById("statusFilter")
-        .value;
-
-    const priority =
-        document.getElementById("priorityFilter")
-        .value;
+const search =
+document
+.getElementById("searchLead")
+.value
+.toLowerCase()
+.trim();
 
 
-    const filtered =
-        allLeads.filter(lead => {
-
-            const searchable = (
-
-                (lead.client_name || "") + " " +
-                (lead.mobile || "") + " " +
-                (lead.district_city || "") + " " +
-                (lead.state || "") + " " +
-                (lead.legal_matter || "") + " " +
-                (lead.brief_requirement || "")
-
-            ).toLowerCase();
+const status =
+document
+.getElementById("statusFilter")
+.value;
 
 
-            const searchMatch =
-                !search ||
-                searchable.includes(search);
+const priority =
+document
+.getElementById("priorityFilter")
+.value;
 
 
-            const statusMatch =
-                !status ||
-                (lead.status || "New") === status;
+const filtered =
+allLeads.filter(
+lead => {
+
+const searchable = (
+
+(lead.client_name || "")
++ " " +
+
+(lead.mobile || "")
++ " " +
+
+(lead.district_city || "")
++ " " +
+
+(lead.state || "")
++ " " +
+
+(lead.legal_matter || "")
++ " " +
+
+(lead.brief_requirement || "")
+
+).toLowerCase();
 
 
-            const priorityMatch =
-                !priority ||
-                (lead.priority || "Normal") === priority;
+const searchMatch =
+!search ||
+searchable.includes(search);
 
 
-            return (
-                searchMatch &&
-                statusMatch &&
-                priorityMatch
-            );
-
-        });
+const statusMatch =
+!status ||
+(lead.status || "New")
+===
+status;
 
 
-    document.getElementById("leadCount")
-        .innerText = filtered.length;
+const priorityMatch =
+!priority ||
+(lead.priority || "Normal")
+===
+priority;
 
 
-    const tbody =
-        document.getElementById("leadTableBody");
+return
+searchMatch &&
+statusMatch &&
+priorityMatch;
+
+});
 
 
-    if(filtered.length === 0){
-
-        tbody.innerHTML = `
-        <tr>
-        <td colspan="9" class="empty">
-        No leads found.
-        </td>
-        </tr>
-        `;
-
-        return;
-    }
+document
+.getElementById("leadCount")
+.innerText =
+filtered.length;
 
 
-    tbody.innerHTML =
-        filtered.map(lead => {
-
-            const date =
-                lead.created_at
-                ? new Date(lead.created_at)
-                    .toLocaleString("en-IN")
-                : "-";
+const tbody =
+document
+.getElementById("leadTableBody");
 
 
-            const currentStatus =
-                lead.status || "New";
+if(filtered.length === 0){
+
+tbody.innerHTML = `
+
+<tr>
+
+<td colspan="9"
+class="empty">
+
+No leads found.
+
+</td>
+
+</tr>
+
+`;
+
+return;
+
+}
 
 
-            const currentPriority =
-                lead.priority || "Normal";
+tbody.innerHTML =
+filtered
+.map(
+lead => {
+
+const date =
+lead.created_at
+?
+new Date(
+lead.created_at
+)
+.toLocaleString("en-IN")
+:
+"-";
 
 
-            const statusClass =
-                getStatusClass(currentStatus);
+const currentStatus =
+lead.status ||
+"New";
 
 
-            const priorityClass =
-                getPriorityClass(currentPriority);
+const currentPriority =
+lead.priority ||
+"Normal";
 
 
-            return `
+const statusClass =
+getStatusClass(
+currentStatus
+);
 
-            <tr>
 
-            <td>${escapeHtml(date)}</td>
+const priorityClass =
+getPriorityClass(
+currentPriority
+);
 
-            <td>
-                <strong>
-                ${escapeHtml(lead.client_name || "-")}
-                </strong>
-            </td>
 
-            <td>
-                ${escapeHtml(lead.mobile || "-")}
-            </td>
+return `
 
-            <td>
-                ${escapeHtml(lead.district_city || "-")}
-                <br>
-                <small>
-                ${escapeHtml(lead.state || "")}
-                </small>
-            </td>
+<tr>
 
-            <td>
-                ${escapeHtml(lead.legal_matter || "-")}
-            </td>
+<td>
+${escapeHtml(date)}
+</td>
 
-            <td>
-                <span class="status-badge ${statusClass}">
-                ${escapeHtml(currentStatus)}
-                </span>
-            </td>
 
-            <td>
-                ${escapeHtml(
-                    lead.payment_status || "Pending"
-                )}
-            </td>
+<td>
 
-            <td>
-                <span class="priority-badge ${priorityClass}">
-                ${escapeHtml(currentPriority)}
-                </span>
-            </td>
+<strong>
+${escapeHtml(
+lead.client_name || "-"
+)}
+</strong>
 
-            <td>
+</td>
 
-                <button
-                class="action-btn"
-                onclick="openEdit(${lead.id})">
-                Manage
-                </button>
 
-            </td>
+<td>
+${escapeHtml(
+lead.mobile || "-"
+)}
+</td>
 
-            </tr>
 
-            `;
+<td>
 
-        }).join("");
+${escapeHtml(
+lead.district_city || "-"
+)}
+
+<br>
+
+<small>
+${escapeHtml(
+lead.state || ""
+)}
+</small>
+
+</td>
+
+
+<td>
+${escapeHtml(
+lead.legal_matter || "-"
+)}
+</td>
+
+
+<td>
+
+<span
+class="status-badge
+${statusClass}">
+
+${escapeHtml(
+currentStatus
+)}
+
+</span>
+
+</td>
+
+
+<td>
+
+${escapeHtml(
+lead.payment_status ||
+"Pending"
+)}
+
+</td>
+
+
+<td>
+
+<span
+class="priority-badge
+${priorityClass}">
+
+${escapeHtml(
+currentPriority
+)}
+
+</span>
+
+</td>
+
+
+<td>
+
+<button
+class="action-btn"
+onclick="openEdit(${lead.id})">
+
+Manage
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+}
+)
+.join("");
 
 }
 
 
 /* =========================================
-   STATUS / PRIORITY CSS
+   STATUS CLASS
 ========================================= */
 
 function getStatusClass(status){
 
-    if(status === "Contacted")
-        return "status-contacted";
+if(status === "Contacted")
+return "status-contacted";
 
-    if(status === "In Progress")
-        return "status-progress";
+if(status === "In Progress")
+return "status-progress";
 
-    if(status === "Closed")
-        return "status-closed";
+if(status === "Closed")
+return "status-closed";
 
-    return "status-new";
+return "status-new";
+
 }
 
 
+/* =========================================
+   PRIORITY CLASS
+========================================= */
+
 function getPriorityClass(priority){
 
-    if(priority === "High")
-        return "priority-high";
+if(priority === "High")
+return "priority-high";
 
-    if(priority === "Low")
-        return "priority-low";
+if(priority === "Low")
+return "priority-low";
 
-    return "priority-normal";
+return "priority-normal";
+
 }
 
 
@@ -1604,47 +2463,91 @@ function getPriorityClass(priority){
 
 function openEdit(id){
 
-    const lead =
-        allLeads.find(x => Number(x.id) === Number(id));
+const lead =
+allLeads.find(
+x =>
+Number(x.id)
+===
+Number(id)
+);
 
 
-    if(!lead) return;
+if(!lead)
+return;
 
 
-    document.getElementById("edit_id")
-        .value = lead.id;
+document
+.getElementById("edit_id")
+.value =
+lead.id;
 
 
-    document.getElementById("edit_status")
-        .value = lead.status || "New";
+document
+.getElementById("edit_status")
+.value =
+lead.status ||
+"New";
 
 
-    document.getElementById("edit_payment_status")
-        .value = lead.payment_status || "Pending";
+document
+.getElementById(
+"edit_payment_status"
+)
+.value =
+lead.payment_status ||
+"Pending";
 
 
-    document.getElementById("edit_priority")
-        .value = lead.priority || "Normal";
+document
+.getElementById(
+"edit_priority"
+)
+.value =
+lead.priority ||
+"Normal";
 
 
-    document.getElementById("edit_assigned_advocate")
-        .value = lead.assigned_advocate || "";
+document
+.getElementById(
+"edit_assigned_advocate"
+)
+.value =
+lead.assigned_advocate ||
+"";
 
 
-    document.getElementById("edit_follow_up_date")
-        .value = lead.follow_up_date || "";
+document
+.getElementById(
+"edit_follow_up_date"
+)
+.value =
+lead.follow_up_date ||
+"";
 
 
-    document.getElementById("edit_internal_notes")
-        .value = lead.internal_notes || "";
+document
+.getElementById(
+"edit_internal_notes"
+)
+.value =
+lead.internal_notes ||
+"";
 
 
-    document.getElementById("updateError")
-        .style.display = "none";
+document
+.getElementById(
+"updateError"
+)
+.style.display =
+"none";
 
 
-    document.getElementById("editModal")
-        .style.display = "flex";
+document
+.getElementById(
+"editModal"
+)
+.style.display =
+"flex";
 
 }
 
@@ -1655,8 +2558,10 @@ function openEdit(id){
 
 function closeModal(){
 
-    document.getElementById("editModal")
-        .style.display = "none";
+document
+.getElementById("editModal")
+.style.display =
+"none";
 
 }
 
@@ -1667,62 +2572,94 @@ function closeModal(){
 
 async function saveLeadUpdate(){
 
-    const id =
-        document.getElementById("edit_id").value;
+const id =
+document
+.getElementById("edit_id")
+.value;
 
 
-    const updateData = {
+const updateData = {
 
-        status:
-        document.getElementById("edit_status").value,
+status:
+document
+.getElementById("edit_status")
+.value,
 
-        payment_status:
-        document.getElementById("edit_payment_status").value,
+payment_status:
+document
+.getElementById(
+"edit_payment_status"
+)
+.value,
 
-        priority:
-        document.getElementById("edit_priority").value,
+priority:
+document
+.getElementById(
+"edit_priority"
+)
+.value,
 
-        assigned_advocate:
-        document.getElementById("edit_assigned_advocate")
-        .value.trim(),
+assigned_advocate:
+document
+.getElementById(
+"edit_assigned_advocate"
+)
+.value
+.trim(),
 
-        follow_up_date:
-        document.getElementById("edit_follow_up_date")
-        .value || null,
+follow_up_date:
+document
+.getElementById(
+"edit_follow_up_date"
+)
+.value
+|| null,
 
-        internal_notes:
-        document.getElementById("edit_internal_notes")
-        .value.trim()
+internal_notes:
+document
+.getElementById(
+"edit_internal_notes"
+)
+.value
+.trim()
 
-    };
-
-
-    const {error} =
-        await supabaseClient
-        .from("client_requirements")
-        .update(updateData)
-        .eq("id", id);
-
-
-    if(error){
-
-        console.error(error);
-
-        const box =
-            document.getElementById("updateError");
-
-        box.innerText =
-            "Update failed: " + error.message;
-
-        box.style.display = "block";
-
-        return;
-    }
+};
 
 
-    closeModal();
+const {error} =
+await supabaseClient
+.from("client_requirements")
+.update(updateData)
+.eq("id",id);
 
-    await loadLeads();
+
+if(error){
+
+console.error(error);
+
+const box =
+document
+.getElementById(
+"updateError"
+);
+
+
+box.innerText =
+"Update failed: "
++ error.message;
+
+
+box.style.display =
+"block";
+
+return;
+
+}
+
+
+closeModal();
+
+await loadLeads();
 
 }
 
@@ -1733,45 +2670,67 @@ async function saveLeadUpdate(){
 
 async function logout(){
 
-    await supabaseClient.auth.signOut();
+await supabaseClient
+.auth
+.signOut();
 
-    document.getElementById("dashboard")
-        .style.display = "none";
 
-    document.getElementById("admin")
-        .style.display = "block";
+document
+.getElementById("dashboard")
+.style.display =
+"none";
 
-    document.getElementById("admin")
-        .scrollIntoView({behavior:"smooth"});
+
+document
+.getElementById("admin")
+.style.display =
+"block";
+
+
+document
+.getElementById("admin")
+.scrollIntoView({
+behavior:"smooth"
+});
 
 }
 
 
 /* =========================================
-   CHECK EXISTING SESSION
+   CHECK SESSION
 ========================================= */
 
 async function checkSession(){
 
-    const {data} =
-        await supabaseClient.auth.getSession();
+const {data} =
+await supabaseClient
+.auth
+.getSession();
 
 
-    if(data.session){
+if(data.session){
 
-        document.getElementById("admin")
-            .style.display = "none";
+document
+.getElementById("admin")
+.style.display =
+"none";
 
-        document.getElementById("dashboard")
-            .style.display = "block";
 
-        document.getElementById("loggedUser")
-            .innerText =
-            data.session.user.email;
+document
+.getElementById("dashboard")
+.style.display =
+"block";
 
-        loadLeads();
 
-    }
+document
+.getElementById("loggedUser")
+.innerText =
+data.session.user.email;
+
+
+loadLeads();
+
+}
 
 }
 
@@ -1782,12 +2741,66 @@ async function checkSession(){
 
 function escapeHtml(value){
 
-    return String(value)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+return String(value)
+
+.replaceAll(
+"&",
+"&amp;"
+)
+
+.replaceAll(
+"<",
+"&lt;"
+)
+
+.replaceAll(
+">",
+"&gt;"
+)
+
+.replaceAll(
+'"',
+"&quot;"
+)
+
+.replaceAll(
+"'",
+"&#039;"
+);
+
+}
+
+
+/* =========================================
+   ADMIN LOGIN HASH
+========================================= */
+
+function showAdminLogin(){
+
+document
+.getElementById("admin")
+.style.display =
+"block";
+
+}
+
+
+window.addEventListener(
+"hashchange",
+function(){
+
+if(location.hash === "#admin"){
+
+showAdminLogin();
+
+}
+
+});
+
+
+if(location.hash === "#admin"){
+
+showAdminLogin();
 
 }
 
@@ -1797,30 +2810,6 @@ function escapeHtml(value){
 ========================================= */
 
 checkSession();
-
-
-/* =========================================
-   SHOW ADMIN LOGIN WHEN #admin IS OPENED
-========================================= */
-
-function showAdminLogin(){
-
-    document.getElementById("admin")
-        .style.display = "block";
-
-}
-
-window.addEventListener("hashchange",function(){
-
-    if(location.hash === "#admin"){
-        showAdminLogin();
-    }
-
-});
-
-if(location.hash === "#admin"){
-    showAdminLogin();
-}
 
 </script>
 
