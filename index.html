@@ -2857,46 +2857,142 @@ async function updateAdvocateVerification(newStatus){
         document.getElementById("advocateUpdateError");
 
     errorBox.style.display = "none";
+    errorBox.innerText = "";
 
     const notes =
         document.getElementById("advocateAdminNotes").value.trim();
 
-    const updateData = {
-        status:newStatus,
-        verification_status:newStatus,
-        admin_notes:notes
-    };
+    try {
 
-    if(newStatus === "Approved"){
-        updateData.public_profile = true;
-        updateData.approved_at = new Date().toISOString();
-    }
+        /* =========================================
+           GET CURRENT ADVOCATE RECORD
+        ========================================= */
 
-    if(newStatus === "Rejected"){
-        updateData.public_profile = false;
-        updateData.approved_at = null;
-    }
+        const { data: advocate, error: fetchError } =
+            await supabaseClient
+                .from("advocate_registrations")
+                .select("*")
+                .eq("id", selectedAdvocateId)
+                .single();
 
-    const {error} = await supabaseClient
-        .from("advocate_registrations")
-        .update(updateData)
-        .eq("id",selectedAdvocateId);
+        if(fetchError) throw fetchError;
 
-    if(error){
+        /* =========================================
+           APPROVE
+           pending/photo -> approved/photo
+        ========================================= */
 
-        console.error(error);
+        if(newStatus === "Approved"){
+
+            let finalPhotoUrl =
+                advocate.photo_url ||
+                advocate.profile_photo_url ||
+                "";
+
+            if(finalPhotoUrl){
+
+                const publicMarker =
+                    "/storage/v1/object/public/advocate-photo/";
+
+                const markerIndex =
+                    finalPhotoUrl.indexOf(publicMarker);
+
+                if(markerIndex !== -1){
+
+                    const currentPath =
+                        finalPhotoUrl.substring(
+                            markerIndex + publicMarker.length
+                        );
+
+                    if(currentPath.startsWith("pending/")){
+
+                        const fileName =
+                            currentPath.substring("pending/".length);
+
+                        const approvedPath =
+                            "approved/" + fileName;
+
+                        const { error: moveError } =
+                            await supabaseClient
+                                .storage
+                                .from("advocate-photo")
+                                .move(
+                                    currentPath,
+                                    approvedPath
+                                );
+
+                        if(moveError) throw moveError;
+
+                        const { data: publicUrlData } =
+                            supabaseClient
+                                .storage
+                                .from("advocate-photo")
+                                .getPublicUrl(approvedPath);
+
+                        finalPhotoUrl =
+                            publicUrlData?.publicUrl || "";
+                    }
+                }
+            }
+
+            const { error: updateError } =
+                await supabaseClient
+                    .from("advocate_registrations")
+                    .update({
+                        status: "Approved",
+                        verification_status: "Approved",
+                        admin_notes: notes,
+                        public_profile: true,
+                        approved_at: new Date().toISOString(),
+                        photo_url: finalPhotoUrl || null
+                    })
+                    .eq("id", selectedAdvocateId);
+
+            if(updateError) throw updateError;
+
+            alert(
+                "Advocate approved successfully. The profile is now eligible for the Verified Legal Network."
+            );
+        }
+
+        /* =========================================
+           REJECT
+           ========================================= */
+
+        if(newStatus === "Rejected"){
+
+            const { error: updateError } =
+                await supabaseClient
+                    .from("advocate_registrations")
+                    .update({
+                        status: "Rejected",
+                        verification_status: "Rejected",
+                        admin_notes: notes,
+                        public_profile: false,
+                        approved_at: null
+                    })
+                    .eq("id", selectedAdvocateId);
+
+            if(updateError) throw updateError;
+
+            alert(
+                "Advocate application rejected. The profile will remain hidden from the public network."
+            );
+        }
+
+        closeAdvocateModal();
+        await loadAdvocates();
+
+    } catch(error){
+
+        console.error("Advocate verification error:", error);
 
         errorBox.innerText =
-            "Update failed: " + error.message;
+            "Update failed: " +
+            (error?.message || "Unknown error");
 
         errorBox.style.display = "block";
-
-        return;
     }
-
-    closeAdvocateModal();
-
-    await loadAdvocates();
 }
 
 async function approveAdvocate(){
