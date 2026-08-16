@@ -683,8 +683,10 @@ INSTANT <span>LEGAL SERVICES</span>
 <nav>
 <a href="#services">Services</a>
 <a href="#network">Network</a>
+<a href="#about">About Us</a>
 <a href="#client">Client</a>
 <a href="#advocate">Advocate</a>
+<a href="#client-access">Client Access</a>
 <a href="#admin">Admin</a>
 </nav>
 
@@ -804,6 +806,77 @@ Become a Network Advocate
 
 </section>
 
+
+<!-- ABOUT INSTANT LEGAL SERVICES -->
+<section class="section" id="about">
+<div class="form-box" style="max-width:1000px;">
+<h2>About Instant Legal Services</h2>
+
+<p class="intro">
+<strong>Instant Legal Services</strong> is a legal assistance and professional
+legal network platform established with the objective of facilitating access
+to appropriate legal professionals across India.
+</p>
+
+<p style="color:#aeb4bf;margin-bottom:18px;">
+Through a structured network of advocates and legal professionals associated
+with different jurisdictions, courts and practice areas, the platform aims to
+connect individuals, families, businesses and organisations with suitable
+legal assistance based on the nature and location of their legal requirements.
+</p>
+
+<p style="color:#aeb4bf;margin-bottom:18px;">
+Our network encompasses legal assistance across a wide range of practice areas,
+including <strong>Criminal Law, Bail &amp; Anticipatory Bail, NDPS matters,
+Cyber Crime, Matrimonial &amp; Family Law, Civil &amp; Property Disputes,
+Consumer Matters, Banking &amp; Financial Disputes, Cheque Bounce &amp;
+Negotiable Instruments matters, Motor Vehicle &amp; Accident Claims,
+Labour &amp; Employment Law, Commercial &amp; Corporate Law, Contractual
+&amp; Business Disputes, Insolvency &amp; Bankruptcy matters, Taxation &amp;
+GST-related matters, Intellectual Property Rights, Constitutional &amp; Writ
+matters, Service Matters, Arbitration &amp; Alternative Dispute Resolution,
+Real Estate matters, Documentation &amp; Legal Drafting, Court Marriage &amp;
+Registration</strong>, and other specialised areas of law.
+</p>
+
+<p style="color:#aeb4bf;margin-bottom:18px;">
+Where a matter requires specialised expertise or representation before a
+particular court, tribunal, authority or forum, the platform facilitates
+coordination with an appropriate professional from its network, subject to
+professional availability, jurisdiction, verification and applicable law.
+</p>
+
+<h3 style="color:#e5a93d;margin:24px 0 10px;">Our Approach</h3>
+<p style="color:#fff;font-size:18px;font-weight:bold;margin-bottom:12px;">
+Right Professional &nbsp;•&nbsp; Right Jurisdiction &nbsp;•&nbsp; Right Legal Assistance
+</p>
+
+<p style="color:#aeb4bf;margin-bottom:18px;">
+We focus on structured coordination, professional communication, matter-based
+allocation and efficient client support while maintaining appropriate
+confidentiality and respecting the professional and ethical obligations
+applicable to legal practitioners.
+</p>
+
+<h3 style="color:#e5a93d;margin:24px 0 10px;">Our Vision</h3>
+<p style="color:#aeb4bf;margin-bottom:18px;">
+Our vision is to develop a <strong>reliable, professionally coordinated and
+technology-enabled legal network across India</strong>, making it easier for
+people to identify and approach suitable legal professionals for their legal
+requirements.
+</p>
+
+<div class="note" style="text-align:left;margin-top:25px;">
+<strong>Important Legal Disclaimer:</strong>
+Instant Legal Services is a legal assistance and professional networking
+platform. Registration or listing of any advocate or legal professional on
+the platform does not, by itself, constitute an endorsement, certification,
+guarantee of outcome or assurance of professional performance. Legal services
+are provided by independent legal professionals in accordance with applicable
+laws, professional standards and the requirements of the concerned matter.
+</div>
+</div>
+</section>
 
 <!-- CLIENT FORM -->
 
@@ -1524,10 +1597,36 @@ id="edit_id">
 
 <label>Assigned Advocate</label>
 
-<input
-type="text"
-id="edit_assigned_advocate"
-placeholder="Advocate name">
+<select id="edit_assigned_advocate_id">
+<option value="">Select approved advocate</option>
+</select>
+
+<input type="hidden" id="edit_assigned_advocate">
+
+<div class="release-box">
+    <label>
+        <input type="checkbox" id="edit_release_advocate_contact"
+               style="width:auto;margin-right:8px;">
+        Release advocate Call/WhatsApp number to this assigned client
+    </label>
+
+    <div id="contactReleaseStatus" class="note">
+        Contact is currently locked.
+    </div>
+
+    <button type="button" class="copy-btn"
+            onclick="generateClientAccess()">
+        Generate / Regenerate Private Client Access
+    </button>
+
+    <div id="accessLinkBox" class="access-link-box">
+        <strong>Private client access link</strong>
+        <input type="text" id="clientAccessLink" readonly>
+        <button type="button" class="copy-btn" onclick="copyClientAccessLink()">
+            Copy Private Link
+        </button>
+    </div>
+</div>
 
 
 <label>Follow-up Date</label>
@@ -1563,12 +1662,56 @@ class="error">
 </div>
 
 
+
+<!-- PUBLIC CONTACT -->
+<div class="public-contact">
+    <span class="public-contact-title">Instant Legal Services — Official Contact</span>
+    <a class="contact-btn contact-call" href="tel:8445609837">📞 Call 8445609837</a>
+    <a class="contact-btn contact-wa" href="https://wa.me/918445609837" target="_blank" rel="noopener">💬 WhatsApp</a>
+</div>
+
+<!-- CLIENT ACCESS: ONLY FOR CLIENTS WHO RECEIVE A PRIVATE ACCESS CODE -->
+<section class="section action-section" id="client-access">
+    <div class="form-box">
+        <h2>Assigned Advocate Contact</h2>
+        <p class="intro">
+            If Instant Legal Services has assigned an advocate to your matter
+            and has shared a private access code with you, enter it below.
+        </p>
+
+        <form id="clientAccessForm">
+            <label>Private Access Code</label>
+            <input type="text" id="client_access_token"
+                   required autocomplete="off"
+                   placeholder="Enter your private access code">
+
+            <label>Registered Mobile Number</label>
+            <input type="tel" id="client_access_mobile"
+                   required pattern="[0-9]{10}" maxlength="10"
+                   placeholder="10 digit mobile number">
+
+            <button class="btn primary full" type="submit">
+                View Assigned Advocate Contact
+            </button>
+
+            <div id="clientAccessError" class="error"></div>
+            <div id="clientAccessResult" class="client-result"></div>
+        </form>
+
+        <p class="note">
+            Advocate contact details are not publicly displayed. Contact information
+            is released only by Instant Legal Services for the assigned client.
+        </p>
+    </div>
+</section>
+
 <footer>
 
 © 2026 Instant Legal Services.<br>
 
 National Legal Network |
-Legal Assistance Across India
+Legal Assistance Across India<br>
+Official Call / WhatsApp: <strong>8445609837</strong>
 
 </footer>
 
@@ -2902,97 +3045,95 @@ return "priority-normal";
    OPEN EDIT MODAL
 ========================================= */
 
+
+function populateAdvocateAssignment(selectedId = ""){
+    const select = document.getElementById("edit_assigned_advocate_id");
+    if(!select) return;
+
+    const approved = (allAdvocates || []).filter(a =>
+        (a.verification_status || a.status || "Pending") === "Approved"
+    );
+
+    select.innerHTML =
+        `<option value="">Select approved advocate</option>` +
+        approved.map(a => `
+            <option value="${Number(a.id)}"
+                    data-name="${escapeHtml(a.advocate_name || "")}">
+                ${escapeHtml(a.advocate_name || "Unnamed")} —
+                ${escapeHtml(a.district_court || "")}
+                ${a.primary_practice_area ? " | " + escapeHtml(a.primary_practice_area) : ""}
+            </option>
+        `).join("");
+
+    select.value = selectedId ? String(selectedId) : "";
+}
+
+function syncAssignedAdvocateName(){
+    const select = document.getElementById("edit_assigned_advocate_id");
+    const hidden = document.getElementById("edit_assigned_advocate");
+    if(!select || !hidden) return;
+
+    const option = select.options[select.selectedIndex];
+    hidden.value = option && select.value
+        ? (option.getAttribute("data-name") || option.textContent.trim())
+        : "";
+}
+
 function openEdit(id){
 
 const lead =
 allLeads.find(
-x =>
-Number(x.id)
-===
-Number(id)
+x => Number(x.id) === Number(id)
 );
 
+if(!lead) return;
 
-if(!lead)
-return;
+document.getElementById("edit_id").value = lead.id;
 
+document.getElementById("edit_status").value =
+lead.status || "New";
 
-document
-.getElementById("edit_id")
-.value =
-lead.id;
+document.getElementById("edit_payment_status").value =
+lead.payment_status || "Pending";
 
+document.getElementById("edit_priority").value =
+lead.priority || "Normal";
 
-document
-.getElementById("edit_status")
-.value =
-lead.status ||
-"New";
+populateAdvocateAssignment(lead.assigned_advocate_id || "");
+document.getElementById("edit_assigned_advocate").value =
+lead.assigned_advocate || "";
 
+document.getElementById("edit_release_advocate_contact").checked =
+Boolean(lead.release_advocate_contact);
 
-document
-.getElementById(
-"edit_payment_status"
-)
-.value =
-lead.payment_status ||
-"Pending";
+document.getElementById("contactReleaseStatus").innerText =
+lead.release_advocate_contact
+? "Contact is RELEASED for this client."
+: "Contact is currently LOCKED.";
 
+document.getElementById("edit_follow_up_date").value =
+lead.follow_up_date || "";
 
-document
-.getElementById(
-"edit_priority"
-)
-.value =
-lead.priority ||
-"Normal";
+document.getElementById("edit_internal_notes").value =
+lead.internal_notes || "";
 
+const accessBox = document.getElementById("accessLinkBox");
+const accessInput = document.getElementById("clientAccessLink");
 
-document
-.getElementById(
-"edit_assigned_advocate"
-)
-.value =
-lead.assigned_advocate ||
-"";
-
-
-document
-.getElementById(
-"edit_follow_up_date"
-)
-.value =
-lead.follow_up_date ||
-"";
-
-
-document
-.getElementById(
-"edit_internal_notes"
-)
-.value =
-lead.internal_notes ||
-"";
-
-
-document
-.getElementById(
-"updateError"
-)
-.style.display =
-"none";
-
-
-document
-.getElementById(
-"editModal"
-)
-.style.display =
-"flex";
-
+if(lead.client_access_token){
+    accessInput.value =
+        buildClientAccessLink(lead.client_access_token);
+    accessBox.style.display = "block";
+}else{
+    accessInput.value = "";
+    accessBox.style.display = "none";
 }
 
+document.getElementById("updateError").style.display = "none";
 
+document.getElementById("editModal").style.display = "flex";
+
+}
 /* =========================================
    CLOSE MODAL
 ========================================= */
@@ -3014,58 +3155,47 @@ document
 async function saveLeadUpdate(){
 
 const id =
-document
-.getElementById("edit_id")
-.value;
+document.getElementById("edit_id").value;
 
+syncAssignedAdvocateName();
+
+const advocateId =
+document.getElementById("edit_assigned_advocate_id").value || null;
+
+const releaseContact =
+document.getElementById("edit_release_advocate_contact").checked;
 
 const updateData = {
 
 status:
-document
-.getElementById("edit_status")
-.value,
+document.getElementById("edit_status").value,
 
 payment_status:
-document
-.getElementById(
-"edit_payment_status"
-)
-.value,
+document.getElementById("edit_payment_status").value,
 
 priority:
-document
-.getElementById(
-"edit_priority"
-)
-.value,
+document.getElementById("edit_priority").value,
 
 assigned_advocate:
-document
-.getElementById(
-"edit_assigned_advocate"
-)
-.value
-.trim(),
+document.getElementById("edit_assigned_advocate").value.trim(),
+
+assigned_advocate_id:
+advocateId,
+
+release_advocate_contact:
+releaseContact,
+
+contact_released_at:
+releaseContact ? new Date().toISOString() : null,
 
 follow_up_date:
-document
-.getElementById(
-"edit_follow_up_date"
-)
-.value
+document.getElementById("edit_follow_up_date").value
 || null,
 
 internal_notes:
-document
-.getElementById(
-"edit_internal_notes"
-)
-.value
-.trim()
+document.getElementById("edit_internal_notes").value.trim()
 
 };
-
 
 const {error} =
 await supabaseClient
@@ -3073,30 +3203,25 @@ await supabaseClient
 .update(updateData)
 .eq("id",id);
 
-
 if(error){
 
 console.error(error);
 
 const box =
-document
-.getElementById(
-"updateError"
-);
-
+document.getElementById("updateError");
 
 box.innerText =
-"Update failed: "
-+ error.message;
+"Update failed: " + error.message;
 
-
-box.style.display =
-"block";
+box.style.display = "block";
 
 return;
-
 }
 
+document.getElementById("contactReleaseStatus").innerText =
+releaseContact
+? "Contact is RELEASED for this client."
+: "Contact is currently LOCKED.";
 
 closeModal();
 
@@ -3104,6 +3229,200 @@ await loadLeads();
 
 }
 
+
+/* =========================================
+   ADVOCATE CONTACT RELEASE / CLIENT ACCESS
+========================================= */
+
+function buildClientAccessLink(token){
+    const url = new URL(window.location.href);
+    url.hash = "client-access";
+    return url.toString() + (url.toString().includes("?") ? "&" : "?") +
+           "access=" + encodeURIComponent(token);
+}
+
+async function generateClientAccess(){
+
+    const id =
+        document.getElementById("edit_id").value;
+
+    if(!id) return;
+
+    const selectedAdvocateId =
+        document.getElementById("edit_assigned_advocate_id").value;
+
+    if(!selectedAdvocateId){
+        alert("Please assign an approved advocate first.");
+        return;
+    }
+
+    const token =
+        (crypto.randomUUID ? crypto.randomUUID() : (
+            Date.now().toString(36) + "-" +
+            Math.random().toString(36).slice(2) + "-" +
+            Math.random().toString(36).slice(2)
+        )).replaceAll("-","");
+
+    const expires =
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const {error} =
+        await supabaseClient
+        .from("client_requirements")
+        .update({
+            client_access_token: token,
+            client_access_created_at: new Date().toISOString(),
+            client_access_expires_at: expires
+        })
+        .eq("id",id);
+
+    if(error){
+        const box = document.getElementById("updateError");
+        box.innerText = "Unable to generate access: " + error.message;
+        box.style.display = "block";
+        return;
+    }
+
+    document.getElementById("clientAccessLink").value =
+        buildClientAccessLink(token);
+
+    document.getElementById("accessLinkBox").style.display = "block";
+
+    alert("Private client access generated. Share this link only with the assigned client.");
+}
+
+async function copyClientAccessLink(){
+
+    const input =
+        document.getElementById("clientAccessLink");
+
+    if(!input.value) return;
+
+    try{
+        await navigator.clipboard.writeText(input.value);
+        alert("Private client link copied.");
+    }catch(e){
+        input.select();
+        document.execCommand("copy");
+        alert("Private client link copied.");
+    }
+}
+
+async function loadClientContact(){
+
+    const errorBox =
+        document.getElementById("clientAccessError");
+
+    const resultBox =
+        document.getElementById("clientAccessResult");
+
+    errorBox.style.display = "none";
+    resultBox.style.display = "none";
+    resultBox.innerHTML = "";
+
+    const token =
+        document.getElementById("client_access_token").value.trim();
+
+    const mobile =
+        document.getElementById("client_access_mobile").value.trim();
+
+    if(!token || !/^[0-9]{10}$/.test(mobile)){
+        errorBox.innerText =
+            "Please enter the private access code and registered 10 digit mobile number.";
+        errorBox.style.display = "block";
+        return;
+    }
+
+    const {data,error} =
+        await supabaseClient.rpc(
+            "get_client_assigned_advocate",
+            {
+                p_access_token: token,
+                p_mobile: mobile
+            }
+        );
+
+    if(error){
+        console.error(error);
+        errorBox.innerText =
+            "Unable to verify access. Please contact Instant Legal Services on 8445609837.";
+        errorBox.style.display = "block";
+        return;
+    }
+
+    if(!data || !data.length){
+        errorBox.innerText =
+            "Access denied or contact has not been released by Instant Legal Services.";
+        errorBox.style.display = "block";
+        return;
+    }
+
+    const advocate = data[0];
+
+    resultBox.innerHTML = `
+        <h3>Assigned Advocate</h3>
+
+        <div class="contact-card">
+            <strong>Advocate</strong>
+            <span>${escapeHtml(advocate.advocate_name || "-")}</span>
+        </div>
+
+        <div class="contact-card">
+            <strong>District / Court</strong>
+            <span>${escapeHtml(advocate.district_court || "-")}</span>
+        </div>
+
+        <div class="contact-card">
+            <strong>Practice Area</strong>
+            <span>${escapeHtml(advocate.primary_practice_area || "-")}</span>
+        </div>
+
+        <div class="contact-card">
+            <strong>Contact Number</strong>
+            <span>${escapeHtml(advocate.mobile || "-")}</span>
+        </div>
+
+        <div class="client-contact-actions">
+            <a class="contact-btn contact-call"
+               href="tel:${encodeURIComponent(advocate.mobile || "")}">
+               📞 Call Advocate
+            </a>
+
+            <a class="contact-btn contact-wa"
+               href="https://wa.me/91${encodeURIComponent(advocate.mobile || "")}"
+               target="_blank" rel="noopener">
+               💬 WhatsApp Advocate
+            </a>
+        </div>
+    `;
+
+    resultBox.style.display = "block";
+}
+
+document
+.getElementById("clientAccessForm")
+.addEventListener("submit", function(event){
+    event.preventDefault();
+    loadClientContact();
+});
+
+function checkAccessQuery(){
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("access");
+
+    if(token){
+        const input = document.getElementById("client_access_token");
+        if(input) input.value = token;
+
+        const section = document.getElementById("client-access");
+        if(section){
+            setTimeout(() => {
+                section.scrollIntoView({behavior:"smooth"});
+            }, 150);
+        }
+    }
+}
 
 /* =========================================
    LOGOUT
@@ -3252,6 +3571,13 @@ showAdminLogin();
 ========================================= */
 
 checkSession();
+checkAccessQuery();
+
+document.addEventListener("change", function(event){
+    if(event.target && event.target.id === "edit_assigned_advocate_id"){
+        syncAssignedAdvocateName();
+    }
+});
 
 </script>
 
