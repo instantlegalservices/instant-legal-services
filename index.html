@@ -669,6 +669,235 @@ footer{
     .advocate-admin-title{align-items:flex-start;flex-direction:column;}
 }
 
+
+/* =========================================================
+   INSTANT LEGAL SERVICES — PREMIUM UI OVERRIDES
+   Existing CRM/Supabase functionality intentionally preserved.
+========================================================= */
+:root{
+  --gold:#d7a84f;
+  --gold2:#f1c56a;
+  --ink:#07101c;
+  --navy:#0a1422;
+  --navy2:#0e1b2c;
+  --panel:rgba(18,31,48,.82);
+  --line:rgba(255,255,255,.10);
+  --muted:#aab6c6;
+  --white:#f8fafc;
+  --green:#35c98a;
+  --red:#ff6b6b;
+  --shadow:0 22px 70px rgba(0,0,0,.34);
+}
+html{scroll-behavior:smooth;}
+body{
+  background:
+    radial-gradient(circle at 8% 5%,rgba(215,168,79,.10),transparent 28%),
+    radial-gradient(circle at 92% 16%,rgba(57,105,168,.16),transparent 30%),
+    linear-gradient(135deg,#050b13,#0a1422 48%,#070d16);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;z-index:-1;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:42px 42px;
+}
+header{
+  background:rgba(5,12,21,.88);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  padding:14px 5%;
+  border-bottom:1px solid var(--line);
+  box-shadow:0 8px 30px rgba(0,0,0,.20);
+}
+.logo{
+  letter-spacing:.4px;
+  font-size:20px;
+  line-height:1.15;
+}
+.logo:before{
+  content:"ILS";
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;margin-right:10px;border-radius:10px;
+  color:#0a1422;background:linear-gradient(135deg,var(--gold2),var(--gold));
+  font-size:11px;font-weight:900;vertical-align:middle;
+  box-shadow:0 8px 25px rgba(215,168,79,.22);
+}
+.logo span{color:var(--gold2);}
+nav{display:flex;align-items:center;gap:4px;}
+nav a{
+  margin:0;padding:9px 11px;border-radius:9px;
+  color:#dbe4ef;font-weight:600;transition:.2s;
+}
+nav a:hover{color:#fff;background:rgba(255,255,255,.07);}
+.mobile-menu-btn{display:none;}
+
+.hero{
+  position:relative;overflow:hidden;text-align:left;
+  min-height:620px;padding:100px 7%;
+  display:flex;align-items:center;
+  background:
+    linear-gradient(90deg,rgba(5,12,21,.98) 0%,rgba(5,12,21,.86) 46%,rgba(5,12,21,.38) 100%),
+    url("https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1800&q=85") center/cover;
+}
+.hero:after{
+  content:"";position:absolute;width:420px;height:420px;right:-120px;bottom:-180px;
+  border:1px solid rgba(215,168,79,.28);border-radius:50%;
+  box-shadow:0 0 0 55px rgba(215,168,79,.025),0 0 0 110px rgba(215,168,79,.018);
+}
+.hero > *{position:relative;z-index:2;}
+.hero h1{
+  max-width:780px;font-size:clamp(42px,6vw,76px);line-height:1.03;
+  letter-spacing:-2.5px;font-weight:800;
+}
+.hero h1 span{
+  display:block;
+  background:linear-gradient(90deg,#fff,var(--gold2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p{
+  max-width:690px;margin:25px 0;color:#c5d0dc;font-size:18px;line-height:1.8;
+}
+.hero .buttons{margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;}
+.btn{
+  padding:14px 21px;border-radius:11px;border:1px solid transparent;
+  transition:transform .2s,box-shadow .2s,background .2s;
+}
+.btn:hover{transform:translateY(-2px);}
+.primary{
+  color:#0a1422;background:linear-gradient(135deg,var(--gold2),var(--gold));
+  box-shadow:0 12px 30px rgba(215,168,79,.20);
+}
+.secondary{
+  color:#fff;border-color:rgba(255,255,255,.18);
+  background:rgba(255,255,255,.05);backdrop-filter:blur(8px);
+}
+.section{padding:88px 6%;}
+.section h2{
+  font-size:clamp(28px,4vw,42px);letter-spacing:-1px;
+}
+.section > h2:after{
+  content:"";display:block;width:54px;height:3px;margin:15px auto 0;
+  border-radius:10px;background:linear-gradient(90deg,var(--gold),transparent);
+}
+.cards{max-width:1180px;gap:18px;}
+.card{
+  position:relative;overflow:hidden;min-height:170px;text-align:left;
+  background:linear-gradient(145deg,rgba(20,35,53,.86),rgba(10,20,33,.90));
+  border:1px solid var(--line);border-radius:18px;padding:25px;
+  box-shadow:0 12px 40px rgba(0,0,0,.14);
+  transition:transform .25s,border-color .25s,box-shadow .25s;
+}
+.card:before{
+  content:"";position:absolute;top:0;left:0;width:100%;height:2px;
+  background:linear-gradient(90deg,var(--gold),transparent);
+  opacity:.8;
+}
+.card:hover{
+  transform:translateY(-5px);border-color:rgba(215,168,79,.34);
+  box-shadow:0 22px 50px rgba(0,0,0,.25);
+}
+.card h3{font-size:18px;color:var(--gold2);margin-bottom:9px;}
+.card p{font-size:14px;line-height:1.75;}
+.action-section,.network{background:rgba(9,19,31,.60);}
+.network{position:relative;overflow:hidden;}
+.network:before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 40%,rgba(215,168,79,.10),transparent 38%);
+  pointer-events:none;
+}
+.network > *{position:relative;}
+.network-text{font-size:17px;line-height:1.9;max-width:760px;}
+.form-box,.login-box{
+  background:linear-gradient(145deg,rgba(19,34,52,.90),rgba(8,18,30,.92));
+  border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);
+  padding:34px;
+}
+.form-box h2{font-size:30px;}
+.form-box .intro{line-height:1.7;}
+label{color:#dce5ef;font-size:13px;letter-spacing:.2px;}
+input,select,textarea{
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(3,10,18,.72);border-radius:10px;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--gold);box-shadow:0 0 0 3px rgba(215,168,79,.10);
+  background:rgba(3,10,18,.9);
+}
+.note{line-height:1.6;}
+.public-contact{
+  position:fixed;right:20px;bottom:20px;z-index:450;
+  display:flex;gap:8px;padding:8px;border:1px solid var(--line);
+  border-radius:14px;background:rgba(5,12,21,.88);backdrop-filter:blur(16px);
+  box-shadow:0 15px 45px rgba(0,0,0,.32);
+}
+.contact-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  text-decoration:none;color:#fff;padding:10px 13px;border-radius:9px;font-weight:700;font-size:12px;
+}
+.contact-call{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);}
+.contact-wa{background:#178a61;}
+.client-result,.contact-card{
+  border:1px solid var(--line);background:rgba(3,10,18,.55);border-radius:12px;padding:14px;
+}
+.client-result h3{color:var(--gold2);margin-bottom:15px;}
+.dashboard{background:transparent;padding:55px 4%;}
+.stat,.leads-box,.advocate-admin-box{
+  background:linear-gradient(145deg,rgba(18,32,49,.90),rgba(8,18,30,.92));
+  border:1px solid var(--line);box-shadow:0 16px 45px rgba(0,0,0,.20);
+}
+.stat{border-radius:16px;}
+.stat-title{font-weight:600;}
+.stat-number{color:#fff;}
+th{background:rgba(3,10,18,.75);}
+td{border-top-color:var(--line);}
+.action-btn,.advocate-action-btn{border-radius:8px;}
+.modal{background:rgba(0,5,12,.82);backdrop-filter:blur(8px);}
+.modal-box{background:#0d1a2a;border-color:var(--line);box-shadow:var(--shadow);}
+footer{
+  border-top:1px solid var(--line);background:#050b13;
+  padding:45px 25px 100px;line-height:2;
+}
+footer strong{color:var(--gold2);}
+.section[id]{scroll-margin-top:85px;}
+.release-box{
+  margin-top:18px;padding:15px;border-radius:12px;
+  border:1px solid rgba(215,168,79,.18);background:rgba(215,168,79,.04);
+}
+.copy-btn{
+  background:rgba(255,255,255,.07)!important;color:#fff!important;
+  border:1px solid rgba(255,255,255,.12)!important;border-radius:8px!important;
+}
+.access-link-box{
+  margin-top:12px;padding:12px;border-radius:10px;
+  background:rgba(0,0,0,.18);border:1px solid var(--line);
+}
+@media(max-width:900px){
+  nav{display:none;position:absolute;top:62px;left:5%;right:5%;padding:10px;
+    flex-direction:column;align-items:stretch;background:rgba(6,14,24,.97);
+    border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);}
+  nav.open{display:flex;}
+  nav a{margin:0;padding:12px;}
+  .mobile-menu-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:42px;height:42px;border-radius:10px;border:1px solid var(--line);
+    background:rgba(255,255,255,.05);color:#fff;font-size:20px;cursor:pointer;
+  }
+  header{position:sticky;}
+  .hero{min-height:600px;padding:85px 7%;}
+}
+@media(max-width:600px){
+  .hero{min-height:560px;background-position:62% center;padding:75px 6%;}
+  .hero h1{font-size:43px;letter-spacing:-1.7px;}
+  .hero p{font-size:16px;}
+  .section{padding:68px 5%;}
+  .form-box,.login-box{padding:23px;border-radius:16px;}
+  .public-contact{left:12px;right:12px;bottom:12px;justify-content:stretch;}
+  .public-contact .contact-btn{flex:1;}
+  .public-contact-title{display:none;}
+  footer{padding-bottom:105px;}
+}
+
 </style>
 </head>
 
@@ -680,48 +909,43 @@ footer{
 INSTANT <span>LEGAL SERVICES</span>
 </div>
 
-<nav>
+<nav id="mainNav">
 <a href="#services">Services</a>
 <a href="#network">Network</a>
 <a href="#about">About Us</a>
-<a href="#client">Client</a>
-<a href="#advocate">Advocate</a>
+<a href="#client">Find Legal Help</a>
+<a href="#advocate">Join Network</a>
 <a href="#client-access">Client Access</a>
 <a href="#admin">Admin</a>
 </nav>
+<button class="mobile-menu-btn" type="button" aria-label="Open menu" onclick="toggleMobileMenu()">☰</button>
 
 </header>
 
 
 <!-- HERO -->
-
 <section class="hero">
-
-<h1>
-Legal Assistance
-<span>Across India</span>
-</h1>
-
-<p>
-A growing national legal network connecting clients
-with advocates and legal professionals across districts
-and states.
-</p>
-
-<div class="buttons">
-
-<a href="#client" class="btn primary">
-Find Legal Assistance
-</a>
-
-<a href="#advocate" class="btn secondary">
-Join Our Legal Network
-</a>
-
-</div>
-
+  <div>
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid rgba(215,168,79,.28);border-radius:999px;background:rgba(215,168,79,.06);color:#f1c56a;font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:18px;">
+      India-Wide Legal Network
+    </div>
+    <h1>Legal Assistance<br><span>Across India.</span></h1>
+    <p>
+      A professionally coordinated legal network connecting individuals, families,
+      businesses and organisations with appropriate legal professionals based on
+      matter, jurisdiction and availability.
+    </p>
+    <div class="buttons">
+      <a href="#client" class="btn primary">Find Legal Assistance</a>
+      <a href="#advocate" class="btn secondary">Join Our Legal Network</a>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:18px;margin-top:34px;color:#aeb9c8;font-size:12px;font-weight:700;">
+      <span>✓ Matter-based coordination</span>
+      <span>✓ Jurisdiction-focused assistance</span>
+      <span>✓ Confidential client access</span>
+    </div>
+  </div>
 </section>
-
 
 <!-- SERVICES -->
 
@@ -730,59 +954,28 @@ Join Our Legal Network
 <h2>Legal Services</h2>
 
 <div class="cards">
+<div class="card"><h3>⚖ Criminal Law</h3><p>Bail, Anticipatory Bail, Criminal Defence, NDPS, cyber crime and related criminal proceedings.</p></div>
+<div class="card"><h3>🏛 Civil & Property</h3><p>Property disputes, injunctions, recovery, partition, possession and civil litigation.</p></div>
+<div class="card"><h3>♥ Family & Matrimonial</h3><p>Divorce, maintenance, custody, domestic disputes and other family-law matters.</p></div>
+<div class="card"><h3>▣ Commercial & Corporate</h3><p>Contracts, commercial disputes, corporate assistance, business documentation and advisory.</p></div>
+<div class="card"><h3>₹ Banking & NI Act</h3><p>Cheque bounce, Negotiable Instruments, banking disputes and financial recovery matters.</p></div>
+<div class="card"><h3>◈ Consumer & Motor Claims</h3><p>Consumer disputes, deficiency of service, motor accident claims and related proceedings.</p></div>
+<div class="card"><h3>▤ Labour & Service</h3><p>Employment, labour disputes, service matters and representation before appropriate forums.</p></div>
+<div class="card"><h3>◆ Tax, GST & IPR</h3><p>Taxation, GST, intellectual property and specialised regulatory legal assistance.</p></div>
+<div class="card"><h3>◉ Arbitration & ADR</h3><p>Arbitration, mediation, dispute resolution and related commercial proceedings.</p></div>
+<div class="card"><h3>⌂ Real Estate & Documentation</h3><p>Legal drafting, agreements, registrations, real-estate matters and documentation support.</p></div>
+<div class="card"><h3>§ Writ & Constitutional</h3><p>Writ petitions, constitutional remedies and appropriate High Court proceedings.</p></div>
+<div class="card"><h3>＋ Specialised Matters</h3><p>Specialised legal assistance coordinated according to the nature, forum and jurisdiction of the matter.</p></div>
+</div></section>
 
-<div class="card">
-<h3>Criminal Law</h3>
-<p>
-Bail, Anticipatory Bail, Criminal Defence,
-NDPS and related criminal matters.
-</p>
+
+<section class="section" style="padding:35px 6%;background:rgba(255,255,255,.018);border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);">
+<div class="cards" style="grid-template-columns:repeat(3,1fr);max-width:1000px;">
+<div class="card" style="min-height:auto;text-align:center;padding:20px;"><div style="font-size:27px;color:var(--gold2);font-weight:800;">PAN INDIA</div><p>Network-oriented legal assistance</p></div>
+<div class="card" style="min-height:auto;text-align:center;padding:20px;"><div style="font-size:27px;color:var(--gold2);font-weight:800;">MULTI-DISCIPLINE</div><p>Broad range of legal practice areas</p></div>
+<div class="card" style="min-height:auto;text-align:center;padding:20px;"><div style="font-size:27px;color:var(--gold2);font-weight:800;">PRIVATE ACCESS</div><p>Controlled client–advocate contact</p></div>
 </div>
-
-<div class="card">
-<h3>Family & Matrimonial</h3>
-<p>
-Divorce, maintenance, custody and
-matrimonial disputes.
-</p>
-</div>
-
-<div class="card">
-<h3>Civil & Property</h3>
-<p>
-Property disputes, recovery, injunction
-and civil litigation.
-</p>
-</div>
-
-<div class="card">
-<h3>Commercial & Corporate</h3>
-<p>
-Business disputes, contracts and
-corporate legal assistance.
-</p>
-</div>
-
-<div class="card">
-<h3>Consumer Matters</h3>
-<p>
-Assistance relating to consumer
-disputes and claims.
-</p>
-</div>
-
-<div class="card">
-<h3>Cheque Bounce</h3>
-<p>
-Legal assistance relating to
-Negotiable Instruments Act matters.
-</p>
-</div>
-
-</div>
-
 </section>
-
 
 <!-- NETWORK -->
 
@@ -1716,7 +1909,27 @@ Official Call / WhatsApp: <strong>8445609837</strong>
 </footer>
 
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+/* PREMIUM MOBILE NAV */
+function toggleMobileMenu(){
+  const nav=document.getElementById("mainNav");
+  if(nav) nav.classList.toggle("open");
+}
+document.addEventListener("click",function(e){
+  const nav=document.getElementById("mainNav");
+  const btn=document.querySelector(".mobile-menu-btn");
+  if(nav && nav.classList.contains("open") && !nav.contains(e.target) && !btn.contains(e.target)){
+    nav.classList.remove("open");
+  }
+});
+document.addEventListener("click",function(e){
+  if(e.target && e.target.closest("#mainNav a")){
+    const nav=document.getElementById("mainNav");
+    if(nav) nav.classList.remove("open");
+  }
+});
+
+</script>
 
 
 <script>
