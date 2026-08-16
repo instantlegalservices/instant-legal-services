@@ -577,6 +577,98 @@ footer{
     }
 }
 
+
+/* ADVOCATE ADMIN */
+.advocate-admin-box{
+    max-width:1200px;
+    margin:25px auto 0;
+    background:#151922;
+    border:1px solid #292d36;
+    border-radius:14px;
+    overflow:hidden;
+}
+.advocate-admin-title{
+    padding:20px;
+    border-bottom:1px solid #292d36;
+    color:#e5a93d;
+    font-weight:bold;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+.advocate-admin-title button{
+    padding:8px 14px;
+    border:1px solid #555;
+    border-radius:7px;
+    background:#252a34;
+    color:#fff;
+    cursor:pointer;
+}
+.advocate-photo-small{
+    width:48px;
+    height:48px;
+    border-radius:8px;
+    object-fit:cover;
+    border:1px solid #e5a93d;
+}
+.verify-badge{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:bold;
+}
+.verify-pending{background:#40351b;color:#ffd77a;}
+.verify-approved{background:#273e31;color:#9de0ad;}
+.verify-rejected{background:#4b1d1d;color:#ffaaaa;}
+.advocate-action-btn{
+    padding:7px 10px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+    margin:2px;
+}
+.approve-btn{background:#4b9b61;color:#fff;}
+.reject-btn{background:#9b4b4b;color:#fff;}
+.view-btn{background:#e5a93d;color:#111;}
+.advocate-modal-actions{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+    flex-wrap:wrap;
+}
+.advocate-modal-actions button{
+    flex:1;
+    min-width:120px;
+}
+.detail-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+.detail-item{
+    background:#0b0d12;
+    border:1px solid #292d36;
+    border-radius:8px;
+    padding:10px;
+}
+.detail-item strong{
+    display:block;
+    color:#9299a6;
+    font-size:11px;
+    margin-bottom:3px;
+}
+.detail-item span{
+    color:#fff;
+    font-size:14px;
+}
+@media(max-width:700px){
+    .detail-grid{grid-template-columns:1fr;}
+    .advocate-admin-title{align-items:flex-start;flex-direction:column;}
+}
+
 </style>
 </head>
 
@@ -1271,6 +1363,57 @@ Low
 
 </div>
 
+
+
+<!-- ADVOCATE VERIFICATION -->
+<div class="advocate-admin-box">
+    <div class="advocate-admin-title">
+        <span>Advocate Registration Applications</span>
+        <button type="button" onclick="loadAdvocates()">↻ Refresh</button>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Photo</th>
+                    <th>Advocate</th>
+                    <th>Mobile</th>
+                    <th>Location</th>
+                    <th>Practice Area</th>
+                    <th>Experience</th>
+                    <th>Verification</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="advocateTableBody">
+                <tr>
+                    <td colspan="8" class="empty">Loading advocate applications...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ADVOCATE DETAIL MODAL -->
+<div class="modal" id="advocateModal">
+    <div class="modal-box">
+        <button class="close" onclick="closeAdvocateModal()">×</button>
+        <h3>Advocate Application</h3>
+
+        <div id="advocateDetails"></div>
+
+        <label>Admin Notes</label>
+        <textarea id="advocateAdminNotes" placeholder="Internal verification notes"></textarea>
+
+        <div class="advocate-modal-actions">
+            <button type="button" class="btn approve-btn" onclick="approveAdvocate()">Approve Advocate</button>
+            <button type="button" class="btn reject-btn" onclick="rejectAdvocate()">Reject</button>
+        </div>
+
+        <div id="advocateUpdateError" class="error"></div>
+    </div>
+</div>
 
 <div class="leads-box">
 
@@ -2068,9 +2211,303 @@ behavior:"smooth"
 
 
 loadLeads();
+loadAdvocates();
 
 });
 
+
+
+/* =========================================
+   ADVOCATE ADMIN VERIFICATION
+========================================= */
+
+let allAdvocates = [];
+let selectedAdvocateId = null;
+
+async function loadAdvocates(){
+
+    const tbody = document.getElementById("advocateTableBody");
+
+    if(!tbody) return;
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="empty">Loading advocate applications...</td>
+        </tr>
+    `;
+
+    const {data,error} = await supabaseClient
+        .from("advocate_registrations")
+        .select("*")
+        .order("created_at",{ascending:false});
+
+    if(error){
+
+        console.error(error);
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="empty">
+                    Unable to load advocates: ${escapeHtml(error.message)}
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    allAdvocates = data || [];
+
+    renderAdvocates();
+}
+
+function renderAdvocates(){
+
+    const tbody = document.getElementById("advocateTableBody");
+
+    if(!tbody) return;
+
+    if(allAdvocates.length === 0){
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="empty">
+                    No advocate applications found.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    tbody.innerHTML = allAdvocates.map(advocate => {
+
+        const verification =
+            advocate.verification_status ||
+            advocate.status ||
+            "Pending";
+
+        const verificationClass =
+            verification === "Approved"
+                ? "verify-approved"
+                : verification === "Rejected"
+                    ? "verify-rejected"
+                    : "verify-pending";
+
+        const photo =
+            advocate.photo_url ||
+            advocate.profile_photo_url ||
+            "";
+
+        const photoHtml = photo
+            ? `<img class="advocate-photo-small"
+                    src="${escapeHtml(photo)}"
+                    alt="Advocate photo">`
+            : `<div class="advocate-photo-small"></div>`;
+
+        const location =
+            `${advocate.district_court || "-"}<br>
+             <small>${advocate.practice_state || ""}</small>`;
+
+        return `
+            <tr>
+                <td>${photoHtml}</td>
+
+                <td>
+                    <strong>${escapeHtml(advocate.advocate_name || "-")}</strong>
+                    <br>
+                    <small>${escapeHtml(advocate.enrollment_number || "")}</small>
+                </td>
+
+                <td>${escapeHtml(advocate.mobile || "-")}</td>
+
+                <td>${location}</td>
+
+                <td>${escapeHtml(advocate.primary_practice_area || "-")}</td>
+
+                <td>${escapeHtml(String(advocate.years_of_practice ?? "-"))} years</td>
+
+                <td>
+                    <span class="verify-badge ${verificationClass}">
+                        ${escapeHtml(verification)}
+                    </span>
+                </td>
+
+                <td>
+                    <button class="advocate-action-btn view-btn"
+                        onclick="openAdvocate(${Number(advocate.id)})">
+                        View
+                    </button>
+                </td>
+            </tr>
+        `;
+
+    }).join("");
+}
+
+function openAdvocate(id){
+
+    const advocate = allAdvocates.find(
+        x => Number(x.id) === Number(id)
+    );
+
+    if(!advocate) return;
+
+    selectedAdvocateId = advocate.id;
+
+    const photo =
+        advocate.photo_url ||
+        advocate.profile_photo_url ||
+        "";
+
+    const photoHtml = photo
+        ? `<div style="text-align:center;margin-bottom:18px;">
+             <img src="${escapeHtml(photo)}"
+                  style="width:140px;height:140px;object-fit:cover;border-radius:12px;border:2px solid #e5a93d;">
+           </div>`
+        : "";
+
+    document.getElementById("advocateDetails").innerHTML = `
+        ${photoHtml}
+
+        <div class="detail-grid">
+
+            <div class="detail-item">
+                <strong>Advocate Name</strong>
+                <span>${escapeHtml(advocate.advocate_name || "-")}</span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Mobile</strong>
+                <span>${escapeHtml(advocate.mobile || "-")}</span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Email</strong>
+                <span>${escapeHtml(advocate.email || "-")}</span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Enrollment Number</strong>
+                <span>${escapeHtml(advocate.enrollment_number || "-")}</span>
+            </div>
+
+            <div class="detail-item">
+                <strong>State Bar Council</strong>
+                <span>${escapeHtml(advocate.state_bar_council || "-")}</span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Practice State</strong>
+                <span>${escapeHtml(advocate.practice_state || "-")}</span>
+            </div>
+
+            <div class="detail-item">
+                <strong>District / Court</strong>
+                <span>${escapeHtml(advocate.district_court || "-")}</span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Primary Practice Area</strong>
+                <span>${escapeHtml(advocate.primary_practice_area || "-")}</span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Years of Practice</strong>
+                <span>${escapeHtml(String(advocate.years_of_practice ?? "-"))}</span>
+            </div>
+
+            <div class="detail-item">
+                <strong>Verification Status</strong>
+                <span>${escapeHtml(advocate.verification_status || advocate.status || "Pending")}</span>
+            </div>
+
+        </div>
+    `;
+
+    document.getElementById("advocateAdminNotes").value =
+        advocate.admin_notes ||
+        advocate.notes ||
+        "";
+
+    document.getElementById("advocateUpdateError").style.display = "none";
+
+    document.getElementById("advocateModal").style.display = "flex";
+}
+
+function closeAdvocateModal(){
+
+    document.getElementById("advocateModal").style.display = "none";
+    selectedAdvocateId = null;
+}
+
+async function updateAdvocateVerification(newStatus){
+
+    if(!selectedAdvocateId) return;
+
+    const errorBox =
+        document.getElementById("advocateUpdateError");
+
+    errorBox.style.display = "none";
+
+    const notes =
+        document.getElementById("advocateAdminNotes").value.trim();
+
+    const updateData = {
+        status:newStatus,
+        verification_status:newStatus,
+        admin_notes:notes
+    };
+
+    if(newStatus === "Approved"){
+        updateData.public_profile = true;
+        updateData.approved_at = new Date().toISOString();
+    }
+
+    if(newStatus === "Rejected"){
+        updateData.public_profile = false;
+        updateData.approved_at = null;
+    }
+
+    const {error} = await supabaseClient
+        .from("advocate_registrations")
+        .update(updateData)
+        .eq("id",selectedAdvocateId);
+
+    if(error){
+
+        console.error(error);
+
+        errorBox.innerText =
+            "Update failed: " + error.message;
+
+        errorBox.style.display = "block";
+
+        return;
+    }
+
+    closeAdvocateModal();
+
+    await loadAdvocates();
+}
+
+async function approveAdvocate(){
+
+    if(!confirm("Approve this advocate and make the profile eligible for the public network?")){
+        return;
+    }
+
+    await updateAdvocateVerification("Approved");
+}
+
+async function rejectAdvocate(){
+
+    if(!confirm("Reject this advocate application?")){
+        return;
+    }
+
+    await updateAdvocateVerification("Rejected");
+}
 
 /* =========================================
    LOAD CRM LEADS
@@ -2733,6 +3170,7 @@ data.session.user.email;
 
 
 loadLeads();
+loadAdvocates();
 
 }
 
