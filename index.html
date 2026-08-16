@@ -596,7 +596,7 @@ async function clientSubmit(event) {
         }]);
 
     if (error) {
-        alert("Unable to submit your requirement. Please try again.");
+        alert("Database Error: " + error.message);
         console.error(error);
         return;
     }
