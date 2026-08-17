@@ -3516,78 +3516,141 @@ document
 
 async function saveLeadUpdate(){
 
-const id =
-document.getElementById("edit_id").value;
+ const id =
+ document.getElementById("edit_id").value;
 
-syncAssignedAdvocateName();
+ syncAssignedAdvocateName();
 
-const advocateId =
-document.getElementById("edit_assigned_advocate_id").value || null;
+ const advocateId =
+ document.getElementById("edit_assigned_advocate_id").value || null;
 
-const releaseContact =
-document.getElementById("edit_release_advocate_contact").checked;
+ const releaseContact =
+ document.getElementById("edit_release_advocate_contact").checked;
 
-const updateData = {
+ const updateData = {
 
-status:
-document.getElementById("edit_status").value,
+ status:
+ document.getElementById("edit_status").value,
 
-payment_status:
-document.getElementById("edit_payment_status").value,
+ payment_status:
+ document.getElementById("edit_payment_status").value,
 
-priority:
-document.getElementById("edit_priority").value,
+ priority:
+ document.getElementById("edit_priority").value,
 
-assigned_advocate:
-document.getElementById("edit_assigned_advocate").value.trim(),
+ assigned_advocate:
+ document.getElementById("edit_assigned_advocate").value.trim(),
 
-assigned_advocate_id:
-advocateId,
+ assigned_advocate_id:
+ advocateId,
 
-release_advocate_contact:
-releaseContact,
+ release_advocate_contact:
+ releaseContact,
 
-contact_released_at:
-releaseContact ? new Date().toISOString() : null,
+ contact_released_at:
+ releaseContact ? new Date().toISOString() : null,
 
-follow_up_date:
-document.getElementById("edit_follow_up_date").value
-|| null,
+ follow_up_date:
+ document.getElementById("edit_follow_up_date").value
+ || null,
 
-internal_notes:
-document.getElementById("edit_internal_notes").value.trim()
+ internal_notes:
+ document.getElementById("edit_internal_notes").value.trim()
 
-};
+ };
 
-const {error} =
-await supabaseClient
-.from("client_requirements")
-.update(updateData)
-.eq("id",id);
+ const {error} =
+ await supabaseClient
+ .from("client_requirements")
+ .update(updateData)
+ .eq("id",id);
 
-if(error){
+ if(error){
 
-console.error(error);
+ console.error(error);
 
-const box =
-document.getElementById("updateError");
+ const box =
+ document.getElementById("updateError");
 
-box.innerText =
-"Update failed: " + error.message;
+ box.innerText =
+ "Update failed: " + error.message;
 
-box.style.display = "block";
+ box.style.display = "block";
 
-return;
-}
+ return;
 
-document.getElementById("contactReleaseStatus").innerText =
-releaseContact
-? "Contact is RELEASED for this client."
-: "Contact is currently LOCKED.";
+ }
 
-closeModal();
+ /* Sync the admin release switch with the assignment permission. */
+ if(advocateId){
 
-await loadLeads();
+     const {data: assignmentRows, error: assignmentError} =
+         await supabaseClient
+         .from("advocate_assignments")
+         .update({
+             client_can_see_contact: releaseContact
+         })
+         .eq("lead_id", id)
+         .eq("advocate_id", Number(advocateId))
+         .in("status", ["Assigned", "Active"])
+         .select("id");
+
+     if(assignmentError){
+
+         console.error(assignmentError);
+
+         const box =
+             document.getElementById("updateError");
+
+         box.innerText =
+             "Advocate contact permission update failed: "
+             + assignmentError.message;
+
+         box.style.display = "block";
+
+         return;
+     }
+
+     /* Create an assignment automatically if none exists. */
+     if(!assignmentRows || assignmentRows.length === 0){
+
+         const {error: insertAssignmentError} =
+             await supabaseClient
+             .from("advocate_assignments")
+             .insert({
+                 lead_id: Number(id),
+                 advocate_id: Number(advocateId),
+                 assigned_at: new Date().toISOString(),
+                 status: releaseContact ? "Active" : "Assigned",
+                 client_can_see_contact: releaseContact
+             });
+
+         if(insertAssignmentError){
+
+             console.error(insertAssignmentError);
+
+             const box =
+                 document.getElementById("updateError");
+
+             box.innerText =
+                 "Advocate assignment update failed: "
+                 + insertAssignmentError.message;
+
+             box.style.display = "block";
+
+             return;
+         }
+     }
+ }
+
+ document.getElementById("contactReleaseStatus").innerText =
+ releaseContact
+ ? "Contact is RELEASED for this client."
+ : "Contact is currently LOCKED.";
+
+ closeModal();
+
+ await loadLeads();
 
 }
 
