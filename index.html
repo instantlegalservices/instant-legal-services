@@ -920,6 +920,39 @@ footer strong{color:var(--gold2);}
 @media(max-width:700px){.verified-network{padding-left:5%;padding-right:5%;}.advocate-network-toolbar input,.advocate-network-toolbar select{max-width:none;width:100%;}.public-advocate-grid{grid-template-columns:1fr;}}
 
 </style>
+
+<style>
+.ils-comms{margin-top:20px;display:grid;gap:14px}
+.ils-panel{border:1px solid var(--line);background:rgba(3,10,18,.42);border-radius:12px;padding:14px}
+.ils-panel h4{color:var(--gold2);margin:0 0 10px}
+.ils-chat{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:4px}
+.ils-msg{padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.035)}
+.ils-msg .meta{font-size:11px;color:var(--muted);margin-bottom:4px}
+.ils-msg.client{border-left:3px solid var(--gold)}
+.ils-msg.admin{border-left:3px solid var(--green)}
+.ils-msg.advocate{border-left:3px solid #7aa7ff}
+.ils-progress{display:grid;gap:8px}
+.ils-progress-item{padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025)}
+.ils-progress-item .meta{font-size:11px;color:var(--muted);margin-bottom:3px}
+.ils-progress-item strong{color:#fff}
+.ils-client-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ils-small{font-size:12px;color:var(--muted)}
+.ils-chat-input{min-height:80px}
+.ils-status-pill{display:inline-block;padding:5px 9px;border-radius:999px;background:rgba(215,168,79,.12);color:var(--gold2);font-size:11px;font-weight:700}
+<style>
+.ils-date-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
+.ils-date-grid label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
+.ils-documents{display:grid;gap:8px;margin-top:12px}
+.ils-doc{border:1px solid var(--line);border-radius:10px;padding:10px;background:rgba(255,255,255,.025);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.ils-doc .meta{font-size:11px;color:var(--muted);margin-top:3px}
+.ils-doc-actions{display:flex;gap:7px;flex-wrap:wrap}
+.ils-date-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.ils-date-chip{border:1px solid var(--line);border-radius:9px;padding:8px;font-size:12px}
+.ils-date-chip strong{display:block;color:var(--gold2);font-size:11px;margin-bottom:3px}
+.ils-role-note{font-size:11px;color:var(--muted);margin-top:5px}
+@media(max-width:700px){.ils-date-grid,.ils-date-row{grid-template-columns:1fr}}
+</style>
+
 </head>
 
 <body>
@@ -939,6 +972,7 @@ INSTANT <span>LEGAL SERVICES</span>
 <a href="#advocate">Join Network</a>
 <a href="#client-access">Client Access</a>
 <a href="#admin">Admin</a>
+<a href="#advocate-portal">Advocate Portal</a>
 </nav>
 <button class="mobile-menu-btn" type="button" aria-label="Open menu" onclick="toggleMobileMenu()">☰</button>
 
@@ -1872,6 +1906,63 @@ id="updateError"
 class="error">
 </div>
 
+<div class="ils-comms" id="adminCommunicationPanel">
+    <div class="ils-panel">
+        <h4>Client–Advocate Chat</h4>
+        <div class="ils-small">Client/advocate messages will be visible here. Admin can also reply.</div>
+        <div id="adminChatThread" class="ils-chat"><div class="ils-small">Loading chat...</div></div>
+        <textarea id="adminChatMessage" class="ils-chat-input" placeholder="Reply to client..."></textarea>
+        <div class="ils-client-actions">
+            <button type="button" class="copy-btn" onclick="sendAdminClientMessage()">Send Reply</button>
+            <button type="button" class="copy-btn" onclick="loadAdminClientCommunication(document.getElementById('edit_id').value)">Refresh Chat</button>
+        </div>
+    </div>
+
+    <div class="ils-panel">
+        <h4>Work Progress</h4>
+        <div class="ils-small">Progress can be shown to the client independently of contact release.</div>
+        <select id="adminProgressStatus">
+            <option>Received</option>
+            <option>Advocate Assigned</option>
+            <option>Consultation Scheduled</option>
+            <option>Documents Under Review</option>
+            <option>Drafting / Preparation</option>
+            <option>Filing / Proceedings</option>
+            <option>Awaiting Court / Authority</option>
+            <option>Completed</option>
+        </select>
+        <input id="adminProgressTitle" placeholder="Progress title">
+        <textarea id="adminProgressNote" placeholder="Short progress note"></textarea>
+        <div class="ils-date-grid">
+            <div><label>Previous Fixed Date</label><input type="date" id="adminPreviousFixedDate"></div>
+            <div><label>Next Fixed Date</label><input type="date" id="adminNextFixedDate"></div>
+            <div><label>Work Done On</label><input type="date" id="adminWorkDoneDate"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;margin:8px 0;">
+            <input type="checkbox" id="adminProgressVisible" checked style="width:auto;">
+            Show this progress update to client
+        </label>
+        <div class="ils-client-actions">
+            <button type="button" class="copy-btn" onclick="addAdminWorkProgress()">Add Progress Update</button>
+            <button type="button" class="copy-btn" onclick="loadAdminClientCommunication(document.getElementById('edit_id').value)">Refresh Progress</button>
+        </div>
+        <div id="adminProgressTimeline" class="ils-progress"><div class="ils-small">Loading progress...</div></div>
+    </div>
+
+    <div class="ils-panel">
+        <h4>Matter Documents</h4>
+        <div class="ils-small">Client and assigned advocate documents are visible here. Admin can upload documents too.</div>
+        <input type="file" id="adminDocumentFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt">
+        <input id="adminDocumentNote" placeholder="Document note (optional)">
+        <div class="ils-client-actions">
+            <button type="button" class="copy-btn" onclick="uploadAdminDocument()">Upload Document</button>
+            <button type="button" class="copy-btn" onclick="loadAdminClientDocuments(document.getElementById('edit_id').value)">Refresh Documents</button>
+        </div>
+        <div id="adminDocuments" class="ils-documents"><div class="ils-small">Loading documents...</div></div>
+    </div>
+</div>
+
+
 </div>
 
 </div>
@@ -1879,6 +1970,35 @@ class="error">
 
 
 
+
+<!-- ADVOCATE PRIVATE PORTAL -->
+<section class="section action-section" id="advocate-portal">
+    <div class="form-box">
+        <h2>Advocate Private Portal</h2>
+        <p class="intro">Approved advocates can securely chat with assigned clients, update work progress, fixed dates and share matter documents.</p>
+
+        <div id="advocateLoginBox">
+            <form id="advocateLoginForm">
+                <label>Advocate Email</label>
+                <input type="email" id="advocate_login_email" required placeholder="Registered advocate email">
+                <label>Password</label>
+                <input type="password" id="advocate_login_password" required placeholder="Supabase Auth password">
+                <button class="btn primary full" type="submit">Login as Advocate</button>
+                <div id="advocateLoginError" class="error"></div>
+            </form>
+        </div>
+
+        <div id="advocateDashboard" style="display:none;">
+            <div class="dashboard-header" style="margin-bottom:15px;">
+                <div>Logged in: <strong id="advocateLoggedUser"></strong></div>
+                <button type="button" class="logout-btn" onclick="logoutAdvocate()">Logout</button>
+            </div>
+            <label>Assigned Matter</label>
+            <select id="advocateMatterSelect"></select>
+            <div id="advocateMatterPanel" class="ils-comms"></div>
+        </div>
+    </div>
+</section>
 
 <!-- VERIFIED ADVOCATE NETWORK -->
 <section class="section verified-network" id="verified-advocates">
@@ -1918,7 +2038,7 @@ class="error">
 <!-- CLIENT ACCESS: ONLY FOR CLIENTS WHO RECEIVE A PRIVATE ACCESS CODE -->
 <section class="section action-section" id="client-access">
     <div class="form-box">
-        <h2>Assigned Advocate Contact</h2>
+        <h2>Client Matter Portal</h2>
         <p class="intro">
             If Instant Legal Services has assigned an advocate to your matter
             and has shared a private access code with you, enter it below.
@@ -1936,7 +2056,7 @@ class="error">
                    placeholder="10 digit mobile number">
 
             <button class="btn primary full" type="submit">
-                View Assigned Advocate Contact
+                Open My Matter Portal
             </button>
 
             <div id="clientAccessError" class="error"></div>
@@ -3495,6 +3615,8 @@ document.getElementById("updateError").style.display = "none";
 
 document.getElementById("editModal").style.display = "flex";
 
+loadAdminClientCommunication(lead.id);
+
 }
 /* =========================================
    CLOSE MODAL
@@ -3513,6 +3635,120 @@ document
 /* =========================================
    SAVE LEAD UPDATE
 ========================================= */
+
+async function loadAdminClientCommunication(clientId){
+    if(!clientId) return;
+
+    const chat = document.getElementById("adminChatThread");
+    const progress = document.getElementById("adminProgressTimeline");
+    if(chat) chat.innerHTML = `<div class="ils-small">Loading chat...</div>`;
+    if(progress) progress.innerHTML = `<div class="ils-small">Loading progress...</div>`;
+
+    const {data,error} = await supabaseClient.rpc("get_admin_client_portal", {
+        p_client_id: Number(clientId)
+    });
+
+    if(error){
+        console.error(error);
+        if(chat) chat.innerHTML = `<div class="ils-small">Unable to load communication.</div>`;
+        if(progress) progress.innerHTML = `<div class="ils-small">Unable to load progress.</div>`;
+        return;
+    }
+
+    const messages = data?.messages || [];
+    const updates = data?.progress || [];
+
+    if(chat){
+        chat.innerHTML = messages.length ? messages.map(m => `
+            <div class="ils-msg ${escapeHtml(m.sender_role || "")}">
+                <div class="meta">${escapeHtml(m.sender_name || m.sender_role || "User")} · ${escapeHtml(new Date(m.created_at).toLocaleString("en-IN"))}</div>
+                <div>${escapeHtml(m.message || "")}</div>
+            </div>
+        `).join("") : `<div class="ils-small">No messages yet.</div>`;
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    if(progress){
+        progress.innerHTML = updates.length ? updates.map(p => `
+            <div class="ils-progress-item">
+                <div class="meta">${escapeHtml(new Date(p.created_at).toLocaleString("en-IN"))} · ${escapeHtml(p.created_by_name || p.created_by_role || "Admin")}</div>
+                <span class="ils-status-pill">${escapeHtml(p.status || "Update")}</span>
+                <strong>${escapeHtml(p.title || "Progress update")}</strong>
+                ${p.note ? `<div class="ils-small">${escapeHtml(p.note)}</div>` : ""}
+                <div class="ils-date-row">
+                    <div class="ils-date-chip"><strong>Previous Fixed Date</strong>${escapeHtml(p.previous_fixed_date || "—")}</div>
+                    <div class="ils-date-chip"><strong>Next Fixed Date</strong>${escapeHtml(p.next_fixed_date || "—")}</div>
+                    <div class="ils-date-chip"><strong>Work Done On</strong>${escapeHtml(p.work_done_date || "—")}</div>
+                </div>
+                <div class="ils-small">Client visibility: ${p.visible_to_client ? "ON" : "OFF"}</div>
+            </div>
+        `).join("") : `<div class="ils-small">No progress updates yet.</div>`;
+    }
+
+    loadAdminClientDocuments(clientId);
+}
+
+async function sendAdminClientMessage(){
+    const clientId = document.getElementById("edit_id").value;
+    const input = document.getElementById("adminChatMessage");
+    const message = (input?.value || "").trim();
+    if(!clientId || !message) return;
+
+    const {data,error} = await supabaseClient.rpc("admin_send_client_message", {
+        p_client_id: Number(clientId),
+        p_message: message
+    });
+
+    if(error || !data?.ok){
+        alert(error?.message || data?.message || "Unable to send reply.");
+        return;
+    }
+
+    input.value = "";
+    await loadAdminClientCommunication(clientId);
+}
+
+async function addAdminWorkProgress(){
+    const clientId = document.getElementById("edit_id").value;
+    const status = document.getElementById("adminProgressStatus").value;
+    const title = document.getElementById("adminProgressTitle").value.trim();
+    const note = document.getElementById("adminProgressNote").value.trim();
+    const visible = document.getElementById("adminProgressVisible").checked;
+    const previousDate = document.getElementById("adminPreviousFixedDate").value || null;
+    const nextDate = document.getElementById("adminNextFixedDate").value || null;
+    const doneDate = document.getElementById("adminWorkDoneDate").value || null;
+
+    if(!clientId || !title){
+        alert("Please enter a progress title.");
+        return;
+    }
+
+    const {data,error} = await supabaseClient.rpc("admin_add_work_progress", {
+        p_client_id: Number(clientId),
+        p_status: status,
+        p_title: title,
+        p_note: note,
+        p_visible_to_client: visible,
+        p_previous_fixed_date: previousDate,
+        p_next_fixed_date: nextDate,
+        p_work_done_date: doneDate
+    });
+
+    if(error || !data?.ok){
+        alert(error?.message || data?.message || "Unable to add progress update.");
+        return;
+    }
+
+    document.getElementById("adminProgressTitle").value = "";
+    document.getElementById("adminProgressNote").value = "";
+    document.getElementById("adminPreviousFixedDate").value = "";
+    document.getElementById("adminNextFixedDate").value = "";
+    document.getElementById("adminWorkDoneDate").value = "";
+    await loadAdminClientCommunication(clientId);
+}
+
+
+
 
 async function saveLeadUpdate(){
 
@@ -3735,21 +3971,15 @@ async function copyClientAccessLink(){
 
 async function loadClientContact(){
 
-    const errorBox =
-        document.getElementById("clientAccessError");
-
-    const resultBox =
-        document.getElementById("clientAccessResult");
+    const errorBox = document.getElementById("clientAccessError");
+    const resultBox = document.getElementById("clientAccessResult");
 
     errorBox.style.display = "none";
     resultBox.style.display = "none";
     resultBox.innerHTML = "";
 
-    const token =
-        document.getElementById("client_access_token").value.trim();
-
-    const mobile =
-        document.getElementById("client_access_mobile").value.trim();
+    const token = document.getElementById("client_access_token").value.trim();
+    const mobile = document.getElementById("client_access_mobile").value.trim();
 
     if(!token || !/^[0-9]{10}$/.test(mobile)){
         errorBox.innerText =
@@ -3758,14 +3988,10 @@ async function loadClientContact(){
         return;
     }
 
-    const {data,error} =
-        await supabaseClient.rpc(
-            "get_client_assigned_advocate",
-            {
-                p_access_token: token,
-                p_mobile: mobile
-            }
-        );
+    const {data,error} = await supabaseClient.rpc(
+        "get_client_portal",
+        { p_access_token: token, p_mobile: mobile }
+    );
 
     if(error){
         console.error(error);
@@ -3775,53 +4001,137 @@ async function loadClientContact(){
         return;
     }
 
-    if(!data || !data.length){
-        errorBox.innerText =
-            "Access denied or contact has not been released by Instant Legal Services.";
+    if(!data || !data.ok){
+        errorBox.innerText = "Access denied. Please check your private access code and registered mobile number.";
         errorBox.style.display = "block";
         return;
     }
 
-    const advocate = data[0];
+    window.currentClientPortal = { token, mobile, data };
+    renderClientPortal(data);
+}
+
+function renderClientPortal(data){
+    const resultBox = document.getElementById("clientAccessResult");
+    const c = data.client || {};
+    const a = data.advocate || null;
+    const progress = data.progress || [];
+    const messages = data.messages || [];
+    const documents = data.documents || [];
+
+    const contactHtml = a ? `
+        <h3>Assigned Advocate</h3>
+        <div class="contact-card"><strong>Advocate</strong><span>${escapeHtml(a.name || "-")}</span></div>
+        <div class="contact-card"><strong>District / Court</strong><span>${escapeHtml(a.district_court || "-")}</span></div>
+        <div class="contact-card"><strong>Practice Area</strong><span>${escapeHtml(a.practice_area || "-")}</span></div>
+        <div class="contact-card"><strong>Contact Number</strong><span>${escapeHtml(a.mobile || "Contact is currently locked")}</span></div>
+        ${a.mobile ? `<div class="client-contact-actions">
+            <a class="contact-btn contact-call" href="tel:${encodeURIComponent(a.mobile)}">📞 Call Advocate</a>
+            <a class="contact-btn contact-wa" href="https://wa.me/91${encodeURIComponent(a.mobile)}" target="_blank" rel="noopener">💬 WhatsApp Advocate</a>
+        </div>` : `<p class="note">Advocate contact is currently locked by Instant Legal Services.</p>`}
+    ` : `<p class="note">An approved advocate has not been assigned yet.</p>`;
+
+    const progressHtml = progress.length ? progress.map(p => `
+        <div class="ils-progress-item">
+            <div class="meta">${escapeHtml(new Date(p.created_at).toLocaleString("en-IN"))} · ${escapeHtml(p.created_by_name || p.created_by_role || "")}</div>
+            <span class="ils-status-pill">${escapeHtml(p.status || "Update")}</span>
+            <strong>${escapeHtml(p.title || "Progress update")}</strong>
+            ${p.note ? `<div class="ils-small">${escapeHtml(p.note)}</div>` : ""}
+            <div class="ils-date-row">
+                <div class="ils-date-chip"><strong>Previous Fixed Date</strong>${escapeHtml(p.previous_fixed_date || "—")}</div>
+                <div class="ils-date-chip"><strong>Next Fixed Date</strong>${escapeHtml(p.next_fixed_date || "—")}</div>
+                <div class="ils-date-chip"><strong>Work Done On</strong>${escapeHtml(p.work_done_date || "—")}</div>
+            </div>
+        </div>
+    `).join("") : `<div class="ils-small">No progress update has been posted yet.</div>`;
+
+    const chatHtml = messages.length ? messages.map(m => `
+        <div class="ils-msg ${escapeHtml(m.sender_role || "")}">
+            <div class="meta">${escapeHtml(m.sender_name || m.sender_role || "User")} · ${escapeHtml(new Date(m.created_at).toLocaleString("en-IN"))}</div>
+            <div>${escapeHtml(m.message || "")}</div>
+        </div>
+    `).join("") : `<div class="ils-small">No messages yet.</div>`;
+
+    const docsHtml = documents.length ? documents.map(d => `
+        <div class="ils-doc">
+            <div><strong>${escapeHtml(d.file_name || "Document")}</strong><div class="meta">${escapeHtml(d.uploaded_by_name || d.uploaded_by_role || "User")} · ${escapeHtml(new Date(d.created_at).toLocaleString("en-IN"))}</div>${d.note ? `<div class="ils-small">${escapeHtml(d.note)}</div>` : ""}</div>
+            <div class="ils-doc-actions"><button type="button" class="copy-btn" onclick="downloadClientDocument(${Number(d.id)})">View / Download</button></div>
+        </div>
+    `).join("") : `<div class="ils-small">No documents yet.</div>`;
 
     resultBox.innerHTML = `
-        <h3>Assigned Advocate</h3>
+        <div class="ils-panel">${contactHtml}</div>
 
-        <div class="contact-card">
-            <strong>Advocate</strong>
-            <span>${escapeHtml(advocate.advocate_name || "-")}</span>
+        <div class="ils-panel">
+            <h3>Work Progress</h3>
+            <div class="ils-progress">${progressHtml}</div>
         </div>
 
-        <div class="contact-card">
-            <strong>District / Court</strong>
-            <span>${escapeHtml(advocate.district_court || "-")}</span>
+        <div class="ils-panel">
+            <h3>Client–Advocate Chat</h3>
+            <div class="ils-chat" id="clientChatThread">${chatHtml}</div>
+            <textarea id="clientChatMessage" class="ils-chat-input" placeholder="Write a message regarding your matter..."></textarea>
+            <div class="ils-client-actions">
+                <button type="button" class="btn primary" onclick="sendClientPortalMessage()">Send Message</button>
+                <button type="button" class="copy-btn" onclick="refreshClientPortal()">Refresh</button>
+            </div>
+            <div class="ils-small">Chat remains available even when advocate contact is locked.</div>
         </div>
 
-        <div class="contact-card">
-            <strong>Practice Area</strong>
-            <span>${escapeHtml(advocate.primary_practice_area || "-")}</span>
+        <div class="ils-panel">
+            <h3>Matter Documents</h3>
+            <div class="ils-documents">${docsHtml}</div>
+            <input type="file" id="clientDocumentFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt">
+            <input id="clientDocumentNote" placeholder="Document note (optional)">
+            <div class="ils-client-actions">
+                <button type="button" class="btn primary" onclick="uploadClientDocument()">Upload Document</button>
+            </div>
+            <div class="ils-small">Documents uploaded by you or your assigned advocate are visible here.</div>
         </div>
 
-        <div class="contact-card">
-            <strong>Contact Number</strong>
-            <span>${escapeHtml(advocate.mobile || "-")}</span>
-        </div>
-
-        <div class="client-contact-actions">
-            <a class="contact-btn contact-call"
-               href="tel:${encodeURIComponent(advocate.mobile || "")}">
-               📞 Call Advocate
-            </a>
-
-            <a class="contact-btn contact-wa"
-               href="https://wa.me/91${encodeURIComponent(advocate.mobile || "")}"
-               target="_blank" rel="noopener">
-               💬 WhatsApp Advocate
-            </a>
-        </div>
+        <div class="ils-small">Current matter status: <span class="ils-status-pill">${escapeHtml(c.status || "New")}</span></div>
     `;
 
     resultBox.style.display = "block";
+}
+
+async function refreshClientPortal(){
+    if(!window.currentClientPortal) return;
+    const {token,mobile} = window.currentClientPortal;
+    const {data,error} = await supabaseClient.rpc("get_client_portal", {
+        p_access_token: token,
+        p_mobile: mobile
+    });
+    if(error){
+        console.error(error);
+        return;
+    }
+    if(data && data.ok){
+        window.currentClientPortal.data = data;
+        renderClientPortal(data);
+    }
+}
+
+async function sendClientPortalMessage(){
+    if(!window.currentClientPortal) return;
+    const input = document.getElementById("clientChatMessage");
+    const message = (input?.value || "").trim();
+    if(!message) return;
+
+    const {token,mobile} = window.currentClientPortal;
+    const {data,error} = await supabaseClient.rpc("send_client_portal_message", {
+        p_access_token: token,
+        p_mobile: mobile,
+        p_message: message
+    });
+
+    if(error || !data?.ok){
+        alert(error?.message || data?.message || "Unable to send message.");
+        return;
+    }
+
+    input.value = "";
+    await refreshClientPortal();
 }
 
 document
@@ -3938,6 +4248,148 @@ async function loadPublicAdvocates(){
     renderPublicAdvocates();
 }
 
+const DOCUMENT_FUNCTION_URL = SUPABASE_URL + "/functions/v1/client-matter-documents";
+
+async function getCurrentAuthToken(){
+    const {data} = await supabaseClient.auth.getSession();
+    return data?.session?.access_token || "";
+}
+
+async function documentApiJson(body){
+    const headers = {"Content-Type":"application/json"};
+    const token = await getCurrentAuthToken();
+    if(token) headers.Authorization = "Bearer " + token;
+    const response = await fetch(DOCUMENT_FUNCTION_URL,{method:"POST",headers,body:JSON.stringify(body)});
+    return await response.json();
+}
+
+async function documentApiUpload(formData){
+    const headers = {};
+    const token = await getCurrentAuthToken();
+    if(token) headers.Authorization = "Bearer " + token;
+    const response = await fetch(DOCUMENT_FUNCTION_URL,{method:"POST",headers,body:formData});
+    return await response.json();
+}
+
+async function loadAdminClientDocuments(clientId){
+    if(!clientId) return;
+    const box = document.getElementById("adminDocuments");
+    if(box) box.innerHTML = `<div class="ils-small">Loading documents...</div>`;
+    const data = await documentApiJson({action:"list",client_id:Number(clientId)});
+    if(!data.ok){ if(box) box.innerHTML = `<div class="ils-small">${escapeHtml(data.message || "Unable to load documents.")}</div>`; return; }
+    if(box){
+        box.innerHTML = data.documents?.length ? data.documents.map(d => `
+            <div class="ils-doc">
+                <div><strong>${escapeHtml(d.file_name || "Document")}</strong><div class="meta">${escapeHtml(d.uploaded_by_name || d.uploaded_by_role || "User")} · ${escapeHtml(new Date(d.created_at).toLocaleString("en-IN"))}</div>${d.note ? `<div class="ils-small">${escapeHtml(d.note)}</div>` : ""}</div>
+                <div class="ils-doc-actions">${d.signed_url ? `<a class="copy-btn" href="${escapeHtml(d.signed_url)}" target="_blank" rel="noopener">View / Download</a>` : ""}</div>
+            </div>`).join("") : `<div class="ils-small">No documents yet.</div>`;
+    }
+}
+
+async function uploadAdminDocument(){
+    const clientId = document.getElementById("edit_id").value;
+    const file = document.getElementById("adminDocumentFile")?.files?.[0];
+    const note = document.getElementById("adminDocumentNote")?.value.trim() || "";
+    if(!clientId || !file){ alert("Please select a document."); return; }
+    const fd = new FormData();
+    fd.append("action","upload"); fd.append("client_id",clientId); fd.append("file",file); fd.append("note",note);
+    const data = await documentApiUpload(fd);
+    if(!data.ok){ alert(data.message || "Upload failed."); return; }
+    document.getElementById("adminDocumentFile").value = "";
+    document.getElementById("adminDocumentNote").value = "";
+    await loadAdminClientDocuments(clientId);
+}
+
+async function loadClientDocuments(){
+    if(!window.currentClientPortal) return;
+    const {token,mobile} = window.currentClientPortal;
+    const data = await documentApiJson({action:"list",access_token:token,mobile});
+    return data.documents || [];
+}
+
+async function downloadClientDocument(documentId){
+    if(!window.currentClientPortal) return;
+    const {token,mobile} = window.currentClientPortal;
+    const data = await documentApiJson({action:"download",document_id:Number(documentId),access_token:token,mobile});
+    if(!data.ok){ alert(data.message || "Unable to open document."); return; }
+    window.open(data.signed_url,"_blank","noopener");
+}
+
+async function uploadClientDocument(){
+    if(!window.currentClientPortal) return;
+    const file = document.getElementById("clientDocumentFile")?.files?.[0];
+    const note = document.getElementById("clientDocumentNote")?.value.trim() || "";
+    if(!file){ alert("Please select a document."); return; }
+    const {token,mobile} = window.currentClientPortal;
+    const fd = new FormData();
+    fd.append("action","upload"); fd.append("access_token",token); fd.append("mobile",mobile); fd.append("file",file); fd.append("note",note);
+    const data = await documentApiUpload(fd);
+    if(!data.ok){ alert(data.message || "Upload failed."); return; }
+    await refreshClientPortal();
+}
+
+async function loadAdvocatePortal(){
+    const {data,error} = await supabaseClient.rpc("get_advocate_portal");
+    if(error || !data?.ok){
+        document.getElementById("advocateLoginError").innerText = error?.message || data?.message || "Advocate access unavailable.";
+        document.getElementById("advocateLoginError").style.display = "block";
+        return false;
+    }
+    document.getElementById("advocateLoginBox").style.display = "none";
+    document.getElementById("advocateDashboard").style.display = "block";
+    document.getElementById("advocateLoggedUser").innerText = data.advocate?.name || data.advocate?.email || "Advocate";
+    const select = document.getElementById("advocateMatterSelect");
+    select.innerHTML = (data.matters || []).map(m => `<option value="${Number(m.client_id)}">${escapeHtml(m.client_name || "Client")} — ${escapeHtml(m.legal_matter || "Matter")} (${escapeHtml(m.status || "New")})</option>`).join("");
+    if(data.matters?.length){ await loadAdvocateMatter(Number(data.matters[0].client_id)); }
+    return true;
+}
+
+async function loadAdvocateMatter(clientId){
+    if(!clientId) return;
+    const panel = document.getElementById("advocateMatterPanel");
+    panel.innerHTML = `<div class="ils-small">Loading matter...</div>`;
+    const {data,error} = await supabaseClient.rpc("get_advocate_client_portal",{p_client_id:Number(clientId)});
+    if(error || !data?.ok){ panel.innerHTML = `<div class="ils-small">${escapeHtml(error?.message || data?.message || "Unable to load matter.")}</div>`; return; }
+    const c=data.client||{}; const msgs=data.messages||[]; const progress=data.progress||[]; const docs=data.documents||[];
+    const chat=msgs.length?msgs.map(m=>`<div class="ils-msg ${escapeHtml(m.sender_role||"")}"><div class="meta">${escapeHtml(m.sender_name||m.sender_role||"User")} · ${escapeHtml(new Date(m.created_at).toLocaleString("en-IN"))}</div><div>${escapeHtml(m.message||"")}</div></div>`).join(""):`<div class="ils-small">No messages yet.</div>`;
+    const prog=progress.length?progress.map(p=>`<div class="ils-progress-item"><div class="meta">${escapeHtml(new Date(p.created_at).toLocaleString("en-IN"))} · ${escapeHtml(p.created_by_name||p.created_by_role||"")}</div><span class="ils-status-pill">${escapeHtml(p.status||"Update")}</span><strong>${escapeHtml(p.title||"Progress update")}</strong>${p.note?`<div class="ils-small">${escapeHtml(p.note)}</div>`:""}<div class="ils-date-row"><div class="ils-date-chip"><strong>Previous Fixed Date</strong>${escapeHtml(p.previous_fixed_date||"—")}</div><div class="ils-date-chip"><strong>Next Fixed Date</strong>${escapeHtml(p.next_fixed_date||"—")}</div><div class="ils-date-chip"><strong>Work Done On</strong>${escapeHtml(p.work_done_date||"—")}</div></div><div class="ils-small">Client visibility: ${p.visible_to_client?"ON":"OFF"}</div></div>`).join(""):`<div class="ils-small">No progress updates yet.</div>`;
+    const docsHtml=docs.length?docs.map(d=>`<div class="ils-doc"><div><strong>${escapeHtml(d.file_name||"Document")}</strong><div class="meta">${escapeHtml(d.uploaded_by_name||d.uploaded_by_role||"User")} · ${escapeHtml(new Date(d.created_at).toLocaleString("en-IN"))}</div>${d.note?`<div class="ils-small">${escapeHtml(d.note)}</div>`:""}</div><div class="ils-doc-actions"><button type="button" class="copy-btn" onclick="downloadAdvocateDocument(${Number(d.id)})">View / Download</button></div></div>`).join(""):`<div class="ils-small">No documents yet.</div>`;
+    panel.innerHTML=`<div class="ils-panel"><h4>${escapeHtml(c.name||"Client")}</h4><div class="ils-small">${escapeHtml(c.matter||"Matter")} · ${escapeHtml(c.mobile||"")}</div></div><div class="ils-panel"><h4>Client–Advocate Chat</h4><div class="ils-chat" id="advocateChatThread">${chat}</div><textarea id="advocateChatMessage" class="ils-chat-input" placeholder="Message the client..."></textarea><div class="ils-client-actions"><button type="button" class="copy-btn" onclick="sendAdvocateClientMessage(${Number(clientId)})">Send Message</button><button type="button" class="copy-btn" onclick="loadAdvocateMatter(${Number(clientId)})">Refresh</button></div></div><div class="ils-panel"><h4>Work Progress</h4><select id="advProgressStatus"><option>Received</option><option>Advocate Assigned</option><option>Consultation Scheduled</option><option>Documents Under Review</option><option>Drafting / Preparation</option><option>Filing / Proceedings</option><option>Awaiting Court / Authority</option><option>Completed</option></select><input id="advProgressTitle" placeholder="Progress title"><textarea id="advProgressNote" placeholder="Short progress note"></textarea><div class="ils-date-grid"><div><label>Previous Fixed Date</label><input type="date" id="advPreviousFixedDate"></div><div><label>Next Fixed Date</label><input type="date" id="advNextFixedDate"></div><div><label>Work Done On</label><input type="date" id="advWorkDoneDate"></div></div><label style="display:flex;align-items:center;gap:8px;margin:8px 0;"><input type="checkbox" id="advProgressVisible" checked style="width:auto;">Show to client</label><button type="button" class="copy-btn" onclick="addAdvocateWorkProgress(${Number(clientId)})">Add Progress Update</button><div class="ils-progress">${prog}</div></div><div class="ils-panel"><h4>Matter Documents</h4><div class="ils-documents">${docsHtml}</div><input type="file" id="advocateDocumentFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt"><input id="advocateDocumentNote" placeholder="Document note (optional)"><button type="button" class="copy-btn" onclick="uploadAdvocateDocument(${Number(clientId)})">Upload Document</button></div>`;
+}
+
+async function sendAdvocateClientMessage(clientId){
+    const input=document.getElementById("advocateChatMessage"); const message=(input?.value||"").trim(); if(!message)return;
+    const {data,error}=await supabaseClient.rpc("advocate_send_client_message",{p_client_id:Number(clientId),p_message:message});
+    if(error||!data?.ok){alert(error?.message||data?.message||"Unable to send message.");return;} input.value=""; await loadAdvocateMatter(clientId);
+}
+
+async function addAdvocateWorkProgress(clientId){
+    const title=document.getElementById("advProgressTitle").value.trim(); if(!title){alert("Please enter a progress title.");return;}
+    const {data,error}=await supabaseClient.rpc("advocate_add_work_progress",{p_client_id:Number(clientId),p_status:document.getElementById("advProgressStatus").value,p_title:title,p_note:document.getElementById("advProgressNote").value.trim(),p_visible_to_client:document.getElementById("advProgressVisible").checked,p_previous_fixed_date:document.getElementById("advPreviousFixedDate").value||null,p_next_fixed_date:document.getElementById("advNextFixedDate").value||null,p_work_done_date:document.getElementById("advWorkDoneDate").value||null});
+    if(error||!data?.ok){alert(error?.message||data?.message||"Unable to add progress.");return;} await loadAdvocateMatter(clientId);
+}
+
+async function uploadAdvocateDocument(clientId){
+    const file=document.getElementById("advocateDocumentFile")?.files?.[0]; if(!file){alert("Please select a document.");return;}
+    const fd=new FormData(); fd.append("action","upload");fd.append("client_id",String(clientId));fd.append("file",file);fd.append("note",document.getElementById("advocateDocumentNote")?.value.trim()||"");
+    const data=await documentApiUpload(fd); if(!data.ok){alert(data.message||"Upload failed.");return;} await loadAdvocateMatter(clientId);
+}
+
+async function downloadAdvocateDocument(documentId){
+    const data=await documentApiJson({action:"download",document_id:Number(documentId),client_id:Number(document.getElementById("advocateMatterSelect").value)}); if(!data.ok){alert(data.message||"Unable to open document.");return;} window.open(data.signed_url,"_blank","noopener");
+}
+
+async function logoutAdvocate(){ await supabaseClient.auth.signOut(); document.getElementById("advocateDashboard").style.display="none"; document.getElementById("advocateLoginBox").style.display="block"; document.getElementById("advocateLoginForm").reset(); }
+
+document.getElementById("advocateLoginForm")?.addEventListener("submit",async function(event){
+    event.preventDefault(); const box=document.getElementById("advocateLoginError"); box.style.display="none";
+    const {error}=await supabaseClient.auth.signInWithPassword({email:document.getElementById("advocate_login_email").value.trim(),password:document.getElementById("advocate_login_password").value});
+    if(error){box.innerText="Login failed: "+error.message;box.style.display="block";return;}
+    await loadAdvocatePortal();
+});
+
+document.getElementById("advocateMatterSelect")?.addEventListener("change",function(){loadAdvocateMatter(Number(this.value));});
+
 /* Public directory filters */
 document.addEventListener("input", function(event){
     if(event.target && event.target.id === "publicAdvocateSearch"){
@@ -3990,38 +4442,27 @@ behavior:"smooth"
 
 async function checkSession(){
 
-const {data} =
-await supabaseClient
-.auth
-.getSession();
+ const {data} =
+ await supabaseClient
+ .auth
+ .getSession();
 
+ if(data.session){
 
-if(data.session){
+     const email=(data.session.user.email||"").toLowerCase();
 
-document
-.getElementById("admin")
-.style.display =
-"none";
-
-
-document
-.getElementById("dashboard")
-.style.display =
-"block";
-
-
-document
-.getElementById("loggedUser")
-.innerText =
-data.session.user.email;
-
-
-loadLeads();
-loadAdvocates();
-
+     if(email === "fahat29@gmail.com"){
+         document.getElementById("admin").style.display="none";
+         document.getElementById("dashboard").style.display="block";
+         document.getElementById("loggedUser").innerText=data.session.user.email;
+         loadLeads();
+         loadAdvocates();
+     }else{
+         await loadAdvocatePortal();
+     }
+ }
 }
 
-}
 
 
 /* =========================================
