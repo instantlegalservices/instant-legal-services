@@ -1,13 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-IN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Instant Legal Services | National Legal Network</title>
+<title>Instant Legal Services | Advocates & Legal Assistance Across India</title>
 
 <meta name="description"
-content="Instant Legal Services - National Legal Network connecting clients with advocates across India.">
+content="Instant Legal Services connects individuals, families and businesses with appropriate advocates and legal professionals across India by matter, jurisdiction and practice area.">
+<meta name="author" content="Instant Legal Services">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+<meta name="theme-color" content="#07101c">
+<meta name="format-detection" content="telephone=yes">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+
+<link rel="canonical" href="/">
+
+<!-- Social sharing metadata -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Instant Legal Services | Legal Assistance Across India">
+<meta property="og:description" content="A professionally coordinated legal network connecting clients with appropriate legal professionals across India.">
+<meta property="og:site_name" content="Instant Legal Services">
+<meta property="og:locale" content="en_IN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Instant Legal Services | Legal Assistance Across India">
+<meta name="twitter:description" content="Connect with appropriate legal professionals across India based on matter, jurisdiction and availability.">
+<meta property="og:url" content="/">
+<meta property="og:image" content="https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1600&q=80">
+<meta property="og:image:alt" content="Legal books and law library representing legal assistance">
+
+<!-- Search engines can understand the public service offering from the visible page content and this semantic hint. -->
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@graph":[
+    {
+      "@type":"Organization",
+      "@id":"/#organization",
+      "name":"Instant Legal Services",
+      "url":"/",
+      "telephone":"+91-8445609837",
+      "description":"Professionally coordinated legal assistance and advocate network across India.",
+      "areaServed":{"@type":"Country","name":"India"},
+      "knowsAbout":["Criminal Law","Bail and Anticipatory Bail","NDPS Law","Family and Matrimonial Law","Civil and Property Law","Cheque Bounce and Negotiable Instruments","Consumer Law","Cyber Crime","Commercial and Corporate Law","Labour and Service Law","Tax and GST","Arbitration and ADR","Writ and Constitutional Law","Real Estate and Documentation"]
+    },
+    {
+      "@type":"WebSite",
+      "@id":"/#website",
+      "url":"/",
+      "name":"Instant Legal Services",
+      "publisher":{"@id":"/#organization"},
+      "inLanguage":"en-IN"
+    },
+    {
+      "@type":"WebPage",
+      "@id":"/#webpage",
+      "url":"/",
+      "name":"Instant Legal Services | Advocates & Legal Assistance Across India",
+      "isPartOf":{"@id":"/#website"},
+      "about":{"@id":"/#organization"},
+      "inLanguage":"en-IN"
+    },
+    {
+      "@type":"Service",
+      "@id":"/#legal-assistance-service",
+      "name":"Legal Assistance Across India",
+      "provider":{"@id":"/#organization"},
+      "areaServed":{"@type":"Country","name":"India"},
+      "serviceType":"Legal assistance and advocate network coordination",
+      "description":"Coordination with appropriate independent legal professionals based on matter, jurisdiction and professional availability."
+    }
+  ]
+}
+</script>
+
 
 <style>
 
@@ -939,6 +1006,7 @@ footer strong{color:var(--gold2);}
 .ils-small{font-size:12px;color:var(--muted)}
 .ils-chat-input{min-height:80px}
 .ils-status-pill{display:inline-block;padding:5px 9px;border-radius:999px;background:rgba(215,168,79,.12);color:var(--gold2);font-size:11px;font-weight:700}
+</style>
 <style>
 .ils-date-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
 .ils-date-grid label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
@@ -951,6 +1019,11 @@ footer strong{color:var(--gold2);}
 .ils-date-chip strong{display:block;color:var(--gold2);font-size:11px;margin-bottom:3px}
 .ils-role-note{font-size:11px;color:var(--muted);margin-top:5px}
 @media(max-width:700px){.ils-date-grid,.ils-date-row{grid-template-columns:1fr}}
+.ils-history-item{padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025)}
+.ils-history-item .history-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ils-history-item strong{color:#fff}
+.ils-history-item .history-status{color:var(--gold2);font-size:11px;font-weight:800}
+
 </style>
 
 
@@ -964,13 +1037,42 @@ footer strong{color:var(--gold2);}
 .quick-card span{font-size:24px}.quick-card strong{font-size:16px;color:var(--gold2)}.quick-card small{color:#aeb9c8;font-size:12px}
 .ils-undertaking{display:flex;gap:10px;align-items:flex-start;margin:20px 0;padding:14px;border:1px solid rgba(215,168,79,.22);border-radius:12px;background:rgba(215,168,79,.045);font-size:12px;line-height:1.65}
 .ils-undertaking input{width:18px;height:18px;min-width:18px;margin-top:2px;accent-color:#d7a84f}
-#client.action-section,#client-access.action-section,#advocate.section{display:none;position:fixed;inset:0;z-index:900;padding:75px 18px 25px;background:rgba(0,5,12,.88);backdrop-filter:blur(10px);overflow:auto}
-#client.action-section.ils-open,#client-access.action-section.ils-open,#advocate.section.ils-open{display:block}
+#client.action-section,#client-access.action-section,#advocate.section,#advocate-portal.action-section{display:none;position:fixed;inset:0;z-index:900;padding:75px 18px 25px;background:rgba(0,5,12,.88);backdrop-filter:blur(10px);overflow:auto}
+#client.action-section.ils-open,#client-access.action-section.ils-open,#advocate.section.ils-open,#advocate-portal.action-section.ils-open{display:block}
 #client .form-box,#client-access .form-box,#advocate .form-box{max-width:760px;margin:0 auto;position:relative}
 .ils-panel-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font-size:22px;cursor:pointer}
 body.ils-modal-open{overflow:hidden}
 @media(max-width:800px){.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:520px){.quick-grid{grid-template-columns:1fr}.ils-quick-access{padding-left:5%;padding-right:5%}#client.action-section,#client-access.action-section,#advocate.section{padding:70px 10px 20px}}
+@media(max-width:520px){.quick-grid{grid-template-columns:1fr}.ils-quick-access{padding-left:5%;padding-right:5%}#client.action-section,#client-access.action-section,#advocate.section,#advocate-portal.action-section{padding:70px 10px 20px}}
+
+/* SEO FAQ */
+.ils-faq{background:rgba(255,255,255,.018);text-align:left;}
+.faq-grid{max-width:900px;margin:auto;display:grid;gap:12px;}
+.faq-item{background:linear-gradient(145deg,rgba(20,35,53,.82),rgba(8,18,30,.92));border:1px solid var(--line);border-radius:14px;padding:0 18px;}
+.faq-item summary{cursor:pointer;list-style:none;padding:18px 35px 18px 0;color:#f1c56a;font-weight:700;position:relative;}
+.faq-item summary::-webkit-details-marker{display:none;}
+.faq-item summary:after{content:'+';position:absolute;right:3px;top:14px;font-size:24px;color:var(--gold2);}
+.faq-item[open] summary:after{content:'−';}
+.faq-item p{padding:0 0 18px;color:#aeb9c8;line-height:1.8;font-size:14px;}
+
+.ils-location-strip{padding:26px 5%;background:rgba(255,255,255,.018);border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);}
+.coverage-grid{max-width:1100px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.coverage-grid>div{padding:18px;border:1px solid var(--line);border-radius:14px;background:rgba(10,20,33,.72);text-align:center;}
+.coverage-grid strong{display:block;color:var(--gold2);font-size:16px;}
+.coverage-grid span{display:block;color:var(--muted);font-size:12px;margin-top:4px;}
+@media(max-width:700px){.coverage-grid{grid-template-columns:1fr;}}
+
+.practice-guide-card{text-decoration:none;color:#fff;display:block;}
+.practice-guide-card span{display:inline-block;margin-top:12px;color:var(--gold2);font-size:12px;font-weight:800;}
+.practice-guide-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+.ils-assignment-overview{margin-top:25px;}
+@media(max-width:900px){.practice-guide-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:600px){.practice-guide-grid{grid-template-columns:1fr;}}
+.ils-public-contact{position:fixed;right:18px;bottom:18px;z-index:850;display:flex;gap:8px;padding:8px;border:1px solid var(--line);border-radius:14px;background:rgba(5,12,21,.90);backdrop-filter:blur(16px);box-shadow:0 15px 45px rgba(0,0,0,.32);}
+.ils-public-contact a{display:inline-flex;align-items:center;justify-content:center;min-width:120px;padding:10px 13px;border-radius:9px;text-decoration:none;color:#fff;font-size:12px;font-weight:800;}
+.ils-public-contact .call{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);}
+.ils-public-contact .wa{background:#178a61;}
+@media(max-width:600px){.ils-public-contact{left:10px;right:10px;bottom:10px;}.ils-public-contact a{flex:1;min-width:0;}}
 </style>
 </head>
 
@@ -984,12 +1086,14 @@ INSTANT <span>LEGAL SERVICES</span>
 
 <nav id="mainNav">
 <a href="#services">Services</a>
+<a href="#practice-guides">Practice Guides</a>
 <a href="#verified-advocates">Network Advocates</a>
 <a href="#about">About ILS</a>
+<a href="#faq">FAQ</a>
 <a href="#quick-access">Get Started</a>
-<a href="#advocate-portal">Advocate Portal</a>
+<a href="#advocate-portal" onclick="openILSPanel('advocate-portal');return false;">Advocate Portal</a>
 </nav>
-<button class="mobile-menu-btn" type="button" aria-label="Open menu" onclick="toggleMobileMenu()">☰</button>
+<button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-controls="mainNav" aria-expanded="false" onclick="toggleMobileMenu()">☰</button>
 
 </header>
 
@@ -1018,6 +1122,14 @@ INSTANT <span>LEGAL SERVICES</span>
   </div>
 </section>
 
+<section class="section ils-location-strip" aria-label="Service coverage">
+  <div class="coverage-grid">
+    <div><strong>Bareilly, Uttar Pradesh</strong><span>Coordination base</span></div>
+    <div><strong>Across India</strong><span>Jurisdiction-focused network</span></div>
+    <div><strong>Multiple Practice Areas</strong><span>Legal assistance by matter</span></div>
+  </div>
+</section>
+
 <!-- QUICK ACCESS -->
 <section class="section ils-quick-access" id="quick-access">
   <h2>Quick Access</h2>
@@ -1027,7 +1139,7 @@ INSTANT <span>LEGAL SERVICES</span>
     <a class="quick-card" href="#verified-advocates"><span>👨‍⚖️</span><strong>Network Advocates</strong><small>View available network members</small></a>
     <button type="button" class="quick-card" onclick="openILSPanel('advocate')"><span>🤝</span><strong>Join ILS Network</strong><small>Advocate registration</small></button>
     <button type="button" class="quick-card" onclick="openILSPanel('client-access')"><span>🔐</span><strong>Client Portal</strong><small>Open your private matter</small></button>
-    <a class="quick-card" href="#advocate-portal"><span>💼</span><strong>Advocate Portal</strong><small>Secure advocate login</small></a>
+    <button type="button" class="quick-card" onclick="openILSPanel('advocate-portal')"><span>💼</span><strong>Advocate Portal</strong><small>Secure advocate login</small></button>
     <button type="button" class="quick-card" onclick="showAdminLogin(); document.getElementById('admin')?.scrollIntoView({behavior:'smooth',block:'start'});"><span>🛡️</span><strong>Admin</strong><small>Restricted administration</small></button>
   </div>
 </section>
@@ -1052,6 +1164,28 @@ INSTANT <span>LEGAL SERVICES</span>
 <div class="card"><h3>§ Writ & Constitutional</h3><p>Writ petitions, constitutional remedies and appropriate High Court proceedings.</p></div>
 <div class="card"><h3>＋ Specialised Matters</h3><p>Specialised legal assistance coordinated according to the nature, forum and jurisdiction of the matter.</p></div>
 </div></section>
+
+<!-- SEO PRACTICE GUIDES -->
+<section class="section ils-practice-guides" id="practice-guides" aria-labelledby="practice-guides-heading">
+  <h2 id="practice-guides-heading">Legal Practice Areas &amp; Guides</h2>
+  <p class="network-text" style="margin-bottom:30px;">
+    Explore focused information pages for common legal requirements in India. Each guide is intended to help visitors understand the nature of a matter and identify the appropriate legal professional or forum.
+  </p>
+  <div class="cards practice-guide-grid">
+    <a class="card practice-guide-card" href="legal-services/criminal-law.html"><h3>Criminal Law</h3><p>Criminal defence, FIR-related matters, bail, trial and criminal proceedings.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/bail-anticipatory-bail.html"><h3>Bail &amp; Anticipatory Bail</h3><p>Guidance on regular bail, anticipatory bail and jurisdiction-specific representation.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/ndps-law.html"><h3>NDPS Law</h3><p>Legal assistance for NDPS-related proceedings, bail and defence coordination.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/family-matrimonial-law.html"><h3>Family &amp; Matrimonial Law</h3><p>Divorce, maintenance, custody, domestic disputes and family proceedings.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/civil-property-law.html"><h3>Civil &amp; Property Law</h3><p>Property disputes, injunctions, possession, partition and civil litigation.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/cheque-bounce-ni-act.html"><h3>Cheque Bounce &amp; NI Act</h3><p>Section 138 matters, statutory notices and related court proceedings.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/cyber-crime-law.html"><h3>Cyber Crime</h3><p>Online fraud, cyber complaints, account issues and related legal proceedings.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/consumer-law.html"><h3>Consumer Law</h3><p>Deficiency in service, unfair practices, product disputes and consumer complaints.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/commercial-corporate-law.html"><h3>Commercial &amp; Corporate</h3><p>Business disputes, contracts, recovery, corporate documentation and advisory.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/labour-service-law.html"><h3>Labour &amp; Service Law</h3><p>Employment disputes, service matters and representation before appropriate forums.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/tax-gst-law.html"><h3>Tax &amp; GST</h3><p>Taxation, GST-related disputes, notices and regulatory legal assistance.</p><span>Read guide →</span></a>
+    <a class="card practice-guide-card" href="legal-services/arbitration-adr.html"><h3>Arbitration &amp; ADR</h3><p>Arbitration, mediation, negotiated resolution and commercial dispute assistance.</p><span>Read guide →</span></a>
+  </div>
+</section>
 
 
 <section class="section" style="padding:35px 6%;background:rgba(255,255,255,.018);border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);">
@@ -1156,7 +1290,7 @@ laws, professional standards and the requirements of the concerned matter.
 
 <!-- CLIENT FORM -->
 
-<section class="section action-section" id="client">
+<section class="section action-section" id="client" data-nosnippet>
 
 <div class="form-box">
 
@@ -1279,7 +1413,7 @@ or highly sensitive information in this form.
 
 <!-- ADVOCATE FORM -->
 
-<section class="section" id="advocate">
+<section class="section" id="advocate" data-nosnippet>
 
 <div class="form-box">
 
@@ -1507,8 +1641,8 @@ or guarantee of empanelment.
 <!-- ADMIN LOGIN -->
 
 <section
-class="section admin-section"
-id="admin">
+class="section admin-section" data-nosnippet
+id="admin" data-nosnippet>
 
 <div class="login-box">
 
@@ -1563,8 +1697,8 @@ class="error">
 <!-- CRM DASHBOARD -->
 
 <section
-class="dashboard"
-id="dashboard">
+class="dashboard" data-nosnippet
+id="dashboard" data-nosnippet>
 
 <div class="dashboard-header">
 
@@ -1749,13 +1883,44 @@ Low
     </div>
 </div>
 
+<!-- ADVOCATE ASSIGNMENT OVERVIEW -->
+<div class="advocate-admin-box ils-assignment-overview" id="assignmentOverviewBox">
+  <div class="advocate-admin-title">
+    <span>Advocate Assignment Overview</span>
+    <button type="button" onclick="loadAssignmentOverview()">↻ Refresh</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Advocate</th><th>Practice / Court</th><th>Active Cases</th><th>Total Assignments</th><th>Latest Assignment</th></tr></thead>
+      <tbody id="assignmentOverviewBody"><tr><td colspan="5" class="empty">Loading assignment overview...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
 <!-- ADVOCATE DETAIL MODAL -->
-<div class="modal" id="advocateModal">
+<div class="modal" id="advocateModal" data-nosnippet>
     <div class="modal-box">
         <button class="close" onclick="closeAdvocateModal()">×</button>
         <h3>Advocate Application</h3>
 
         <div id="advocateDetails"></div>
+
+        <div class="ils-panel" style="margin-top:16px;">
+            <h4>Admin Editable Profile</h4>
+            <div class="detail-grid">
+                <div><label>Advocate Name</label><input id="edit_advocate_name"></div>
+                <div><label>Mobile</label><input id="edit_advocate_mobile" inputmode="numeric" maxlength="10"></div>
+                <div><label>Email</label><input id="edit_advocate_email" type="email"></div>
+                <div><label>Enrollment Number</label><input id="edit_advocate_enrollment"></div>
+                <div><label>State Bar Council</label><input id="edit_advocate_bar_council"></div>
+                <div><label>Practice State</label><input id="edit_advocate_state"></div>
+                <div><label>District / Court</label><input id="edit_advocate_court"></div>
+                <div><label>Primary Practice Area</label><input id="edit_advocate_area"></div>
+                <div><label>Years of Practice</label><input id="edit_advocate_years" type="number" min="0" max="70"></div>
+            </div>
+            <button type="button" class="btn primary full" onclick="saveAdvocateProfile()">Save Advocate Profile</button>
+            <div id="advocateProfileSaveResult" class="note"></div>
+        </div>
 
         <label>Admin Notes</label>
         <textarea id="advocateAdminNotes" placeholder="Internal verification notes"></textarea>
@@ -1763,7 +1928,14 @@ Low
         <div class="advocate-modal-actions">
             <button type="button" class="btn approve-btn" onclick="approveAdvocate()">Approve Advocate</button>
             <button type="button" class="btn reject-btn" onclick="rejectAdvocate()">Reject</button>
+            <button type="button" class="btn secondary" onclick="saveAdvocateNotes()">Save Notes</button>
+            <div style="width:100%;margin-top:6px;">
+            <label for="advocate_temp_password">Temporary Advocate Password</label>
+            <input id="advocate_temp_password" type="password" minlength="8" autocomplete="new-password" placeholder="Minimum 8 characters">
         </div>
+        <button type="button" class="btn secondary" onclick="createAdvocateLogin()">Create / Reset Login</button>
+        </div>
+        <div id="advocateLoginResult" class="note"></div>
 
         <div id="advocateUpdateError" class="error"></div>
     </div>
@@ -1792,6 +1964,7 @@ lead(s) loaded.
 <th>Mobile</th>
 <th>Location</th>
 <th>Matter</th>
+<th>Assigned Advocate</th>
 <th>Status</th>
 <th>Payment</th>
 <th>Priority</th>
@@ -1909,6 +2082,10 @@ id="edit_id">
     </div>
 </div>
 
+<div class="ils-panel" style="margin-top:14px;">
+    <h4>Advocate Assignment History</h4>
+    <div id="assignmentHistory" class="ils-progress"><div class="ils-small">Loading assignment history...</div></div>
+</div>
 
 <label>Follow-up Date</label>
 
@@ -2004,7 +2181,7 @@ class="error">
 
 
 <!-- ADVOCATE PRIVATE PORTAL -->
-<section class="section action-section" id="advocate-portal">
+<section class="section action-section" id="advocate-portal" data-nosnippet>
     <div class="form-box">
         <h2>Advocate Private Portal</h2>
         <p class="intro">Approved advocates can securely chat with assigned clients, update work progress, fixed dates and share matter documents.</p>
@@ -2023,6 +2200,7 @@ class="error">
         <div id="advocateDashboard" style="display:none;">
             <div class="dashboard-header" style="margin-bottom:15px;">
                 <div>Logged in: <strong id="advocateLoggedUser"></strong></div>
+                <button type="button" class="copy-btn" onclick="changeAdvocatePassword()">Change Password</button>
                 <button type="button" class="logout-btn" onclick="logoutAdvocate()">Logout</button>
             </div>
             <label>Assigned Matter</label>
@@ -2061,7 +2239,7 @@ class="error">
 </section>
 
 <!-- CLIENT ACCESS: ONLY FOR CLIENTS WHO RECEIVE A PRIVATE ACCESS CODE -->
-<section class="section action-section" id="client-access">
+<section class="section action-section" id="client-access" data-nosnippet>
     <div class="form-box">
         <h2>Client Matter Portal</h2>
         <p class="intro">
@@ -2095,6 +2273,54 @@ class="error">
     </div>
 </section>
 
+<section class="section ils-india-coverage" id="india-coverage" aria-labelledby="india-coverage-heading">
+  <h2 id="india-coverage-heading">Legal Assistance Across India</h2>
+  <p class="network-text" style="margin-bottom:22px;">Instant Legal Services is designed as an India-wide coordination platform. Requirements can be submitted from any state or Union Territory and are evaluated according to the nature of the matter, relevant court or authority, jurisdiction and professional availability.</p>
+  <div class="cards" style="grid-template-columns:repeat(4,minmax(0,1fr));max-width:1100px;">
+    <div class="card"><h3>North India</h3><p>Coordination for matters across Delhi, Uttar Pradesh, Haryana, Punjab, Uttarakhand, Himachal Pradesh, Jammu &amp; Kashmir, Ladakh and Rajasthan.</p></div>
+    <div class="card"><h3>West &amp; Central India</h3><p>Network-oriented assistance for Maharashtra, Gujarat, Goa, Madhya Pradesh, Chhattisgarh and neighbouring jurisdictions.</p></div>
+    <div class="card"><h3>South India</h3><p>Assistance can be coordinated for Karnataka, Tamil Nadu, Kerala, Telangana, Andhra Pradesh and other southern jurisdictions.</p></div>
+    <div class="card"><h3>East &amp; North-East India</h3><p>Requirements from Bihar, Jharkhand, Odisha, West Bengal and North-Eastern states can be routed according to jurisdiction and availability.</p></div>
+  </div>
+  <p class="public-network-note">The availability of a particular advocate, court representation or specialised service is subject to independent professional acceptance, jurisdiction and applicable law.</p>
+</section>
+
+<!-- SEO / USER FAQ -->
+<section class="section ils-faq" id="faq" aria-labelledby="faq-heading">
+  <h2 id="faq-heading">Frequently Asked Questions</h2>
+  <div class="faq-grid">
+    <details class="faq-item">
+      <summary>Can Instant Legal Services help me find an advocate in another state?</summary>
+      <p>Yes. The platform is designed to coordinate with network advocates according to the nature of the matter, jurisdiction, court and professional availability.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Which types of legal matters can I submit?</summary>
+      <p>Clients can submit requirements relating to criminal law, bail and anticipatory bail, NDPS, family and matrimonial matters, civil and property disputes, cheque bounce and NI Act matters, consumer disputes, commercial matters, cyber crime and other specialised legal requirements.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Can I track communication and work progress for an assigned matter?</summary>
+      <p>Where a private client matter portal has been activated, authorised clients can view available work-progress updates, communicate through the portal and access permitted matter documents.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Can an advocate join the Instant Legal Services network?</summary>
+      <p>Advocates may submit their professional details for review. Registration does not itself constitute verification, empanelment, endorsement or a guarantee of professional performance.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Is advocate contact information publicly displayed?</summary>
+      <p>No. The public directory is designed to display professional profile information while private contact details remain controlled through the platform.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Does Instant Legal Services guarantee the outcome of a legal matter?</summary>
+      <p>No. Legal outcomes depend on the facts, evidence, applicable law, forum and decisions of the competent authority or court. No outcome is guaranteed.</p>
+    </details>
+  </div>
+</section>
+
+<div class="ils-public-contact" aria-label="Instant Legal Services contact">
+  <a class="call" href="tel:+918445609837">📞 Call ILS</a>
+  <a class="wa" href="https://wa.me/918445609837" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
+</div>
+
 <footer>
 
 © 2026 Instant Legal Services.<br>
@@ -2106,26 +2332,28 @@ Official Call / WhatsApp: <strong>8445609837</strong>
 </footer>
 
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-/* PREMIUM MOBILE NAV */
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* PREMIUM MOBILE NAV — FIXED */
 function toggleMobileMenu(){
   const nav=document.getElementById("mainNav");
-  if(nav) nav.classList.toggle("open");
+  if(nav){ nav.classList.toggle("open"); const btn=document.querySelector(".mobile-menu-btn"); if(btn) btn.setAttribute("aria-expanded", nav.classList.contains("open") ? "true" : "false"); }
 }
 document.addEventListener("click",function(e){
   const nav=document.getElementById("mainNav");
   const btn=document.querySelector(".mobile-menu-btn");
-  if(nav && nav.classList.contains("open") && !nav.contains(e.target) && !btn.contains(e.target)){
+  if(nav && nav.classList.contains("open") && !nav.contains(e.target) && btn && !btn.contains(e.target)){
     nav.classList.remove("open");
+    btn.setAttribute("aria-expanded","false");
   }
 });
 document.addEventListener("click",function(e){
   if(e.target && e.target.closest("#mainNav a")){
     const nav=document.getElementById("mainNav");
-    if(nav) nav.classList.remove("open");
+    if(nav){ nav.classList.remove("open"); const btn=document.querySelector(".mobile-menu-btn"); if(btn) btn.setAttribute("aria-expanded","false"); }
   }
 });
-
 </script>
 
 
@@ -2492,7 +2720,7 @@ const filePath =
 const {error:uploadError} =
 await supabaseClient
 .storage
-.from("advocate-photo")
+.from("advocate-photo-pending")
 .upload(
 filePath,
 selectedAdvocatePhoto,
@@ -2516,26 +2744,8 @@ throw new Error(
 
 
 /* =====================================
-   PUBLIC PHOTO URL
-===================================== */
-
-const {data:publicUrlData} =
-supabaseClient
-.storage
-.from("advocate-photo")
-.getPublicUrl(filePath);
-
-
-const photoUrl =
-publicUrlData.publicUrl;
-
-if(!photoUrl){
-    throw new Error("Unable to create public photo URL.");
-}
-
-
-/* =====================================
    ADVOCATE DATA
+   Photo remains private until admin approval.
 ===================================== */
 
 const registration = {
@@ -2591,8 +2801,8 @@ document
 
 admin_notes: "ILS professional ethics undertaking accepted on " + new Date().toISOString(),
 
-photo_url:
-photoUrl
+photo_url:null,
+photo_storage_path:filePath
 
 };
 
@@ -2779,6 +2989,7 @@ behavior:"smooth"
 
 loadLeads();
 loadAdvocates();
+loadAssignmentOverview();
 
 });
 
@@ -2833,6 +3044,7 @@ async function loadAdvocates(){
 
     allAdvocates = data || [];
     renderAdvocates();
+    loadAssignmentOverview();
 }
 
 function renderAdvocates(){
@@ -3004,6 +3216,8 @@ function openAdvocate(id){
         advocate.notes ||
         "";
 
+    fillAdvocateEditFields(advocate);
+
     document.getElementById("advocateUpdateError").style.display = "none";
 
     document.getElementById("advocateModal").style.display = "flex";
@@ -3045,60 +3259,31 @@ async function updateAdvocateVerification(newStatus){
 
         /* =========================================
            APPROVE
-           pending/photo -> approved/photo
+           Private pending photo -> public approved photo
         ========================================= */
 
         if(newStatus === "Approved"){
 
-            let finalPhotoUrl =
-                advocate.photo_url ||
-                advocate.profile_photo_url ||
-                "";
+            let finalPhotoUrl = advocate.photo_url || advocate.profile_photo_url || "";
+            const pendingPath = advocate.photo_storage_path || "";
 
-            if(finalPhotoUrl){
+            if(pendingPath){
+                const {data:fileData,error:downloadError} = await supabaseClient
+                    .storage.from("advocate-photo-pending").download(pendingPath);
+                if(downloadError) throw downloadError;
 
-                const publicMarker =
-                    "/storage/v1/object/public/advocate-photo/";
+                const fileName = pendingPath.split("/").pop();
+                const approvedPath = "approved/" + fileName;
+                const {error:uploadApprovedError} = await supabaseClient
+                    .storage.from("advocate-photo")
+                    .upload(approvedPath,fileData,{cacheControl:"86400",upsert:true,contentType:fileData.type || "image/jpeg"});
+                if(uploadApprovedError) throw uploadApprovedError;
 
-                const markerIndex =
-                    finalPhotoUrl.indexOf(publicMarker);
+                const {data:publicUrlData} = supabaseClient
+                    .storage.from("advocate-photo").getPublicUrl(approvedPath);
+                finalPhotoUrl = publicUrlData?.publicUrl || "";
 
-                if(markerIndex !== -1){
-
-                    const currentPath =
-                        finalPhotoUrl.substring(
-                            markerIndex + publicMarker.length
-                        );
-
-                    if(currentPath.startsWith("pending/")){
-
-                        const fileName =
-                            currentPath.substring("pending/".length);
-
-                        const approvedPath =
-                            "approved/" + fileName;
-
-                        const { error: moveError } =
-                            await supabaseClient
-                                .storage
-                                .from("advocate-photo")
-                                .move(
-                                    currentPath,
-                                    approvedPath
-                                );
-
-                        if(moveError) throw moveError;
-
-                        const { data: publicUrlData } =
-                            supabaseClient
-                                .storage
-                                .from("advocate-photo")
-                                .getPublicUrl(approvedPath);
-
-                        finalPhotoUrl =
-                            publicUrlData?.publicUrl || "";
-                    }
-                }
+                await supabaseClient.storage.from("advocate-photo-pending").remove([pendingPath]);
             }
 
             const { error: updateError } =
@@ -3110,7 +3295,8 @@ async function updateAdvocateVerification(newStatus){
                         admin_notes: notes,
                         public_profile: true,
                         approved_at: new Date().toISOString(),
-                        photo_url: finalPhotoUrl || null
+                        photo_url: finalPhotoUrl || null,
+                        photo_storage_path: null
                     })
                     .eq("id", selectedAdvocateId);
 
@@ -3159,6 +3345,91 @@ async function updateAdvocateVerification(newStatus){
 
         errorBox.style.display = "block";
     }
+}
+
+async function createAdvocateLogin(){
+    if(!selectedAdvocateId) return;
+    const advocate=allAdvocates.find(a=>Number(a.id)===Number(selectedAdvocateId));
+    if(!advocate || !advocate.email){ alert("Advocate email is required."); return; }
+    if((advocate.verification_status||advocate.status) !== "Approved"){
+        alert("Approve the advocate first, then create the portal login.");
+        return;
+    }
+    const password=(document.getElementById("advocate_temp_password")?.value || "").trim();
+    if(password.length<8){ alert("Enter a temporary password of at least 8 characters."); return; }
+    const resultBox=document.getElementById("advocateLoginResult");
+    if(resultBox) resultBox.innerText="Creating / resetting secure login...";
+    try{
+        const {data,error}=await supabaseClient.functions.invoke("create-advocate-user",{
+            body:{advocate_id:Number(selectedAdvocateId),password}
+        });
+        if(error || !data?.ok) throw new Error(error?.message || data?.message || "Unable to create advocate login.");
+        if(resultBox) resultBox.innerText="Login created/reset successfully for "+advocate.email+". Share the temporary password securely and ask the advocate to change it after first login.";
+        const passwordInput=document.getElementById("advocate_temp_password");
+        if(passwordInput) passwordInput.value="";
+        alert("Advocate login created/reset successfully. Share the temporary password securely with the advocate.");
+    }catch(error){
+        console.error(error);
+        if(resultBox) resultBox.innerText="Login setup failed: "+(error.message||"Unknown error");
+    }
+}
+
+async function saveAdvocateProfile(){
+    if(!selectedAdvocateId) return;
+    const result=document.getElementById("advocateProfileSaveResult");
+    if(result) result.innerText="Saving...";
+    const mobile=document.getElementById("edit_advocate_mobile").value.trim();
+    if(mobile && !/^[0-9]{10}$/.test(mobile)){
+        if(result) result.innerText="Enter a valid 10 digit mobile number.";
+        return;
+    }
+    const updateData={
+        advocate_name:document.getElementById("edit_advocate_name").value.trim(),
+        mobile,
+        email:document.getElementById("edit_advocate_email").value.trim().toLowerCase(),
+        enrollment_number:document.getElementById("edit_advocate_enrollment").value.trim(),
+        state_bar_council:document.getElementById("edit_advocate_bar_council").value.trim(),
+        practice_state:document.getElementById("edit_advocate_state").value.trim(),
+        district_court:document.getElementById("edit_advocate_court").value.trim(),
+        primary_practice_area:document.getElementById("edit_advocate_area").value.trim(),
+        years_of_practice:Number(document.getElementById("edit_advocate_years").value||0)
+    };
+    const {error}=await supabaseClient.from("advocate_registrations").update(updateData).eq("id",selectedAdvocateId);
+    if(error){ if(result) result.innerText="Save failed: "+error.message; return; }
+    if(result) result.innerText="Advocate profile saved successfully.";
+    await loadAdvocates();
+    const updated=allAdvocates.find(a=>Number(a.id)===Number(selectedAdvocateId));
+    if(updated) openAdvocate(updated.id);
+}
+
+async function saveAdvocateNotes(){
+    if(!selectedAdvocateId) return;
+    const notes=document.getElementById("advocateAdminNotes").value.trim();
+    const box=document.getElementById("advocateUpdateError");
+    box.style.display="none";
+    const {error}=await supabaseClient.from("advocate_registrations").update({admin_notes:notes}).eq("id",selectedAdvocateId);
+    if(error){ box.innerText="Notes save failed: "+error.message; box.style.display="block"; return; }
+    document.getElementById("advocateLoginResult").innerText="Admin notes saved.";
+}
+
+function fillAdvocateEditFields(advocate){
+    const map={
+        edit_advocate_name:advocate.advocate_name||"", edit_advocate_mobile:advocate.mobile||"",
+        edit_advocate_email:advocate.email||"", edit_advocate_enrollment:advocate.enrollment_number||"",
+        edit_advocate_bar_council:advocate.state_bar_council||"", edit_advocate_state:advocate.practice_state||"",
+        edit_advocate_court:advocate.district_court||"", edit_advocate_area:advocate.primary_practice_area||"",
+        edit_advocate_years:String(advocate.years_of_practice??0)
+    };
+    Object.entries(map).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.value=value;});
+}
+
+async function changeAdvocatePassword(){
+    const current=prompt("Enter a new password (minimum 8 characters):");
+    if(current===null) return;
+    if(current.length<8){alert("Password must contain at least 8 characters.");return;}
+    const {error}=await supabaseClient.auth.updateUser({password:current});
+    if(error){alert("Unable to change password: "+error.message);return;}
+    alert("Password changed successfully.");
 }
 
 async function approveAdvocate(){
@@ -3215,6 +3486,7 @@ if(error){
 
 allLeads = data || [];
 updateStats();
+loadAssignmentOverview();
 renderLeads();
 }
 
@@ -3362,7 +3634,7 @@ tbody.innerHTML = `
 
 <tr>
 
-<td colspan="9"
+<td colspan="10"
 class="empty">
 
 No leads found.
@@ -3461,9 +3733,11 @@ lead.state || ""
 
 
 <td>
-${escapeHtml(
-lead.legal_matter || "-"
-)}
+${escapeHtml(lead.legal_matter || "-")}
+</td>
+
+<td>
+${escapeHtml(lead.assigned_advocate || "Not assigned")}
 </td>
 
 
@@ -3660,6 +3934,7 @@ document.getElementById("updateError").style.display = "none";
 document.getElementById("editModal").style.display = "flex";
 
 loadAdminClientCommunication(lead.id);
+loadAssignmentHistory(lead.id);
 
 }
 /* =========================================
@@ -3675,6 +3950,67 @@ document
 
 }
 
+
+/* =========================================
+   ADVOCATE ASSIGNMENT HISTORY
+========================================= */
+async function loadAssignmentOverview(){
+    const body=document.getElementById("assignmentOverviewBody");
+    if(!body) return;
+    body.innerHTML='<tr><td colspan="5" class="empty">Loading assignment overview...</td></tr>';
+    try{
+        const {data:rows,error}=await supabaseClient
+            .from("advocate_assignments")
+            .select("lead_id,advocate_id,assigned_at,status,client_can_see_contact,ended_at,assigned_by_email");
+        if(error) throw error;
+        const advocatesMap=new Map((allAdvocates||[]).map(a=>[Number(a.id),a]));
+        const groups=new Map();
+        (rows||[]).forEach(r=>{
+            const id=Number(r.advocate_id);
+            if(!groups.has(id)) groups.set(id,{id,total:0,active:0,latest:null});
+            const g=groups.get(id); g.total++;
+            if(["Assigned","Active"].includes(r.status||"Assigned")) g.active++;
+            if(!g.latest || new Date(r.assigned_at||0)>new Date(g.latest.assigned_at||0)) g.latest=r;
+        });
+        const sorted=[...groups.values()].sort((a,b)=>b.active-a.active || b.total-a.total);
+        if(!sorted.length){ body.innerHTML='<tr><td colspan="5" class="empty">No advocate assignments recorded yet.</td></tr>'; return; }
+        body.innerHTML=sorted.map(g=>{
+            const a=advocatesMap.get(g.id)||{}; const latest=g.latest;
+            return `<tr><td><strong>${escapeHtml(a.advocate_name||("Advocate #"+g.id))}</strong></td><td>${escapeHtml(a.primary_practice_area||"-")}<br><small>${escapeHtml(a.district_court||"")}</small></td><td><strong>${g.active}</strong></td><td>${g.total}</td><td>${escapeHtml(latest?.assigned_at?new Date(latest.assigned_at).toLocaleString("en-IN"):"-")}<br><small>${escapeHtml(latest?.assigned_by_email||"Admin")}</small></td></tr>`;
+        }).join("");
+    }catch(error){
+        console.error("Assignment overview error:",error);
+        body.innerHTML=`<tr><td colspan="5" class="empty">Unable to load assignment overview: ${escapeHtml(error?.message||"Unknown error")}</td></tr>`;
+    }
+}
+
+async function loadAssignmentHistory(clientId){
+    const box=document.getElementById("assignmentHistory");
+    if(!box || !clientId) return;
+    box.innerHTML='<div class="ils-small">Loading assignment history...</div>';
+    const {data,error}=await supabaseClient
+        .from("advocate_assignments")
+        .select("id,advocate_id,lead_id,assigned_at,status,client_can_see_contact")
+        .eq("lead_id",Number(clientId))
+        .order("assigned_at",{ascending:false});
+    if(error){
+        console.error(error);
+        box.innerHTML='<div class="ils-small">Assignment history unavailable.</div>';
+        return;
+    }
+    const rows=data||[];
+    if(!rows.length){
+        box.innerHTML='<div class="ils-small">No assignment history yet.</div>';
+        return;
+    }
+    const names=new Map((allAdvocates||[]).map(a=>[Number(a.id),a.advocate_name||"Advocate"]));
+    box.innerHTML=rows.map(r=>`
+      <div class="ils-history-item">
+        <div class="history-head"><strong>${escapeHtml(names.get(Number(r.advocate_id))||("Advocate #"+r.advocate_id))}</strong><span class="history-status">${escapeHtml(r.status||"Assigned")}</span></div>
+        <div class="ils-small">Assigned: ${escapeHtml(r.assigned_at?new Date(r.assigned_at).toLocaleString("en-IN"):"-")} · Contact: ${r.client_can_see_contact?"Released":"Locked"}${r.ended_at?` · Ended: ${escapeHtml(new Date(r.ended_at).toLocaleString("en-IN"))}`:""}</div>
+        <div class="ils-small">Assigned by: ${escapeHtml(r.assigned_by_email||"Admin")}</div>
+      </div>`).join("");
+}
 
 /* =========================================
    SAVE LEAD UPDATE
@@ -3796,142 +4132,41 @@ async function addAdminWorkProgress(){
 
 async function saveLeadUpdate(){
 
- const id =
- document.getElementById("edit_id").value;
-
+ const id = document.getElementById("edit_id").value;
  syncAssignedAdvocateName();
+ const advocateId = document.getElementById("edit_assigned_advocate_id").value || null;
+ const releaseContact = document.getElementById("edit_release_advocate_contact").checked;
+ const status = document.getElementById("edit_status").value;
+ const paymentStatus = document.getElementById("edit_payment_status").value;
+ const priority = document.getElementById("edit_priority").value;
+ const followUpDate = document.getElementById("edit_follow_up_date").value || null;
+ const internalNotes = document.getElementById("edit_internal_notes").value.trim();
+ const box = document.getElementById("updateError");
+ box.style.display = "none";
 
- const advocateId =
- document.getElementById("edit_assigned_advocate_id").value || null;
+ try {
+   const {data,error} = await supabaseClient.rpc("ils_admin_save_lead",{
+     p_lead_id:Number(id),
+     p_status:status,
+     p_payment_status:paymentStatus,
+     p_priority:priority,
+     p_assigned_advocate_id:advocateId ? Number(advocateId) : null,
+     p_release_contact:Boolean(releaseContact),
+     p_follow_up_date:followUpDate,
+     p_internal_notes:internalNotes
+   });
+   if(error || !data?.ok) throw new Error(error?.message || data?.message || "Unable to save lead changes.");
 
- const releaseContact =
- document.getElementById("edit_release_advocate_contact").checked;
-
- const updateData = {
-
- status:
- document.getElementById("edit_status").value,
-
- payment_status:
- document.getElementById("edit_payment_status").value,
-
- priority:
- document.getElementById("edit_priority").value,
-
- assigned_advocate:
- document.getElementById("edit_assigned_advocate").value.trim(),
-
- assigned_advocate_id:
- advocateId,
-
- release_advocate_contact:
- releaseContact,
-
- contact_released_at:
- releaseContact ? new Date().toISOString() : null,
-
- follow_up_date:
- document.getElementById("edit_follow_up_date").value
- || null,
-
- internal_notes:
- document.getElementById("edit_internal_notes").value.trim()
-
- };
-
- const {error} =
- await supabaseClient
- .from("client_requirements")
- .update(updateData)
- .eq("id",id);
-
- if(error){
-
- console.error(error);
-
- const box =
- document.getElementById("updateError");
-
- box.innerText =
- "Update failed: " + error.message;
-
- box.style.display = "block";
-
- return;
-
+   document.getElementById("contactReleaseStatus").innerText = releaseContact && advocateId
+     ? "Contact is RELEASED for this client."
+     : "Contact is currently LOCKED.";
+   closeModal();
+   await loadLeads();
+ } catch(error) {
+   console.error("CRM lead save error:",error);
+   box.innerText = "Update failed: " + (error?.message || "Unknown error");
+   box.style.display = "block";
  }
-
- /* Sync the admin release switch with the assignment permission. */
- if(advocateId){
-
-     const {data: assignmentRows, error: assignmentError} =
-         await supabaseClient
-         .from("advocate_assignments")
-         .update({
-             client_can_see_contact: releaseContact
-         })
-         .eq("lead_id", id)
-         .eq("advocate_id", Number(advocateId))
-         .in("status", ["Assigned", "Active"])
-         .select("id");
-
-     if(assignmentError){
-
-         console.error(assignmentError);
-
-         const box =
-             document.getElementById("updateError");
-
-         box.innerText =
-             "Advocate contact permission update failed: "
-             + assignmentError.message;
-
-         box.style.display = "block";
-
-         return;
-     }
-
-     /* Create an assignment automatically if none exists. */
-     if(!assignmentRows || assignmentRows.length === 0){
-
-         const {error: insertAssignmentError} =
-             await supabaseClient
-             .from("advocate_assignments")
-             .insert({
-                 lead_id: Number(id),
-                 advocate_id: Number(advocateId),
-                 assigned_at: new Date().toISOString(),
-                 status: releaseContact ? "Active" : "Assigned",
-                 client_can_see_contact: releaseContact
-             });
-
-         if(insertAssignmentError){
-
-             console.error(insertAssignmentError);
-
-             const box =
-                 document.getElementById("updateError");
-
-             box.innerText =
-                 "Advocate assignment update failed: "
-                 + insertAssignmentError.message;
-
-             box.style.display = "block";
-
-             return;
-         }
-     }
- }
-
- document.getElementById("contactReleaseStatus").innerText =
- releaseContact
- ? "Contact is RELEASED for this client."
- : "Contact is currently LOCKED.";
-
- closeModal();
-
- await loadLeads();
-
 }
 
 
@@ -3941,9 +4176,9 @@ async function saveLeadUpdate(){
 
 function buildClientAccessLink(token){
     const url = new URL(window.location.href);
+    url.searchParams.set("access", token);
     url.hash = "client-access";
-    return url.toString() + (url.toString().includes("?") ? "&" : "?") +
-           "access=" + encodeURIComponent(token);
+    return url.toString();
 }
 
 async function generateClientAccess(){
@@ -4193,11 +4428,10 @@ function checkAccessQuery(){
     if(token){
         const input = document.getElementById("client_access_token");
         if(input) input.value = token;
-
         const section = document.getElementById("client-access");
         if(section){
             setTimeout(() => {
-                section.scrollIntoView({behavior:"smooth"});
+                openILSPanel("client-access");
             }, 150);
         }
     }
@@ -4274,7 +4508,7 @@ async function loadPublicAdvocates(){
     if(!grid) return;
 
     const {data,error} = await supabaseClient
-        .from("public_advocate_directory")
+        .from("ils_public_advocate_directory")
         .select("id,advocate_name,practice_state,district_court,primary_practice_area,years_of_practice,photo_url,profile_photo_url")
         .order("advocate_name",{ascending:true});
 
@@ -4620,7 +4854,7 @@ function closeILSPanel(id){
     if(section) section.classList.remove('ils-open');
     document.body.classList.remove('ils-modal-open');
 }
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ ['client','advocate','client-access'].forEach(closeILSPanel); }});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ ['client','advocate','client-access','advocate-portal'].forEach(closeILSPanel); }});
 
 /* =========================================
    AUTH STATE SAFETY
@@ -4632,6 +4866,17 @@ supabaseClient.auth.onAuthStateChange((event) => {
     }
 });
 
+
+/* =========================================
+   PRIVATE ACCESS URL SAFETY
+========================================= */
+(function(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.has("access")){
+    const robots=document.querySelector('meta[name="robots"]');
+    if(robots) robots.setAttribute("content","noindex,nofollow,noarchive");
+  }
+})();
 
 /* =========================================
    INITIALIZE
