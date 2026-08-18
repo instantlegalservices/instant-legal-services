@@ -737,7 +737,7 @@ nav a:hover{color:#fff;background:rgba(255,255,255,.07);}
   display:flex;align-items:center;
   background:
     linear-gradient(90deg,rgba(5,12,21,.98) 0%,rgba(5,12,21,.86) 46%,rgba(5,12,21,.38) 100%),
-    url("https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1800&q=85") center/cover;
+    url("https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1800&q=85") center/cover;
 }
 .hero:after{
   content:"";position:absolute;width:420px;height:420px;right:-120px;bottom:-180px;
@@ -953,6 +953,25 @@ footer strong{color:var(--gold2);}
 @media(max-width:700px){.ils-date-grid,.ils-date-row{grid-template-columns:1fr}}
 </style>
 
+
+<style>
+/* ILS STEP 1 — clean navigation, modal forms and privacy-safe public directory */
+.ils-quick-access{padding-top:55px;padding-bottom:55px;background:rgba(255,255,255,.018)}
+.quick-access-intro{max-width:700px;margin:-15px auto 28px;color:#aeb4bf}
+.quick-grid{max-width:1050px;margin:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.quick-card{appearance:none;text-decoration:none;text-align:left;color:#fff;cursor:pointer;border:1px solid var(--line);border-radius:16px;padding:20px;background:linear-gradient(145deg,rgba(20,35,53,.88),rgba(8,18,30,.94));min-height:125px;display:flex;flex-direction:column;gap:5px;transition:.2s}
+.quick-card:hover{transform:translateY(-3px);border-color:rgba(215,168,79,.5);box-shadow:0 15px 35px rgba(0,0,0,.22)}
+.quick-card span{font-size:24px}.quick-card strong{font-size:16px;color:var(--gold2)}.quick-card small{color:#aeb9c8;font-size:12px}
+.ils-undertaking{display:flex;gap:10px;align-items:flex-start;margin:20px 0;padding:14px;border:1px solid rgba(215,168,79,.22);border-radius:12px;background:rgba(215,168,79,.045);font-size:12px;line-height:1.65}
+.ils-undertaking input{width:18px;height:18px;min-width:18px;margin-top:2px;accent-color:#d7a84f}
+#client.action-section,#client-access.action-section,#advocate.section{display:none;position:fixed;inset:0;z-index:900;padding:75px 18px 25px;background:rgba(0,5,12,.88);backdrop-filter:blur(10px);overflow:auto}
+#client.action-section.ils-open,#client-access.action-section.ils-open,#advocate.section.ils-open{display:block}
+#client .form-box,#client-access .form-box,#advocate .form-box{max-width:760px;margin:0 auto;position:relative}
+.ils-panel-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font-size:22px;cursor:pointer}
+body.ils-modal-open{overflow:hidden}
+@media(max-width:800px){.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.quick-grid{grid-template-columns:1fr}.ils-quick-access{padding-left:5%;padding-right:5%}#client.action-section,#client-access.action-section,#advocate.section{padding:70px 10px 20px}}
+</style>
 </head>
 
 <body>
@@ -965,13 +984,9 @@ INSTANT <span>LEGAL SERVICES</span>
 
 <nav id="mainNav">
 <a href="#services">Services</a>
-<a href="#network">Network</a>
-<a href="#verified-advocates">Verified Advocates</a>
-<a href="#about">About Us</a>
-<a href="#client">Find Legal Help</a>
-<a href="#advocate">Join Network</a>
-<a href="#client-access">Client Access</a>
-<a href="#admin">Admin</a>
+<a href="#verified-advocates">Network Advocates</a>
+<a href="#about">About ILS</a>
+<a href="#quick-access">Get Started</a>
 <a href="#advocate-portal">Advocate Portal</a>
 </nav>
 <button class="mobile-menu-btn" type="button" aria-label="Open menu" onclick="toggleMobileMenu()">☰</button>
@@ -992,14 +1007,28 @@ INSTANT <span>LEGAL SERVICES</span>
       matter, jurisdiction and availability.
     </p>
     <div class="buttons">
-      <a href="#client" class="btn primary">Find Legal Assistance</a>
-      <a href="#advocate" class="btn secondary">Join Our Legal Network</a>
+      <button type="button" class="btn primary" onclick="openILSPanel('client')">Find Legal Assistance</button>
+      <button type="button" class="btn secondary" onclick="openILSPanel('advocate')">Join Our Legal Network</button>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:18px;margin-top:34px;color:#aeb9c8;font-size:12px;font-weight:700;">
       <span>✓ Matter-based coordination</span>
       <span>✓ Jurisdiction-focused assistance</span>
       <span>✓ Confidential client access</span>
     </div>
+  </div>
+</section>
+
+<!-- QUICK ACCESS -->
+<section class="section ils-quick-access" id="quick-access">
+  <h2>Quick Access</h2>
+  <p class="quick-access-intro">Choose exactly what you need. Forms and private portals open only when selected.</p>
+  <div class="quick-grid">
+    <button type="button" class="quick-card" onclick="openILSPanel('client')"><span>⚖️</span><strong>Find Legal Assistance</strong><small>Submit a legal requirement</small></button>
+    <a class="quick-card" href="#verified-advocates"><span>👨‍⚖️</span><strong>Network Advocates</strong><small>View available network members</small></a>
+    <button type="button" class="quick-card" onclick="openILSPanel('advocate')"><span>🤝</span><strong>Join ILS Network</strong><small>Advocate registration</small></button>
+    <button type="button" class="quick-card" onclick="openILSPanel('client-access')"><span>🔐</span><strong>Client Portal</strong><small>Open your private matter</small></button>
+    <a class="quick-card" href="#advocate-portal"><span>💼</span><strong>Advocate Portal</strong><small>Secure advocate login</small></a>
+    <button type="button" class="quick-card" onclick="showAdminLogin(); document.getElementById('admin')?.scrollIntoView({behavior:'smooth',block:'start'});"><span>🛡️</span><strong>Admin</strong><small>Restricted administration</small></button>
   </div>
 </section>
 
@@ -1047,9 +1076,7 @@ across India.
 
 <div class="buttons">
 
-<a href="#advocate" class="btn primary">
-Become a Network Advocate
-</a>
+<button type="button" class="btn primary" onclick="openILSPanel('advocate')">Become a Network Advocate</button>
 
 </div>
 
@@ -1430,6 +1457,11 @@ Photo selected successfully
 
 </div>
 
+
+<label class="ils-undertaking">
+  <input type="checkbox" id="advocate_ethics_undertaking" required>
+  <span>I undertake to comply with the Advocates Act, applicable Bar Council of India / State Bar Council rules, professional duties, confidentiality requirements and Instant Legal Services professional policies. I will not use the ILS platform for prohibited solicitation, misleading publicity, touting or any conduct contrary to applicable professional ethics.</span>
+</label>
 
 <button
 class="btn primary full"
@@ -2028,13 +2060,6 @@ class="error">
     </p>
 </section>
 
-<!-- PUBLIC CONTACT -->
-<div class="public-contact">
-    <span class="public-contact-title">Instant Legal Services — Official Contact</span>
-    <a class="contact-btn contact-call" href="tel:8445609837">📞 Call 8445609837</a>
-    <a class="contact-btn contact-wa" href="https://wa.me/918445609837" target="_blank" rel="noopener">💬 WhatsApp</a>
-</div>
-
 <!-- CLIENT ACCESS: ONLY FOR CLIENTS WHO RECEIVE A PRIVATE ACCESS CODE -->
 <section class="section action-section" id="client-access">
     <div class="form-box">
@@ -2563,6 +2588,8 @@ document
 .getElementById("years_of_practice")
 .value
 ),
+
+admin_notes: "ILS professional ethics undertaking accepted on " + new Date().toISOString(),
 
 photo_url:
 photoUrl
@@ -4165,6 +4192,8 @@ function checkAccessQuery(){
    PUBLIC VERIFIED ADVOCATE NETWORK
 ========================================= */
 let publicAdvocates = [];
+let publicAdvocateRotationIndex = 0;
+let publicAdvocateRotationTimer = null;
 
 function normalizeText(value){
     return String(value || "").trim().toLowerCase();
@@ -4177,7 +4206,7 @@ function renderPublicAdvocates(){
     const search = normalizeText(document.getElementById("publicAdvocateSearch")?.value);
     const state = normalizeText(document.getElementById("publicAdvocateState")?.value);
 
-    const filtered = publicAdvocates.filter(a => {
+    const filteredAll = publicAdvocates.filter(a => {
         const haystack = normalizeText([
             a.advocate_name,
             a.practice_state,
@@ -4188,6 +4217,11 @@ function renderPublicAdvocates(){
         const matchesState = !state || normalizeText(a.practice_state) === state;
         return matchesSearch && matchesState;
     });
+
+    const start = publicAdvocateRotationIndex % Math.max(filteredAll.length, 1);
+    const filtered = filteredAll.length > 10
+        ? [...filteredAll.slice(start, start + 10), ...filteredAll.slice(0, Math.max(0, start + 10 - filteredAll.length))].slice(0,10)
+        : filteredAll;
 
     if(!filtered.length){
         grid.innerHTML = `<div class="public-network-empty">
@@ -4246,6 +4280,13 @@ async function loadPublicAdvocates(){
     }
 
     renderPublicAdvocates();
+    if(publicAdvocateRotationTimer) clearInterval(publicAdvocateRotationTimer);
+    publicAdvocateRotationTimer = setInterval(() => {
+        if(!document.getElementById('publicAdvocateSearch')?.value && !document.getElementById('publicAdvocateState')?.value && publicAdvocates.length > 10){
+            publicAdvocateRotationIndex = (publicAdvocateRotationIndex + 10) % publicAdvocates.length;
+            renderPublicAdvocates();
+        }
+    }, 12000);
 }
 
 const DOCUMENT_FUNCTION_URL = SUPABASE_URL + "/functions/v1/client-matter-documents";
@@ -4397,6 +4438,9 @@ document.addEventListener("input", function(event){
     }
 });
 
+document.getElementById('publicAdvocateSearch')?.addEventListener('input', () => { publicAdvocateRotationIndex = 0; renderPublicAdvocates(); });
+document.getElementById('publicAdvocateState')?.addEventListener('change', () => { publicAdvocateRotationIndex = 0; renderPublicAdvocates(); });
+
 document.addEventListener("change", function(event){
     if(event.target && event.target.id === "publicAdvocateState"){
         renderPublicAdvocates();
@@ -4534,6 +4578,31 @@ showAdminLogin();
 
 }
 
+
+
+/* =========================================
+   ILS STEP 1 — PANEL FORMS
+========================================= */
+function openILSPanel(id){
+    const section=document.getElementById(id);
+    if(!section) return;
+    if(!section.querySelector('.ils-panel-close')){
+        const close=document.createElement('button');
+        close.type='button'; close.className='ils-panel-close'; close.setAttribute('aria-label','Close'); close.innerHTML='×';
+        close.onclick=()=>closeILSPanel(id);
+        const box=section.querySelector('.form-box,.login-box');
+        if(box) box.prepend(close);
+    }
+    section.classList.add('ils-open');
+    document.body.classList.add('ils-modal-open');
+    setTimeout(()=>{ const first=section.querySelector('input,select,textarea,button:not(.ils-panel-close)'); if(first) first.focus(); },80);
+}
+function closeILSPanel(id){
+    const section=document.getElementById(id);
+    if(section) section.classList.remove('ils-open');
+    document.body.classList.remove('ils-modal-open');
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ ['client','advocate','client-access'].forEach(closeILSPanel); }});
 
 /* =========================================
    INITIALIZE
