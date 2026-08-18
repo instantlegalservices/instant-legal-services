@@ -2739,6 +2739,18 @@ return;
 
 }
 
+/* Always refresh the authenticated session before loading private CRM data.
+   This clears a stale access token that may contain a future JWT iat value. */
+const refreshed = await supabaseClient.auth.refreshSession();
+if(refreshed.error){
+    console.error("Session refresh failed:", refreshed.error);
+    await supabaseClient.auth.signOut();
+    errorBox.innerText =
+        "Login session could not be refreshed. Please check your system date/time and login again.";
+    errorBox.style.display = "block";
+    return;
+}
+
 
 document
 .getElementById("admin")
@@ -2791,28 +2803,35 @@ async function loadAdvocates(){
         </tr>
     `;
 
-    const {data,error} = await supabaseClient
+    let {data,error} = await supabaseClient
         .from("advocate_registrations")
         .select("*")
         .order("created_at",{ascending:false});
 
+    if(error && /JWT issued at future/i.test(error.message || "")){
+        const refreshed = await supabaseClient.auth.refreshSession();
+        if(!refreshed.error){
+            ({data,error} = await supabaseClient
+                .from("advocate_registrations")
+                .select("*")
+                .order("created_at",{ascending:false}));
+        }
+    }
+
     if(error){
-
         console.error(error);
-
+        const msg = /JWT issued at future/i.test(error.message || "")
+            ? "Your login session time is out of sync. Please refresh the page and login again."
+            : (error.message || "Unable to load advocate applications.");
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="empty">
-                    Unable to load advocates: ${escapeHtml(error.message)}
-                </td>
+                <td colspan="8" class="empty">${escapeHtml(msg)}</td>
             </tr>
         `;
-
         return;
     }
 
     allAdvocates = data || [];
-
     renderAdvocates();
 }
 
@@ -3166,7 +3185,7 @@ async function rejectAdvocate(){
 
 async function loadLeads(){
 
-const {data,error} =
+let {data,error} =
 await supabaseClient
 .from("client_requirements")
 .select("*")
@@ -3175,31 +3194,29 @@ await supabaseClient
 {ascending:false}
 );
 
+if(error && /JWT issued at future/i.test(error.message || "")){
+    const refreshed = await supabaseClient.auth.refreshSession();
+    if(!refreshed.error){
+        ({data,error} = await supabaseClient
+            .from("client_requirements")
+            .select("*")
+            .order("created_at",{ascending:false}));
+    }
+}
 
 if(error){
-
-console.error(error);
-
-alert(
-"Unable to load CRM leads: "
-+ error.message
-);
-
-return;
-
+    console.error(error);
+    const msg = /JWT issued at future/i.test(error.message || "")
+        ? "Your login session time is out of sync. Please refresh the page and login again."
+        : (error.message || "Unable to load CRM leads.");
+    alert("Unable to load CRM leads: " + msg);
+    return;
 }
 
-
-allLeads =
-data || [];
-
-
+allLeads = data || [];
 updateStats();
-
 renderLeads();
-
 }
-
 
 /* =========================================
    UPDATE STATISTICS
@@ -4486,27 +4503,28 @@ behavior:"smooth"
 
 async function checkSession(){
 
- const {data} =
- await supabaseClient
- .auth
- .getSession();
+ const {data} = await supabaseClient.auth.getSession();
+ if(!data.session) return;
 
- if(data.session){
+ const email=(data.session.user.email||"").toLowerCase();
 
-     const email=(data.session.user.email||"").toLowerCase();
-
-     if(email === "fahat29@gmail.com"){
-         document.getElementById("admin").style.display="none";
-         document.getElementById("dashboard").style.display="block";
-         document.getElementById("loggedUser").innerText=data.session.user.email;
-         loadLeads();
-         loadAdvocates();
-     }else{
-         await loadAdvocatePortal();
-     }
+ /*
+    IMPORTANT: Supabase keeps sessions across normal page refreshes.
+    Never reveal the private CRM merely because an old admin session
+    exists in the browser. The public homepage stays public.
+    The Admin button / #admin route is the explicit entry point.
+ */
+ if(email === "fahat29@gmail.com"){
+     document.getElementById("dashboard").style.display="none";
+     document.getElementById("admin").style.display="none";
+     return;
  }
-}
 
+ /* Do not render an advocate's private portal automatically on the
+    public homepage either. It is opened explicitly from the portal. */
+ document.getElementById("advocateDashboard")?.style &&
+     (document.getElementById("advocateDashboard").style.display="none");
+}
 
 
 /* =========================================
@@ -4603,6 +4621,17 @@ function closeILSPanel(id){
     document.body.classList.remove('ils-modal-open');
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ ['client','advocate','client-access'].forEach(closeILSPanel); }});
+
+/* =========================================
+   AUTH STATE SAFETY
+========================================= */
+supabaseClient.auth.onAuthStateChange((event) => {
+    if(event === "SIGNED_OUT") {
+        const dashboard = document.getElementById("dashboard");
+        if(dashboard) dashboard.style.display = "none";
+    }
+});
+
 
 /* =========================================
    INITIALIZE
