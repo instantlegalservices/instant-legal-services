@@ -1215,6 +1215,21 @@ nav a.ils-official-tool .tool-icon{font-size:13px;}
 })();
 </script>
 
+
+<style id="ils-v7-enhancements-css">
+.ils-selected-tags,.assignment-chip-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.ils-selected-tag{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:rgba(215,168,79,.10);border:1px solid rgba(215,168,79,.28);color:var(--gold2);font-size:11px;font-weight:700}
+.ils-jurisdiction-note{margin-top:8px;font-size:11px;color:var(--muted)}
+.ils-jurisdiction-note a{color:var(--gold2);text-decoration:none}
+#primary_practice_area,#edit_advocate_area{min-height:150px}
+@media(max-width:700px){#primary_practice_area,#edit_advocate_area{min-height:180px}.advocate-admin-title{gap:8px}.advocate-admin-title input{max-width:100%!important}}
+</style>
+
+<script id="ils-v7-bootstrap">
+window.ILS_V7_BOOT={};
+window.ILS_V7_SPLIT_PRACTICE=function(value){return String(value||"").split(/\s*\|\s*|\s*;\s*|\n/).map(function(x){return x.trim();}).filter(Boolean);};
+window.ILS_V7_FORMAT_PRACTICE=function(value){return window.ILS_V7_SPLIT_PRACTICE(value).join(" · ")||"Legal Practice";};
+</script>
 </head>
 
 <body>
@@ -1983,30 +1998,41 @@ placeholder="State Bar Council">
 </select>
 
 
-<label>District / Court</label>
-
-<input
-type="text"
-id="district_court"
-required
-placeholder="District / Court">
-
-
-<label>Primary Practice Area</label>
-
-<select id="primary_practice_area" required>
-
-<option value="">Select Practice Area</option>
-<option>Criminal Law</option>
-<option>NDPS</option>
-<option>Family / Matrimonial</option>
-<option>Civil / Property</option>
-<option>Commercial / Corporate</option>
-<option>Consumer</option>
-<option>NI Act</option>
-<option>Other</option>
-
+<label>Jurisdiction Level</label>
+<select id="advocate_jurisdiction_level" required>
+  <option value="District Court">District / Sessions / District Court</option>
+  <option value="High Court">High Court</option>
+  <option value="Supreme Court">Supreme Court of India</option>
+  <option value="Tribunal / Commission">Tribunal / Commission / Authority</option>
 </select>
+
+<div id="districtJurisdictionFields">
+  <label>District</label>
+  <input type="text" id="advocate_district" list="ilsDistrictList" placeholder="Select / type district">
+  <datalist id="ilsDistrictList"></datalist>
+
+  <label>Court / Court Complex / Establishment</label>
+  <input type="text" id="advocate_court" list="ilsCourtList" placeholder="e.g. District & Sessions Court, Bareilly">
+  <datalist id="ilsCourtList"></datalist>
+</div>
+
+<div id="highCourtJurisdictionFields" style="display:none;">
+  <label>High Court</label>
+  <select id="advocate_high_court"></select>
+</div>
+
+<div id="tribunalJurisdictionFields" style="display:none;">
+  <label>Tribunal / Commission / Authority</label>
+  <input type="text" id="advocate_tribunal" placeholder="Name of tribunal / commission / authority">
+</div>
+
+<div class="ils-jurisdiction-note">
+  <a href="https://services.ecourts.gov.in/ecourtindia_v6/?p=location/index" target="_blank" rel="noopener noreferrer">Open official eCourts State → District → Court Complex → Establishment directory ↗</a>
+</div>
+
+<label>Primary Practice Areas <span class="ils-small">(select all that apply)</span></label>
+<select id="primary_practice_area" multiple size="7" required aria-label="Select multiple primary practice areas"></select>
+<div id="selectedPracticeAreas" class="ils-selected-tags"></div>
 
 
 <label>Years of Practice</label>
@@ -2382,7 +2408,11 @@ Low
 <div class="advocate-admin-box ils-assignment-overview" id="assignmentOverviewBox" data-admin-view="assignments">
   <div class="advocate-admin-title">
     <span>Advocate Assignment Overview</span>
-    <button type="button" onclick="loadAssignmentOverview()">↻ Refresh</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input id="adminAssignmentSearch" type="search" placeholder="Search assigned advocate, district, court, state or practice area..." oninput="filterAssignmentOverview()" style="max-width:420px;">
+      <button type="button" onclick="clearAssignmentOverviewSearch()">Clear</button>
+      <button type="button" onclick="loadAssignmentOverview()">↻ Refresh</button>
+    </div>
   </div>
   <div class="table-wrap">
     <table>
@@ -2408,9 +2438,12 @@ Low
                 <div><label>Email</label><input id="edit_advocate_email" type="email"></div>
                 <div><label>Enrollment Number</label><input id="edit_advocate_enrollment"></div>
                 <div><label>State Bar Council</label><input id="edit_advocate_bar_council"></div>
-                <div><label>Practice State</label><input id="edit_advocate_state"></div>
-                <div><label>District / Court</label><input id="edit_advocate_court"></div>
-                <div><label>Primary Practice Area</label><input id="edit_advocate_area"></div>
+                <div><label>Practice State</label><select id="edit_advocate_state"></select></div>
+                <div><label>Jurisdiction Level</label><select id="edit_advocate_jurisdiction_level"><option>District Court</option><option>High Court</option><option>Supreme Court</option><option>Tribunal / Commission</option></select></div>
+                <div><label>District</label><input id="edit_advocate_district" list="ilsAdminDistrictList"></div>
+                <div><label>Court / Establishment</label><input id="edit_advocate_court" list="ilsAdminCourtList"></div>
+                <div><label>High Court</label><select id="edit_advocate_high_court"></select></div>
+                <div><label>Primary Practice Areas</label><select id="edit_advocate_area" multiple size="7"></select></div>
                 <div><label>Years of Practice</label><input id="edit_advocate_years" type="number" min="0" max="70"></div>
             </div>
             <button type="button" class="btn primary full" onclick="saveAdvocateProfile()">Save Advocate Profile</button>
@@ -2419,6 +2452,8 @@ Low
 
         <label>Admin Notes</label>
         <textarea id="advocateAdminNotes" placeholder="Internal verification notes"></textarea>
+
+        <datalist id="ilsAdminDistrictList"></datalist><datalist id="ilsAdminCourtList"></datalist>
 
         <div class="advocate-modal-actions">
             <button type="button" class="btn approve-btn" onclick="approveAdvocate()">Approve Advocate</button>
@@ -2733,11 +2768,12 @@ class="error">
 
     <div class="advocate-network-toolbar">
         <input type="search" id="publicAdvocateSearch"
-               placeholder="Search advocate, court or practice area..."
+               placeholder="Search advocate, district, court, state or practice area..."
                autocomplete="off">
-        <select id="publicAdvocateState">
-            <option value="">All Practice States</option>
-        </select>
+        <select id="publicAdvocatePracticeArea"><option value="">All Practice Areas</option></select>
+        <select id="publicAdvocateState"><option value="">All Practice States / UTs</option></select>
+        <input type="search" id="publicAdvocateDistrict" placeholder="District" autocomplete="off">
+        <input type="search" id="publicAdvocateCourt" placeholder="Court / High Court" autocomplete="off">
     </div>
 
     <div id="publicAdvocateGrid" class="public-advocate-grid">
@@ -3167,6 +3203,14 @@ return;
 }
 
 
+/* PRACTICE AREAS */
+const practiceAreas = getSelectedPracticeAreas();
+if(!practiceAreas.length){
+    errorBox.innerText="Please select at least one primary practice area.";
+    errorBox.style.display="block";
+    return;
+}
+
 /* MOBILE */
 
 const mobile =
@@ -3294,16 +3338,9 @@ document
 .getElementById("practice_state")
 .value,
 
-district_court:
-document
-.getElementById("district_court")
-.value
-.trim(),
+district_court:buildAdvocateJurisdictionString(),
 
-primary_practice_area:
-document
-.getElementById("primary_practice_area")
-.value,
+primary_practice_area:getSelectedPracticeAreas().join(" | "),
 
 years_of_practice:
 Number(
@@ -3560,89 +3597,22 @@ async function loadAdvocates(){
 }
 
 function renderAdvocates(){
-
-    const tbody = document.getElementById("advocateTableBody");
-
-    if(!tbody) return;
-
-    if(allAdvocates.length === 0){
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="empty">
-                    No advocate applications found.
-                </td>
-            </tr>
-        `;
-
-        return;
-    }
-
-    tbody.innerHTML = allAdvocates.map(advocate => {
-
-        const verification =
-            advocate.verification_status ||
-            advocate.status ||
-            "Pending";
-
-        const verificationClass =
-            verification === "Approved"
-                ? "verify-approved"
-                : verification === "Rejected"
-                    ? "verify-rejected"
-                    : "verify-pending";
-
-        const photo =
-            advocate.photo_url ||
-            advocate.profile_photo_url ||
-            "";
-
-        const photoHtml = photo
-            ? `<img class="advocate-photo-small"
-                    src="${escapeHtml(photo)}"
-                    alt="Advocate photo">`
-            : `<div class="advocate-photo-small"></div>`;
-
-        const location =
-            `${advocate.district_court || "-"}<br>
-             <small>${advocate.practice_state || ""}</small>`;
-
-        return `
-            <tr>
-                <td>${photoHtml}</td>
-
-                <td>
-                    <strong>${escapeHtml(advocate.advocate_name || "-")}</strong>
-                    <br>
-                    <small>${escapeHtml(advocate.enrollment_number || "")}</small>
-                </td>
-
-                <td>${escapeHtml(advocate.mobile || "-")}</td>
-
-                <td>${location}</td>
-
-                <td>${escapeHtml(advocate.primary_practice_area || "-")}</td>
-
-                <td>${escapeHtml(String(advocate.years_of_practice ?? "-"))} years</td>
-
-                <td>
-                    <span class="verify-badge ${verificationClass}">
-                        ${escapeHtml(verification)}
-                    </span>
-                </td>
-
-                <td>
-                    <button class="advocate-action-btn view-btn"
-                        onclick="openAdvocate(${Number(advocate.id)})">
-                        View
-                    </button>
-                </td>
-            </tr>
-        `;
-
+    const tbody=document.getElementById("advocateTableBody"); if(!tbody)return;
+    const q=(document.getElementById("adminAdvocateSearch")?.value||"").toLowerCase().trim();
+    const source=window.allAdvocates || allAdvocates || [];
+    const rows=source.filter(a=>{
+      const hay=[a.advocate_name,a.mobile,a.email,a.practice_state,a.district_court,a.primary_practice_area,a.enrollment_number,a.state_bar_council].filter(Boolean).join(" ").toLowerCase();
+      return !q||hay.includes(q);
+    });
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="8" class="empty">No advocate applications match the search.</td></tr>';return;}
+    tbody.innerHTML=rows.map(advocate=>{
+      const verification=advocate.verification_status||advocate.status||"Pending";
+      const verificationClass=verification==="Approved"?"verify-approved":verification==="Rejected"?"verify-rejected":"verify-pending";
+      const photo=advocate.photo_url||advocate.profile_photo_url||"";
+      const photoHtml=photo?`<img class="advocate-photo-small" src="${escapeHtml(photo)}" alt="Advocate photo">`:`<div class="advocate-photo-small"></div>`;
+      return `<tr><td>${photoHtml}</td><td><strong>${escapeHtml(advocate.advocate_name||"-")}</strong><br><small>${escapeHtml(advocate.enrollment_number||"")}</small></td><td>${escapeHtml(advocate.mobile||"-")}</td><td>${escapeHtml(advocate.district_court||"-")}<br><small>${escapeHtml(advocate.practice_state||"")}</small></td><td>${escapeHtml((window.ILS_V7_FORMAT_PRACTICE?window.ILS_V7_FORMAT_PRACTICE(advocate.primary_practice_area):String(advocate.primary_practice_area||"Legal Practice")))}</td><td>${escapeHtml(String(advocate.years_of_practice??"-"))} years</td><td><span class="verify-badge ${verificationClass}">${escapeHtml(verification)}</span></td><td><button class="advocate-action-btn view-btn" onclick="openAdvocate(${Number(advocate.id)})">View</button></td></tr>`;
     }).join("");
 }
-
 function openAdvocate(id){
 
     const advocate = allAdvocates.find(
@@ -3902,8 +3872,8 @@ async function saveAdvocateProfile(){
         enrollment_number:document.getElementById("edit_advocate_enrollment").value.trim(),
         state_bar_council:document.getElementById("edit_advocate_bar_council").value.trim(),
         practice_state:document.getElementById("edit_advocate_state").value.trim(),
-        district_court:document.getElementById("edit_advocate_court").value.trim(),
-        primary_practice_area:document.getElementById("edit_advocate_area").value.trim(),
+        district_court:buildAdminAdvocateJurisdictionString(),
+        primary_practice_area:getSelectedAdminPracticeAreas().join(" | "),
         years_of_practice:Number(document.getElementById("edit_advocate_years").value||0)
     };
     const {error}=await supabaseClient.from("advocate_registrations").update(updateData).eq("id",selectedAdvocateId);
@@ -3929,10 +3899,11 @@ function fillAdvocateEditFields(advocate){
         edit_advocate_name:advocate.advocate_name||"", edit_advocate_mobile:advocate.mobile||"",
         edit_advocate_email:advocate.email||"", edit_advocate_enrollment:advocate.enrollment_number||"",
         edit_advocate_bar_council:advocate.state_bar_council||"", edit_advocate_state:advocate.practice_state||"",
-        edit_advocate_court:advocate.district_court||"", edit_advocate_area:advocate.primary_practice_area||"",
         edit_advocate_years:String(advocate.years_of_practice??0)
     };
     Object.entries(map).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.value=value;});
+    populateJurisdictionEditors(advocate.district_court||"");
+    setMultiSelectValues(document.getElementById("edit_advocate_area"),splitPracticeAreas(advocate.primary_practice_area));
 }
 
 async function changeAdvocatePassword(){
@@ -4416,38 +4387,19 @@ document
    ADVOCATE ASSIGNMENT HISTORY
 ========================================= */
 async function loadAssignmentOverview(){
-    const body=document.getElementById("assignmentOverviewBody");
-    if(!body) return;
+    const body=document.getElementById("assignmentOverviewBody"); if(!body)return;
     body.innerHTML='<tr><td colspan="5" class="empty">Loading assignment overview...</td></tr>';
     try{
-        const {data:rows,error}=await supabaseClient
-            .from("advocate_assignments")
-            .select("lead_id,advocate_id,assigned_at,status,client_can_see_contact,ended_at,assigned_by_email");
-        if(error) throw error;
-        allAssignments = rows || [];
-        // Refresh lead search/display because assigned advocate names are part of CRM search.
-        if(document.getElementById("leadTableBody")) renderLeads();
-        const advocatesMap=new Map((allAdvocates||[]).map(a=>[Number(a.id),a]));
-        const groups=new Map();
-        (rows||[]).forEach(r=>{
-            const id=Number(r.advocate_id);
-            if(!groups.has(id)) groups.set(id,{id,total:0,active:0,latest:null});
-            const g=groups.get(id); g.total++;
-            if(["Assigned","Active"].includes(r.status||"Assigned")) g.active++;
-            if(!g.latest || new Date(r.assigned_at||0)>new Date(g.latest.assigned_at||0)) g.latest=r;
-        });
-        const sorted=[...groups.values()].sort((a,b)=>b.active-a.active || b.total-a.total);
-        if(!sorted.length){ body.innerHTML='<tr><td colspan="5" class="empty">No advocate assignments recorded yet.</td></tr>'; return; }
-        body.innerHTML=sorted.map(g=>{
-            const a=advocatesMap.get(g.id)||{}; const latest=g.latest;
-            return `<tr><td><strong>${escapeHtml(a.advocate_name||("Advocate #"+g.id))}</strong></td><td>${escapeHtml(a.primary_practice_area||"-")}<br><small>${escapeHtml(a.district_court||"")}</small></td><td><strong>${g.active}</strong></td><td>${g.total}</td><td>${escapeHtml(latest?.assigned_at?new Date(latest.assigned_at).toLocaleString("en-IN"):"-")}<br><small>${escapeHtml(latest?.assigned_by_email||"Admin")}</small></td></tr>`;
-        }).join("");
-    }catch(error){
-        console.error("Assignment overview error:",error);
-        body.innerHTML=`<tr><td colspan="5" class="empty">Unable to load assignment overview: ${escapeHtml(error?.message||"Unknown error")}</td></tr>`;
-    }
+      const {data:rows,error}=await supabaseClient.from("advocate_assignments").select("lead_id,advocate_id,assigned_at,status,client_can_see_contact,ended_at,assigned_by_email");
+      if(error)throw error;
+      allAssignments=rows||[];
+      if(document.getElementById("leadTableBody"))renderLeads();
+      const map=new Map((allAdvocates||[]).map(a=>[Number(a.id),a])); const groups=new Map();
+      (rows||[]).forEach(r=>{const id=Number(r.advocate_id);if(!groups.has(id))groups.set(id,{id,total:0,active:0,latest:null});const g=groups.get(id);g.total++;if(["Assigned","Active"].includes(r.status||"Assigned"))g.active++;if(!g.latest||new Date(r.assigned_at||0)>new Date(g.latest.assigned_at||0))g.latest=r;});
+      window.ilsV7AssignmentRows=[...groups.values()].map(g=>{const a=map.get(g.id)||{};return{id:g.id,name:a.advocate_name||"",mobile:a.mobile||"",email:a.email||"",state:a.practice_state||"",court:a.district_court||"",practice:a.primary_practice_area||"",active:g.active,total:g.total,latest:g.latest?.assigned_at?new Date(g.latest.assigned_at).toLocaleString("en-IN"):"-"};});
+      filterAssignmentOverview();
+    }catch(error){console.error(error);body.innerHTML=`<tr><td colspan="5" class="empty">Unable to load assignment overview: ${escapeHtml(error?.message||"Unknown error")}</td></tr>`;}
 }
-
 async function loadAssignmentHistory(clientId){
     const box=document.getElementById("assignmentHistory");
     if(!box || !clientId) return;
@@ -4653,10 +4605,9 @@ async function generateClientAccess(){
 
     if(!id) return;
 
-    const selectedAdvocateId =
-        document.getElementById("edit_assigned_advocate_id").value;
+    const selectedAdvocateIds = getSelectedAdvocateIds();
 
-    if(!selectedAdvocateId){
+    if(!selectedAdvocateIds.length){
         alert("Please assign an approved advocate first.");
         return;
     }
@@ -4919,58 +4870,22 @@ function normalizeText(value){
 }
 
 function renderPublicAdvocates(){
-    const grid = document.getElementById("publicAdvocateGrid");
-    if(!grid) return;
-
-    const search = normalizeText(document.getElementById("publicAdvocateSearch")?.value);
-    const state = normalizeText(document.getElementById("publicAdvocateState")?.value);
-
-    const filteredAll = publicAdvocates.filter(a => {
-        const haystack = normalizeText([
-            a.advocate_name,
-            a.practice_state,
-            a.district_court,
-            a.primary_practice_area
-        ].join(" "));
-        const matchesSearch = !search || haystack.includes(search);
-        const matchesState = !state || normalizeText(a.practice_state) === state;
-        return matchesSearch && matchesState;
+    const grid=document.getElementById("publicAdvocateGrid"); if(!grid)return;
+    const search=normalizeText(document.getElementById("publicAdvocateSearch")?.value);
+    const state=normalizeText(document.getElementById("publicAdvocateState")?.value);
+    const area=normalizeText(document.getElementById("publicAdvocatePracticeArea")?.value);
+    const district=normalizeText(document.getElementById("publicAdvocateDistrict")?.value);
+    const court=normalizeText(document.getElementById("publicAdvocateCourt")?.value);
+    const filteredAll=publicAdvocates.filter(a=>{
+      const hay=normalizeText([a.advocate_name,a.practice_state,a.district_court,a.primary_practice_area].join(" "));
+      const areas=(window.ILS_V7_SPLIT_PRACTICE?window.ILS_V7_SPLIT_PRACTICE(a.primary_practice_area):String(a.primary_practice_area||"").split("|").map(x=>x.trim()).filter(Boolean)).map(normalizeText);
+      return (!search||hay.includes(search))&&(!state||normalizeText(a.practice_state)===state)&&(!area||areas.includes(area))&&(!district||normalizeText(a.district_court).includes(district))&&(!court||normalizeText(a.district_court).includes(court));
     });
-
-    const start = publicAdvocateRotationIndex % Math.max(filteredAll.length, 1);
-    const filtered = filteredAll.length > 10
-        ? [...filteredAll.slice(start, start + 10), ...filteredAll.slice(0, Math.max(0, start + 10 - filteredAll.length))].slice(0,10)
-        : filteredAll;
-
-    if(!filtered.length){
-        grid.innerHTML = `<div class="public-network-empty">
-            No verified advocates found for the selected search.
-        </div>`;
-        return;
-    }
-
-    grid.innerHTML = filtered.map(a => {
-        const photo = a.photo_url || a.profile_photo_url || "";
-        const photoHtml = photo
-            ? `<img class="public-advocate-photo" src="${escapeHtml(photo)}" alt="${escapeHtml(a.advocate_name || "Advocate")}" loading="lazy">`
-            : `<div class="public-advocate-photo" aria-hidden="true"></div>`;
-
-        return `
-            <article class="public-advocate-card">
-                ${photoHtml}
-                <h3>${escapeHtml(a.advocate_name || "Advocate")}</h3>
-                <span class="public-advocate-badge">Verified Network Member</span>
-                <div class="public-advocate-meta">
-                    <div><strong>Practice Area:</strong> ${escapeHtml(a.primary_practice_area || "Legal Practice")}</div>
-                    <div><strong>District / Court:</strong> ${escapeHtml(a.district_court || "-")}</div>
-                    <div><strong>Practice State:</strong> ${escapeHtml(a.practice_state || "-")}</div>
-                    <div><strong>Experience:</strong> ${escapeHtml(String(a.years_of_practice ?? "-"))} years</div>
-                </div>
-            </article>
-        `;
-    }).join("");
+    const start=publicAdvocateRotationIndex%Math.max(filteredAll.length,1);
+    const filtered=filteredAll.length>10?[...filteredAll.slice(start,start+10),...filteredAll.slice(0,Math.max(0,start+10-filteredAll.length))].slice(0,10):filteredAll;
+    if(!filtered.length){grid.innerHTML='<div class="public-network-empty">No verified advocates found for the selected search.</div>';return;}
+    grid.innerHTML=filtered.map(a=>{const photo=a.photo_url||a.profile_photo_url||"";const photoHtml=photo?`<img class="public-advocate-photo" src="${escapeHtml(photo)}" alt="${escapeHtml(a.advocate_name||"Advocate")}" loading="lazy">`:`<div class="public-advocate-photo" aria-hidden="true"></div>`;return `<article class="public-advocate-card">${photoHtml}<h3>${escapeHtml(a.advocate_name||"Advocate")}</h3><span class="public-advocate-badge">Verified Network Member</span><div class="public-advocate-meta"><div><strong>Practice Areas:</strong> ${escapeHtml((window.ILS_V7_FORMAT_PRACTICE?window.ILS_V7_FORMAT_PRACTICE(a.primary_practice_area):String(a.primary_practice_area||"Legal Practice")))}</div><div><strong>District / Court:</strong> ${escapeHtml(a.district_court||"-")}</div><div><strong>Practice State:</strong> ${escapeHtml(a.practice_state||"-")}</div><div><strong>Experience:</strong> ${escapeHtml(String(a.years_of_practice??"-"))} years</div></div></article>`;}).join("");
 }
-
 async function loadPublicAdvocates(){
     const grid = document.getElementById("publicAdvocateGrid");
     if(!grid) return;
@@ -4992,10 +4907,13 @@ async function loadPublicAdvocates(){
 
     const stateSelect = document.getElementById("publicAdvocateState");
     if(stateSelect){
-        const states = [...new Set(publicAdvocates.map(a => String(a.practice_state || "").trim()).filter(Boolean))]
-            .sort((a,b) => a.localeCompare(b));
-        stateSelect.innerHTML = `<option value="">All Practice States</option>` +
-            states.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+        const states = [...new Set(publicAdvocates.map(a => String(a.practice_state || "").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+        stateSelect.innerHTML = `<option value="">All Practice States / UTs</option>` + states.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+    }
+    const areaSelect=document.getElementById("publicAdvocatePracticeArea");
+    if(areaSelect){
+        const areas=[...new Set(publicAdvocates.flatMap(a=>splitPracticeAreas(a.primary_practice_area)))].sort((a,b)=>a.localeCompare(b));
+        areaSelect.innerHTML='<option value="">All Practice Areas</option>'+areas.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
     }
 
     renderPublicAdvocates();
@@ -5159,6 +5077,9 @@ document.addEventListener("input", function(event){
 
 document.getElementById('publicAdvocateSearch')?.addEventListener('input', () => { publicAdvocateRotationIndex = 0; renderPublicAdvocates(); });
 document.getElementById('publicAdvocateState')?.addEventListener('change', () => { publicAdvocateRotationIndex = 0; renderPublicAdvocates(); });
+document.getElementById('publicAdvocatePracticeArea')?.addEventListener('change', () => { publicAdvocateRotationIndex = 0; renderPublicAdvocates(); });
+document.getElementById('publicAdvocateDistrict')?.addEventListener('input', () => { publicAdvocateRotationIndex = 0; renderPublicAdvocates(); });
+document.getElementById('publicAdvocateCourt')?.addEventListener('input', () => { publicAdvocateRotationIndex = 0; renderPublicAdvocates(); });
 
 document.addEventListener("change", function(event){
     if(event.target && event.target.id === "publicAdvocateState"){
@@ -5383,6 +5304,127 @@ document.addEventListener("change", function(event){
 </script>
 
 
+
+<script id="ils-v7-enhancements-js">
+(function(){
+const V7_STATES=["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"];
+const V7_HIGH_COURTS=["Allahabad High Court", "Andhra Pradesh High Court", "Bombay High Court", "Calcutta High Court", "Chhattisgarh High Court", "Delhi High Court", "Gauhati High Court", "Gujarat High Court", "Himachal Pradesh High Court", "High Court of Jammu & Kashmir and Ladakh", "Jharkhand High Court", "Karnataka High Court", "Kerala High Court", "Madhya Pradesh High Court", "Madras High Court", "Manipur High Court", "Meghalaya High Court", "Orissa High Court", "Patna High Court", "Punjab and Haryana High Court", "Rajasthan High Court", "Sikkim High Court", "Telangana High Court", "Tripura High Court", "Uttarakhand High Court"];
+const V7_PRACTICE=["Criminal Law", "Bail & Anticipatory Bail", "NDPS Law", "Cyber Crime", "Family / Matrimonial Law", "Civil / Property Law", "Consumer Law", "Banking & Financial Disputes", "Cheque Bounce / NI Act", "Motor Vehicle & Accident Claims", "Labour & Employment Law", "Service Matters", "Commercial & Corporate Law", "Contractual & Business Disputes", "Insolvency & Bankruptcy", "Taxation & GST", "Intellectual Property Rights", "Constitutional & Writ Matters", "Arbitration & ADR", "Real Estate", "Legal Drafting & Documentation", "Court Marriage & Registration", "Other"];
+const V7_COURT_HINTS=["District & Sessions Court", "District Court", "Civil Court", "Chief Judicial Magistrate Court", "Family Court", "Commercial Court", "Consumer Commission", "Motor Accident Claims Tribunal", "Labour Court", "Industrial Tribunal", "Juvenile Justice Board", "Special Judge Court", "Metropolitan Magistrate Court", "City Civil & Sessions Court", "High Court", "Supreme Court of India"];
+
+window.ILS_V7={states:V7_STATES,highCourts:V7_HIGH_COURTS,practiceAreas:V7_PRACTICE};
+
+function splitPracticeAreas(value){
+  return String(value||"").split(/\s*\|\s*|\s*;\s*|\n/).map(x=>x.trim()).filter(Boolean);
+}
+window.splitPracticeAreas=splitPracticeAreas;
+function formatPracticeAreas(value){ return splitPracticeAreas(value).join(" · ") || "Legal Practice"; }
+window.formatPracticeAreas=formatPracticeAreas;
+function escapeV7(v){ return typeof escapeHtml==='function' ? escapeHtml(v) : String(v??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+function setMultiSelectValues(select,values){ if(!select)return; const set=new Set((values||[]).map(String)); [...select.options].forEach(o=>o.selected=set.has(String(o.value))); select.dispatchEvent(new Event('change',{bubbles:true})); }
+function fillSelect(select,items,placeholder){ if(!select)return; select.innerHTML=(placeholder?`<option value="">${escapeV7(placeholder)}</option>`:'')+items.map(x=>`<option value="${escapeV7(x)}">${escapeV7(x)}</option>`).join(''); }
+function initPracticeSelects(){
+  fillSelect(document.getElementById('primary_practice_area'),V7_PRACTICE,'');
+  const admin=document.getElementById('edit_advocate_area'); if(admin) fillSelect(admin,V7_PRACTICE,'');
+  const hc=document.getElementById('advocate_high_court'); if(hc) fillSelect(hc,V7_HIGH_COURTS,'Select High Court');
+  const ahc=document.getElementById('edit_advocate_high_court'); if(ahc) fillSelect(ahc,V7_HIGH_COURTS,'Select High Court');
+  const statesSel=document.getElementById('practice_state'); if(statesSel) fillSelect(statesSel,V7_STATES,'Select State / UT');
+  const editState=document.getElementById('edit_advocate_state'); if(editState) fillSelect(editState,V7_STATES,'Select State / UT');
+  const dl=document.getElementById('ilsCourtList'); if(dl) dl.innerHTML=V7_COURT_HINTS.map(x=>`<option value="${escapeV7(x)}"></option>`).join('');
+  const adl=document.getElementById('ilsAdminCourtList'); if(adl) adl.innerHTML=V7_COURT_HINTS.map(x=>`<option value="${escapeV7(x)}"></option>`).join('');
+  updatePracticeTags();
+  const p=document.getElementById('primary_practice_area'); if(p)p.addEventListener('change',updatePracticeTags);
+  const level=document.getElementById('advocate_jurisdiction_level'); if(level)level.addEventListener('change',toggleJurisdictionFields);
+  const alevel=document.getElementById('edit_advocate_jurisdiction_level'); if(alevel)alevel.addEventListener('change',toggleAdminJurisdictionFields);
+  toggleJurisdictionFields(); toggleAdminJurisdictionFields();
+}
+function updatePracticeTags(){
+  const box=document.getElementById('selectedPracticeAreas'); const s=document.getElementById('primary_practice_area'); if(!box||!s)return;
+  box.innerHTML=[...s.selectedOptions].map(o=>`<span class="ils-selected-tag">${escapeV7(o.value)}</span>`).join('');
+}
+function getSelectedPracticeAreas(){return [...(document.getElementById('primary_practice_area')?.selectedOptions||[])].map(o=>o.value).filter(Boolean);}
+window.getSelectedPracticeAreas=getSelectedPracticeAreas;
+function getSelectedAdminPracticeAreas(){return [...(document.getElementById('edit_advocate_area')?.selectedOptions||[])].map(o=>o.value).filter(Boolean);}
+window.getSelectedAdminPracticeAreas=getSelectedAdminPracticeAreas;
+function toggleJurisdictionFields(){
+  const level=document.getElementById('advocate_jurisdiction_level')?.value||'District Court';
+  const d=document.getElementById('districtJurisdictionFields'), h=document.getElementById('highCourtJurisdictionFields'), t=document.getElementById('tribunalJurisdictionFields');
+  if(d)d.style.display=level==='District Court'?'block':'none'; if(h)h.style.display=level==='High Court'?'block':'none'; if(t)t.style.display=level==='Tribunal / Commission'?'block':'none';
+}
+function toggleAdminJurisdictionFields(){
+  const level=document.getElementById('edit_advocate_jurisdiction_level')?.value||'District Court';
+  const h=document.getElementById('edit_advocate_high_court'); if(h)h.parentElement.style.display=level==='High Court'?'block':'none';
+  const d=document.getElementById('edit_advocate_district'); if(d)d.parentElement.style.display=level==='District Court'?'block':'none';
+}
+function buildAdvocateJurisdictionString(){
+  const level=document.getElementById('advocate_jurisdiction_level')?.value||'District Court';
+  if(level==='Supreme Court')return 'Supreme Court of India';
+  if(level==='High Court')return 'High Court: '+(document.getElementById('advocate_high_court')?.value||'High Court');
+  if(level==='Tribunal / Commission')return 'Tribunal / Commission: '+(document.getElementById('advocate_tribunal')?.value||document.getElementById('advocate_court')?.value||'Not specified');
+  const district=document.getElementById('advocate_district')?.value.trim()||''; const court=document.getElementById('advocate_court')?.value.trim()||'';
+  return [district?'District: '+district:'',court?'Court: '+court:''].filter(Boolean).join(' | ') || 'District / Court';
+}
+window.buildAdvocateJurisdictionString=buildAdvocateJurisdictionString;
+function parseJurisdictionString(value){
+  const s=String(value||'');
+  if(/^Supreme Court/i.test(s))return {level:'Supreme Court',district:'',court:'',highCourt:''};
+  const hm=s.match(/^High Court:\s*(.+)$/i); if(hm)return {level:'High Court',district:'',court:'',highCourt:hm[1].trim()};
+  const tm=s.match(/^Tribunal \/ Commission:\s*(.+)$/i); if(tm)return {level:'Tribunal / Commission',district:'',court:tm[1].trim(),highCourt:''};
+  const dm=s.match(/District:\s*([^|]+)/i), cm=s.match(/Court:\s*(.+)$/i);
+  return {level:'District Court',district:dm?dm[1].trim():'',court:cm?cm[1].trim():s,highCourt:''};
+}
+function populateJurisdictionEditors(value){
+  const p=parseJurisdictionString(value); const l=document.getElementById('edit_advocate_jurisdiction_level'); if(l)l.value=p.level;
+  const d=document.getElementById('edit_advocate_district'); if(d)d.value=p.district;
+  const c=document.getElementById('edit_advocate_court'); if(c)c.value=p.court;
+  const h=document.getElementById('edit_advocate_high_court'); if(h)h.value=p.highCourt;
+  toggleAdminJurisdictionFields();
+}
+function buildAdminAdvocateJurisdictionString(){
+  const level=document.getElementById('edit_advocate_jurisdiction_level')?.value||'District Court';
+  if(level==='Supreme Court')return 'Supreme Court of India';
+  if(level==='High Court')return 'High Court: '+(document.getElementById('edit_advocate_high_court')?.value||'High Court');
+  if(level==='Tribunal / Commission')return 'Tribunal / Commission: '+(document.getElementById('edit_advocate_court')?.value||'Not specified');
+  const d=document.getElementById('edit_advocate_district')?.value.trim()||''; const c=document.getElementById('edit_advocate_court')?.value.trim()||'';
+  return [d?'District: '+d:'',c?'Court: '+c:''].filter(Boolean).join(' | ')||'District / Court';
+}
+window.buildAdminAdvocateJurisdictionString=buildAdminAdvocateJurisdictionString;
+
+// Fix missing Admin advocate search function in the current source.
+window.renderAdminAdvocates=function(){
+  const q=(document.getElementById('adminAdvocateSearch')?.value||'').toLowerCase().trim();
+  const base=window.allAdvocates||[];
+  const filtered=base.filter(a=>{
+    const hay=[a.advocate_name,a.mobile,a.email,a.practice_state,a.district_court,a.primary_practice_area,a.enrollment_number,a.state_bar_council].filter(Boolean).join(' ').toLowerCase();
+    return !q||hay.includes(q);
+  });
+  const old=window.allAdvocates; window.allAdvocates=filtered; if(typeof renderAdvocates==='function')renderAdvocates(); window.allAdvocates=old;
+};
+
+// Assignment search: filter the already-loaded overview without touching DB/RPC logic.
+window.filterAssignmentOverview=function(){
+  const q=(document.getElementById('adminAssignmentSearch')?.value||'').toLowerCase().trim();
+  const rows=window.ilsV7AssignmentRows||[];
+  const filtered=rows.filter(r=>[r.name,r.mobile,r.email,r.state,r.court,r.practice].filter(Boolean).join(' ').toLowerCase().includes(q));
+  renderV7AssignmentRows(filtered);
+};
+window.clearAssignmentOverviewSearch=function(){const x=document.getElementById('adminAssignmentSearch');if(x)x.value='';renderV7AssignmentRows(window.ilsV7AssignmentRows||[]);};
+function renderV7AssignmentRows(rows){
+  const body=document.getElementById('assignmentOverviewBody'); if(!body)return;
+  if(!rows.length){body.innerHTML='<tr><td colspan="5" class="empty">No assigned advocates found.</td></tr>';return;}
+  body.innerHTML=rows.map(r=>`<tr><td><strong>${escapeV7(r.name||('Advocate #'+r.id))}</strong><br><small>${escapeV7(r.mobile||r.email||'')}</small></td><td>${escapeV7(formatPracticeAreas(r.practice))}<br><small>${escapeV7(r.court||'')}${r.state?' · '+escapeV7(r.state):''}</small></td><td><strong>${r.active}</strong></td><td>${r.total}</td><td>${escapeV7(r.latest||'-')}</td></tr>`).join('');
+}
+window.renderV7AssignmentRows=renderV7AssignmentRows;
+
+// Public directory enhancements.
+function initPublicFilters(){
+  const pa=document.getElementById('publicAdvocatePracticeArea'); if(pa)fillSelect(pa,V7_PRACTICE,'All Practice Areas');
+  ['publicAdvocateSearch','publicAdvocateState','publicAdvocatePracticeArea','publicAdvocateDistrict','publicAdvocateCourt'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>{publicAdvocateRotationIndex=0;renderPublicAdvocates();}));
+}
+
+window.addEventListener('load',()=>{setTimeout(()=>{initPracticeSelects();initPublicFilters();},120);});
+})();
+</script>
 
 </body>
 </html>
