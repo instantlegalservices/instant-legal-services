@@ -1458,6 +1458,13 @@ id="advocate_email"
 required
 placeholder="Professional email">
 
+<label>Create Password</label>
+<input type="password" id="advocate_password" required minlength="8" autocomplete="new-password" placeholder="Minimum 8 characters">
+
+<label>Confirm Password</label>
+<input type="password" id="advocate_password_confirm" required minlength="8" autocomplete="new-password" placeholder="Re-enter password">
+
+
 
 <label>Enrollment Number</label>
 
@@ -2049,11 +2056,11 @@ id="edit_id">
 </select>
 
 
-<label>Assigned Advocate</label>
+<label>Assigned Advocates</label>
 
-<select id="edit_assigned_advocate_id">
-<option value="">Select approved advocate</option>
+<select id="edit_assigned_advocate_id" multiple size="6" aria-label="Select one or more approved advocates">
 </select>
+<div class="ils-small" style="margin-top:6px;">You can assign any number of approved advocates to the same client. Hold Ctrl/Cmd to select multiple advocates.</div>
 
 <input type="hidden" id="edit_assigned_advocate">
 
@@ -2381,6 +2388,7 @@ supabase.createClient(
 ========================================= */
 
 let allLeads = [];
+let allAssignments = [];
 
 let selectedAdvocatePhoto = null;
 
@@ -2808,26 +2816,24 @@ photo_storage_path:filePath
 
 
 /* =====================================
-   SAVE ADVOCATE REGISTRATION
+   CREATE SECURE ADVOCATE ACCOUNT + REGISTRATION
+   Password is handled by Supabase Auth only.
 ===================================== */
 
-submitButton.innerText =
-"Saving Registration...";
+const password = document.getElementById("advocate_password").value;
+const passwordConfirm = document.getElementById("advocate_password_confirm").value;
+if(password.length < 8) throw new Error("Password must contain at least 8 characters.");
+if(password !== passwordConfirm) throw new Error("Password and confirm password do not match.");
 
+submitButton.innerText = "Creating Secure Account...";
 
-const {error} =
-await supabaseClient
-.from("advocate_registrations")
-.insert([registration]);
+const {data:registrationResult,error:registrationError} =
+await supabaseClient.functions.invoke("register-advocate",{
+    body:{...registration,password,photo_storage_path:filePath}
+});
 
-
-if(error){
-
-throw new Error(
-"Registration failed: "
-+ error.message
-);
-
+if(registrationError || !registrationResult?.ok){
+    throw new Error(registrationError?.message || registrationResult?.message || "Registration failed.");
 }
 
 
@@ -3846,38 +3852,27 @@ return "priority-normal";
 ========================================= */
 
 
-function populateAdvocateAssignment(selectedId = ""){
+function populateAdvocateAssignment(selectedIds = []){
     const select = document.getElementById("edit_assigned_advocate_id");
     if(!select) return;
-
+    const selected = Array.isArray(selectedIds) ? selectedIds.map(Number) : (selectedIds ? String(selectedIds).split(",").map(Number) : []);
     const approved = (allAdvocates || []).filter(a =>
         (a.verification_status || a.status || "Pending") === "Approved"
     );
-
-    select.innerHTML =
-        `<option value="">Select approved advocate</option>` +
-        approved.map(a => `
-            <option value="${Number(a.id)}"
-                    data-name="${escapeHtml(a.advocate_name || "")}">
-                ${escapeHtml(a.advocate_name || "Unnamed")} —
-                ${escapeHtml(a.district_court || "")}
-                ${a.primary_practice_area ? " | " + escapeHtml(a.primary_practice_area) : ""}
-            </option>
-        `).join("");
-
-    select.value = selectedId ? String(selectedId) : "";
+    select.innerHTML = approved.map(a => `
+        <option value="${Number(a.id)}">${escapeHtml(a.advocate_name || "Unnamed")} — ${escapeHtml(a.district_court || "")}${a.primary_practice_area ? " | " + escapeHtml(a.primary_practice_area) : ""}</option>
+    `).join("");
+    [...select.options].forEach(o => { o.selected = selected.includes(Number(o.value)); });
 }
+
 
 function syncAssignedAdvocateName(){
     const select = document.getElementById("edit_assigned_advocate_id");
     const hidden = document.getElementById("edit_assigned_advocate");
     if(!select || !hidden) return;
-
-    const option = select.options[select.selectedIndex];
-    hidden.value = option && select.value
-        ? (option.getAttribute("data-name") || option.textContent.trim())
-        : "";
+    hidden.value = [...select.selectedOptions].map(o => o.textContent.trim()).join("; ");
 }
+
 
 function openEdit(id){
 
@@ -3899,9 +3894,12 @@ lead.payment_status || "Pending";
 document.getElementById("edit_priority").value =
 lead.priority || "Normal";
 
-populateAdvocateAssignment(lead.assigned_advocate_id || "");
-document.getElementById("edit_assigned_advocate").value =
-lead.assigned_advocate || "";
+const assignedIds = (allAssignments || [])
+    .filter(r => Number(r.lead_id) === Number(lead.id) && ["Assigned","Active"].includes(r.status || "Assigned"))
+    .map(r => Number(r.advocate_id));
+if(!assignedIds.length && lead.assigned_advocate_id) assignedIds.push(Number(lead.assigned_advocate_id));
+populateAdvocateAssignment(assignedIds);
+document.getElementById("edit_assigned_advocate").value = lead.assigned_advocate || "";
 
 document.getElementById("edit_release_advocate_contact").checked =
 Boolean(lead.release_advocate_contact);
@@ -3963,6 +3961,7 @@ async function loadAssignmentOverview(){
             .from("advocate_assignments")
             .select("lead_id,advocate_id,assigned_at,status,client_can_see_contact,ended_at,assigned_by_email");
         if(error) throw error;
+        allAssignments = rows || [];
         const advocatesMap=new Map((allAdvocates||[]).map(a=>[Number(a.id),a]));
         const groups=new Map();
         (rows||[]).forEach(r=>{
@@ -4134,7 +4133,7 @@ async function saveLeadUpdate(){
 
  const id = document.getElementById("edit_id").value;
  syncAssignedAdvocateName();
- const advocateId = document.getElementById("edit_assigned_advocate_id").value || null;
+ const advocateIds = [...document.getElementById("edit_assigned_advocate_id").selectedOptions].map(o => Number(o.value)).filter(Number.isFinite);
  const releaseContact = document.getElementById("edit_release_advocate_contact").checked;
  const status = document.getElementById("edit_status").value;
  const paymentStatus = document.getElementById("edit_payment_status").value;
@@ -4145,19 +4144,19 @@ async function saveLeadUpdate(){
  box.style.display = "none";
 
  try {
-   const {data,error} = await supabaseClient.rpc("ils_admin_save_lead",{
+   const {data,error} = await supabaseClient.rpc("ils_admin_save_lead_multi",{
      p_lead_id:Number(id),
      p_status:status,
      p_payment_status:paymentStatus,
      p_priority:priority,
-     p_assigned_advocate_id:advocateId ? Number(advocateId) : null,
+     p_assigned_advocate_ids:advocateIds,
      p_release_contact:Boolean(releaseContact),
      p_follow_up_date:followUpDate,
      p_internal_notes:internalNotes
    });
    if(error || !data?.ok) throw new Error(error?.message || data?.message || "Unable to save lead changes.");
 
-   document.getElementById("contactReleaseStatus").innerText = releaseContact && advocateId
+   document.getElementById("contactReleaseStatus").innerText = releaseContact && advocateIds.length
      ? "Contact is RELEASED for this client."
      : "Contact is currently LOCKED.";
    closeModal();
@@ -4298,16 +4297,19 @@ function renderClientPortal(data){
     const messages = data.messages || [];
     const documents = data.documents || [];
 
-    const contactHtml = a ? `
-        <h3>Assigned Advocate</h3>
-        <div class="contact-card"><strong>Advocate</strong><span>${escapeHtml(a.name || "-")}</span></div>
-        <div class="contact-card"><strong>District / Court</strong><span>${escapeHtml(a.district_court || "-")}</span></div>
-        <div class="contact-card"><strong>Practice Area</strong><span>${escapeHtml(a.practice_area || "-")}</span></div>
-        <div class="contact-card"><strong>Contact Number</strong><span>${escapeHtml(a.mobile || "Contact is currently locked")}</span></div>
-        ${a.mobile ? `<div class="client-contact-actions">
-            <a class="contact-btn contact-call" href="tel:${encodeURIComponent(a.mobile)}">📞 Call Advocate</a>
-            <a class="contact-btn contact-wa" href="https://wa.me/91${encodeURIComponent(a.mobile)}" target="_blank" rel="noopener">💬 WhatsApp Advocate</a>
-        </div>` : `<p class="note">Advocate contact is currently locked by Instant Legal Services.</p>`}
+    const advocates = Array.isArray(data.advocates) ? data.advocates : (a ? [a] : []);
+    const contactHtml = advocates.length ? `
+        <h3>Assigned Advocates</h3>
+        ${advocates.map(av => `
+            <div class="contact-card">
+                <strong>Advocate</strong><span>${escapeHtml(av.name || "-")}</span>
+                <strong>District / Court</strong><span>${escapeHtml(av.district_court || "-")}</span>
+                <strong>Practice Area</strong><span>${escapeHtml(av.practice_area || "-")}</span>
+                <strong>Contact Number</strong><span>${escapeHtml(av.mobile || "Contact is currently locked")}</span>
+                ${av.mobile ? `<div class="client-contact-actions"><a class="contact-btn contact-call" href="tel:${encodeURIComponent(av.mobile)}">📞 Call Advocate</a><a class="contact-btn contact-wa" href="https://wa.me/91${encodeURIComponent(av.mobile)}" target="_blank" rel="noopener">💬 WhatsApp Advocate</a></div>` : ""}
+            </div>
+        `).join("")}
+        ${!c.release_contact ? `<p class="note">Advocate contact numbers are currently locked by Instant Legal Services.</p>` : ""}
     ` : `<p class="note">An approved advocate has not been assigned yet.</p>`;
 
     const progressHtml = progress.length ? progress.map(p => `
