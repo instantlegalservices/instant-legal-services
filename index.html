@@ -5425,6 +5425,343 @@ function initPublicFilters(){
 window.addEventListener('load',()=>{setTimeout(()=>{initPracticeSelects();initPublicFilters();},120);});
 })();
 </script>
+<!-- ILS FINAL CRM + COURT LINKS PATCH START -->
+<style>
+#ilsQuickFilters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
+.ilsQuickFilter{padding:8px 12px;border-radius:20px;border:1px solid #d7a84f;background:#0e1b2c;color:#fff;cursor:pointer;font-weight:700}
+.ilsQuickFilter.active{background:#d7a84f;color:#111}
+.ilsQuickCount{margin-left:5px;padding:1px 6px;border-radius:10px;background:rgba(255,255,255,.18);font-size:11px}
+.ilsCourtModal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999999;display:none;align-items:center;justify-content:center;padding:20px}
+.ilsCourtModal.open{display:flex}
+.ilsCourtBox{width:min(850px,100%);max-height:85vh;overflow:auto;background:#fff;color:#111;padding:22px;border-radius:16px}
+.ilsCourtGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:15px}
+.ilsCourtGrid a{padding:12px;border:1px solid #ddd;border-radius:10px;text-decoration:none;color:#111;font-weight:700}
+.ilsCourtGrid a:hover{background:#f4f4f4}
+</style>
 
+<script>
+(function(){
+
+const COURTS=[
+["Supreme Court of India","https://www.sci.gov.in/"],
+["Allahabad High Court","https://www.allahabadhighcourt.in/"],
+["Andhra Pradesh High Court","https://aphc.gov.in/"],
+["Bombay High Court","https://bombayhighcourt.nic.in/"],
+["Calcutta High Court","https://www.calcuttahighcourt.gov.in/"],
+["Chhattisgarh High Court","https://highcourt.cg.gov.in/"],
+["Delhi High Court","https://delhihighcourt.nic.in/"],
+["Gauhati High Court","https://ghconline.gov.in/"],
+["Gujarat High Court","https://gujarathighcourt.nic.in/"],
+["Himachal Pradesh High Court","https://hphighcourt.gov.in/"],
+["Jammu & Kashmir and Ladakh High Court","https://jkhighcourt.nic.in/"],
+["Jharkhand High Court","https://jharkhandhighcourt.nic.in/"],
+["Karnataka High Court","https://karnatakajudiciary.kar.nic.in/"],
+["Kerala High Court","https://highcourt.kerala.gov.in/"],
+["Madhya Pradesh High Court","https://mphc.gov.in/"],
+["Madras High Court","https://www.mhc.tn.gov.in/"],
+["Manipur High Court","https://hcmimphal.nic.in/"],
+["Meghalaya High Court","https://meghalayahighcourt.nic.in/"],
+["Orissa High Court","https://orissahighcourt.nic.in/"],
+["Patna High Court","https://patnahighcourt.gov.in/"],
+["Punjab and Haryana High Court","https://highcourtchd.gov.in/"],
+["Rajasthan High Court","https://hcraj.nic.in/"],
+["Sikkim High Court","https://highcourtofsikkim.nic.in/"],
+["Telangana High Court","https://hc.ts.nic.in/"],
+["Tripura High Court","https://thc.tripura.gov.in/"],
+["Uttarakhand High Court","https://highcourtofuttarakhand.gov.in/"]
+];
+
+/* COURT LINKS BUTTON */
+function addCourtLinks(){
+
+const grid=document.querySelector("#official-legal-tools .ils-tool-grid");
+if(!grid || document.getElementById("ilsCourtButton")) return;
+
+const button=document.createElement("button");
+button.id="ilsCourtButton";
+button.type="button";
+button.className="ils-tool-card";
+button.style.cursor="pointer";
+
+button.innerHTML=`
+<span>
+<strong>🏛️ Court Links</strong>
+<small>Official Supreme Court of India and High Court websites.</small>
+</span>
+<span class="tool-arrow">↗</span>
+`;
+
+button.onclick=function(){
+document.getElementById("ilsCourtModal").classList.add("open");
+};
+
+grid.appendChild(button);
+
+const modal=document.createElement("div");
+modal.id="ilsCourtModal";
+modal.className="ilsCourtModal";
+
+modal.innerHTML=`
+<div class="ilsCourtBox">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+<h2 style="margin:0">Official Court Links</h2>
+<button type="button" id="closeCourtModal">✕ Close</button>
+</div>
+
+<input id="courtSearch"
+placeholder="Search Supreme Court or High Court..."
+style="width:100%;padding:12px;margin-top:15px;border:1px solid #ccc;border-radius:8px">
+
+<div id="courtGrid" class="ilsCourtGrid"></div>
+</div>
+`;
+
+document.body.appendChild(modal);
+
+function renderCourts(q=""){
+const box=document.getElementById("courtGrid");
+const query=q.toLowerCase();
+
+box.innerHTML=COURTS
+.filter(c=>c[0].toLowerCase().includes(query))
+.map(c=>`
+<a href="${c[1]}" target="_blank" rel="noopener noreferrer">
+🏛️ ${c[0]} ↗
+</a>
+`).join("");
+}
+
+renderCourts();
+
+document.getElementById("closeCourtModal").onclick=function(){
+modal.classList.remove("open");
+};
+
+document.getElementById("courtSearch").oninput=function(){
+renderCourts(this.value);
+};
+
+modal.onclick=function(e){
+if(e.target===modal) modal.classList.remove("open");
+};
+
+}
+
+/* CRM QUICK FILTERS */
+
+function isSameDate(a,b){
+return a.getFullYear()===b.getFullYear() &&
+a.getMonth()===b.getMonth() &&
+a.getDate()===b.getDate();
+}
+
+function matchesQuickFilter(lead,type){
+
+const today=new Date();
+today.setHours(0,0,0,0);
+
+const follow=lead.follow_up_date
+?new Date(lead.follow_up_date+"T00:00:00")
+:null;
+
+const assigned=String(lead.assigned_advocate||"").trim();
+const payment=String(lead.payment_status||"Pending").toLowerCase();
+const priority=String(lead.priority||"Normal").toLowerCase();
+
+if(type==="all") return true;
+
+if(type==="overdue")
+return follow && follow<today;
+
+if(type==="today")
+return follow && isSameDate(follow,today);
+
+if(type==="upcoming"){
+if(!follow) return false;
+const next=new Date(today);
+next.setDate(next.getDate()+7);
+return follow>today && follow<=next;
+}
+
+if(type==="no-followup")
+return !follow;
+
+if(type==="unassigned")
+return !assigned;
+
+if(type==="payment-pending")
+return payment==="pending" || payment==="unpaid";
+
+if(type==="high-priority")
+return priority==="high" || priority==="urgent";
+
+return true;
+}
+
+window.ilsActiveQuickFilter="all";
+
+function addQuickFilters(){
+
+const leadsBox=document.getElementById("leadsBox");
+if(!leadsBox) return;
+
+if(document.getElementById("ilsQuickFilters")) return;
+
+const filters=[
+["all","All"],
+["overdue","Overdue"],
+["today","Today"],
+["upcoming","Upcoming (7 Days)"],
+["no-followup","No Follow-up"],
+["unassigned","Unassigned"],
+["payment-pending","Payment Pending"],
+["high-priority","High Priority"]
+];
+
+const wrap=document.createElement("div");
+wrap.id="ilsQuickFilters";
+
+filters.forEach(([key,label])=>{
+
+const count=(window.allLeads||[])
+.filter(x=>matchesQuickFilter(x,key)).length;
+
+const btn=document.createElement("button");
+btn.type="button";
+btn.className="ilsQuickFilter"+(key==="all"?" active":"");
+btn.dataset.filter=key;
+
+btn.innerHTML=`
+${label}
+<span class="ilsQuickCount">${count}</span>
+`;
+
+btn.onclick=function(){
+
+window.ilsActiveQuickFilter=key;
+
+document.querySelectorAll(".ilsQuickFilter")
+.forEach(b=>b.classList.remove("active"));
+
+btn.classList.add("active");
+
+if(typeof window.renderLeads==="function")
+window.renderLeads();
+
+};
+
+wrap.appendChild(btn);
+
+});
+
+leadsBox.parentNode.insertBefore(wrap,leadsBox);
+
+}
+
+/* PATCH EXISTING renderLeads WITHOUT REWRITING IT */
+
+function patchRenderLeads(){
+
+if(typeof window.renderLeads!=="function") return;
+
+if(window.renderLeads.__ilsPatched) return;
+
+const originalRender=window.renderLeads;
+
+window.renderLeads=function(){
+
+const result=originalRender.apply(this,arguments);
+
+const type=window.ilsActiveQuickFilter||"all";
+
+if(type==="all") return result;
+
+/*
+Existing renderLeads output is preserved.
+This block filters rows/cards after normal rendering.
+*/
+
+setTimeout(function(){
+
+const visibleItems=document.querySelectorAll(
+"#leadsBox tr[data-lead-id],#leadsBox [data-lead-id]"
+);
+
+visibleItems.forEach(function(el){
+
+const id=Number(el.dataset.leadId);
+
+const lead=(window.allLeads||[])
+.find(x=>Number(x.id)===id);
+
+if(lead){
+el.style.display=matchesQuickFilter(lead,type)?"":"none";
+}
+
+});
+
+},0);
+
+return result;
+
+};
+
+window.renderLeads.__ilsPatched=true;
+
+}
+
+/* REFRESH FILTER COUNTS AFTER loadLeads */
+
+function patchLoadLeads(){
+
+if(typeof window.loadLeads!=="function") return;
+
+if(window.loadLeads.__ilsPatched) return;
+
+const originalLoad=window.loadLeads;
+
+window.loadLeads=async function(){
+
+const result=await originalLoad.apply(this,arguments);
+
+const old=document.getElementById("ilsQuickFilters");
+
+if(old) old.remove();
+
+addQuickFilters();
+
+return result;
+
+};
+
+window.loadLeads.__ilsPatched=true;
+
+}
+
+/* START */
+
+function initILSFinal(){
+
+addCourtLinks();
+
+patchRenderLeads();
+
+patchLoadLeads();
+
+addQuickFilters();
+
+}
+
+if(document.readyState==="loading"){
+document.addEventListener("DOMContentLoaded",function(){
+setTimeout(initILSFinal,800);
+});
+}else{
+setTimeout(initILSFinal,800);
+}
+
+})();
+</script>
+<!-- ILS FINAL CRM + COURT LINKS PATCH END -->
 </body>
 </html>
