@@ -9406,5 +9406,461 @@ document.addEventListener("click",function(e){
 
 })();
 </script>
+<!-- ILS DYNAMIC PUBLIC ADVOCATE SEO MODULE -->
+<script>
+(() => {
+  const ILS_SEO = {
+    base: "https://instantlegalservices.in",
+    advocates: [],
+    slug(v) {
+      return String(v || "")
+        .toLowerCase().trim()
+        .replace(/&/g, " and ")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .replace(/-+/g, "-");
+    },
+    text(v) {
+      return String(v || "").trim();
+    },
+    areas(v) {
+      if (Array.isArray(v)) return v.map(this.text).filter(Boolean);
+      return String(v || "")
+        .split(/[|,;]/)
+        .map(x => x.trim())
+        .filter(Boolean);
+    },
+    canonical(path) {
+      return this.base + (path || "/");
+    },
+    setMeta(name, content) {
+      if (!content) return;
+      let el = document.querySelector(`meta[name="${name}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("name", name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    },
+    setProperty(property, content) {
+      if (!content) return;
+      let el = document.querySelector(`meta[property="${property}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("property", property);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    },
+    setCanonical(url) {
+      let el = document.querySelector('link[rel="canonical"]');
+      if (!el) {
+        el = document.createElement("link");
+        el.rel = "canonical";
+        document.head.appendChild(el);
+      }
+      el.href = url;
+    },
+    addSchema(data) {
+      document.querySelectorAll(".ils-dynamic-schema").forEach(e => e.remove());
+      const s = document.createElement("script");
+      s.type = "application/ld+json";
+      s.className = "ils-dynamic-schema";
+      s.textContent = JSON.stringify(data);
+      document.head.appendChild(s);
+    }
+  };
+
+  function approvedPublic(a) {
+    return (
+      String(a.verification_status || a.status || "").toLowerCase() === "approved" &&
+      (a.public_profile === true || String(a.public_profile).toLowerCase() === "true")
+    );
+  }
+
+  async function loadILSSeoAdvocates() {
+    if (!window.supabaseClient) return [];
+
+    const result = await supabaseClient
+      .from("advocate_registrations")
+      .select("*");
+
+    if (result.error) {
+      console.error("ILS SEO advocate load error:", result.error);
+      return [];
+    }
+
+    return (result.data || []).filter(approvedPublic);
+  }
+
+  function getPath() {
+    return location.pathname
+      .replace(/\/index\.html$/i, "/")
+      .replace(/\/+$/, "") || "/";
+  }
+
+  function findBySlug(list, field, slug) {
+    return list.filter(a => ILS_SEO.slug(a[field]) === slug);
+  }
+
+  function uniqueValues(list, field) {
+    return [...new Set(
+      list.map(a => ILS_SEO.text(a[field])).filter(Boolean)
+    )];
+  }
+
+  function setSEO(title, description, canonical, schema) {
+    document.title = title;
+    ILS_SEO.setMeta("description", description);
+    ILS_SEO.setCanonical(canonical);
+    ILS_SEO.setProperty("og:title", title);
+    ILS_SEO.setProperty("og:description", description);
+    ILS_SEO.setProperty("og:url", canonical);
+    if (schema) ILS_SEO.addSchema(schema);
+  }
+
+  function renderSEOPage(title, intro, advocates) {
+    const grid = document.getElementById("publicAdvocateGrid");
+
+    if (!grid) return;
+
+    const existing = document.getElementById("ilsDynamicSeoHeading");
+
+    if (!existing) {
+      const section = document.createElement("section");
+      section.id = "ilsDynamicSeoHeading";
+      section.className = "ils-dynamic-seo-page";
+      section.innerHTML = `
+        <div class="container">
+          <h1 id="ilsDynamicSeoTitle"></h1>
+          <p id="ilsDynamicSeoIntro"></p>
+        </div>
+      `;
+
+      grid.parentElement?.insertBefore(section, grid);
+    }
+
+    document.getElementById("ilsDynamicSeoTitle").textContent = title;
+    document.getElementById("ilsDynamicSeoIntro").textContent = intro;
+
+    grid.innerHTML = advocates.length
+      ? advocates.map(a => {
+          const photo =
+            a.photo_url ||
+            a.profile_photo_url ||
+            "";
+
+          const name = ILS_SEO.text(a.advocate_name || "Advocate");
+
+          return `
+            <article class="public-advocate-card">
+              ${photo ? `<img class="public-advocate-photo"
+                src="${escapeHtml(photo)}"
+                alt="${escapeHtml(name)}"
+                loading="lazy">` : ""}
+              <h3>${escapeHtml(name)}</h3>
+              <span class="public-advocate-badge">
+                Verified Network Member
+              </span>
+              <div class="public-advocate-meta">
+                <div><strong>Practice Areas:</strong>
+                  ${escapeHtml(ILS_SEO.text(a.primary_practice_area))}
+                </div>
+                <div><strong>District / Court:</strong>
+                  ${escapeHtml(ILS_SEO.text(a.district_court))}
+                </div>
+                <div><strong>Practice State:</strong>
+                  ${escapeHtml(ILS_SEO.text(a.practice_state))}
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("")
+      : `<div class="public-network-empty">
+          No verified public advocates found for this page.
+        </div>`;
+  }
+
+  function renderStatePage(state, advocates) {
+    const title = `Verified Advocates in ${state} | Instant Legal Services`;
+    const canonical = ILS_SEO.canonical(`/state/${ILS_SEO.slug(state)}`);
+    const description =
+      `Find verified public advocates and legal professionals practising in ${state} through Instant Legal Services.`;
+
+    setSEO(title, description, canonical, {
+      "@context": "https://schema.org",
+      "@type": "LegalService",
+      "name": `Instant Legal Services - ${state}`,
+      "url": canonical,
+      "areaServed": state
+    });
+
+    renderSEOPage(
+      `Verified Advocates in ${state}`,
+      `Browse approved public advocate profiles and legal practice information for ${state}.`,
+      advocates
+    );
+  }
+
+  function renderDistrictPage(district, advocates) {
+    const title = `Advocates in ${district} | Instant Legal Services`;
+    const canonical = ILS_SEO.canonical(`/district/${ILS_SEO.slug(district)}`);
+    const description =
+      `Find verified advocates associated with ${district} and relevant courts through Instant Legal Services.`;
+
+    setSEO(title, description, canonical, {
+      "@context": "https://schema.org",
+      "@type": "LegalService",
+      "name": `Instant Legal Services - ${district}`,
+      "url": canonical,
+      "areaServed": district
+    });
+
+    renderSEOPage(
+      `Verified Advocates in ${district}`,
+      `Explore approved public advocate profiles associated with ${district}.`,
+      advocates
+    );
+  }
+
+  function renderCourtPage(court, advocates) {
+    const title = `Advocates for ${court} | Instant Legal Services`;
+    const canonical = ILS_SEO.canonical(`/court/${ILS_SEO.slug(court)}`);
+    const description =
+      `Find verified advocates associated with ${court} and relevant legal practice areas.`;
+
+    setSEO(title, description, canonical, {
+      "@context": "https://schema.org",
+      "@type": "LegalService",
+      "name": `Instant Legal Services - ${court}`,
+      "url": canonical
+    });
+
+    renderSEOPage(
+      `Verified Advocates for ${court}`,
+      `Browse approved public advocate profiles associated with ${court}.`,
+      advocates
+    );
+  }
+
+  function renderPracticePage(area, advocates) {
+    const title = `${area} Advocates | Instant Legal Services`;
+    const canonical =
+      ILS_SEO.canonical(`/practice-area/${ILS_SEO.slug(area)}`);
+
+    const description =
+      `Find verified advocates practising ${area} through the Instant Legal Services legal network.`;
+
+    setSEO(title, description, canonical, {
+      "@context": "https://schema.org",
+      "@type": "LegalService",
+      "name": `${area} Legal Services`,
+      "url": canonical,
+      "serviceType": area
+    });
+
+    renderSEOPage(
+      `${area} Advocates`,
+      `Browse approved public advocates associated with ${area}.`,
+      advocates
+    );
+  }
+
+  function renderProfilePage(a) {
+    const name = ILS_SEO.text(a.advocate_name);
+    const state = ILS_SEO.text(a.practice_state);
+    const court = ILS_SEO.text(a.district_court);
+    const slug = ILS_SEO.slug(name) + "-" + a.id;
+
+    const canonical =
+      ILS_SEO.canonical(`/advocate/${slug}`);
+
+    const title =
+      `${name} | Advocate Profile | Instant Legal Services`;
+
+    const description =
+      `${name} is listed in the Instant Legal Services verified public advocate network${state ? ` for ${state}` : ""}${court ? `, associated with ${court}` : ""}.`;
+
+    setSEO(title, description, canonical, {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": name,
+      "url": canonical,
+      "jobTitle": "Advocate",
+      "worksFor": {
+        "@type": "LegalService",
+        "name": "Instant Legal Services"
+      }
+    });
+
+    renderSEOPage(
+      name,
+      `${a.primary_practice_area || "Legal practice"}${state ? " | " + state : ""}${court ? " | " + court : ""}`,
+      [a]
+    );
+  }
+
+  function matchPractice(a, slug) {
+    return ILS_SEO.areas(a.primary_practice_area)
+      .some(area => ILS_SEO.slug(area) === slug);
+  }
+
+  async function handleILSSeoRoute() {
+    const path = getPath();
+
+    /* Existing homepage and existing static pages remain untouched */
+    const protectedPaths = [
+      "/",
+      "/about",
+      "/services",
+      "/contact",
+      "/criminal-law",
+      "/family-law"
+    ];
+
+    if (protectedPaths.includes(path)) return;
+
+    const advocates = await loadILSSeoAdvocates();
+
+    if (!advocates.length) return;
+
+    ILS_SEO.advocates = advocates;
+
+    const parts = path.split("/").filter(Boolean);
+
+    /* /state/uttar-pradesh */
+    if (parts[0] === "state" && parts[1]) {
+      const matched = advocates.filter(
+        a => ILS_SEO.slug(a.practice_state) === parts[1]
+      );
+
+      if (matched.length) {
+        renderStatePage(
+          ILS_SEO.text(matched[0].practice_state),
+          matched
+        );
+      }
+
+      return;
+    }
+
+    /* /district/bareilly */
+    if (parts[0] === "district" && parts[1]) {
+      const matched = advocates.filter(
+        a => ILS_SEO.slug(a.district_court) === parts[1]
+      );
+
+      if (matched.length) {
+        renderDistrictPage(
+          ILS_SEO.text(matched[0].district_court),
+          matched
+        );
+      }
+
+      return;
+    }
+
+    /* /court/district-sessions-court-bareilly */
+    if (parts[0] === "court" && parts[1]) {
+      const matched = advocates.filter(
+        a => ILS_SEO.slug(a.district_court) === parts[1]
+      );
+
+      if (matched.length) {
+        renderCourtPage(
+          ILS_SEO.text(matched[0].district_court),
+          matched
+        );
+      }
+
+      return;
+    }
+
+    /* /practice-area/criminal-law */
+    if (parts[0] === "practice-area" && parts[1]) {
+      const matched = advocates.filter(
+        a => matchPractice(a, parts[1])
+      );
+
+      if (matched.length) {
+        const area = ILS_SEO.areas(
+          matched.find(a => matchPractice(a, parts[1]))
+            ?.primary_practice_area
+        ).find(x => ILS_SEO.slug(x) === parts[1]);
+
+        renderPracticePage(area || "Legal Practice", matched);
+      }
+
+      return;
+    }
+
+    /* /advocate/name-id */
+    if (parts[0] === "advocate" && parts[1]) {
+      const id = parts[1].match(/-(\d+)$/)?.[1];
+
+      const matched = advocates.find(
+        a => String(a.id) === String(id)
+      );
+
+      if (matched) renderProfilePage(matched);
+
+      return;
+    }
+
+    /* SEO combination:
+       /lawyer/uttar-pradesh/bareilly/criminal-law
+    */
+    if (parts[0] === "lawyer" && parts.length >= 4) {
+      const [_, stateSlug, districtSlug, areaSlug] = parts;
+
+      const matched = advocates.filter(a =>
+        ILS_SEO.slug(a.practice_state) === stateSlug &&
+        ILS_SEO.slug(a.district_court) === districtSlug &&
+        matchPractice(a, areaSlug)
+      );
+
+      if (matched.length) {
+        const state = ILS_SEO.text(matched[0].practice_state);
+        const district = ILS_SEO.text(matched[0].district_court);
+        const area = ILS_SEO.areas(
+          matched[0].primary_practice_area
+        ).find(x => ILS_SEO.slug(x) === areaSlug) || "Legal Practice";
+
+        const canonical = ILS_SEO.canonical(path);
+        const title =
+          `${area} Lawyer in ${district}, ${state} | Instant Legal Services`;
+
+        const description =
+          `Find approved public advocates practising ${area} and associated with ${district}, ${state}.`;
+
+        setSEO(title, description, canonical, {
+          "@context": "https://schema.org",
+          "@type": "LegalService",
+          "name": `${area} Lawyer in ${district}`,
+          "url": canonical,
+          "areaServed": {
+            "@type": "AdministrativeArea",
+            "name": district
+          },
+          "serviceType": area
+        });
+
+        renderSEOPage(
+          `${area} Lawyers in ${district}, ${state}`,
+          description,
+          matched
+        );
+      }
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(handleILSSeoRoute, 1200);
+  });
+
+  window.addEventListener("popstate", handleILSSeoRoute);
+})();
+</script>
 </body>
 </html>
