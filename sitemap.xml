@@ -3,37 +3,43 @@
 
   <url>
     <loc>https://instantlegalservices.in/</loc>
+    <lastmod>2026-08-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
     <loc>https://instantlegalservices.in/about</loc>
+    <lastmod>2026-08-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://instantlegalservices.in/services</loc>
-    <changefreq>monthly</changefreq>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://instantlegalservices.in/contact</loc>
+    <lastmod>2026-08-21</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://instantlegalservices.in/criminal-law</loc>
-    <changefreq>monthly</changefreq>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://instantlegalservices.in/family-law</loc>
-    <changefreq>monthly</changefreq>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
