@@ -7148,5 +7148,366 @@ document.addEventListener("click",function(e){
 }
 </script>
 
+  <script>
+/* =========================================
+   ILS FIX — ADMIN ADVOCATE PHOTO + VIEW
+   ========================================= */
+
+(async function () {
+
+  async function getAdvocatePhotoUrl(advocate) {
+    try {
+      if (advocate.photo_url) return advocate.photo_url;
+      if (advocate.profile_photo_url) return advocate.profile_photo_url;
+
+      const path = advocate.photo_storage_path;
+
+      if (!path) return "";
+
+      const { data, error } = await supabaseClient
+        .storage
+        .from("advocate-photo-pending")
+        .createSignedUrl(path, 3600);
+
+      if (error) {
+        console.error("Photo URL error:", error);
+        return "";
+      }
+
+      return data?.signedUrl || "";
+
+    } catch (error) {
+      console.error("Photo fetch error:", error);
+      return "";
+    }
+  }
+
+
+  /* LOAD ADVOCATES WITH PRIVATE PHOTO URL */
+
+  window.loadAdvocates = async function () {
+
+    const tbody = document.getElementById("advocateTableBody");
+
+    if (!tbody) return;
+
+    tbody.innerHTML =
+      '<tr><td colspan="8" class="empty">Loading advocate applications...</td></tr>';
+
+    try {
+
+      const { data, error } = await supabaseClient
+        .from("advocate_registrations")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const advocates = data || [];
+
+      for (const advocate of advocates) {
+        advocate._displayPhotoUrl =
+          await getAdvocatePhotoUrl(advocate);
+      }
+
+      window.allAdvocates = advocates;
+
+      if (typeof allAdvocates !== "undefined") {
+        allAdvocates = advocates;
+      }
+
+      window.renderAdvocates();
+
+    } catch (error) {
+
+      console.error("Advocate load error:", error);
+
+      tbody.innerHTML =
+        '<tr><td colspan="8" class="empty">Unable to load advocate applications: ' +
+        escapeHtml(error?.message || "Unknown error") +
+        '</td></tr>';
+    }
+  };
+
+
+  /* RENDER ADVOCATE TABLE */
+
+  window.renderAdvocates = function () {
+
+    const tbody = document.getElementById("advocateTableBody");
+
+    if (!tbody) return;
+
+    const search =
+      (document.getElementById("adminAdvocateSearch")?.value || "")
+        .toLowerCase()
+        .trim();
+
+    const advocates = window.allAdvocates || [];
+
+    const rows = advocates.filter(function (advocate) {
+
+      const text = [
+        advocate.advocate_name,
+        advocate.mobile,
+        advocate.email,
+        advocate.practice_state,
+        advocate.district_court,
+        advocate.primary_practice_area,
+        advocate.enrollment_number,
+        advocate.state_bar_council
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return !search || text.includes(search);
+    });
+
+    if (!rows.length) {
+
+      tbody.innerHTML =
+        '<tr><td colspan="8" class="empty">No advocate applications found.</td></tr>';
+
+      return;
+    }
+
+    tbody.innerHTML = rows.map(function (advocate) {
+
+      const verification =
+        advocate.verification_status ||
+        advocate.status ||
+        "Pending";
+
+      const verificationClass =
+        verification === "Approved"
+          ? "verify-approved"
+          : verification === "Rejected"
+          ? "verify-rejected"
+          : "verify-pending";
+
+      const photo =
+        advocate._displayPhotoUrl ||
+        advocate.photo_url ||
+        advocate.profile_photo_url ||
+        "";
+
+      const photoHtml = photo
+        ? '<img class="advocate-photo-small" src="' +
+          escapeHtml(photo) +
+          '" alt="Advocate photo">'
+        : '<div class="advocate-photo-small"></div>';
+
+      return `
+        <tr>
+          <td>${photoHtml}</td>
+
+          <td>
+            <strong>${escapeHtml(advocate.advocate_name || "-")}</strong>
+            <br>
+            <small>${escapeHtml(advocate.enrollment_number || "")}</small>
+          </td>
+
+          <td>${escapeHtml(advocate.mobile || "-")}</td>
+
+          <td>
+            ${escapeHtml(advocate.district_court || "-")}
+            <br>
+            <small>${escapeHtml(advocate.practice_state || "")}</small>
+          </td>
+
+          <td>
+            ${escapeHtml(
+              advocate.primary_practice_area || "Legal Practice"
+            )}
+          </td>
+
+          <td>
+            ${escapeHtml(
+              String(advocate.years_of_practice ?? "-")
+            )} years
+          </td>
+
+          <td>
+            <span class="verify-badge ${verificationClass}">
+              ${escapeHtml(verification)}
+            </span>
+          </td>
+
+          <td>
+            <button
+              type="button"
+              class="advocate-action-btn view-btn"
+              onclick="openAdvocate('${String(advocate.id).replaceAll("'", "\\'")}')"
+            >
+              View
+            </button>
+          </td>
+        </tr>
+      `;
+
+    }).join("");
+  };
+
+
+  /* FIX VIEW BUTTON */
+
+  window.openAdvocate = function (id) {
+
+    const advocates = window.allAdvocates || [];
+
+    const advocate = advocates.find(
+      function (item) {
+        return String(item.id) === String(id);
+      }
+    );
+
+    if (!advocate) {
+      console.error("Advocate not found:", id);
+      alert("Advocate details could not be found.");
+      return;
+    }
+
+    window.selectedAdvocateId = advocate.id;
+
+    const photo =
+      advocate._displayPhotoUrl ||
+      advocate.photo_url ||
+      advocate.profile_photo_url ||
+      "";
+
+    const photoHtml = photo
+      ? `
+        <div style="text-align:center;margin-bottom:18px;">
+          <img
+            src="${escapeHtml(photo)}"
+            alt="Advocate photo"
+            style="
+              width:140px;
+              height:140px;
+              object-fit:cover;
+              border-radius:12px;
+              border:2px solid #e5a93d;
+            "
+          >
+        </div>
+      `
+      : "";
+
+    const details = document.getElementById("advocateDetails");
+
+    if (details) {
+
+      details.innerHTML = `
+        ${photoHtml}
+
+        <div class="detail-grid">
+
+          <div class="detail-item">
+            <strong>Advocate Name</strong>
+            <span>${escapeHtml(advocate.advocate_name || "-")}</span>
+          </div>
+
+          <div class="detail-item">
+            <strong>Mobile</strong>
+            <span>${escapeHtml(advocate.mobile || "-")}</span>
+          </div>
+
+          <div class="detail-item">
+            <strong>Email</strong>
+            <span>${escapeHtml(advocate.email || "-")}</span>
+          </div>
+
+          <div class="detail-item">
+            <strong>Enrollment Number</strong>
+            <span>${escapeHtml(advocate.enrollment_number || "-")}</span>
+          </div>
+
+          <div class="detail-item">
+            <strong>State Bar Council</strong>
+            <span>${escapeHtml(advocate.state_bar_council || "-")}</span>
+          </div>
+
+          <div class="detail-item">
+            <strong>Practice State</strong>
+            <span>${escapeHtml(advocate.practice_state || "-")}</span>
+          </div>
+
+          <div class="detail-item">
+            <strong>District / Court</strong>
+            <span>${escapeHtml(advocate.district_court || "-")}</span>
+          </div>
+
+          <div class="detail-item">
+            <strong>Primary Practice Area</strong>
+            <span>${escapeHtml(advocate.primary_practice_area || "-")}</span>
+          </div>
+
+          <div class="detail-item">
+            <strong>Years of Practice</strong>
+            <span>${escapeHtml(
+              String(advocate.years_of_practice ?? "-")
+            )}</span>
+          </div>
+
+          <div class="detail-item">
+            <strong>Verification Status</strong>
+            <span>${escapeHtml(
+              advocate.verification_status ||
+              advocate.status ||
+              "Pending"
+            )}</span>
+          </div>
+
+        </div>
+      `;
+    }
+
+    const notes =
+      document.getElementById("advocateAdminNotes");
+
+    if (notes) {
+      notes.value =
+        advocate.admin_notes ||
+        advocate.notes ||
+        "";
+    }
+
+    if (typeof fillAdvocateEditFields === "function") {
+      fillAdvocateEditFields(advocate);
+    }
+
+    const errorBox =
+      document.getElementById("advocateUpdateError");
+
+    if (errorBox) {
+      errorBox.style.display = "none";
+    }
+
+    const modal =
+      document.getElementById("advocateModal");
+
+    if (modal) {
+      modal.style.display = "flex";
+    }
+  };
+
+
+  /* SEARCH */
+
+  document.addEventListener("input", function (event) {
+
+    if (
+      event.target &&
+      event.target.id === "adminAdvocateSearch"
+    ) {
+      window.renderAdvocates();
+    }
+
+  });
+
+})();
+</script>
+  
 </body>
 </html>
