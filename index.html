@@ -8324,5 +8324,1087 @@ document.addEventListener("click",function(e){
 
 })();
 </script>
+<!-- =========================================================
+     ILS ABSOLUTE FINAL ADVOCATE ADMIN FIX
+     PHOTO + VIEW + SEARCH + PRIVATE PENDING PHOTO SUPPORT
+     Paste this ONCE immediately before </body>
+========================================================= -->
+
+<style id="ils-absolute-final-advocate-style">
+#ilsAbsoluteAdvocateModal{
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.78);
+  backdrop-filter:blur(6px);
+  box-sizing:border-box;
+}
+#ilsAbsoluteAdvocateModal.open{
+  display:flex;
+}
+#ilsAbsoluteAdvocateModal .ils-aam-card{
+  width:min(940px,100%);
+  max-height:92vh;
+  overflow:auto;
+  background:#101722;
+  color:#fff;
+  border:1px solid rgba(229,169,61,.48);
+  border-radius:18px;
+  box-shadow:0 30px 90px rgba(0,0,0,.65);
+}
+#ilsAbsoluteAdvocateModal .ils-aam-head{
+  position:sticky;
+  top:0;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  padding:18px 22px;
+  background:#101722;
+  border-bottom:1px solid rgba(255,255,255,.09);
+}
+#ilsAbsoluteAdvocateModal .ils-aam-head h2{
+  margin:0;
+  color:#e5a93d;
+  font-size:22px;
+}
+#ilsAbsoluteAdvocateModal .ils-aam-close{
+  width:40px;
+  height:40px;
+  border:1px solid rgba(255,255,255,.18);
+  background:#1a2330;
+  color:#fff;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:24px;
+  line-height:1;
+}
+#ilsAbsoluteAdvocateModal .ils-aam-close:hover{
+  background:#8c3838;
+}
+#ilsAbsoluteAdvocateModal .ils-aam-body{
+  padding:22px;
+}
+.ils-aam-top{
+  display:flex;
+  gap:20px;
+  align-items:center;
+  padding-bottom:22px;
+  margin-bottom:22px;
+  border-bottom:1px solid rgba(255,255,255,.09);
+}
+.ils-aam-photo{
+  width:140px;
+  height:140px;
+  border-radius:16px;
+  object-fit:cover;
+  border:3px solid #e5a93d;
+  background:#151922;
+  flex:none;
+}
+.ils-aam-no-photo{
+  width:140px;
+  height:140px;
+  border-radius:16px;
+  border:2px dashed #4a5565;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#8f96a3;
+  background:#151922;
+  flex:none;
+  text-align:center;
+  font-size:12px;
+}
+.ils-aam-name{
+  margin:0 0 8px;
+  font-size:26px;
+  font-weight:800;
+}
+.ils-aam-sub{
+  color:#aeb4bf;
+  line-height:1.6;
+}
+.ils-aam-status{
+  display:inline-block;
+  margin-top:10px;
+  padding:6px 11px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+}
+.ils-aam-status.pending{
+  color:#f1c56a;
+  border:1px solid rgba(229,169,61,.45);
+  background:rgba(229,169,61,.12);
+}
+.ils-aam-status.approved{
+  color:#b9f0c4;
+  border:1px solid #357a46;
+  background:rgba(53,122,70,.25);
+}
+.ils-aam-status.rejected{
+  color:#ffb7b7;
+  border:1px solid #8c3838;
+  background:rgba(140,56,56,.24);
+}
+.ils-aam-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+}
+.ils-aam-item{
+  padding:14px;
+  border-radius:12px;
+  background:#151d29;
+  border:1px solid rgba(255,255,255,.08);
+}
+.ils-aam-item strong{
+  display:block;
+  margin-bottom:7px;
+  color:#e5a93d;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+.ils-aam-item span{
+  color:#fff;
+  word-break:break-word;
+  line-height:1.5;
+}
+.ils-aam-notes-wrap{
+  margin-top:18px;
+}
+.ils-aam-notes-wrap label{
+  display:block;
+  margin-bottom:8px;
+  color:#e5a93d;
+  font-size:12px;
+  font-weight:800;
+}
+#ilsAbsoluteAdvocateNotes{
+  width:100%;
+  min-height:100px;
+  box-sizing:border-box;
+  resize:vertical;
+}
+.ils-aam-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
+.ils-aam-actions button{
+  border:0;
+  border-radius:9px;
+  padding:12px 17px;
+  cursor:pointer;
+  font-weight:800;
+}
+.ils-aam-approve{
+  background:#357a46;
+  color:#fff;
+}
+.ils-aam-reject{
+  background:#8c3838;
+  color:#fff;
+}
+.ils-aam-refresh{
+  background:#293342;
+  color:#fff;
+}
+.ils-aam-message{
+  margin-top:12px;
+  min-height:18px;
+  color:#ffb7b7;
+  font-size:13px;
+}
+@media(max-width:650px){
+  #ilsAbsoluteAdvocateModal{
+    padding:8px;
+  }
+  #ilsAbsoluteAdvocateModal .ils-aam-body{
+    padding:16px;
+  }
+  .ils-aam-top{
+    align-items:flex-start;
+  }
+  .ils-aam-photo,
+  .ils-aam-no-photo{
+    width:92px;
+    height:92px;
+  }
+  .ils-aam-name{
+    font-size:20px;
+  }
+  .ils-aam-grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+
+<div id="ilsAbsoluteAdvocateModal" aria-hidden="true">
+  <div class="ils-aam-card" role="dialog" aria-modal="true">
+    <div class="ils-aam-head">
+      <h2>Advocate Application Details</h2>
+      <button type="button"
+              class="ils-aam-close"
+              onclick="closeAbsoluteAdvocateView()"
+              aria-label="Close">×</button>
+    </div>
+    <div class="ils-aam-body" id="ilsAbsoluteAdvocateContent"></div>
+  </div>
+</div>
+
+<script id="ils-absolute-final-advocate-fix">
+(function(){
+  "use strict";
+
+  const PENDING_BUCKET = "advocate-photo-pending";
+
+  function getClient(){
+    try{
+      if(typeof supabaseClient !== "undefined" &&
+         supabaseClient &&
+         typeof supabaseClient.from === "function"){
+        return supabaseClient;
+      }
+    }catch(e){}
+
+    if(window.supabaseClient &&
+       typeof window.supabaseClient.from === "function"){
+      return window.supabaseClient;
+    }
+
+    return null;
+  }
+
+  function esc(value){
+    if(typeof window.escapeHtml === "function"){
+      return window.escapeHtml(
+        value === null || value === undefined ? "" : String(value)
+      );
+    }
+
+    return String(
+      value === null || value === undefined ? "" : value
+    )
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  }
+
+  function valueOrDash(value){
+    if(value === null ||
+       value === undefined ||
+       String(value).trim() === ""){
+      return "-";
+    }
+
+    return String(value);
+  }
+
+  function getAdvocateArray(){
+    try{
+      if(Array.isArray(allAdvocates)){
+        return allAdvocates;
+      }
+    }catch(e){}
+
+    if(Array.isArray(window.allAdvocates)){
+      return window.allAdvocates;
+    }
+
+    return [];
+  }
+
+  function setAdvocateArray(rows){
+    window.allAdvocates = Array.isArray(rows) ? rows : [];
+
+    try{
+      allAdvocates = window.allAdvocates;
+    }catch(e){}
+  }
+
+  function getStatus(advocate){
+    return String(
+      advocate?.verification_status ||
+      advocate?.status ||
+      "Pending"
+    );
+  }
+
+  function getStatusClass(status){
+    const value = String(status || "").toLowerCase();
+
+    if(value === "approved"){
+      return "approved";
+    }
+
+    if(value === "rejected"){
+      return "rejected";
+    }
+
+    return "pending";
+  }
+
+  async function getDisplayPhotoUrl(advocate){
+    if(!advocate){
+      return "";
+    }
+
+    if(advocate._displayPhotoUrl){
+      return String(advocate._displayPhotoUrl);
+    }
+
+    if(advocate.photo_url){
+      return String(advocate.photo_url);
+    }
+
+    if(advocate.profile_photo_url){
+      return String(advocate.profile_photo_url);
+    }
+
+    if(advocate.photo_storage_url){
+      return String(advocate.photo_storage_url);
+    }
+
+    const path = String(
+      advocate.photo_storage_path || ""
+    ).trim();
+
+    if(!path){
+      return "";
+    }
+
+    const client = getClient();
+
+    if(!client){
+      return "";
+    }
+
+    try{
+      const result = await client
+        .storage
+        .from(PENDING_BUCKET)
+        .createSignedUrl(path, 3600);
+
+      if(result.error){
+        console.error(
+          "Pending advocate photo signed URL error:",
+          result.error
+        );
+        return "";
+      }
+
+      return result.data?.signedUrl || "";
+    }catch(error){
+      console.error(
+        "Pending advocate photo fetch error:",
+        error
+      );
+      return "";
+    }
+  }
+
+  async function attachDisplayPhotos(rows){
+    const list = Array.isArray(rows) ? rows : [];
+
+    await Promise.all(
+      list.map(async function(advocate){
+        advocate._displayPhotoUrl =
+          await getDisplayPhotoUrl(advocate);
+      })
+    );
+
+    return list;
+  }
+
+  function renderTable(){
+    const tbody = document.getElementById(
+      "advocateTableBody"
+    );
+
+    if(!tbody){
+      return;
+    }
+
+    const search = String(
+      document.getElementById(
+        "adminAdvocateSearch"
+      )?.value || ""
+    ).toLowerCase().trim();
+
+    const source = getAdvocateArray();
+
+    const rows = source.filter(function(advocate){
+      const haystack = [
+        advocate.advocate_name,
+        advocate.mobile,
+        advocate.email,
+        advocate.practice_state,
+        advocate.district_court,
+        advocate.primary_practice_area,
+        advocate.enrollment_number,
+        advocate.state_bar_council
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return !search || haystack.includes(search);
+    });
+
+    if(!rows.length){
+      tbody.innerHTML =
+        '<tr>' +
+          '<td colspan="8" class="empty">' +
+            'No advocate applications match the search.' +
+          '</td>' +
+        '</tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(function(advocate){
+      const verification = getStatus(advocate);
+
+      const verificationClass =
+        verification === "Approved"
+          ? "verify-approved"
+          : verification === "Rejected"
+            ? "verify-rejected"
+            : "verify-pending";
+
+      const photo = String(
+        advocate._displayPhotoUrl ||
+        advocate.photo_url ||
+        advocate.profile_photo_url ||
+        ""
+      );
+
+      const photoHtml = photo
+        ? '<img class="advocate-photo-small" ' +
+            'src="' + esc(photo) + '" ' +
+            'alt="Advocate photo" ' +
+            'loading="lazy">'
+        : '<div class="advocate-photo-small"></div>';
+
+      const practiceArea =
+        typeof window.ILS_V7_FORMAT_PRACTICE === "function"
+          ? window.ILS_V7_FORMAT_PRACTICE(
+              advocate.primary_practice_area
+            )
+          : String(
+              advocate.primary_practice_area ||
+              "Legal Practice"
+            );
+
+      return (
+        '<tr>' +
+
+          '<td>' + photoHtml + '</td>' +
+
+          '<td>' +
+            '<strong>' +
+              esc(valueOrDash(advocate.advocate_name)) +
+            '</strong>' +
+            '<br>' +
+            '<small>' +
+              esc(advocate.enrollment_number || "") +
+            '</small>' +
+          '</td>' +
+
+          '<td>' +
+            esc(valueOrDash(advocate.mobile)) +
+          '</td>' +
+
+          '<td>' +
+            esc(valueOrDash(advocate.district_court)) +
+            '<br>' +
+            '<small>' +
+              esc(advocate.practice_state || "") +
+            '</small>' +
+          '</td>' +
+
+          '<td>' +
+            esc(practiceArea) +
+          '</td>' +
+
+          '<td>' +
+            esc(
+              String(
+                advocate.years_of_practice ??
+                "-"
+              )
+            ) +
+            ' years' +
+          '</td>' +
+
+          '<td>' +
+            '<span class="verify-badge ' +
+              verificationClass +
+            '">' +
+              esc(verification) +
+            '</span>' +
+          '</td>' +
+
+          '<td>' +
+            '<button ' +
+              'type="button" ' +
+              'class="advocate-action-btn view-btn" ' +
+              'onclick="openAdvocate(' +
+                Number(advocate.id) +
+              ')">' +
+              'View' +
+            '</button>' +
+          '</td>' +
+
+        '</tr>'
+      );
+    }).join("");
+  }
+
+  async function loadTable(){
+    const tbody = document.getElementById(
+      "advocateTableBody"
+    );
+
+    if(!tbody){
+      return;
+    }
+
+    const client = getClient();
+
+    if(!client){
+      tbody.innerHTML =
+        '<tr>' +
+          '<td colspan="8" class="empty">' +
+            'Supabase connection is not ready. Please refresh and login again.' +
+          '</td>' +
+        '</tr>';
+      return;
+    }
+
+    tbody.innerHTML =
+      '<tr>' +
+        '<td colspan="8" class="empty">' +
+          'Loading advocate applications...' +
+        '</td>' +
+      '</tr>';
+
+    try{
+      let result = await client
+        .from("advocate_registrations")
+        .select("*")
+        .order("created_at", {
+          ascending:false
+        });
+
+      if(
+        result.error &&
+        /JWT issued at future/i.test(
+          result.error.message || ""
+        )
+      ){
+        try{
+          const refreshed =
+            await client.auth.refreshSession();
+
+          if(!refreshed.error){
+            result = await client
+              .from("advocate_registrations")
+              .select("*")
+              .order("created_at", {
+                ascending:false
+              });
+          }
+        }catch(refreshError){
+          console.error(
+            "Session refresh error:",
+            refreshError
+          );
+        }
+      }
+
+      if(result.error){
+        throw result.error;
+      }
+
+      const rows =
+        Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      await attachDisplayPhotos(rows);
+
+      setAdvocateArray(rows);
+
+      renderTable();
+
+      if(
+        typeof window.loadAssignmentOverview === "function"
+      ){
+        try{
+          window.loadAssignmentOverview();
+        }catch(e){
+          console.error(
+            "Assignment overview refresh error:",
+            e
+          );
+        }
+      }
+
+    }catch(error){
+      console.error(
+        "Advocate applications load error:",
+        error
+      );
+
+      tbody.innerHTML =
+        '<tr>' +
+          '<td colspan="8" class="empty">' +
+            'Unable to load advocate applications: ' +
+            esc(
+              error?.message ||
+              "Unknown error"
+            ) +
+          '</td>' +
+        '</tr>';
+    }
+  }
+
+  function getAdvocate(id){
+    return getAdvocateArray().find(function(advocate){
+      return String(advocate.id) === String(id);
+    }) || null;
+  }
+
+  function setSelectedAdvocate(id){
+    try{
+      selectedAdvocateId = id;
+    }catch(e){}
+
+    window.ilsAbsoluteSelectedAdvocateId = id;
+  }
+
+  function syncOriginalNotes(notes){
+    const oldNotes =
+      document.getElementById("advocateAdminNotes");
+
+    if(oldNotes){
+      oldNotes.value = notes || "";
+    }
+  }
+
+  async function openView(id){
+    const advocate = getAdvocate(id);
+
+    if(!advocate){
+      alert(
+        "Advocate record was not found. Please refresh the Advocates page."
+      );
+      return;
+    }
+
+    setSelectedAdvocate(advocate.id);
+
+    if(
+      !advocate._displayPhotoUrl &&
+      !advocate.photo_url &&
+      !advocate.profile_photo_url
+    ){
+      advocate._displayPhotoUrl =
+        await getDisplayPhotoUrl(advocate);
+    }
+
+    const modal = document.getElementById(
+      "ilsAbsoluteAdvocateModal"
+    );
+
+    const content = document.getElementById(
+      "ilsAbsoluteAdvocateContent"
+    );
+
+    if(!modal || !content){
+      return;
+    }
+
+    const status = getStatus(advocate);
+
+    const photo = String(
+      advocate._displayPhotoUrl ||
+      advocate.photo_url ||
+      advocate.profile_photo_url ||
+      ""
+    );
+
+    const photoHtml = photo
+      ? '<img class="ils-aam-photo" ' +
+          'src="' + esc(photo) + '" ' +
+          'alt="Advocate photo">'
+      : '<div class="ils-aam-no-photo">' +
+          'No Photo Available' +
+        '</div>';
+
+    const detail = function(label, value){
+      return (
+        '<div class="ils-aam-item">' +
+          '<strong>' + esc(label) + '</strong>' +
+          '<span>' +
+            esc(valueOrDash(value)) +
+          '</span>' +
+        '</div>'
+      );
+    };
+
+    content.innerHTML =
+      '<div class="ils-aam-top">' +
+
+        photoHtml +
+
+        '<div>' +
+          '<h3 class="ils-aam-name">' +
+            esc(valueOrDash(advocate.advocate_name)) +
+          '</h3>' +
+
+          '<div class="ils-aam-sub">' +
+            esc(advocate.enrollment_number || "") +
+          '</div>' +
+
+          '<div class="ils-aam-sub">' +
+            esc(advocate.email || "") +
+          '</div>' +
+
+          '<span class="ils-aam-status ' +
+            getStatusClass(status) +
+          '">' +
+            esc(status) +
+          '</span>' +
+        '</div>' +
+
+      '</div>' +
+
+      '<div class="ils-aam-grid">' +
+
+        detail("Mobile", advocate.mobile) +
+        detail("Email", advocate.email) +
+        detail(
+          "Enrollment Number",
+          advocate.enrollment_number
+        ) +
+        detail(
+          "State Bar Council",
+          advocate.state_bar_council
+        ) +
+        detail(
+          "Practice State",
+          advocate.practice_state
+        ) +
+        detail(
+          "District / Court",
+          advocate.district_court
+        ) +
+        detail(
+          "Primary Practice Area",
+          advocate.primary_practice_area
+        ) +
+        detail(
+          "Years of Practice",
+          advocate.years_of_practice
+        ) +
+        detail(
+          "Public Profile",
+          advocate.public_profile ? "Yes" : "No"
+        ) +
+        detail(
+          "Registration Date",
+          advocate.created_at
+            ? new Date(
+                advocate.created_at
+              ).toLocaleString("en-IN")
+            : "-"
+        ) +
+
+      '</div>' +
+
+      '<div class="ils-aam-notes-wrap">' +
+        '<label for="ilsAbsoluteAdvocateNotes">' +
+          'Admin Notes' +
+        '</label>' +
+        '<textarea id="ilsAbsoluteAdvocateNotes" ' +
+          'placeholder="Add admin notes...">' +
+          esc(
+            advocate.admin_notes ||
+            advocate.notes ||
+            ""
+          ) +
+        '</textarea>' +
+      '</div>' +
+
+      '<div class="ils-aam-actions">' +
+
+        '<button type="button" ' +
+          'class="ils-aam-approve" ' +
+          'onclick="absoluteApproveAdvocate()">' +
+          'Approve' +
+        '</button>' +
+
+        '<button type="button" ' +
+          'class="ils-aam-reject" ' +
+          'onclick="absoluteRejectAdvocate()">' +
+          'Reject' +
+        '</button>' +
+
+        '<button type="button" ' +
+          'class="ils-aam-refresh" ' +
+          'onclick="closeAbsoluteAdvocateView()">' +
+          'Close' +
+        '</button>' +
+
+      '</div>' +
+
+      '<div id="ilsAbsoluteAdvocateMessage" ' +
+        'class="ils-aam-message"></div>';
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+  }
+
+  async function runExistingVerification(status){
+    const id = window.ilsAbsoluteSelectedAdvocateId;
+
+    if(
+      id === null ||
+      id === undefined ||
+      id === ""
+    ){
+      return;
+    }
+
+    const notes = String(
+      document.getElementById(
+        "ilsAbsoluteAdvocateNotes"
+      )?.value || ""
+    ).trim();
+
+    syncOriginalNotes(notes);
+    setSelectedAdvocate(id);
+
+    const message =
+      document.getElementById(
+        "ilsAbsoluteAdvocateMessage"
+      );
+
+    if(message){
+      message.style.color = "#f1c56a";
+      message.textContent =
+        status === "Approved"
+          ? "Approving advocate..."
+          : "Rejecting advocate...";
+    }
+
+    try{
+      if(
+        typeof window.updateAdvocateVerification ===
+        "function"
+      ){
+        await window.updateAdvocateVerification(status);
+
+        await loadTable();
+
+        closeAbsoluteView();
+
+        return;
+      }
+
+      const client = getClient();
+
+      if(!client){
+        throw new Error(
+          "Supabase connection is not ready."
+        );
+      }
+
+      const update = {
+        status:status,
+        verification_status:status,
+        admin_notes:notes,
+        public_profile:
+          status === "Approved"
+      };
+
+      if(status === "Approved"){
+        update.approved_at =
+          new Date().toISOString();
+      }
+
+      if(status === "Rejected"){
+        update.approved_at = null;
+      }
+
+      const result = await client
+        .from("advocate_registrations")
+        .update(update)
+        .eq("id", id);
+
+      if(result.error){
+        throw result.error;
+      }
+
+      await loadTable();
+
+      closeAbsoluteView();
+
+      alert(
+        "Advocate status updated successfully."
+      );
+
+    }catch(error){
+      console.error(
+        "Advocate status update error:",
+        error
+      );
+
+      if(message){
+        message.style.color = "#ffb7b7";
+        message.textContent =
+          error?.message ||
+          "Unable to update advocate status.";
+      }else{
+        alert(
+          error?.message ||
+          "Unable to update advocate status."
+        );
+      }
+    }
+  }
+
+  function closeAbsoluteView(){
+    const modal = document.getElementById(
+      "ilsAbsoluteAdvocateModal"
+    );
+
+    if(modal){
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  window.closeAbsoluteAdvocateView =
+    closeAbsoluteView;
+
+  window.absoluteApproveAdvocate =
+    function(){
+      return runExistingVerification("Approved");
+    };
+
+  window.absoluteRejectAdvocate =
+    function(){
+      return runExistingVerification("Rejected");
+    };
+
+  window.openAdvocate =
+    function(id){
+      return openView(id);
+    };
+
+  window.renderAdvocates =
+    function(){
+      return renderTable();
+    };
+
+  window.renderAdvocateApplications =
+    window.renderAdvocates;
+
+  window.loadAdvocates =
+    function(){
+      return loadTable();
+    };
+
+  window.loadAdvocateApplications =
+    window.loadAdvocates;
+
+  document.addEventListener(
+    "input",
+    function(event){
+      if(
+        event.target &&
+        event.target.id ===
+          "adminAdvocateSearch"
+      ){
+        renderTable();
+      }
+    }
+  );
+
+  document.addEventListener(
+    "click",
+    function(event){
+      const modal = document.getElementById(
+        "ilsAbsoluteAdvocateModal"
+      );
+
+      if(
+        modal &&
+        event.target === modal
+      ){
+        closeAbsoluteView();
+      }
+
+      const nav =
+        event.target &&
+        event.target.closest(
+          '[data-admin-nav="advocates"]'
+        );
+
+      if(nav){
+        setTimeout(loadTable, 0);
+      }
+    }
+  );
+
+  document.addEventListener(
+    "keydown",
+    function(event){
+      if(event.key === "Escape"){
+        closeAbsoluteView();
+      }
+    }
+  );
+
+  [300, 1000, 2500].forEach(function(delay){
+    setTimeout(function(){
+      const tbody =
+        document.getElementById(
+          "advocateTableBody"
+        );
+
+      if(
+        tbody &&
+        (
+          document.getElementById(
+            "adminAdvocateSearch"
+          ) ||
+          document.querySelector(
+            '[data-admin-nav="advocates"]'
+          )
+        )
+      ){
+        if(!getAdvocateArray().length){
+          loadTable();
+        }
+      }
+    }, delay);
+  });
+
+})();
+</script>
 </body>
 </html>
