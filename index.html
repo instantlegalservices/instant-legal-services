@@ -10895,7 +10895,81 @@ document.addEventListener("click",function(e){
 })();
 
 </script>
+<script id="ils-final-home-cleanup">
+(function () {
 
+  function cleanOldHomepage() {
+
+    document.body.classList.add("ils-clean-mode");
+
+    /* Hide only OLD PUBLIC UI */
+    const oldHeader = document.querySelector("body > header");
+
+    if (oldHeader) {
+      oldHeader.style.display = "none";
+    }
+
+    /*
+      Hide old visual homepage sections.
+      Do NOT hide working forms, portals, advocate directory,
+      admin or backend-connected sections.
+    */
+
+    const selectors = [
+      ".hero",
+      ".ils-location-strip",
+      "#quick-access",
+      "#services",
+      "#practice-guides",
+      "#about",
+      "#faq"
+    ];
+
+    selectors.forEach(function(selector) {
+      document.querySelectorAll(selector).forEach(function(el) {
+        el.classList.add("ils-legacy-home-hidden");
+      });
+    });
+
+    /*
+      Move new homepage to the very top of the body.
+      This ensures it appears first after every refresh.
+    */
+
+    const newHome = document.getElementById("ilsHomeHub");
+
+    if (newHome && document.body.firstElementChild !== newHome) {
+      document.body.insertBefore(newHome, document.body.firstElementChild);
+    }
+
+  }
+
+
+  if (document.readyState === "loading") {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      cleanOldHomepage
+    );
+
+  } else {
+
+    cleanOldHomepage();
+
+  }
+
+
+  /*
+    Recheck after existing asynchronous scripts finish.
+    Existing functions are not modified.
+  */
+
+  setTimeout(cleanOldHomepage, 500);
+  setTimeout(cleanOldHomepage, 1500);
+  setTimeout(cleanOldHomepage, 3000);
+
+})();
+</script>
 <!-- ILS CLEAN HOMEPAGE UPGRADE END -->
   
 </body>
