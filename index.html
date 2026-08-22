@@ -10967,5 +10967,188 @@ document
   });
 
 </script>
+<script>
+/* =========================================================
+   ILS HOMEPAGE POSITION & CLEANUP FIX
+   This moves the new homepage to the TOP without touching
+   Supabase, forms, portals, CRM or existing functions.
+========================================================= */
+
+window.addEventListener('load', function () {
+
+  setTimeout(function () {
+
+    const newHome = document.getElementById('ilsNewHomepage');
+    const header = document.querySelector('header');
+
+    /* MOVE NEW HOMEPAGE DIRECTLY BELOW HEADER */
+    if (newHome && header) {
+      header.insertAdjacentElement('afterend', newHome);
+    }
+
+    /*
+      HIDE ONLY OLD DUPLICATE PUBLIC HOMEPAGE CONTENT.
+      Elements remain in DOM, so existing JavaScript keeps working.
+    */
+
+    const hideSelectors = [
+      '.hero',
+      '.ils-quick-access',
+      '#official-legal-tools',
+      '#services',
+      '#practice-guides',
+      '#network',
+      '#about',
+      '#faq'
+    ];
+
+    hideSelectors.forEach(function(selector) {
+      document.querySelectorAll(selector).forEach(function(el) {
+
+        /* Never hide the new homepage itself */
+        if (
+          !el.closest('#ilsNewHomepage') &&
+          el.id !== 'publicAdvocateSection'
+        ) {
+          el.classList.add('ils-auto-hidden');
+        }
+
+      });
+    });
+
+
+    /*
+      CLEAN NAVIGATION
+      Keep navigation compact without touching backend.
+    */
+
+    const nav = document.querySelector('header nav');
+
+    if (nav && !document.getElementById('ilsCleanNav')) {
+
+      const cleanNav = document.createElement('div');
+      cleanNav.id = 'ilsCleanNav';
+      cleanNav.innerHTML = `
+        <a href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">Home</a>
+        <a href="#" onclick="ILS_UI.goTo('publicAdvocateSection');return false;">Find Advocate</a>
+        <a href="#" onclick="openILSPanel('client');return false;">Get Legal Help</a>
+        <a href="#" onclick="ILS_UI.openECourts();return false;">eCourts</a>
+        <a href="#" onclick="ILS_UI.openEChallan();return false;">eChallan</a>
+        <a href="#" onclick="ILS_UI.goTo('courtSearchSection');return false;">Court Search</a>
+        <a href="#" onclick="openILSPanel('advocate');return false;">Join Network</a>
+      `;
+
+      nav.style.display = 'none';
+      nav.insertAdjacentElement('afterend', cleanNav);
+    }
+
+
+    /*
+      MAKE EXISTING ADVOCATE DIRECTORY A SEPARATE CLEAN AREA
+      It remains connected to existing Supabase logic.
+    */
+
+    const advocateGrid = document.getElementById('publicAdvocateGrid');
+
+    if (advocateGrid) {
+
+      const directory =
+        document.getElementById('publicAdvocateSection') ||
+        document.getElementById('verified-advocates') ||
+        advocateGrid.closest('section');
+
+      if (directory) {
+        directory.classList.remove('ils-auto-hidden');
+        directory.classList.add('ils-directory-area');
+      }
+    }
+
+  }, 1200);
+
+});
+</script>
+
+<style>
+
+/* =========================================================
+   FINAL VISUAL FIX
+========================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body.ils-clean-mode {
+  background: #f5f7fa !important;
+  color: #132238 !important;
+}
+
+/* Hide old duplicate homepage sections only */
+.ils-auto-hidden {
+  display: none !important;
+}
+
+/* New homepage always stays at top */
+#ilsNewHomepage {
+  display: block;
+  width: 100%;
+}
+
+/* Compact new navigation */
+#ilsCleanNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px 5%;
+  background: #ffffff;
+  border-bottom: 1px solid #e3e8ee;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  box-shadow: 0 4px 18px rgba(0,0,0,.06);
+}
+
+#ilsCleanNav a {
+  color: #18314d;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 12px;
+  border-radius: 8px;
+}
+
+#ilsCleanNav a:hover {
+  background: #edf3f8;
+}
+
+/* Existing directory remains functional but visually separated */
+.ils-directory-area {
+  display: block !important;
+  background: #f5f7fa !important;
+  color: #132238 !important;
+  padding-top: 70px !important;
+  padding-bottom: 70px !important;
+}
+
+/* Mobile */
+@media (max-width: 850px) {
+
+  #ilsCleanNav {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  #ilsCleanNav a {
+    flex: 0 0 auto;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+}
+</style>
 </body>
 </html>
