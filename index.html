@@ -5021,8 +5021,8 @@ async function loadPublicAdvocates(){
     }
 
     renderPublicAdvocates();
-  if (typeof renderFeaturedAdvocates === "function") {
-  renderFeaturedAdvocates();
+  if (typeof renderFeaturedAdvocatesV2 === "function") {
+  renderFeaturedAdvocatesV2();
 }
     if(publicAdvocateRotationTimer) clearInterval(publicAdvocateRotationTimer);
     publicAdvocateRotationTimer = setInterval(() => {
