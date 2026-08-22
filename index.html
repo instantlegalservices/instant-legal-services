@@ -9862,5 +9862,1041 @@ document.addEventListener("click",function(e){
   window.addEventListener("popstate", handleILSSeoRoute);
 })();
 </script>
+  <!-- =========================================================
+     ILS CLEAN HOMEPAGE UPGRADE - SAFE ADDITIVE PATCH
+     Paste immediately BEFORE </body>
+========================================================= -->
+
+<style id="ils-clean-homepage-v2">
+
+/* =========================
+   CLEAN HOMEPAGE ONLY
+========================= */
+
+#ilsHomeHub{
+  padding:28px 6% 70px;
+  background:
+    radial-gradient(circle at top right,rgba(215,168,79,.08),transparent 32%),
+    #0b0d12;
+}
+
+.ils-home-wrap{
+  max-width:1180px;
+  margin:auto;
+}
+
+.ils-home-heading{
+  text-align:center;
+  margin:0 auto 30px;
+  max-width:780px;
+}
+
+.ils-home-eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 13px;
+  border-radius:999px;
+  border:1px solid rgba(215,168,79,.25);
+  background:rgba(215,168,79,.06);
+  color:#f1c56a;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+}
+
+.ils-home-heading h2{
+  font-size:34px;
+  margin:15px 0 10px;
+  color:#fff;
+}
+
+.ils-home-heading p{
+  color:#aeb9c8;
+  max-width:650px;
+  margin:auto;
+  font-size:15px;
+}
+
+/* =========================
+   MAIN ACTION CARDS
+========================= */
+
+.ils-main-actions{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+  margin-top:28px;
+}
+
+.ils-main-action{
+  border:1px solid #2a3340;
+  border-radius:18px;
+  padding:24px 20px;
+  min-height:185px;
+  background:
+    linear-gradient(145deg,rgba(24,32,43,.96),rgba(12,17,24,.98));
+  color:#fff;
+  text-align:left;
+  cursor:pointer;
+  text-decoration:none;
+  transition:.22s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.ils-main-action:hover{
+  transform:translateY(-4px);
+  border-color:rgba(215,168,79,.6);
+  box-shadow:0 18px 45px rgba(0,0,0,.25);
+}
+
+.ils-main-action .ils-action-icon{
+  width:46px;
+  height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  background:rgba(215,168,79,.10);
+  font-size:24px;
+  margin-bottom:17px;
+}
+
+.ils-main-action h3{
+  color:#f1c56a;
+  font-size:18px;
+  margin:0 0 8px;
+}
+
+.ils-main-action p{
+  color:#aeb9c8;
+  font-size:13px;
+  line-height:1.65;
+  margin:0;
+}
+
+.ils-main-action .ils-arrow{
+  position:absolute;
+  right:18px;
+  bottom:16px;
+  color:#f1c56a;
+  font-size:20px;
+}
+
+/* =========================
+   OFFICIAL SEARCH TOOLS
+========================= */
+
+.ils-search-tools{
+  margin-top:45px;
+}
+
+.ils-section-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:15px;
+  margin-bottom:18px;
+}
+
+.ils-section-title h2{
+  margin:0;
+  color:#fff;
+  font-size:25px;
+}
+
+.ils-section-title p{
+  margin:5px 0 0;
+  color:#8f9baa;
+  font-size:13px;
+}
+
+.ils-tool-row-v2{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+
+.ils-tool-v2{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  min-height:92px;
+  padding:16px;
+  text-decoration:none;
+  color:#fff;
+  background:#111720;
+  border:1px solid #293341;
+  border-radius:16px;
+  transition:.2s;
+  cursor:pointer;
+}
+
+.ils-tool-v2:hover{
+  border-color:rgba(215,168,79,.65);
+  transform:translateY(-2px);
+}
+
+.ils-tool-v2 .tool-v2-icon{
+  width:48px;
+  height:48px;
+  min-width:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  background:rgba(255,255,255,.045);
+  font-size:23px;
+}
+
+.ils-tool-v2 strong{
+  display:block;
+  color:#f1c56a;
+  font-size:15px;
+  margin-bottom:4px;
+}
+
+.ils-tool-v2 small{
+  display:block;
+  color:#9eabb9;
+  line-height:1.45;
+  font-size:11px;
+}
+
+/* =========================
+   FEATURED ADVOCATES
+========================= */
+
+.ils-featured-section{
+  margin-top:52px;
+}
+
+#ilsFeaturedAdvocatesV2{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+}
+
+.ils-featured-card-v2{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  padding:16px;
+  background:#111720;
+  border:1px solid #293341;
+  border-radius:17px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.ils-featured-card-v2:hover{
+  transform:translateY(-3px);
+  border-color:rgba(215,168,79,.6);
+}
+
+.ils-featured-photo-v2,
+.ils-featured-avatar-v2{
+  width:62px;
+  height:62px;
+  min-width:62px;
+  border-radius:16px;
+  object-fit:cover;
+  background:linear-gradient(135deg,#263548,#111923);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.ils-featured-info-v2{
+  min-width:0;
+}
+
+.ils-featured-name-v2{
+  color:#fff;
+  font-size:15px;
+  margin:0 0 5px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.ils-featured-status-v2{
+  color:#68d391;
+  font-size:11px;
+  font-weight:700;
+  margin-bottom:5px;
+}
+
+.ils-featured-location-v2{
+  color:#98a6b6;
+  font-size:11px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.ils-view-network{
+  display:inline-flex;
+  margin-top:18px;
+  color:#f1c56a;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:700;
+}
+
+/* =========================
+   PROFILE MODAL
+========================= */
+
+#ilsProfileModalV2{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:5000;
+  padding:25px;
+  background:rgba(0,5,10,.82);
+  backdrop-filter:blur(8px);
+  overflow:auto;
+}
+
+#ilsProfileModalV2.ils-profile-open{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.ils-profile-box-v2{
+  position:relative;
+  width:min(620px,100%);
+  background:#101720;
+  border:1px solid #354253;
+  border-radius:22px;
+  padding:30px;
+  box-shadow:0 30px 90px rgba(0,0,0,.45);
+}
+
+.ils-profile-close-v2{
+  position:absolute;
+  top:12px;
+  right:14px;
+  width:38px;
+  height:38px;
+  border:1px solid #354253;
+  border-radius:10px;
+  background:#18212c;
+  color:#fff;
+  font-size:23px;
+  cursor:pointer;
+}
+
+.ils-profile-top-v2{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding-bottom:20px;
+  border-bottom:1px solid #293341;
+}
+
+.ils-profile-photo-v2,
+.ils-profile-avatar-v2{
+  width:92px;
+  height:92px;
+  min-width:92px;
+  border-radius:20px;
+  object-fit:cover;
+  background:#1c2733;
+}
+
+.ils-profile-box-v2 h2{
+  margin:0 0 7px;
+  color:#fff;
+}
+
+.ils-profile-verified-v2{
+  color:#68d391;
+  font-size:12px;
+  font-weight:700;
+}
+
+.ils-profile-grid-v2{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+  margin:22px 0;
+}
+
+.ils-profile-item-v2{
+  padding:13px;
+  border-radius:13px;
+  background:#151e28;
+  border:1px solid #263240;
+}
+
+.ils-profile-item-v2 span{
+  display:block;
+  color:#8493a3;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  margin-bottom:5px;
+}
+
+.ils-profile-item-v2 strong{
+  color:#fff;
+  font-size:13px;
+}
+
+.ils-profile-areas-v2{
+  margin-top:5px;
+}
+
+.ils-profile-areas-v2 h3{
+  color:#f1c56a;
+  font-size:14px;
+  margin-bottom:8px;
+}
+
+.ils-profile-areas-v2 p{
+  color:#aeb9c8;
+  font-size:13px;
+  line-height:1.7;
+}
+
+.ils-profile-cta-v2{
+  margin-top:22px;
+  width:100%;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:900px){
+  .ils-main-actions,
+  .ils-tool-row-v2,
+  #ilsFeaturedAdvocatesV2{
+    grid-template-columns:1fr;
+  }
+
+  .ils-home-heading h2{
+    font-size:28px;
+  }
+}
+
+@media(max-width:560px){
+  #ilsHomeHub{
+    padding-left:5%;
+    padding-right:5%;
+  }
+
+  .ils-profile-grid-v2{
+    grid-template-columns:1fr;
+  }
+
+  .ils-profile-top-v2{
+    align-items:flex-start;
+  }
+}
+
+</style>
+
+
+<!-- =========================
+     NEW CLEAN HOMEPAGE HUB
+========================= -->
+
+<section id="ilsHomeHub" aria-label="Instant Legal Services quick access">
+
+  <div class="ils-home-wrap">
+
+    <div class="ils-home-heading">
+      <div class="ils-home-eyebrow">
+        India-Wide Legal Network
+      </div>
+
+      <h2>What do you need help with?</h2>
+
+      <p>
+        Find appropriate legal assistance, explore our professional network,
+        or join Instant Legal Services as an advocate.
+      </p>
+    </div>
+
+
+    <!-- THREE MAIN USER JOURNEYS -->
+
+    <div class="ils-main-actions">
+
+      <button type="button"
+              class="ils-main-action"
+              onclick="openILSPanel('client')">
+
+        <div class="ils-action-icon">⚖️</div>
+
+        <h3>Get Legal Help</h3>
+
+        <p>
+          Submit your legal requirement with your matter and jurisdiction details.
+        </p>
+
+        <span class="ils-arrow">→</span>
+
+      </button>
+
+
+      <button type="button"
+              class="ils-main-action"
+              onclick="document.getElementById('verified-advocates').scrollIntoView({behavior:'smooth',block:'start'})">
+
+        <div class="ils-action-icon">👨‍⚖️</div>
+
+        <h3>Find an Advocate</h3>
+
+        <p>
+          Search approved public advocate profiles by name, state, court or practice area.
+        </p>
+
+        <span class="ils-arrow">→</span>
+
+      </button>
+
+
+      <button type="button"
+              class="ils-main-action"
+              onclick="openILSPanel('advocate')">
+
+        <div class="ils-action-icon">🤝</div>
+
+        <h3>Join Our Network</h3>
+
+        <p>
+          Register your professional profile for review and network participation.
+        </p>
+
+        <span class="ils-arrow">→</span>
+
+      </button>
+
+    </div>
+
+
+    <!-- SEO / OFFICIAL TOOLS -->
+
+    <div class="ils-search-tools">
+
+      <div class="ils-section-title">
+
+        <div>
+          <h2>Legal Search Tools</h2>
+          <p>Quick access to useful official legal and court services.</p>
+        </div>
+
+      </div>
+
+
+      <div class="ils-tool-row-v2">
+
+        <a class="ils-tool-v2"
+           href="https://services.ecourts.gov.in/ecourtindia_v6/"
+           target="_blank"
+           rel="noopener noreferrer">
+
+          <div class="tool-v2-icon">⚖️</div>
+
+          <div>
+            <strong>eCourts Case Search</strong>
+            <small>Search case status and available case information through the official service.</small>
+          </div>
+
+        </a>
+
+
+        <a class="ils-tool-v2"
+           href="https://echallan.parivahan.gov.in/index/accused-challan"
+           target="_blank"
+           rel="noopener noreferrer">
+
+          <div class="tool-v2-icon">🚦</div>
+
+          <div>
+            <strong>Check Traffic Challan</strong>
+            <small>Open the official Parivahan eChallan service for challan information.</small>
+          </div>
+
+        </a>
+
+
+        <button type="button"
+                class="ils-tool-v2"
+                style="font:inherit;text-align:left"
+                onclick="if(typeof openILSCourts==='function'){openILSCourts()}">
+
+          <div class="tool-v2-icon">🏛️</div>
+
+          <div>
+            <strong>Court Search</strong>
+            <small>Find and open official websites and links for courts in India.</small>
+          </div>
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- FEATURED ADVOCATES -->
+
+    <div class="ils-featured-section">
+
+      <div class="ils-section-title">
+
+        <div>
+          <h2>Featured Network Advocates</h2>
+          <p>Explore selected approved public professional profiles.</p>
+        </div>
+
+      </div>
+
+
+      <div id="ilsFeaturedAdvocatesV2">
+
+        <div class="ils-featured-card-v2">
+          <div class="ils-featured-avatar-v2"></div>
+          <div class="ils-featured-info-v2">
+            <h3 class="ils-featured-name-v2">Loading profiles...</h3>
+            <div class="ils-featured-location-v2">Please wait</div>
+          </div>
+        </div>
+
+      </div>
+
+
+      <a href="#verified-advocates"
+         class="ils-view-network">
+
+        View All Network Advocates →
+
+      </a>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     ADVOCATE PROFILE MODAL
+========================= -->
+
+<div id="ilsProfileModalV2"
+     aria-hidden="true">
+
+  <div class="ils-profile-box-v2">
+
+    <button type="button"
+            class="ils-profile-close-v2"
+            onclick="closeILSProfileV2()"
+            aria-label="Close profile">
+
+      ×
+
+    </button>
+
+    <div id="ilsProfileContentV2"></div>
+
+  </div>
+
+</div>
+
+
+<script id="ils-clean-homepage-v2-js">
+
+(function(){
+
+  function esc(value){
+
+    return String(value || "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+
+  }
+
+
+  window.closeILSProfileV2 = function(){
+
+    const modal =
+      document.getElementById("ilsProfileModalV2");
+
+    if(!modal) return;
+
+    modal.classList.remove("ils-profile-open");
+
+    modal.setAttribute("aria-hidden","true");
+
+    document.body.style.overflow = "";
+
+  };
+
+
+  window.openILSProfileV2 = function(advocate){
+
+    const modal =
+      document.getElementById("ilsProfileModalV2");
+
+    const content =
+      document.getElementById("ilsProfileContentV2");
+
+    if(!modal || !content || !advocate) return;
+
+
+    const photo =
+      advocate.photo_url ||
+      advocate.profile_photo_url ||
+      "";
+
+
+    const photoHtml = photo
+      ? `<img class="ils-profile-photo-v2"
+              src="${esc(photo)}"
+              alt="${esc(advocate.advocate_name || "Advocate")}">`
+      : `<div class="ils-profile-avatar-v2"></div>`;
+
+
+    const practiceAreas =
+
+      advocate.primary_practice_area ||
+      advocate.practice_area ||
+      advocate.practice_areas ||
+      "Professional details available on profile";
+
+
+    const state =
+      advocate.practice_state ||
+      advocate.state ||
+      "Not specified";
+
+
+    const court =
+      advocate.district_court ||
+      advocate.court ||
+      "Not specified";
+
+
+    const experience =
+      advocate.experience ||
+      advocate.years_of_experience ||
+      "Not specified";
+
+
+    content.innerHTML = `
+
+      <div class="ils-profile-top-v2">
+
+        ${photoHtml}
+
+        <div>
+
+          <h2>
+            ${esc(advocate.advocate_name || "Advocate")}
+          </h2>
+
+          <div class="ils-profile-verified-v2">
+            ✓ Verified Network Member
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="ils-profile-grid-v2">
+
+        <div class="ils-profile-item-v2">
+
+          <span>Practice State</span>
+
+          <strong>
+            ${esc(state)}
+          </strong>
+
+        </div>
+
+
+        <div class="ils-profile-item-v2">
+
+          <span>Jurisdiction / Court</span>
+
+          <strong>
+            ${esc(court)}
+          </strong>
+
+        </div>
+
+
+        <div class="ils-profile-item-v2">
+
+          <span>Experience</span>
+
+          <strong>
+            ${esc(experience)}
+          </strong>
+
+        </div>
+
+
+        <div class="ils-profile-item-v2">
+
+          <span>Network Status</span>
+
+          <strong>
+            Verified Public Profile
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="ils-profile-areas-v2">
+
+        <h3>Practice Areas</h3>
+
+        <p>
+          ${esc(
+            Array.isArray(practiceAreas)
+              ? practiceAreas.join(" • ")
+              : practiceAreas
+          )}
+        </p>
+
+      </div>
+
+
+      <button type="button"
+              class="btn primary ils-profile-cta-v2"
+              onclick="closeILSProfileV2();openILSPanel('client')">
+
+        Need Legal Assistance?
+
+      </button>
+
+    `;
+
+
+    modal.classList.add("ils-profile-open");
+
+    modal.setAttribute("aria-hidden","false");
+
+  };
+
+
+  document
+    .getElementById("ilsProfileModalV2")
+    ?.addEventListener("click",function(event){
+
+      if(event.target === this){
+
+        closeILSProfileV2();
+
+      }
+
+    });
+
+
+  function renderFeaturedAdvocatesV2(){
+
+    const box =
+      document.getElementById("ilsFeaturedAdvocatesV2");
+
+    if(!box) return;
+
+
+    const advocates =
+      Array.isArray(window.publicAdvocates)
+        ? window.publicAdvocates
+        : [];
+
+
+    const approved = advocates
+      .filter(function(a){
+
+        return a &&
+               a.advocate_name;
+
+      })
+      .slice(0,3);
+
+
+    if(!approved.length){
+
+      box.innerHTML = `
+        <div class="ils-featured-card-v2">
+
+          <div class="ils-featured-avatar-v2"></div>
+
+          <div class="ils-featured-info-v2">
+
+            <h3 class="ils-featured-name-v2">
+              No public profiles available yet
+            </h3>
+
+            <div class="ils-featured-location-v2">
+              Approved profiles will appear here.
+            </div>
+
+          </div>
+
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    box.innerHTML =
+      approved.map(function(a){
+
+        const photo =
+          a.photo_url ||
+          a.profile_photo_url ||
+          "";
+
+
+        const photoHtml = photo
+
+          ? `<img class="ils-featured-photo-v2"
+                  src="${esc(photo)}"
+                  alt="${esc(a.advocate_name)}"
+                  loading="lazy">`
+
+          : `<div class="ils-featured-avatar-v2"></div>`;
+
+
+        const state =
+          a.practice_state ||
+          a.state ||
+          "";
+
+
+        const court =
+          a.district_court ||
+          a.court ||
+          "";
+
+
+        return `
+
+          <article class="ils-featured-card-v2"
+                   data-advocate-id="${esc(a.id)}">
+
+            ${photoHtml}
+
+            <div class="ils-featured-info-v2">
+
+              <h3 class="ils-featured-name-v2">
+
+                ${esc(a.advocate_name)}
+
+              </h3>
+
+
+              <div class="ils-featured-status-v2">
+
+                ✓ Verified Network Member
+
+              </div>
+
+
+              <div class="ils-featured-location-v2">
+
+                ${esc(state)}
+                ${state && court ? " • " : ""}
+                ${esc(court)}
+
+              </div>
+
+            </div>
+
+          </article>
+
+        `;
+
+      }).join("");
+
+
+    box
+      .querySelectorAll(".ils-featured-card-v2[data-advocate-id]")
+      .forEach(function(card){
+
+        card.addEventListener("click",function(){
+
+          const id =
+            String(card.dataset.advocateId);
+
+
+          const advocate =
+            advocates.find(function(a){
+
+              return String(a.id) === id;
+
+            });
+
+
+          if(advocate){
+
+            openILSProfileV2(advocate);
+
+          }
+
+        });
+
+      });
+
+  }
+
+
+  /*
+    Existing loadPublicAdvocates() runs asynchronously.
+    Retry only the featured display.
+    No existing function is replaced or changed.
+  */
+
+  [300,800,1500,2500,4000,6000]
+    .forEach(function(delay){
+
+      setTimeout(
+        renderFeaturedAdvocatesV2,
+        delay
+      );
+
+    });
+
+
+  document.addEventListener(
+    "keydown",
+    function(event){
+
+      if(event.key === "Escape"){
+
+        closeILSProfileV2();
+
+      }
+
+    }
+  );
+
+
+})();
+
+</script>
+
+<!-- ILS CLEAN HOMEPAGE UPGRADE END -->
+  
 </body>
 </html>
