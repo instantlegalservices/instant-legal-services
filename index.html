@@ -10971,6 +10971,289 @@ document.addEventListener("click",function(e){
 })();
 </script>
 <!-- ILS CLEAN HOMEPAGE UPGRADE END -->
-  
+  <!-- ILS FEATURED ADVOCATES FINAL DATA FIX -->
+<style id="ils-featured-advocates-final-style">
+
+/* Remove the old large advocate directory from homepage.
+   Data/backend/functions remain untouched. */
+#verified-advocates{
+  display:none !important;
+}
+
+/* Featured advocate row */
+#ilsFeaturedAdvocateGrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+  margin-top:24px;
+}
+
+.ils-featured-card-final{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  background:rgba(255,255,255,.04);
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.ils-featured-card-final:hover{
+  transform:translateY(-3px);
+  border-color:#d9a441;
+  background:rgba(217,164,65,.08);
+}
+
+.ils-featured-photo-final,
+.ils-featured-avatar-final{
+  width:72px;
+  height:72px;
+  min-width:72px;
+  border-radius:16px;
+  object-fit:cover;
+  background:#1d2938;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.ils-featured-info-final{
+  min-width:0;
+}
+
+.ils-featured-name-final{
+  margin:0 0 6px;
+  font-size:16px;
+  font-weight:800;
+  color:#fff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.ils-featured-status-final{
+  font-size:12px;
+  font-weight:700;
+  color:#d9a441;
+  margin-bottom:5px;
+}
+
+.ils-featured-location-final{
+  font-size:12px;
+  color:#aab5c2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.ils-featured-loading-final,
+.ils-featured-empty-final,
+.ils-featured-error-final{
+  grid-column:1/-1;
+  text-align:center;
+  padding:28px 15px;
+  color:#aab5c2;
+}
+
+@media(max-width:800px){
+  #ilsFeaturedAdvocateGrid{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+}
+
+</style>
+
+<script id="ils-featured-advocates-final">
+(function(){
+"use strict";
+
+const DIRECTORY_VIEW = "ils_public_advocate_directory";
+
+function esc(value){
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+/* Directly fetch the SAME verified public directory */
+async function loadFeaturedVerifiedAdvocates(){
+
+  const box = document.getElementById("ilsFeaturedAdvocateGrid");
+
+  if(!box) return;
+
+  box.innerHTML =
+    '<div class="ils-featured-loading-final">Loading verified network advocates...</div>';
+
+  try{
+
+    if(
+      typeof supabaseClient === "undefined" ||
+      !supabaseClient
+    ){
+      throw new Error("Supabase connection unavailable");
+    }
+
+    const {data,error} = await supabaseClient
+      .from(DIRECTORY_VIEW)
+      .select(
+        "id,advocate_name,practice_state,district_court," +
+        "primary_practice_area,years_of_practice," +
+        "photo_url,profile_photo_url"
+      )
+      .order("advocate_name",{ascending:true})
+      .limit(3);
+
+    if(error) throw error;
+
+    const advocates = Array.isArray(data) ? data : [];
+
+    if(!advocates.length){
+
+      box.innerHTML = `
+        <div class="ils-featured-empty-final">
+          <strong>No verified advocates available yet</strong><br>
+          Approved public profiles will appear here.
+        </div>
+      `;
+
+      return;
+    }
+
+    box.innerHTML = advocates.map(function(a){
+
+      const photo =
+        a.photo_url ||
+        a.profile_photo_url ||
+        "";
+
+      const photoHtml = photo
+        ? `<img
+             class="ils-featured-photo-final"
+             src="${esc(photo)}"
+             alt="${esc(a.advocate_name || "Advocate")}"
+             loading="lazy"
+           >`
+        : `<div
+             class="ils-featured-avatar-final"
+             aria-hidden="true"
+           ></div>`;
+
+      const location = [
+        a.practice_state,
+        a.district_court
+      ]
+      .filter(Boolean)
+      .join(" • ");
+
+      return `
+        <article
+          class="ils-featured-card-final"
+          data-advocate-id="${esc(a.id)}"
+        >
+
+          ${photoHtml}
+
+          <div class="ils-featured-info-final">
+
+            <h3 class="ils-featured-name-final">
+              ${esc(a.advocate_name || "Advocate")}
+            </h3>
+
+            <div class="ils-featured-status-final">
+              ✓ Verified Network Member
+            </div>
+
+            <div class="ils-featured-location-final">
+              ${esc(location || "India")}
+            </div>
+
+          </div>
+
+        </article>
+      `;
+
+    }).join("");
+
+
+    /* Profile click:
+       Uses your existing profile function if already present */
+    box.querySelectorAll("[data-advocate-id]").forEach(function(card){
+
+      card.addEventListener("click",function(){
+
+        const id = String(card.dataset.advocateId);
+
+        const advocate = advocates.find(function(a){
+          return String(a.id) === id;
+        });
+
+        if(
+          advocate &&
+          typeof window.openILSProfileV2 === "function"
+        ){
+          window.openILSProfileV2(advocate);
+        }
+
+      });
+
+    });
+
+  }catch(error){
+
+    console.error(
+      "Featured verified advocates error:",
+      error
+    );
+
+    box.innerHTML = `
+      <div class="ils-featured-error-final">
+        Unable to load verified advocate profiles at the moment.
+      </div>
+    `;
+
+  }
+
+}
+
+
+/* Load after existing page scripts */
+window.addEventListener("load",function(){
+
+  setTimeout(
+    loadFeaturedVerifiedAdvocates,
+    700
+  );
+
+});
+
+
+/* Refresh automatically when returning to page */
+document.addEventListener(
+  "visibilitychange",
+  function(){
+
+    if(
+      document.visibilityState === "visible"
+    ){
+      loadFeaturedVerifiedAdvocates();
+    }
+
+  }
+);
+
+
+/* Make available if needed elsewhere */
+window.loadFeaturedVerifiedAdvocates =
+  loadFeaturedVerifiedAdvocates;
+
+})();
+</script>
+<!-- ILS FEATURED ADVOCATES FINAL DATA FIX END -->
 </body>
 </html>
