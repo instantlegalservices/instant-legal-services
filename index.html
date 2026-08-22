@@ -5033,6 +5033,36 @@ async function loadPublicAdvocates(){
     }, 12000);
 }
 
+/* FEATURED NETWORK ADVOCATES — INITIAL LOAD + 9 CARD ROTATION */
+
+if (typeof renderFeaturedAdvocatesV2 === "function") {
+  renderFeaturedAdvocatesV2();
+}
+
+if (typeof ilsFeaturedRotationTimer !== "undefined" && ilsFeaturedRotationTimer) {
+  clearInterval(ilsFeaturedRotationTimer);
+}
+
+ilsFeaturedRotationTimer = setInterval(function () {
+
+  const advocates =
+    Array.isArray(window.publicAdvocates)
+      ? window.publicAdvocates.filter(function (a) {
+          return a && a.advocate_name;
+        })
+      : [];
+
+  if (advocates.length > 9) {
+
+    ilsFeaturedRotationIndex =
+      (ilsFeaturedRotationIndex + 9) % advocates.length;
+
+    renderFeaturedAdvocatesV2();
+
+  }
+
+}, 12000);
+  
 const DOCUMENT_FUNCTION_URL = SUPABASE_URL + "/functions/v1/client-matter-documents";
 
 async function getCurrentAuthToken(){
@@ -10712,56 +10742,140 @@ document.addEventListener("click",function(e){
     });
 
 
-  function renderFeaturedAdvocatesV2(){
+ let ilsFeaturedRotationIndex = 0;
+let ilsFeaturedRotationTimer = null;
 
-    const box =
-      document.getElementById("ilsFeaturedAdvocatesV2");
+function renderFeaturedAdvocatesV2(){
 
-    if(!box) return;
+  const box =
+    document.getElementById("ilsFeaturedAdvocatesV2");
 
+  if(!box) return;
 
-    const advocates =
-      Array.isArray(window.publicAdvocates)
-        ? window.publicAdvocates
-        : [];
+  const advocates =
+    Array.isArray(window.publicAdvocates)
+      ? window.publicAdvocates.filter(function(a){
+          return a && a.advocate_name;
+        })
+      : [];
 
+  if(!advocates.length){
 
-    const approved = advocates
-      .filter(function(a){
+    box.innerHTML = `
+      <div class="ils-featured-card-v2">
+        <div class="ils-featured-avatar-v2"></div>
+        <div class="ils-featured-info-v2">
+          <h3 class="ils-featured-name-v2">
+            Loading verified advocates...
+          </h3>
+          <div class="ils-featured-location-v2">
+            Please wait
+          </div>
+        </div>
+      </div>
+    `;
 
-        return a &&
-               a.advocate_name;
+    return;
+  }
 
-      })
-      .slice(0,3);
+  const SHOW_COUNT = 9;
 
+  const start =
+    ilsFeaturedRotationIndex % advocates.length;
 
-    if(!approved.length){
+  const featured =
+    advocates.length > SHOW_COUNT
+      ? [
+          ...advocates.slice(start, start + SHOW_COUNT),
+          ...advocates.slice(
+            0,
+            Math.max(
+              0,
+              start + SHOW_COUNT - advocates.length
+            )
+          )
+        ].slice(0, SHOW_COUNT)
+      : advocates;
 
-      box.innerHTML = `
-        <div class="ils-featured-card-v2">
+  box.innerHTML =
+    featured.map(function(a){
 
-          <div class="ils-featured-avatar-v2"></div>
+      const photo =
+        a.photo_url ||
+        a.profile_photo_url ||
+        "";
+
+      const photoHtml = photo
+        ? `<img class="ils-featured-photo-v2"
+                src="${esc(photo)}"
+                alt="${esc(a.advocate_name)}"
+                loading="lazy">`
+        : `<div class="ils-featured-avatar-v2"></div>`;
+
+      const state =
+        a.practice_state ||
+        a.state ||
+        "";
+
+      const court =
+        a.district_court ||
+        a.court ||
+        "";
+
+      return `
+
+        <article class="ils-featured-card-v2"
+                 data-advocate-id="${esc(a.id)}">
+
+          ${photoHtml}
 
           <div class="ils-featured-info-v2">
 
             <h3 class="ils-featured-name-v2">
-              No public profiles available yet
+              ${esc(a.advocate_name)}
             </h3>
 
+            <div class="ils-featured-status-v2">
+              ✓ Verified Network Member
+            </div>
+
             <div class="ils-featured-location-v2">
-              Approved profiles will appear here.
+              ${esc(state)}
+              ${state && court ? " • " : ""}
+              ${esc(court)}
             </div>
 
           </div>
 
-        </div>
+        </article>
+
       `;
 
-      return;
+    }).join("");
 
-    }
+  box
+    .querySelectorAll(".ils-featured-card-v2[data-advocate-id]")
+    .forEach(function(card){
 
+      card.addEventListener("click",function(){
+
+        const id =
+          String(card.dataset.advocateId);
+
+        const advocate =
+          advocates.find(function(a){
+            return String(a.id) === id;
+          });
+
+        if(advocate){
+          openILSProfileV2(advocate);
+        }
+
+      });
+
+    });
+
+}
 
     box.innerHTML =
       approved.map(function(a){
