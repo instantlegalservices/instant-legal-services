@@ -9862,5 +9862,19 @@ document.addEventListener("click",function(e){
   window.addEventListener("popstate", handleILSSeoRoute);
 })();
 </script>
+<script>
+window.addEventListener('load', function () {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get('join') === 'advocate') {
+    setTimeout(function () {
+      openILSPanel('advocate');
+    }, 500);
+  }
+});
+</script>
+
+</body>
+</html>
 </body>
 </html>
