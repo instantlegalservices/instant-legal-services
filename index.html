@@ -11373,5 +11373,904 @@ window.loadFeaturedVerifiedAdvocates =
 })();
 </script>
 <!-- ILS FEATURED ADVOCATES FINAL DATA FIX END -->
+<!-- =========================================================
+     ILS FINAL SAFE REPAIR
+     Featured Advocates + Directory Links + Services Hub
+     APPEND ONLY - DO NOT REMOVE EXISTING WORKING CODE
+========================================================= -->
+
+<style id="ils-final-safe-repair-style">
+
+/* =========================================================
+   1. RESTORE VERIFIED ADVOCATE DIRECTORY
+   Overrides the previous accidental:
+   #verified-advocates { display:none !important; }
+========================================================= */
+
+#verified-advocates{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+#verified-advocates.ils-legacy-home-hidden{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+
+/* =========================================================
+   2. KEEP SERVICES + PRACTICE GUIDES VISIBLE
+========================================================= */
+
+#services,
+#practice-guides{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+#services.ils-legacy-home-hidden,
+#practice-guides.ils-legacy-home-hidden{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+
+/* =========================================================
+   3. SINGLE LEGAL SERVICES HUB
+========================================================= */
+
+#ilsLegalServicesHub{
+  display:block;
+  position:relative;
+  width:100%;
+  scroll-margin-top:90px;
+}
+
+#ilsLegalServicesHub .ils-services-hub-header{
+  max-width:1100px;
+  margin:0 auto 28px;
+  text-align:center;
+  padding:0 20px;
+}
+
+#ilsLegalServicesHub .ils-services-hub-kicker{
+  display:inline-block;
+  margin-bottom:10px;
+  padding:7px 14px;
+  border:1px solid rgba(229,169,61,.32);
+  border-radius:999px;
+  color:#f1c56a;
+  background:rgba(229,169,61,.08);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+}
+
+#ilsLegalServicesHub .ils-services-hub-header h2{
+  margin:0 0 14px;
+}
+
+#ilsLegalServicesHub .ils-services-hub-header p{
+  max-width:900px;
+  margin:0 auto;
+}
+
+
+/* Hide duplicate child headings after merge */
+
+#ilsLegalServicesHub #services > h2:first-child,
+#ilsLegalServicesHub #practice-guides > h2:first-child{
+  display:none !important;
+}
+
+
+/* Keep both original functional sections visually connected */
+
+#ilsLegalServicesHub #services,
+#ilsLegalServicesHub #practice-guides{
+  padding-top:24px !important;
+  padding-bottom:24px !important;
+}
+
+
+/* =========================================================
+   4. FEATURED ADVOCATES
+========================================================= */
+
+#ilsFeaturedAdvocatesV2{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+  width:100%;
+}
+
+.ils-featured-card-v2{
+  cursor:pointer !important;
+  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.ils-featured-card-v2:hover{
+  transform:translateY(-4px);
+}
+
+
+/* Make photo clearly clickable */
+
+.ils-featured-photo-v2,
+.ils-featured-avatar-v2{
+  cursor:pointer !important;
+}
+
+
+/* =========================================================
+   5. PROFILE MODAL SAFETY
+========================================================= */
+
+#ilsProfileModalV2{
+  z-index:99999 !important;
+}
+
+#ilsProfileModalV2.ils-profile-open{
+  display:flex !important;
+}
+
+
+/* =========================================================
+   6. RESPONSIVE
+========================================================= */
+
+@media(max-width:1000px){
+
+  #ilsFeaturedAdvocatesV2{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+}
+
+@media(max-width:640px){
+
+  #ilsFeaturedAdvocatesV2{
+    grid-template-columns:1fr;
+  }
+
+}
+
+</style>
+
+
+<script id="ils-final-safe-repair-script">
+
+(function(){
+
+  "use strict";
+
+
+  /* =======================================================
+     SAFE SCROLL FUNCTION
+  ======================================================= */
+
+  function ilsSafeScrollTo(id){
+
+    const target = document.getElementById(id);
+
+    if(!target) return false;
+
+    target.classList.remove("ils-legacy-home-hidden");
+
+    target.style.display = "block";
+    target.style.visibility = "visible";
+    target.style.opacity = "1";
+
+    requestAnimationFrame(function(){
+
+      target.scrollIntoView({
+        behavior:"smooth",
+        block:"start"
+      });
+
+    });
+
+    return true;
+  }
+
+
+  window.ilsSafeScrollTo = ilsSafeScrollTo;
+
+
+  /* =======================================================
+     RESTORE VERIFIED ADVOCATE DIRECTORY
+  ======================================================= */
+
+  function restoreVerifiedAdvocateDirectory(){
+
+    const directory =
+      document.getElementById("verified-advocates");
+
+    if(!directory) return;
+
+    directory.classList.remove("ils-legacy-home-hidden");
+
+    directory.style.setProperty(
+      "display",
+      "block",
+      "important"
+    );
+
+    directory.style.setProperty(
+      "visibility",
+      "visible",
+      "important"
+    );
+
+    directory.style.setProperty(
+      "opacity",
+      "1",
+      "important"
+    );
+
+  }
+
+
+  /* =======================================================
+     MERGE LEGAL SERVICES + PRACTICE AREAS
+     Existing cards, buttons and guide functions are retained.
+     Nothing inside existing sections is recreated or deleted.
+  ======================================================= */
+
+  function buildLegalServicesHub(){
+
+    const services =
+      document.getElementById("services");
+
+    const guides =
+      document.getElementById("practice-guides");
+
+    if(!services && !guides) return;
+
+
+    let hub =
+      document.getElementById("ilsLegalServicesHub");
+
+
+    if(!hub){
+
+      hub =
+        document.createElement("section");
+
+      hub.id =
+        "ilsLegalServicesHub";
+
+      hub.className =
+        "section ils-legal-services-hub";
+
+
+      const header =
+        document.createElement("div");
+
+      header.className =
+        "ils-services-hub-header";
+
+      header.innerHTML = `
+        <div class="ils-services-hub-kicker">
+          Professional Legal Support
+        </div>
+
+        <h2>
+          Legal Services &amp; Practice Areas
+        </h2>
+
+        <p class="intro">
+          Instant Legal Services provides legal assistance,
+          professional coordination and access to advocates for
+          a wide range of legal matters across India. The exact
+          scope and availability of representation may depend on
+          the nature of the matter, jurisdiction and the concerned
+          legal professional.
+        </p>
+      `;
+
+      hub.appendChild(header);
+
+
+      if(services){
+
+        services.parentNode.insertBefore(
+          hub,
+          services
+        );
+
+      }else if(guides){
+
+        guides.parentNode.insertBefore(
+          hub,
+          guides
+        );
+
+      }
+
+    }
+
+
+    [services,guides].forEach(function(section){
+
+      if(!section) return;
+
+      section.classList.remove(
+        "ils-legacy-home-hidden"
+      );
+
+      section.style.setProperty(
+        "display",
+        "block",
+        "important"
+      );
+
+      section.style.setProperty(
+        "visibility",
+        "visible",
+        "important"
+      );
+
+      section.style.setProperty(
+        "opacity",
+        "1",
+        "important"
+      );
+
+
+      if(section.parentNode !== hub){
+
+        hub.appendChild(section);
+
+      }
+
+    });
+
+  }
+
+
+  /* =======================================================
+     FEATURED ADVOCATE DATA HELPER
+  ======================================================= */
+
+  function getVerifiedAdvocates(){
+
+    if(!Array.isArray(window.publicAdvocates)){
+
+      return [];
+
+    }
+
+    return window.publicAdvocates.filter(function(a){
+
+      return a && a.advocate_name;
+
+    });
+
+  }
+
+
+  /* =======================================================
+     FEATURED ADVOCATE RENDER
+     9 cards
+     Existing modal is used.
+  ======================================================= */
+
+  function renderSafeFeaturedAdvocates(){
+
+    const box =
+      document.getElementById(
+        "ilsFeaturedAdvocatesV2"
+      );
+
+    if(!box) return;
+
+
+    const advocates =
+      getVerifiedAdvocates();
+
+
+    if(!advocates.length){
+
+      box.innerHTML = `
+        <div class="ils-featured-card-v2">
+          <div class="ils-featured-info-v2">
+            <h3 class="ils-featured-name-v2">
+              Loading verified advocates...
+            </h3>
+            <div class="ils-featured-location-v2">
+              Please wait
+            </div>
+          </div>
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    if(
+      typeof window.ilsFeaturedRotationIndex !==
+      "number"
+    ){
+
+      window.ilsFeaturedRotationIndex = 0;
+
+    }
+
+
+    const SHOW_COUNT = 9;
+
+    const start =
+      window.ilsFeaturedRotationIndex %
+      advocates.length;
+
+
+    let featured = [];
+
+
+    for(
+      let i = 0;
+      i < Math.min(
+        SHOW_COUNT,
+        advocates.length
+      );
+      i++
+    ){
+
+      featured.push(
+        advocates[
+          (start + i) %
+          advocates.length
+        ]
+      );
+
+    }
+
+
+    function esc(value){
+
+      if(
+        typeof window.escapeHtml ===
+        "function"
+      ){
+
+        return window.escapeHtml(
+          value == null ? "" : value
+        );
+
+      }
+
+
+      return String(
+        value == null ? "" : value
+      )
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+
+    }
+
+
+    box.innerHTML =
+      featured.map(function(a){
+
+        const photo =
+          a.photo_url ||
+          a.profile_photo_url ||
+          "";
+
+
+        const state =
+          a.practice_state ||
+          a.state ||
+          "";
+
+
+        const court =
+          a.district_court ||
+          a.court ||
+          "";
+
+
+        const photoHtml =
+          photo
+            ? `
+              <img
+                class="ils-featured-photo-v2"
+                src="${esc(photo)}"
+                alt="${esc(a.advocate_name)}"
+                loading="lazy"
+              >
+            `
+            : `
+              <div
+                class="ils-featured-avatar-v2"
+                aria-hidden="true"
+              ></div>
+            `;
+
+
+        return `
+
+          <article
+            class="ils-featured-card-v2"
+            data-advocate-id="${esc(a.id)}"
+            tabindex="0"
+            role="button"
+            aria-label="View professional profile of ${esc(a.advocate_name)}"
+          >
+
+            ${photoHtml}
+
+            <div class="ils-featured-info-v2">
+
+              <h3 class="ils-featured-name-v2">
+                ${esc(a.advocate_name)}
+              </h3>
+
+              <div class="ils-featured-status-v2">
+                ✓ Verified Network Member
+              </div>
+
+              <div class="ils-featured-location-v2">
+
+                ${esc(state)}
+                ${state && court ? " • " : ""}
+                ${esc(court)}
+
+              </div>
+
+            </div>
+
+          </article>
+
+        `;
+
+      }).join("");
+
+
+    box
+      .querySelectorAll(
+        ".ils-featured-card-v2[data-advocate-id]"
+      )
+      .forEach(function(card){
+
+        function openProfile(){
+
+          const id =
+            String(
+              card.dataset.advocateId
+            );
+
+
+          const advocate =
+            getVerifiedAdvocates().find(
+              function(a){
+
+                return String(a.id) === id;
+
+              }
+            );
+
+
+          if(!advocate) return;
+
+
+          if(
+            typeof window.openILSProfileV2 ===
+            "function"
+          ){
+
+            window.openILSProfileV2(
+              advocate
+            );
+
+            return;
+
+          }
+
+
+          if(
+            typeof window.openILSFinalAdvocateModal ===
+            "function"
+          ){
+
+            window.openILSFinalAdvocateModal(
+              advocate
+            );
+
+          }
+
+        }
+
+
+        card.addEventListener(
+          "click",
+          openProfile
+        );
+
+
+        card.addEventListener(
+          "keydown",
+          function(event){
+
+            if(
+              event.key === "Enter" ||
+              event.key === " "
+            ){
+
+              event.preventDefault();
+
+              openProfile();
+
+            }
+
+          }
+        );
+
+      });
+
+  }
+
+
+  window.renderSafeFeaturedAdvocates =
+    renderSafeFeaturedAdvocates;
+
+
+  /* =======================================================
+     FEATURED ADVOCATE ROTATION
+     Existing data is reused.
+     9 advocates every 12 seconds.
+  ======================================================= */
+
+  let safeFeaturedRotationTimer =
+    null;
+
+
+  function startSafeFeaturedRotation(){
+
+    if(safeFeaturedRotationTimer){
+
+      clearInterval(
+        safeFeaturedRotationTimer
+      );
+
+    }
+
+
+    safeFeaturedRotationTimer =
+      setInterval(function(){
+
+        const advocates =
+          getVerifiedAdvocates();
+
+
+        if(
+          advocates.length > 9
+        ){
+
+          window.ilsFeaturedRotationIndex =
+            (
+              (
+                Number(
+                  window.ilsFeaturedRotationIndex
+                ) || 0
+              ) + 9
+            ) %
+            advocates.length;
+
+
+          renderSafeFeaturedAdvocates();
+
+        }
+
+      },12000);
+
+  }
+
+
+  /* =======================================================
+     REPAIR VIEW ALL + FIND AN ADVOCATE BUTTONS
+     Works even if original click handlers were disturbed.
+  ======================================================= */
+
+  document.addEventListener(
+    "click",
+    function(event){
+
+      const trigger =
+        event.target.closest(
+          "a,button"
+        );
+
+
+      if(!trigger) return;
+
+
+      const text =
+        (
+          trigger.textContent || ""
+        )
+        .replace(/\s+/g," ")
+        .trim()
+        .toLowerCase();
+
+
+      const href =
+        (
+          trigger.getAttribute("href") ||
+          ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+      const isViewAll =
+        text.includes("view all network advocates") ||
+        text.includes("view all advocates") ||
+        href.includes("#verified-advocates");
+
+
+      const isFindAdvocate =
+        text === "find an advocate" ||
+        text.includes("find an advocate");
+
+
+      if(
+        isViewAll ||
+        isFindAdvocate
+      ){
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+        restoreVerifiedAdvocateDirectory();
+
+        setTimeout(function(){
+
+          ilsSafeScrollTo(
+            "verified-advocates"
+          );
+
+        },50);
+
+      }
+
+    },
+    true
+  );
+
+
+  /* =======================================================
+     REPAIR OLD HASH / LINK NAVIGATION
+  ======================================================= */
+
+  function repairHashNavigation(){
+
+    if(
+      window.location.hash ===
+      "#verified-advocates"
+    ){
+
+      restoreVerifiedAdvocateDirectory();
+
+      setTimeout(function(){
+
+        ilsSafeScrollTo(
+          "verified-advocates"
+        );
+
+      },100);
+
+    }
+
+  }
+
+
+  window.addEventListener(
+    "hashchange",
+    repairHashNavigation
+  );
+
+
+  /* =======================================================
+     FINAL REPAIR PASS
+     Existing asynchronous Supabase loader is not replaced.
+  ======================================================= */
+
+  function repairEverything(){
+
+    restoreVerifiedAdvocateDirectory();
+
+    buildLegalServicesHub();
+
+    renderSafeFeaturedAdvocates();
+
+  }
+
+
+  /* Initial pass */
+
+  repairEverything();
+
+
+  /* Existing async scripts may finish later */
+
+  [300,800,1500,2500,4000,6000,9000]
+    .forEach(function(delay){
+
+      setTimeout(
+        repairEverything,
+        delay
+      );
+
+    });
+
+
+  /* Start 9-card periodic rotation */
+
+  startSafeFeaturedRotation();
+
+
+  /* If page loads directly on directory hash */
+
+  repairHashNavigation();
+
+
+  /* Restore after DOM is fully ready */
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+      repairEverything();
+
+      repairHashNavigation();
+
+    }
+  );
+
+
+  /* Escape closes existing profile modal if supported */
+
+  document.addEventListener(
+    "keydown",
+    function(event){
+
+      if(event.key === "Escape"){
+
+        if(
+          typeof window.closeILSProfileV2 ===
+          "function"
+        ){
+
+          window.closeILSProfileV2();
+
+        }
+
+      }
+
+    }
+  );
+
+
+})();
+
+</script>
+
+<!-- =========================================================
+     ILS FINAL SAFE REPAIR END
+========================================================= -->
+
 </body>
 </html>
