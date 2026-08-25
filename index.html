@@ -3371,7 +3371,105 @@ supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
+async function loadLatestJudgments() {
+  const container = document.getElementById("latestJudgmentsContainer");
 
+  if (!container) {
+    console.error("latestJudgmentsContainer not found");
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="judgment-loading">
+      Loading latest judgments...
+    </div>
+  `;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("judgments")
+      .select(`
+        id,
+        case_title,
+        case_number,
+        judgment_date,
+        primary_category,
+        short_summary,
+        legal_principle,
+        key_legal_issues,
+        official_source_url,
+        source_pdf_url,
+        summary_status
+      `)
+      .eq("summary_status", "completed")
+      .order("judgment_date", { ascending: false })
+      .limit(20);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = `
+        <div class="no-judgments">
+          No processed judgments available yet.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = data.map(judgment => `
+      <div class="judgment-card">
+        <div class="judgment-category">
+          ${judgment.primary_category || "Supreme Court"}
+        </div>
+
+        <h3>${judgment.case_title || "Judgment"}</h3>
+
+        <div class="judgment-meta">
+          ${judgment.case_number || ""}
+          ${judgment.judgment_date ? " | " + judgment.judgment_date : ""}
+        </div>
+
+        <p>
+          ${judgment.short_summary || "Summary not available."}
+        </p>
+
+        ${judgment.legal_principle ? `
+          <div class="legal-principle">
+            <strong>Legal Principle:</strong>
+            ${judgment.legal_principle}
+          </div>
+        ` : ""}
+
+        <div class="judgment-actions">
+          ${judgment.official_source_url ? `
+            <a href="${judgment.official_source_url}"
+               target="_blank"
+               rel="noopener noreferrer">
+              View Official Judgment
+            </a>
+          ` : ""}
+
+          ${judgment.source_pdf_url ? `
+            <a href="${judgment.source_pdf_url}"
+               target="_blank"
+               rel="noopener noreferrer">
+              Download PDF
+            </a>
+          ` : ""}
+        </div>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    console.error("Error loading judgments:", error);
+
+    container.innerHTML = `
+      <div class="no-judgments">
+        Unable to load latest judgments.
+      </div>
+    `;
+  }
+}
 
 /* =========================================
    GLOBAL DATA
@@ -13930,6 +14028,8 @@ window.loadFeaturedVerifiedAdvocates =
 
 })();
 
+loadLatestJudgments();
+  
 </script>
 
 <!-- =========================================================
