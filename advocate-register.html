@@ -1,0 +1,40 @@
+<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Join ILS Network | Advocate Registration</title><meta name="description" content="Join the Instant Legal Services professional network by submitting advocate details for review."><meta name="robots" content="index,follow">
+<link rel="canonical" href="https://instantlegalservices.in/advocate-register.html">
+<link rel="stylesheet" href="assets/ils.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js" defer></script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js" defer></script></head>
+<body>
+<header class="site-header"><div class="wrap navbar">
+<a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
+<nav class="navlinks">
+<a class="" href="index.html">Home</a>
+<a class="" href="advocates.html">Find Advocate</a>
+<a class="" href="judgments.html">Judgments</a>
+<a class="" href="law-guide.html">Law Guide</a>
+<a class="" href="ai-assistant.html">AI Assistant</a>
+<a class="" href="about.html">About</a>
+<a class="" href="faq.html">FAQ</a>
+<a class="btn btn-primary btn-small" href="assistance.html">Get Legal Help</a>
+</nav>
+<button class="menu" data-menu aria-label="Open menu">☰</button><button class="btn btn-ghost btn-small" data-install-app hidden>Install App</button>
+</div></header>
+<main><section class="page-hero"><div class="wrap"><span class="eyebrow">Professional Network</span><h1>Join ILS Network</h1><p>Submit professional details for review. Approval and public listing remain subject to the site's verification workflow.</p></div></section>
+<section class="section alt"><div class="wrap"><form id="regForm" class="card form-card"><div class="form-row"><div><label>Advocate name</label><input id="aname" required maxlength="120"></div><div><label>Email</label><input id="aemail" type="email" required maxlength="160"></div></div>
+<div class="form-row"><div><label>Mobile</label><input id="amobile" inputmode="numeric" maxlength="10" required></div><div><label>Enrollment number</label><input id="enrollment" required maxlength="80"></div></div>
+<div class="form-row"><div><label>State Bar Council</label><input id="bar" required maxlength="120"></div><div><label>Practice state</label><input id="state" required maxlength="80"></div></div>
+<label>District / Court</label><input id="court" required maxlength="160">
+<label>Primary practice areas</label><input id="areas" required maxlength="500" placeholder="Example: Criminal Law | Bail & Anticipatory Bail">
+<div class="form-row"><div><label>Years of practice</label><input id="years" type="number" min="0" max="80" required></div><div><label>Password</label><input id="password" type="password" minlength="8" required></div></div>
+<label>Confirm password</label><input id="password2" type="password" minlength="8" required>
+<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input id="agree" type="checkbox" style="width:18px;margin-top:2px" required><span>I confirm the professional information submitted is accurate and understand that approval is subject to review.</span></label>
+<button class="btn btn-primary" type="submit">Submit for Review</button><div id="regStatus" class="status"></div>
+<div class="notice" style="margin-top:12px">This simplified registration page is intentionally separate from the existing CRM. If your current production registration requires photo upload or additional fields, use the existing <a href="legacy-admin.html">working CRM page</a> until those fields are migrated to the new route.</div>
+</form><div class="notice" style="margin-top:14px">For the full existing registration/photo workflow, <a class="link" href="portal.html#advocate">open the working ILS registration form →</a></div></div></section></main>
+<footer class="footer"><div class="wrap footer-grid">
+<div><strong>Instant Legal Services</strong><p>Legal information, research access and professional network coordination.</p><p>Public information only. No guarantee of outcome or professional ranking is intended.</p></div>
+<div><strong>Explore</strong><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="advocates.html">Advocates</a><a href="faq.html">FAQ</a></div>
+<div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="ai-assistant.html">AI Assistant</a><a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts</a><a href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">eChallan</a></div>
+<div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="legacy-admin.html">Admin / Existing CRM</a><p>© 2026 Instant Legal Services</p></div>
+</div></footer>
+<script>
+document.addEventListener("DOMContentLoaded",()=>regForm.addEventListener("submit",async e=>{e.preventDefault();const s=regStatus;s.className="status";s.textContent="Submitting…";s.style.display="block";const mobile=amobile.value.trim();if(!/^[0-9]{10}$/.test(mobile)){s.className="status err";s.textContent="Enter a valid 10-digit mobile number.";return}if(password.value!==password2.value){s.className="status err";s.textContent="Passwords do not match.";return}try{const c=ILS.ready();if(!c)throw new Error("Service connection unavailable.");const {data,error}=await c.functions.invoke("register-advocate",{body:{advocate_name:aname.value.trim(),email:aemail.value.trim().toLowerCase(),mobile, enrollment_number:enrollment.value.trim(),state_bar_council:bar.value.trim(),practice_state:state.value.trim(),district_court:court.value.trim(),primary_practice_area:areas.value.trim(),years_of_practice:Number(years.value),password:password.value}});if(error||!data?.ok)throw new Error(data?.message||error?.message||"Registration failed.");s.className="status ok";s.textContent=data.message||"Registration submitted successfully.";regForm.reset()}catch(err){s.className="status err";s.textContent=err.message||"Registration service unavailable."}}));
+</script></body></html>

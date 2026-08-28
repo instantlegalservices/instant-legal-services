@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
-
+Disallow: /portal.html
+Disallow: /legacy-admin.html
+Disallow: /supabase/
 Sitemap: https://instantlegalservices.in/sitemap.xml

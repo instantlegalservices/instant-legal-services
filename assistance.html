@@ -1,0 +1,35 @@
+<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Get Legal Help | Instant Legal Services</title><meta name="description" content="Submit a basic legal requirement to Instant Legal Services for matter-based coordination."><meta name="robots" content="index,follow">
+<link rel="canonical" href="https://instantlegalservices.in/assistance.html">
+<link rel="stylesheet" href="assets/ils.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js" defer></script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js" defer></script></head>
+<body>
+<header class="site-header"><div class="wrap navbar">
+<a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
+<nav class="navlinks">
+<a class="" href="index.html">Home</a>
+<a class="" href="advocates.html">Find Advocate</a>
+<a class="" href="judgments.html">Judgments</a>
+<a class="" href="law-guide.html">Law Guide</a>
+<a class="" href="ai-assistant.html">AI Assistant</a>
+<a class="" href="about.html">About</a>
+<a class="" href="faq.html">FAQ</a>
+<a class="btn btn-primary btn-small" href="assistance.html">Get Legal Help</a>
+</nav>
+<button class="menu" data-menu aria-label="Open menu">☰</button><button class="btn btn-ghost btn-small" data-install-app hidden>Install App</button>
+</div></header>
+<main><section class="page-hero"><div class="wrap"><span class="eyebrow">Legal Assistance</span><h1>Submit a Legal Requirement</h1><p>Provide only the basic information needed to understand the matter and jurisdiction. Do not submit unnecessary sensitive information in this public form.</p></div></section>
+<section class="section alt"><div class="wrap"><form id="assistForm" class="card form-card"><div class="form-row"><div><label>Name</label><input id="name" required maxlength="100"></div><div><label>10-digit mobile</label><input id="mobile" inputmode="numeric" maxlength="10" required></div></div>
+<div class="form-row"><div><label>State</label><input id="state" required maxlength="80"></div><div><label>District / City</label><input id="city" required maxlength="100"></div></div>
+<label>Legal matter</label><select id="matter" required><option value="">Select</option><option>Criminal</option><option>Bail / Anticipatory Bail</option><option>NDPS</option><option>Cyber Crime</option><option>Family / Matrimonial</option><option>Civil / Property</option><option>Cheque Bounce / NI Act</option><option>Consumer</option><option>Commercial / Corporate</option><option>Labour / Service</option><option>Tax / GST</option><option>Writ / Constitutional</option><option>Arbitration / ADR</option><option>Other</option></select>
+<label>Brief requirement</label><textarea id="brief" maxlength="3000" required placeholder="Briefly describe the matter and what assistance you need."></textarea>
+<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input id="consent" type="checkbox" style="width:18px;margin-top:2px" required><span>I understand this submission is a request for coordination and does not itself create an advocate-client relationship.</span></label>
+<button class="btn btn-primary" type="submit">Submit Requirement</button><div id="assistStatus" class="status"></div></form><div class="notice" style="margin-top:14px">Existing ILS client workflow: <a class="link" href="portal.html#client">open the original working client form →</a></div></div></section></main>
+<footer class="footer"><div class="wrap footer-grid">
+<div><strong>Instant Legal Services</strong><p>Legal information, research access and professional network coordination.</p><p>Public information only. No guarantee of outcome or professional ranking is intended.</p></div>
+<div><strong>Explore</strong><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="advocates.html">Advocates</a><a href="faq.html">FAQ</a></div>
+<div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="ai-assistant.html">AI Assistant</a><a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts</a><a href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">eChallan</a></div>
+<div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="legacy-admin.html">Admin / Existing CRM</a><p>© 2026 Instant Legal Services</p></div>
+</div></footer>
+<script>
+document.addEventListener("DOMContentLoaded",()=>assistForm.addEventListener("submit",async e=>{e.preventDefault();const s=assistStatus;s.className="status";s.textContent="Submitting…";s.style.display="block";const mobile=document.getElementById("mobile").value.trim();if(!/^[0-9]{10}$/.test(mobile)){s.className="status err";s.textContent="Please enter a valid 10-digit mobile number.";return}try{await ILS.submitRequirement({name:document.getElementById("name").value,mobile,state:document.getElementById("state").value,city:document.getElementById("city").value,matter:document.getElementById("matter").value,brief:document.getElementById("brief").value});s.className="status ok";s.textContent="Requirement submitted successfully. Please retain your details for follow-up.";assistForm.reset()}catch(err){s.className="status err";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}));
+</script></body></html>
