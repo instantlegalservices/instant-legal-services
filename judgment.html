@@ -2,5 +2,362 @@
 function text(v){return ILS.esc(v||"")}
 function sectionBlock(j){const raw=[j.statutes_and_sections,j.key_legal_issues,j.legal_principle,j.short_summary,j.detailed_summary].filter(Boolean).join(" ");const links=ILS.sectionLinksHTML(raw);return links?`<div class="card"><h3>Related Indian Law Sections</h3><div class="chips">${links}</div><p class="meta">Section pages provide research context and link back to the official statutory source.</p></div>`:""}
 function injectSchema(j){const url=location.href.split('#')[0];document.getElementById('canonical').href=url;const node=document.createElement('script');node.type='application/ld+json';node.textContent=JSON.stringify({"@context":"https://schema.org","@type":"Article","headline":j.case_title||"Indian Judgment","datePublished":j.judgment_date||j.created_at||undefined,"dateModified":j.created_at||j.judgment_date||undefined,"inLanguage":"en-IN","author":{"@type":"Organization","name":"Instant Legal Services"},"publisher":{"@type":"Organization","name":"Instant Legal Services","url":"https://instantlegalservices.in/"},"mainEntityOfPage":{"@type":"WebPage","@id":url},"about":[j.primary_category||"Indian law",j.court_name||"Court judgment"].filter(Boolean),"isBasedOn":j.official_source_url||j.source_pdf_url||undefined},(k,v)=>v===undefined?undefined:v);document.head.appendChild(node);const bc=document.createElement('script');bc.type='application/ld+json';bc.textContent=JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://instantlegalservices.in/"},{"@type":"ListItem","position":2,"name":"Judgments","item":"https://instantlegalservices.in/judgments.html"},{"@type":"ListItem","position":3,"name":j.case_title||"Judgment","item":url}]});document.head.appendChild(bc)}
-async function loadDetail(){const id=new URLSearchParams(location.search).get('id');const content=document.getElementById('content');if(!id){content.innerHTML='<div class="card judgment-detail-card"><h2>Judgment not specified</h2><p>Open a verified judgment from the Indian Judgments page.</p><a class="btn btn-primary" href="judgments.html">Back to Judgments</a></div>';return}const rows=await ILS.judgments({limit:1});let j=rows.find(x=>String(x.id)===String(id));if(!j){try{const c=ILS.ready();const {data,error}=await c.from('judgments').select('id,case_title,case_number,court_type,court_name,judgment_date,primary_category,short_summary,detailed_summary,key_legal_issues,legal_principle,statutes_and_sections,important_precedents,final_decision,practical_significance,keywords,official_source_url,source_pdf_url,summary_status,is_latest,is_verified,created_at').eq('id',id).eq('is_verified',true).eq('summary_status','completed').maybeSingle();if(!error)j=data}catch(e){console.error(e)}}if(!j||!j.is_verified||j.summary_status!=='completed'){content.innerHTML='<div class="card judgment-detail-card"><h2>Verified judgment not available</h2><p>This record is not available for public research unless it has passed ILS verification and processing requirements.</p><a class="btn btn-primary" href="judgments.html">Back to Judgments</a></div>';return}document.title=(j.case_title||'Indian Judgment')+' | Instant Legal Services';document.getElementById('title').textContent=j.case_title||'Indian Judgment';document.getElementById('lead').textContent=[j.court_name,j.case_number,ILS.formatDate(j.judgment_date)].filter(Boolean).join(' · ');document.getElementById('intent').innerHTML=ILS.searchIntentHTML(j.case_title||'');const blocks=[];for(const [label,val] of [['Summary',j.detailed_summary||j.short_summary],['Key legal issues',j.key_legal_issues],['Legal principle',j.legal_principle],['Important precedents',j.important_precedents],['Final decision',j.final_decision],['Practical significance',j.practical_significance]])if(val)blocks.push(`<div class="card judgment-detail-card"><h2>${label}</h2><p>${text(val)}</p></div>`);const meta=`<div class="card judgment-detail-card"><h2>Case details</h2><p><strong>Court:</strong> ${text(j.court_name||j.court_type)}</p><p><strong>Date:</strong> ${text(ILS.formatDate(j.judgment_date))}</p><p><strong>Case number:</strong> ${text(j.case_number||'Not available')}</p><p><strong>Category:</strong> ${text(j.primary_category||'Not specified')}</p>${j.statutes_and_sections?`<p><strong>Statutes / sections:</strong> ${text(j.statutes_and_sections)}</p>`:''}${j.keywords?`<p><strong>Keywords:</strong> ${text(j.keywords)}</p>`:''}<div class="actions">${j.official_source_url?`<a class="btn btn-primary" href="${text(j.official_source_url)}" target="_blank" rel="noopener noreferrer">Official source ↗</a>`:''}${j.source_pdf_url?`<a class="btn btn-ghost" href="${text(j.source_pdf_url)}" target="_blank" rel="noopener noreferrer">Official PDF ↗</a>`:''}</div></div>`;content.innerHTML=blocks.join('')+meta+sectionBlock(j);injectSchema(j)}document.addEventListener('DOMContentLoaded',loadDetail);
+async function loadDetail() {
+
+  const id =
+    new URLSearchParams(location.search).get("id");
+
+  const content =
+    document.getElementById("content");
+
+  if (!id) {
+
+    content.innerHTML = `
+      <div class="card judgment-detail-card">
+        <h2>Judgment not specified</h2>
+
+        <p>
+          Open a verified judgment from the
+          Indian Judgments page.
+        </p>
+
+        <a
+          class="btn btn-primary"
+          href="judgments.html"
+        >
+          Back to Judgments
+        </a>
+      </div>
+    `;
+
+    return;
+  }
+
+  try {
+
+    /*
+      DIRECT VERIFIED JUDGMENT LOOKUP
+
+      Do not fetch latest judgment first.
+      Fetch the exact requested ID.
+    */
+
+    const rows =
+      await ILS.judgments({
+        id,
+        limit: 1
+      });
+
+    const j = rows?.[0];
+
+    if (
+      !j ||
+      !j.is_verified ||
+      j.summary_status !== "completed"
+    ) {
+
+      content.innerHTML = `
+        <div class="card judgment-detail-card">
+
+          <h2>
+            Verified judgment not available
+          </h2>
+
+          <p>
+            This judgment is not currently available
+            for public verified research.
+          </p>
+
+          <a
+            class="btn btn-primary"
+            href="judgments.html"
+          >
+            Back to Judgments
+          </a>
+
+        </div>
+      `;
+
+      return;
+    }
+
+    document.title =
+      `${j.case_title || "Indian Judgment"} | Instant Legal Services`;
+
+    document.getElementById("title").textContent =
+      j.case_title || "Indian Judgment";
+
+    document.getElementById("lead").textContent =
+      [
+        j.court_name,
+        j.case_number,
+        ILS.formatDate(j.judgment_date)
+      ]
+        .filter(Boolean)
+        .join(" · ");
+
+    document.getElementById("intent").innerHTML =
+      ILS.searchIntentHTML(
+        j.case_title || ""
+      );
+
+    const blocks = [];
+
+    const sections = [
+      ["Summary", j.detailed_summary || j.short_summary],
+      ["Key legal issues", j.key_legal_issues],
+      ["Legal principle", j.legal_principle],
+      ["Important precedents", j.important_precedents],
+      ["Final decision", j.final_decision],
+      ["Practical significance", j.practical_significance]
+    ];
+
+    for (const [label, value] of sections) {
+
+      if (!value) continue;
+
+      blocks.push(`
+        <div class="card judgment-detail-card">
+
+          <h2>${ILS.esc(label)}</h2>
+
+          <p>
+            ${ILS.esc(value)}
+          </p>
+
+        </div>
+      `);
+    }
+
+    const relatedText = [
+      j.statutes_and_sections,
+      j.key_legal_issues,
+      j.legal_principle,
+      j.short_summary,
+      j.detailed_summary
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const relatedLinks =
+      ILS.sectionLinksHTML(
+        relatedText
+      );
+
+    const relatedBlock =
+      relatedLinks
+        ? `
+          <div class="card judgment-detail-card">
+
+            <h2>
+              Related Indian Law Sections
+            </h2>
+
+            <div class="chips">
+              ${relatedLinks}
+            </div>
+
+            <p class="meta">
+              Section pages provide research context
+              and link back to official statutory sources.
+            </p>
+
+          </div>
+        `
+        : "";
+
+    const meta = `
+      <div class="card judgment-detail-card">
+
+        <h2>Case details</h2>
+
+        <p>
+          <strong>Court:</strong>
+          ${ILS.esc(
+            j.court_name ||
+            j.court_type ||
+            "Not available"
+          )}
+        </p>
+
+        <p>
+          <strong>Date:</strong>
+          ${ILS.esc(
+            ILS.formatDate(j.judgment_date)
+          )}
+        </p>
+
+        <p>
+          <strong>Case number:</strong>
+          ${ILS.esc(
+            j.case_number ||
+            "Not available"
+          )}
+        </p>
+
+        <p>
+          <strong>Category:</strong>
+          ${ILS.esc(
+            j.primary_category ||
+            "Not specified"
+          )}
+        </p>
+
+        ${
+          j.statutes_and_sections
+            ? `
+              <p>
+                <strong>
+                  Statutes / sections:
+                </strong>
+
+                ${ILS.esc(
+                  j.statutes_and_sections
+                )}
+              </p>
+            `
+            : ""
+        }
+
+        <div class="actions">
+
+          ${
+            j.official_source_url
+              ? `
+                <a
+                  class="btn btn-primary"
+                  href="${ILS.esc(
+                    j.official_source_url
+                  )}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Official source ↗
+                </a>
+              `
+              : ""
+          }
+
+          ${
+            j.source_pdf_url
+              ? `
+                <a
+                  class="btn btn-ghost"
+                  href="${ILS.esc(
+                    j.source_pdf_url
+                  )}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Official PDF ↗
+                </a>
+              `
+              : ""
+          }
+
+        </div>
+
+      </div>
+    `;
+
+    content.innerHTML =
+      blocks.join("") +
+      meta +
+      relatedBlock;
+
+    /*
+      SEO structured data
+    */
+
+    const url =
+      location.href.split("#")[0];
+
+    document
+      .getElementById("canonical")
+      .href = url;
+
+    const schema =
+      document.createElement("script");
+
+    schema.type =
+      "application/ld+json";
+
+    schema.textContent =
+      JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline:
+          j.case_title ||
+          "Indian Judgment",
+        datePublished:
+          j.judgment_date ||
+          j.created_at,
+        dateModified:
+          j.updated_at ||
+          j.created_at,
+        inLanguage: "en-IN",
+        author: {
+          "@type": "Organization",
+          name:
+            "Instant Legal Services"
+        },
+        publisher: {
+          "@type": "Organization",
+          name:
+            "Instant Legal Services",
+          url:
+            "https://instantlegalservices.in/"
+        },
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": url
+        },
+        about: [
+          j.primary_category ||
+            "Indian law",
+          j.court_name ||
+            "Court judgment"
+        ].filter(Boolean),
+        isBasedOn:
+          j.official_source_url ||
+          j.source_pdf_url ||
+          undefined
+      });
+
+    document.head.appendChild(schema);
+
+  } catch (error) {
+
+    console.error(
+      "Judgment detail error:",
+      error
+    );
+
+    content.innerHTML = `
+      <div class="card judgment-detail-card">
+
+        <h2>
+          Judgment service temporarily unavailable
+        </h2>
+
+        <p>
+          Please try again in a moment.
+        </p>
+
+        <a
+          class="btn btn-primary"
+          href="judgments.html"
+        >
+          Back to Judgments
+        </a>
+
+      </div>
+    `;
+  }
+}
+
+document.addEventListener(
+  "DOMContentLoaded",
+  loadDetail
+);
 </script></body></html>
