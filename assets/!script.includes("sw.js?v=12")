@@ -7,7 +7,7 @@
       location.hash === "#admin"
     ) {
 
-      location.replace("admin.html?v=12");
+      location.replace("/admin/");
       return true;
 
     }
@@ -96,7 +96,7 @@
 
             if (
               script &&
-              !script.includes("sw.js?v=12")
+              !script.includes("sw.js?v=13")
             ) {
               await registration.unregister();
             }
@@ -105,7 +105,7 @@
 
           const registration =
             await navigator.serviceWorker.register(
-              "./sw.js?v=12",
+              "./sw.js?v=13",
               {
                 updateViaCache: "none"
               }
