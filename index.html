@@ -71,17 +71,6 @@
 <script>
 async function homeSearch(){const q=document.getElementById("homeSearch").value.trim();if(!q)return;window.location.href="legal-search.html?q="+encodeURIComponent(q)}
 function closeProfile(){document.getElementById("profileModal").classList.remove("open")}
-<script>
-async function homeSearch(){
-  const q=document.getElementById("homeSearch").value.trim();
-  if(!q)return;
-  window.location.href="legal-search.html?q="+encodeURIComponent(q);
-}
-
-function closeProfile(){
-  document.getElementById("profileModal").classList.remove("open");
-}
-
 async function loadHome(){
   try{
     await ILS.init();
