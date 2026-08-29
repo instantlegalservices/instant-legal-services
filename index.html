@@ -71,12 +71,149 @@
 <script>
 async function homeSearch(){const q=document.getElementById("homeSearch").value.trim();if(!q)return;window.location.href="legal-search.html?q="+encodeURIComponent(q)}
 function closeProfile(){document.getElementById("profileModal").classList.remove("open")}
-async function loadHome(){
- const adv=await ILS.advocates({limit:4,featured:true}); const ac=document.getElementById("featuredAdvocates");
- ac.innerHTML=adv.length?adv.map(a=>`<article class="card adv-card" onclick='showProfile(${JSON.stringify(a).replace(/'/g,"&#39;")})'><div class="adv-top">${a.photo_url||a.profile_photo_url?`<img class="adv-photo" src="${ILS.esc(a.photo_url||a.profile_photo_url)}" alt="${ILS.esc(a.advocate_name||"Advocate")}">`:`<div class="adv-photo"></div>`}<div><div class="adv-name">${ILS.esc(a.advocate_name||"Advocate")}</div><div class="verified">✓ Verified</div><div class="meta">${ILS.esc(a.practice_state||"India")}</div></div></div><div class="chips">${ILS.split(a.primary_practice_area).slice(0,3).map(x=>`<span class="chip">${ILS.esc(x)}</span>`).join("")}</div></article>`).join(""):`<div class="empty" style="grid-column:1/-1">No public profiles are available at the moment.</div>`;
- const js=await ILS.judgments({limit:4}); const jc=document.getElementById("latestJudgments");
- jc.innerHTML=js.length?js.map(j=>`<article class="card judgment-card"><div class="judgment-top"><span class="badge">${ILS.esc(j.court_name||j.primary_category||"Judgment")}</span><span class="judgment-date">${ILS.formatDate(j.judgment_date)}</span></div><h3>${ILS.esc(j.case_title||"Judgment")}</h3><p>${ILS.esc(j.short_summary||j.legal_principle||"Official judgment record available.")}</p><div class="actions">${j.official_source_url?`<a class="btn btn-ghost btn-small" href="${ILS.esc(j.official_source_url)}" target="_blank" rel="noopener">Official source ↗</a>`:""}${j.source_pdf_url?`<a class="btn btn-primary btn-small" href="${ILS.esc(j.source_pdf_url)}" target="_blank" rel="noopener">PDF</a>`:""}</div></article>`).join(""):`<div class="empty" style="grid-column:1/-1">No published judgments are available yet.</div>`;
+<script>
+async function homeSearch(){
+  const q=document.getElementById("homeSearch").value.trim();
+  if(!q)return;
+  window.location.href="legal-search.html?q="+encodeURIComponent(q);
 }
+
+function closeProfile(){
+  document.getElementById("profileModal").classList.remove("open");
+}
+
+async function loadHome(){
+  try{
+    await ILS.init();
+
+    /* FEATURED ADVOCATES */
+    const adv=await ILS.advocates({
+      limit:4,
+      featured:true
+    });
+
+    const ac=document.getElementById("featuredAdvocates");
+
+    if(ac){
+      ac.innerHTML=adv.length
+        ? adv.map(a=>`
+          <article class="card adv-card"
+            onclick='showProfile(${JSON.stringify(a).replace(/'/g,"&#39;")})'>
+            <div class="adv-top">
+              ${
+                a.photo_url||a.profile_photo_url
+                ? `<img class="adv-photo"
+                    src="${ILS.esc(a.photo_url||a.profile_photo_url)}"
+                    alt="${ILS.esc(a.advocate_name||"Advocate")}">`
+                : `<div class="adv-photo"></div>`
+              }
+              <div>
+                <div class="adv-name">${ILS.esc(a.advocate_name||"Advocate")}</div>
+                <div class="verified">✓ Verified</div>
+                <div class="meta">${ILS.esc(a.practice_state||"India")}</div>
+              </div>
+            </div>
+
+            <div class="chips">
+              ${ILS.split(a.primary_practice_area)
+                .slice(0,3)
+                .map(x=>`<span class="chip">${ILS.esc(x)}</span>`)
+                .join("")}
+            </div>
+          </article>
+        `).join("")
+        : `<div class="empty" style="grid-column:1/-1">
+             No public profiles are available at the moment.
+           </div>`;
+    }
+
+    /* LATEST JUDGMENTS */
+    const js=await ILS.judgments({
+      limit:4
+    });
+
+    const jc=document.getElementById("latestJudgments");
+
+    if(jc){
+      jc.innerHTML=js.length
+        ? js.map(j=>`
+          <article class="card judgment-card">
+            <div class="judgment-top">
+              <span class="badge">
+                ${ILS.esc(j.court_name||j.primary_category||"Judgment")}
+              </span>
+              <span class="judgment-date">
+                ${ILS.formatDate(j.judgment_date)}
+              </span>
+            </div>
+
+            <h3>${ILS.esc(j.case_title||"Judgment")}</h3>
+
+            <p>
+              ${ILS.esc(
+                j.short_summary||
+                j.legal_principle||
+                "Official judgment record available."
+              )}
+            </p>
+
+            <div class="actions">
+              ${
+                j.official_source_url
+                ? `<a class="btn btn-ghost btn-small"
+                     href="${ILS.esc(j.official_source_url)}"
+                     target="_blank"
+                     rel="noopener">
+                     Official source ↗
+                   </a>`
+                : ""
+              }
+
+              ${
+                j.source_pdf_url
+                ? `<a class="btn btn-primary btn-small"
+                     href="${ILS.esc(j.source_pdf_url)}"
+                     target="_blank"
+                     rel="noopener">
+                     PDF
+                   </a>`
+                : ""
+              }
+            </div>
+          </article>
+        `).join("")
+        : `<div class="empty" style="grid-column:1/-1">
+             No published judgments are available yet.
+           </div>`;
+    }
+
+  }catch(error){
+    console.error("ILS HOME LOAD ERROR:",error);
+
+    const ac=document.getElementById("featuredAdvocates");
+    const jc=document.getElementById("latestJudgments");
+
+    if(ac){
+      ac.innerHTML=`<div class="empty" style="grid-column:1/-1">
+        Unable to load advocate profiles.
+      </div>`;
+    }
+
+    if(jc){
+      jc.innerHTML=`<div class="empty" style="grid-column:1/-1">
+        Unable to load judgments.
+      </div>`;
+    }
+  }
+}
+
+function showProfile(a){
+  document.getElementById("profileContent").innerHTML=ILS.profileHTML(a);
+  document.getElementById("profileModal").classList.add("open");
+}
+
+document.addEventListener("DOMContentLoaded",loadHome);
+</script>
 function showProfile(a){document.getElementById("profileContent").innerHTML=ILS.profileHTML(a);document.getElementById("profileModal").classList.add("open")}
 document.addEventListener("DOMContentLoaded",loadHome);
 </script>
