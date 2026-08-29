@@ -1,7 +1,7 @@
 <!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Instant Legal Services | India-wide Legal Information & Assistance</title><meta name="description" content="Instant Legal Services provides legal information, judgment research access, professional network profiles and coordinated legal assistance across India."><meta name="robots" content="index,follow">
 <link rel="canonical" href="https://instantlegalservices.in/">
-<link rel="stylesheet" href="assets/ils.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js" defer></script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js" defer></script></head>
+<link rel="stylesheet" href="assets/ils.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js?v=10" defer></script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js?v=10" defer></script></head>
 <body>
 <header class="site-header"><div class="wrap navbar">
 <a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
@@ -42,7 +42,7 @@
 <a class="card feature-card" href="faq.html"><h3>❓ FAQ</h3><p>Answers about ILS, profiles, research, AI and assistance.</p></a>
 <a class="card feature-card" href="portal.html#client-access"><h3>🔐 Client Portal</h3><p>Open the existing private client matter-access workflow.</p></a>
 <a class="card feature-card" href="portal.html#advocate-portal"><h3>💼 Advocate Portal</h3><p>Open the existing secure advocate login workflow.</p></a>
-<a class="card feature-card" href="portal.html#admin"><h3>🛡️ Admin</h3><p>Open the existing restricted administration and CRM workflow.</p></a>
+<a class="card feature-card" href="admin.html"><h3>🛡️ Admin</h3><p>Open the existing restricted administration and CRM workflow.</p></a>
 <a class="card feature-card" href="advocate-register.html"><h3>🤝 Advocate Registration</h3><p>Use the network registration route for professional applications.</p></a>
 <a class="card feature-card" href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener"><h3>🏛️ eCourts</h3><p>Open the official case-status service directly.</p></a>
 <a class="card feature-card" href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener"><h3>🚦 eChallan</h3><p>Open the official Parivahan challan service directly.</p></a>
@@ -65,145 +65,273 @@
 <div><strong>Instant Legal Services</strong><p>Legal information, research access and professional network coordination.</p><p>Public information only. No guarantee of outcome or professional ranking is intended.</p></div>
 <div><strong>Explore</strong><a href="legal-search.html">Legal Search</a><a href="acts/">Acts Library</a><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="advocates.html">Advocates</a><a href="faq.html">FAQ</a></div>
 <div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="ai-assistant.html">AI Assistant</a><a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts</a><a href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">eChallan</a></div>
-<div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="legacy-admin.html">Admin / Existing CRM</a><p>© 2026 Instant Legal Services</p></div>
+<div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="admin.html">Admin / Existing CRM</a><p>© 2026 Instant Legal Services</p></div>
 </div></footer>
 
+
 <script>
-async function homeSearch(){const q=document.getElementById("homeSearch").value.trim();if(!q)return;window.location.href="legal-search.html?q="+encodeURIComponent(q)}
-function closeProfile(){document.getElementById("profileModal").classList.remove("open")}
-async function loadHome(){
-  try{
-    await ILS.init();
+/* =========================================================
+   ILS HOME — V10
+   Independent loading for advocates + judgments.
+   One failing section must never block the other.
+   ========================================================= */
 
-    /* FEATURED ADVOCATES */
-    const adv=await ILS.advocates({
-      limit:4,
-      featured:true
-    });
+function homeSearch(){
+  const input = document.getElementById("homeSearch");
+  const q = input ? input.value.trim() : "";
+  if(q){
+    window.location.href = "legal-search.html?q=" + encodeURIComponent(q);
+  }
+}
 
-    const ac=document.getElementById("featuredAdvocates");
-
-    if(ac){
-      ac.innerHTML=adv.length
-        ? adv.map(a=>`
-          <article class="card adv-card"
-            onclick='showProfile(${JSON.stringify(a).replace(/'/g,"&#39;")})'>
-            <div class="adv-top">
-              ${
-                a.photo_url||a.profile_photo_url
-                ? `<img class="adv-photo"
-                    src="${ILS.esc(a.photo_url||a.profile_photo_url)}"
-                    alt="${ILS.esc(a.advocate_name||"Advocate")}">`
-                : `<div class="adv-photo"></div>`
-              }
-              <div>
-                <div class="adv-name">${ILS.esc(a.advocate_name||"Advocate")}</div>
-                <div class="verified">✓ Verified</div>
-                <div class="meta">${ILS.esc(a.practice_state||"India")}</div>
-              </div>
-            </div>
-
-            <div class="chips">
-              ${ILS.split(a.primary_practice_area)
-                .slice(0,3)
-                .map(x=>`<span class="chip">${ILS.esc(x)}</span>`)
-                .join("")}
-            </div>
-          </article>
-        `).join("")
-        : `<div class="empty" style="grid-column:1/-1">
-             No public profiles are available at the moment.
-           </div>`;
-    }
-
-    /* LATEST JUDGMENTS */
-    const js=await ILS.judgments({
-      limit:4
-    });
-
-    const jc=document.getElementById("latestJudgments");
-
-    if(jc){
-      jc.innerHTML=js.length
-        ? js.map(j=>`
-          <article class="card judgment-card">
-            <div class="judgment-top">
-              <span class="badge">
-                ${ILS.esc(j.court_name||j.primary_category||"Judgment")}
-              </span>
-              <span class="judgment-date">
-                ${ILS.formatDate(j.judgment_date)}
-              </span>
-            </div>
-
-            <h3>${ILS.esc(j.case_title||"Judgment")}</h3>
-
-            <p>
-              ${ILS.esc(
-                j.short_summary||
-                j.legal_principle||
-                "Official judgment record available."
-              )}
-            </p>
-
-            <div class="actions">
-              ${
-                j.official_source_url
-                ? `<a class="btn btn-ghost btn-small"
-                     href="${ILS.esc(j.official_source_url)}"
-                     target="_blank"
-                     rel="noopener">
-                     Official source ↗
-                   </a>`
-                : ""
-              }
-
-              ${
-                j.source_pdf_url
-                ? `<a class="btn btn-primary btn-small"
-                     href="${ILS.esc(j.source_pdf_url)}"
-                     target="_blank"
-                     rel="noopener">
-                     PDF
-                   </a>`
-                : ""
-              }
-            </div>
-          </article>
-        `).join("")
-        : `<div class="empty" style="grid-column:1/-1">
-             No published judgments are available yet.
-           </div>`;
-    }
-
-  }catch(error){
-    console.error("ILS HOME LOAD ERROR:",error);
-
-    const ac=document.getElementById("featuredAdvocates");
-    const jc=document.getElementById("latestJudgments");
-
-    if(ac){
-      ac.innerHTML=`<div class="empty" style="grid-column:1/-1">
-        Unable to load advocate profiles.
-      </div>`;
-    }
-
-    if(jc){
-      jc.innerHTML=`<div class="empty" style="grid-column:1/-1">
-        Unable to load judgments.
-      </div>`;
-    }
+function closeProfile(){
+  const modal = document.getElementById("profileModal");
+  if(modal){
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden","true");
   }
 }
 
 function showProfile(a){
-  document.getElementById("profileContent").innerHTML=ILS.profileHTML(a);
-  document.getElementById("profileModal").classList.add("open");
+  const content = document.getElementById("profileContent");
+  const modal = document.getElementById("profileModal");
+
+  if(!content || !modal || !window.ILS) return;
+
+  try{
+    content.innerHTML = ILS.profileHTML(a);
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden","false");
+  }catch(error){
+    console.error("ILS PROFILE ERROR:", error);
+  }
 }
 
-document.addEventListener("DOMContentLoaded",loadHome);
+function renderHomeAdvocates(rows){
+  const container = document.getElementById("featuredAdvocates");
+  if(!container) return;
+
+  const list = Array.isArray(rows) ? rows : [];
+
+  if(!list.length){
+    container.innerHTML =
+      '<div class="empty" style="grid-column:1/-1">' +
+      'No public profiles are available at the moment.' +
+      '</div>';
+    return;
+  }
+
+  container.innerHTML = list.map(function(a){
+    const photo = a.photo_url || a.profile_photo_url || "";
+    const name = a.advocate_name || "Advocate";
+    const state = a.practice_state || "India";
+    const areas = (window.ILS && typeof ILS.split === "function")
+      ? ILS.split(a.primary_practice_area).slice(0,3)
+      : [];
+
+    let profileJson = "{}";
+    try{
+      profileJson = JSON.stringify(a)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/'/g,"&#39;");
+    }catch(e){}
+
+    return `
+      <article class="card adv-card"
+        onclick='showProfile(${profileJson})'
+        role="button"
+        tabindex="0"
+        onkeydown='if(event.key==="Enter"||event.key===" "){event.preventDefault();showProfile(${profileJson})}'>
+
+        <div class="adv-top">
+          ${
+            photo
+            ? `<img class="adv-photo"
+                src="${ILS.esc(photo)}"
+                alt="${ILS.esc(name)}"
+                loading="lazy"
+                onerror="this.style.display='none'">`
+            : `<div class="adv-photo" aria-hidden="true"></div>`
+          }
+
+          <div>
+            <div class="adv-name">${ILS.esc(name)}</div>
+            <div class="verified">✓ Verified</div>
+            <div class="meta">${ILS.esc(state)}</div>
+          </div>
+        </div>
+
+        <div class="chips">
+          ${
+            areas.length
+            ? areas.map(function(x){
+                return `<span class="chip">${ILS.esc(x)}</span>`;
+              }).join("")
+            : `<span class="chip">Professional Profile</span>`
+          }
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderHomeJudgments(rows){
+  const container = document.getElementById("latestJudgments");
+  if(!container) return;
+
+  const list = Array.isArray(rows) ? rows : [];
+
+  if(!list.length){
+    container.innerHTML =
+      '<div class="empty" style="grid-column:1/-1">' +
+      'No published judgments are available yet.' +
+      '</div>';
+    return;
+  }
+
+  container.innerHTML = list.map(function(j){
+    const official = j.official_source_url
+      ? `<a class="btn btn-ghost btn-small"
+           href="${ILS.esc(j.official_source_url)}"
+           target="_blank"
+           rel="noopener noreferrer">
+           Official source ↗
+         </a>`
+      : "";
+
+    const pdf = j.source_pdf_url
+      ? `<a class="btn btn-primary btn-small"
+           href="${ILS.esc(j.source_pdf_url)}"
+           target="_blank"
+           rel="noopener noreferrer">
+           PDF
+         </a>`
+      : "";
+
+    return `
+      <article class="card judgment-card">
+        <div class="judgment-top">
+          <span class="badge">
+            ${ILS.esc(j.court_name || j.primary_category || "Judgment")}
+          </span>
+
+          <span class="judgment-date">
+            ${ILS.formatDate(j.judgment_date)}
+          </span>
+        </div>
+
+        <h3>${ILS.esc(j.case_title || "Judgment")}</h3>
+
+        <p>
+          ${ILS.esc(
+            j.short_summary ||
+            j.legal_principle ||
+            "Official judgment record available."
+          )}
+        </p>
+
+        <div class="actions">
+          ${official}
+          ${pdf}
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+async function loadHome(){
+
+  const advocatesContainer =
+    document.getElementById("featuredAdvocates");
+
+  const judgmentsContainer =
+    document.getElementById("latestJudgments");
+
+  /* Never let a missing/failed ILS init stop the page. */
+  try{
+    if(window.ILS && typeof ILS.init === "function"){
+      await ILS.init();
+    }else{
+      throw new Error("ILS core library did not load.");
+    }
+  }catch(error){
+    console.error("ILS HOME INIT ERROR:", error);
+  }
+
+  /*
+    IMPORTANT:
+    These two requests are independent.
+    Previously, an advocate failure could prevent judgments
+    from being rendered. That is fixed here.
+  */
+
+  const advocatePromise =
+    (window.ILS && typeof ILS.advocates === "function")
+    ? ILS.advocates({limit:4, featured:true})
+    : Promise.reject(new Error("Advocate service unavailable."));
+
+  const judgmentPromise =
+    (window.ILS && typeof ILS.judgments === "function")
+    ? ILS.judgments({limit:4})
+    : Promise.reject(new Error("Judgment service unavailable."));
+
+  const results = await Promise.allSettled([
+    advocatePromise,
+    judgmentPromise
+  ]);
+
+  /* Featured Advocates */
+  if(results[0].status === "fulfilled"){
+    renderHomeAdvocates(results[0].value);
+  }else{
+    console.error("HOME ADVOCATES ERROR:", results[0].reason);
+
+    if(advocatesContainer){
+      advocatesContainer.innerHTML =
+        '<div class="empty" style="grid-column:1/-1">' +
+        'Unable to load advocate profiles. Please try again.' +
+        '</div>';
+    }
+  }
+
+  /* Latest Judgments */
+  if(results[1].status === "fulfilled"){
+    renderHomeJudgments(results[1].value);
+  }else{
+    console.error("HOME JUDGMENTS ERROR:", results[1].reason);
+
+    if(judgmentsContainer){
+      judgmentsContainer.innerHTML =
+        '<div class="empty" style="grid-column:1/-1">' +
+        'Unable to load judgments. Please try again.' +
+        '</div>';
+    }
+  }
+}
+
+/* Close profile modal by clicking outside it. */
+document.addEventListener("click", function(event){
+  const modal = document.getElementById("profileModal");
+  if(modal && event.target === modal){
+    closeProfile();
+  }
+});
+
+/* Escape key closes profile modal. */
+document.addEventListener("keydown", function(event){
+  if(event.key === "Escape"){
+    closeProfile();
+  }
+});
+
+/* Run exactly once after deferred ILS core has loaded. */
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", loadHome, {once:true});
+}else{
+  loadHome();
+}
 </script>
-function showProfile(a){document.getElementById("profileContent").innerHTML=ILS.profileHTML(a);document.getElementById("profileModal").classList.add("open")}
-document.addEventListener("DOMContentLoaded",loadHome);
-</script>
+
 <div style="text-align:center;padding:18px"><a href="sections/" style="color:#d7a84f;font-weight:700">Browse Indian Law Sections →</a></div></body></html>
