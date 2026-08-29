@@ -106,26 +106,55 @@ function writePage(route, html) {
 }
 
 async function fetchAdvocates() {
-  if (!API_URL) {
+  const apiUrl = String(process.env.ADVOCATES_API_URL || "").trim();
+  const apiKey = String(process.env.ADVOCATES_API_KEY || "").trim();
+
+  if (!apiUrl) {
     throw new Error("ADVOCATES_API_URL is missing");
   }
 
-  const headers = {
-    "Content-Type": "application/json"
-  };
-
-  if (API_KEY) {
-    headers.apikey = API_KEY;
-    headers.Authorization = `Bearer ${API_KEY}`;
+  if (!apiKey) {
+    throw new Error("ADVOCATES_API_KEY is missing");
   }
 
-  const response = await fetch(API_URL, { headers });
+  let parsedUrl;
+
+  try {
+    parsedUrl = new URL(apiUrl);
+  } catch {
+    throw new Error("ADVOCATES_API_URL is not a valid URL");
+  }
+
+  console.log(`Fetching advocates from ${parsedUrl.origin}${parsedUrl.pathname}`);
+
+  const headers = new Headers();
+
+  headers.set("Content-Type", "application/json");
+  headers.set("apikey", apiKey);
+  headers.set("Authorization", `Bearer ${apiKey}`);
+
+  const response = await fetch(parsedUrl.toString(), {
+    method: "GET",
+    headers
+  });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    const errorText = await response.text();
+
+    throw new Error(
+      `API Error: ${response.status} ${response.statusText} - ${errorText.slice(0, 500)}`
+    );
   }
 
-  return response.json();
+  const data = await response.json();
+
+  if (!Array.isArray(data)) {
+    throw new Error(
+      `API response is not an array. Received: ${typeof data}`
+    );
+  }
+
+  return data;
 }
 
 async function main() {

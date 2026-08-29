@@ -1,0 +1,36 @@
+<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Indian Judgments | Supreme Court & High Court Research</title><meta name="description" content="Search Supreme Court and High Court judgment records available in the Instant Legal Services database."><meta name="robots" content="index,follow"><meta name="keywords" content="Supreme Court judgments, High Court judgments, Indian case law, Supreme Court decision, Indian legal research, सुप्रीम कोर्ट निर्णय, हाई कोर्ट फैसला, भारतीय कानून">
+<link rel="canonical" href="https://instantlegalservices.in/judgments.html">
+<link rel="stylesheet" href="assets/ils.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js" defer></script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js" defer></script></head>
+<body>
+<header class="site-header"><div class="wrap navbar">
+<a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
+<nav class="navlinks">
+<a class="" href="index.html">Home</a>
+<a class="" href="advocates.html">Find Advocate</a>
+<a class="active" href="judgments.html">Judgments</a>
+<a class="" href="law-guide.html">Law Guide</a>
+<a class="" href="ai-assistant.html">AI Assistant</a>
+<a class="" href="about.html">About</a>
+<a class="" href="faq.html">FAQ</a>
+<a class="btn btn-primary btn-small" href="assistance.html">Get Legal Help</a>
+</nav>
+<button class="menu" data-menu aria-label="Open menu">☰</button><button class="btn btn-ghost btn-small" data-install-app hidden>Install App</button>
+</div></header>
+
+<main><section class="page-hero"><div class="wrap"><span class="eyebrow">Legal Research</span><h1>Indian Judgments</h1><p>Search the ILS judgment database by case title, party terms, legal topic, court, category or keywords. Only verified, completed judgment records are displayed publicly. Original/official source links are shown where available.</p><div id="intent"></div></div></section>
+<section class="section alt"><div class="wrap"><div class="toolbar"><input id="jq" placeholder="Case, party, section, topic or keyword"><select id="jc"><option value="">All Courts</option><option>Supreme Court of India</option><option>High Court</option></select><select id="jcat"><option value="">All Categories</option><option>Criminal Law</option><option>Constitutional</option><option>Civil</option><option>Family</option><option>Commercial</option><option>Consumer</option><option>NDPS</option></select></div><div id="judGrid" class="grid two-grid"><div class="empty">Loading judgments…</div></div></div></section></main>
+
+<footer class="footer"><div class="wrap footer-grid">
+<div><strong>Instant Legal Services</strong><p>Legal information, research access and professional network coordination.</p><p>Public information only. No guarantee of outcome or professional ranking is intended.</p></div>
+<div><strong>Explore</strong><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="advocates.html">Advocates</a><a href="faq.html">FAQ</a></div>
+<div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="ai-assistant.html">AI Assistant</a><a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts</a><a href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">eChallan</a></div>
+<div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="legacy-admin.html">Admin / Existing CRM</a><p>© 2026 Instant Legal Services</p></div>
+</div></footer>
+
+<script>
+function renderJudgments(rows){judGrid.innerHTML=rows.length?rows.map(j=>`<article class="card judgment-card"><div class="judgment-top"><span class="badge">${ILS.esc(j.court_name||j.primary_category||"Judgment")}</span><span class="judgment-date">${ILS.formatDate(j.judgment_date)}</span></div><h3>${ILS.esc(j.case_title||"Judgment")}</h3><div class="meta">${ILS.esc(j.case_number||"Case number not available")}</div><p>${ILS.esc(j.short_summary||j.legal_principle||"Detailed summary is not available. Refer to the official source.")}</p>${j.statutes_and_sections?`<div class="chips"><span class="chip">${ILS.esc(j.statutes_and_sections)}</span>${ILS.sectionLinksHTML(j.statutes_and_sections)}</div>`:""}<div class="actions"><a class="btn btn-ghost btn-small" href="judgment.html?id=${encodeURIComponent(j.id)}">Detailed research ↗</a>${j.official_source_url?`<a class="btn btn-primary btn-small" href="${ILS.esc(j.official_source_url)}" target="_blank" rel="noopener">Official source ↗</a>`:""}${j.source_pdf_url?`<a class="btn btn-ghost btn-small" href="${ILS.esc(j.source_pdf_url)}" target="_blank" rel="noopener">PDF</a>`:""}</div></article>`).join(""):`<div class="empty" style="grid-column:1/-1">No judgments match the selected search.</div>`}
+async function loadJ(){judGrid.innerHTML='<div class="empty" style="grid-column:1/-1">Searching…</div>';let rows=await ILS.judgments({limit:50,q:jq.value,court:jc.value,category:jcat.value});if(jc.value==="High Court")rows=rows.filter(x=>(x.court_name||"").toLowerCase().includes("high court"));renderJudgments(rows)}
+document.addEventListener("DOMContentLoaded",()=>{const q=new URLSearchParams(location.search).get("q");if(q)jq.value=q;document.getElementById("intent").innerHTML=ILS.searchIntentHTML(q||"");["jq","jc","jcat"].forEach(id=>document.getElementById(id).addEventListener("input",()=>{document.getElementById("intent").innerHTML=ILS.searchIntentHTML(jq.value);loadJ()}));loadJ()});
+</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Indian Judgments","url":"https://instantlegalservices.in/judgments.html","inLanguage":"en-IN","about":{"@type":"Thing","name":"Indian case law and judgments"},"isPartOf":{"@type":"WebSite","name":"Instant Legal Services","url":"https://instantlegalservices.in/"}}</script></body></html>

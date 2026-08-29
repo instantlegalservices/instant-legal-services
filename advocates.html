@@ -1,0 +1,41 @@
+<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find Advocates | Instant Legal Services</title><meta name="description" content="Search approved public professional advocate profiles by state, court and practice area."><meta name="robots" content="index,follow">
+<link rel="canonical" href="https://instantlegalservices.in/advocates.html">
+<link rel="stylesheet" href="assets/ils.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js" defer></script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js" defer></script></head>
+<body>
+<header class="site-header"><div class="wrap navbar">
+<a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
+<nav class="navlinks">
+<a class="" href="index.html">Home</a>
+<a class="active" href="advocates.html">Find Advocate</a>
+<a class="" href="judgments.html">Judgments</a>
+<a class="" href="law-guide.html">Law Guide</a>
+<a class="" href="ai-assistant.html">AI Assistant</a>
+<a class="" href="about.html">About</a>
+<a class="" href="faq.html">FAQ</a>
+<a class="btn btn-primary btn-small" href="assistance.html">Get Legal Help</a>
+</nav>
+<button class="menu" data-menu aria-label="Open menu">☰</button><button class="btn btn-ghost btn-small" data-install-app hidden>Install App</button>
+</div></header>
+
+<main><section class="page-hero"><div class="wrap"><span class="eyebrow">Professional Network</span><h1>Find an Advocate</h1><p>Search approved public professional profiles by name, state, jurisdiction or practice area. Public listing is factual and is not a ranking or endorsement.</p></div></section>
+<section class="section alt"><div class="wrap"><div class="toolbar"><input id="aq" placeholder="Search name, court, state or practice area"><select id="astate"><option value="">All states</option></select><select id="aarea"><option value="">All practice areas</option></select></div><div id="advGrid" class="grid feature-grid"><div class="empty">Loading profiles…</div></div></div></section></main>
+<div id="profileModal" class="profile-modal"><div class="modal-box"><button class="close" onclick="closeProfile()">×</button><div id="profileContent"></div></div></div>
+
+<footer class="footer"><div class="wrap footer-grid">
+<div><strong>Instant Legal Services</strong><p>Legal information, research access and professional network coordination.</p><p>Public information only. No guarantee of outcome or professional ranking is intended.</p></div>
+<div><strong>Explore</strong><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="advocates.html">Advocates</a><a href="faq.html">FAQ</a></div>
+<div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="ai-assistant.html">AI Assistant</a><a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts</a><a href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">eChallan</a></div>
+<div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="legacy-admin.html">Admin / Existing CRM</a><p>© 2026 Instant Legal Services</p></div>
+</div></footer>
+
+<script>
+const STATES=["Andhra Pradesh","Bihar","Delhi","Gujarat","Haryana","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Odisha","Punjab","Rajasthan","Tamil Nadu","Telangana","Uttar Pradesh","Uttarakhand","West Bengal","Other"];
+const AREAS=["Criminal Law","Bail & Anticipatory Bail","NDPS Law","Cyber Crime","Family / Matrimonial Law","Civil / Property Law","Consumer Law","Banking & Financial Disputes","Cheque Bounce / NI Act","Motor Vehicle & Accident Claims","Labour & Employment Law","Service Matters","Commercial & Corporate Law","Taxation & GST","Constitutional & Writ Matters","Arbitration & ADR","Real Estate","Legal Drafting & Documentation"];
+function opts(){STATES.forEach(x=>astate.insertAdjacentHTML("beforeend",`<option>${x}</option>`));AREAS.forEach(x=>aarea.insertAdjacentHTML("beforeend",`<option>${x}</option>`))}
+async function renderAdv(){const rows=await ILS.advocates({limit:50,q:aq.value,state:astate.value,area:aarea.value});advGrid.innerHTML=rows.length?rows.map(a=>`<article class="card adv-card" onclick='showProfile(${JSON.stringify(a).replace(/'/g,"&#39;")})'><div class="adv-top">${a.photo_url||a.profile_photo_url?`<img class="adv-photo" src="${ILS.esc(a.photo_url||a.profile_photo_url)}" alt="${ILS.esc(a.advocate_name||"Advocate")}">`:`<div class="adv-photo"></div>`}<div><div class="adv-name">${ILS.esc(a.advocate_name||"Advocate")}</div><div class="verified">✓ Verified</div><div class="meta">${ILS.esc(a.practice_state||"India")}</div></div></div><p style="margin-top:12px">${ILS.esc(a.district_court||"Jurisdiction not specified")}</p><div class="chips">${ILS.split(a.primary_practice_area).slice(0,4).map(x=>`<span class="chip">${ILS.esc(x)}</span>`).join("")}<div class="actions"><button class="btn btn-ghost btn-small" type="button">View Profile</button></div></div></article>`).join(""):`<div class="empty" style="grid-column:1/-1">No profiles match your search.</div>`}
+function showProfile(a){profileContent.innerHTML=ILS.profileHTML(a);profileModal.classList.add("open")}
+function closeProfile(){profileModal.classList.remove("open")}
+document.addEventListener("DOMContentLoaded",()=>{opts();["aq","astate","aarea"].forEach(id=>document.getElementById(id).addEventListener("input",renderAdv));renderAdv()});
+</script>
+</body></html>
