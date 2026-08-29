@@ -7,7 +7,7 @@
       location.hash === "#admin"
     ) {
 
-      location.replace("/admin/");
+      location.replace("/admin.html");
       return true;
 
     }
