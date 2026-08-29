@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ILS Admin | Instant Legal Services</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/ils.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{background:#07101c;color:#eef2f7}
+.admin-wrap{max-width:1250px;margin:auto;padding:30px 18px 60px}
+.admin-top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}
+.admin-top h1{margin:0}.admin-top p{margin:5px 0 0;color:#9ca7b6}
+.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:22px}
+.admin-stat{background:#111b2a;border:1px solid #26354a;border-radius:14px;padding:20px}
+.admin-stat small{color:#9ca7b6}.admin-stat strong{display:block;font-size:32px;margin-top:6px}
+.panel{background:#111b2a;border:1px solid #26354a;border-radius:14px;padding:20px;margin-bottom:20px}
+.panel h2{margin:0 0 15px;font-size:20px}
+.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-bottom:15px}
+.table-wrap{overflow:auto;border:1px solid #26354a;border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:1050px}
+th,td{padding:12px;border-bottom:1px solid #26354a;text-align:left;vertical-align:top;font-size:13px}
+th{background:#0c1522;color:#d7a84f;position:sticky;top:0}
+td{color:#dce3ec}
+select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;border-radius:8px;padding:10px}
+.btnx{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+.btnx.primary{background:#d7a84f;color:#10151c}.btnx.secondary{background:#1d2a3b;color:#fff;border:1px solid #34455d}
+.msg{display:none;padding:12px;border-radius:8px;margin-bottom:15px}.msg.ok{display:block;background:#173524;border:1px solid #356e49;color:#b9f1c8}.msg.err{display:block;background:#3b171b;border:1px solid #8c3d47;color:#ffc1c7}
+.login{max-width:460px;margin:10vh auto;padding:25px;background:#111b2a;border:1px solid #26354a;border-radius:16px}
+.login h1{color:#d7a84f}.login label{display:block;margin:14px 0 6px}
+.login button{width:100%;margin-top:18px}
+.hidden{display:none!important}
+.actions-cell{white-space:nowrap}
+@media(max-width:850px){.admin-grid{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr}.admin-top{align-items:flex-start;flex-direction:column}}
+@media(max-width:500px){.admin-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="loginView" class="login">
+  <h1>ILS Admin</h1>
+  <p>Secure administration for Instant Legal Services.</p>
+  <div id="loginMsg" class="msg"></div>
+  <form id="loginForm">
+    <label>Email</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label>Password</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button class="btnx primary" type="submit">Sign in securely</button>
+  </form>
+  <p style="color:#8793a4;font-size:12px;margin-top:15px">
+    Access is controlled by the Supabase admin allow-list. A normal authenticated account is not automatically an administrator.
+  </p>
+</div>
+
+<div id="appView" class="hidden">
+  <header class="site-header">
+    <div class="wrap navbar">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo">
+        <span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span>
+      </a>
+      <nav class="navlinks">
+        <a href="index.html">Home</a>
+        <a href="legal-search.html">Legal Search</a>
+        <a href="judgments.html">Judgments</a>
+        <a href="advocates.html">Advocates</a>
+        <a href="admin.html" class="active">Admin</a>
+        <button id="logoutBtn" class="btn btn-primary btn-small" type="button">Logout</button>
+      </nav>
+      <button class="menu" data-menu aria-label="Open menu">☰</button>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <div class="admin-top">
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p id="adminUser">Checking administrator session…</p>
+      </div>
+      <button id="refreshBtn" class="btnx secondary" type="button">Refresh</button>
+    </div>
+
+    <div id="appMsg" class="msg"></div>
+
+    <section class="admin-grid">
+      <div class="admin-stat"><small>Client Requirements</small><strong id="countLeads">—</strong></div>
+      <div class="admin-stat"><small>Advocate Registrations</small><strong id="countAdvocates">—</strong></div>
+      <div class="admin-stat"><small>Verified Judgments</small><strong id="countJudgments">—</strong></div>
+      <div class="admin-stat"><small>New Leads</small><strong id="countNew">—</strong></div>
+    </section>
+
+    <section class="panel">
+      <h2>Client Requirements / CRM</h2>
+      <div class="toolbar">
+        <input id="leadSearch" placeholder="Search name, mobile, city, matter…">
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="New">New</option>
+          <option value="Contacted">Contacted</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Closed">Closed</option>
+        </select>
+        <select id="priorityFilter">
+          <option value="">All priorities</option>
+          <option value="High">High</option>
+          <option value="Normal">Normal</option>
+          <option value="Low">Low</option>
+        </select>
+        <button id="loadLeadsBtn" class="btnx primary" type="button">Load</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Client</th><th>Mobile</th><th>Location</th>
+              <th>Matter</th><th>Requirement</th><th>Status</th><th>Priority</th><th>Payment</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="leadBody"><tr><td colspan="10" style="text-align:center">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
+const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+const $=id=>document.getElementById(id);
+function msg(id,text,type){
+  const el=$(id); if(!el)return;
+  el.className="msg "+(type||"");
+  el.textContent=text||"";
+  el.style.display=text?"block":"none";
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+async function isAdmin(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)return {ok:false,reason:"Please sign in."};
+  const {data,error}=await sb.rpc("ils_is_admin");
+  if(error)return {ok:false,reason:"Administrator verification failed: "+error.message};
+  if(data!==true)return {ok:false,reason:"This account is authenticated but is not on the ILS administrator allow-list."};
+  return {ok:true,session};
+}
+
+async function countTable(table,extra){
+  let q=sb.from(table).select("*",{count:"exact",head:true});
+  if(extra)q=extra(q);
+  const {count,error}=await q;
+  if(error)throw error;
+  return count||0;
+}
+
+async function loadStats(){
+  try{
+    const [leads,adv,jud,newLeads]=await Promise.all([
+      countTable("client_requirements"),
+      countTable("advocate_registrations"),
+      countTable("judgments",q=>q.eq("is_verified",true)),
+      countTable("client_requirements",q=>q.eq("status","New"))
+    ]);
+    $("countLeads").textContent=leads;
+    $("countAdvocates").textContent=adv;
+    $("countJudgments").textContent=jud;
+    $("countNew").textContent=newLeads;
+  }catch(e){
+    console.error(e);
+    msg("appMsg","Stats could not be loaded. Check the Supabase RLS/admin allow-list.","err");
+  }
+}
+
+function statusOptions(current){
+  const vals=["New","Contacted","In Progress","Closed"];
+  return vals.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("");
+}
+function priorityOptions(current){
+  const vals=["High","Normal","Low"];
+  return vals.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("");
+}
+
+async function loadLeads(){
+  const body=$("leadBody");
+  body.innerHTML='<tr><td colspan="10" style="text-align:center">Loading…</td></tr>';
+
+  let query=sb.from("client_requirements").select("*").order("created_at",{ascending:false}).limit(100);
+
+  const sf=$("statusFilter").value;
+  const pf=$("priorityFilter").value;
+  const term=$("leadSearch").value.trim();
+
+  if(sf)query=query.eq("status",sf);
+  if(pf)query=query.eq("priority",pf);
+
+  if(term){
+    const s=term.replace(/[,%()]/g," ").trim();
+    query=query.or(
+      `client_name.ilike.%${s}%,mobile.ilike.%${s}%,district_city.ilike.%${s}%,legal_matter.ilike.%${s}%,brief_requirement.ilike.%${s}%`
+    );
+  }
+
+  const {data,error}=await query;
+  if(error){
+    body.innerHTML='<tr><td colspan="10" style="text-align:center">Unable to load records.</td></tr>';
+    msg("appMsg","CRM error: "+error.message,"err");
+    return;
+  }
+
+  if(!data?.length){
+    body.innerHTML='<tr><td colspan="10" style="text-align:center">No matching requirements.</td></tr>';
+    return;
+  }
+
+  body.innerHTML=data.map(r=>{
+    const date=r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—";
+    return `<tr>
+      <td>${esc(date)}</td>
+      <td><strong>${esc(r.client_name||"—")}</strong></td>
+      <td>${esc(r.mobile||"—")}</td>
+      <td>${esc([r.district_city,r.state].filter(Boolean).join(", ")||"—")}</td>
+      <td>${esc(r.legal_matter||"—")}</td>
+      <td style="min-width:260px">${esc(r.brief_requirement||"—")}</td>
+      <td><select data-status="${esc(r.id)}">${statusOptions(r.status||"New")}</select></td>
+      <td><select data-priority="${esc(r.id)}">${priorityOptions(r.priority||"Normal")}</select></td>
+      <td>${esc(r.payment_status||"Pending")}</td>
+      <td class="actions-cell"><button class="btnx primary saveLead" data-id="${esc(r.id)}">Save</button></td>
+    </tr>`;
+  }).join("");
+
+  document.querySelectorAll(".saveLead").forEach(btn=>{
+    btn.addEventListener("click",()=>saveLead(btn.dataset.id,btn));
+  });
+}
+
+async function saveLead(id,button){
+  const statusEl=document.querySelector(`[data-status="${CSS.escape(id)}"]`);
+  const priorityEl=document.querySelector(`[data-priority="${CSS.escape(id)}"]`);
+  if(!statusEl||!priorityEl)return;
+
+  button.disabled=true;
+  const {error}=await sb.from("client_requirements").update({
+    status:statusEl.value,
+    priority:priorityEl.value
+  }).eq("id",id);
+  button.disabled=false;
+
+  if(error){
+    msg("appMsg","Could not update lead: "+error.message,"err");
+    return;
+  }
+
+  msg("appMsg","Lead updated successfully.","ok");
+  await loadStats();
+}
+
+async function openApp(){
+  const check=await isAdmin();
+  if(!check.ok){
+    $("loginView").classList.remove("hidden");
+    $("appView").classList.add("hidden");
+    msg("loginMsg",check.reason,"err");
+    return;
+  }
+
+  $("loginView").classList.add("hidden");
+  $("appView").classList.remove("hidden");
+  $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
+  await Promise.all([loadStats(),loadLeads()]);
+}
+
+$("loginForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  msg("loginMsg","Signing in…","");
+  const {error}=await sb.auth.signInWithPassword({
+    email:$("email").value.trim(),
+    password:$("password").value
+  });
+  if(error){
+    msg("loginMsg",error.message,"err");
+    return;
+  }
+  await openApp();
+});
+
+$("logoutBtn").addEventListener("click",async()=>{
+  await sb.auth.signOut();
+  location.href="admin.html";
+});
+$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads()]);msg("appMsg","Dashboard refreshed.","ok")});
+$("loadLeadsBtn").addEventListener("click",loadLeads);
+$("leadSearch").addEventListener("keydown",e=>{if(e.key==="Enter")loadLeads()});
+sb.auth.onAuthStateChange(()=>{});
+
+openApp();
+</script>
+</body>
+</html>
