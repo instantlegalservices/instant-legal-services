@@ -1,58 +1,129 @@
-(()=>{
+(() => {
 
-  /* OLD PORTAL ADMIN -> NEW ADMIN */
-  function redirectOldAdmin(){
-    if(
+  function redirectOldAdmin() {
+
+    if (
       location.pathname.endsWith("/portal.html") &&
       location.hash === "#admin"
-    ){
-      location.replace("admin.html?v=11");
+    ) {
+
+      location.replace("admin.html?v=12");
       return true;
+
     }
+
     return false;
   }
 
-  if(redirectOldAdmin()) return;
+  if (redirectOldAdmin()) return;
 
-  window.addEventListener("hashchange",redirectOldAdmin);
+  window.addEventListener(
+    "hashchange",
+    redirectOldAdmin
+  );
 
-  let deferred=null;
+  let deferred = null;
 
-  window.addEventListener("beforeinstallprompt",e=>{
-    e.preventDefault();
-    deferred=e;
+  window.addEventListener(
+    "beforeinstallprompt",
+    event => {
 
-    const b=document.querySelector("[data-install-app]");
-    if(b)b.hidden=false;
-  });
+      event.preventDefault();
 
-  document.addEventListener("click",async e=>{
-    const b=e.target.closest("[data-install-app]");
+      deferred = event;
 
-    if(!b||!deferred)return;
+      const button =
+        document.querySelector("[data-install-app]");
 
-    deferred.prompt();
-    await deferred.userChoice;
+      if (button) {
+        button.hidden = false;
+      }
 
-    deferred=null;
-    b.hidden=true;
-  });
+    }
+  );
 
-  window.addEventListener("appinstalled",()=>{
-    document
-      .querySelectorAll("[data-install-app]")
-      .forEach(b=>b.hidden=true);
-  });
+  document.addEventListener(
+    "click",
+    async event => {
 
-  if("serviceWorker" in navigator){
+      const button =
+        event.target.closest("[data-install-app]");
 
-    window.addEventListener("load",()=>{
+      if (!button || !deferred) return;
 
-      navigator.serviceWorker
-        .register("./sw.js?v=11")
-        .catch(console.error);
+      deferred.prompt();
 
-    });
+      await deferred.userChoice;
+
+      deferred = null;
+
+      button.hidden = true;
+
+    }
+  );
+
+  window.addEventListener(
+    "appinstalled",
+    () => {
+
+      document
+        .querySelectorAll("[data-install-app]")
+        .forEach(button => {
+          button.hidden = true;
+        });
+
+    }
+  );
+
+  if ("serviceWorker" in navigator) {
+
+    window.addEventListener(
+      "load",
+      async () => {
+
+        try {
+
+          /*
+            Remove any old service worker registrations.
+          */
+          const registrations =
+            await navigator.serviceWorker.getRegistrations();
+
+          for (const registration of registrations) {
+
+            const script =
+              registration.active?.scriptURL || "";
+
+            if (
+              script &&
+              !script.includes("sw.js?v=12")
+            ) {
+              await registration.unregister();
+            }
+
+          }
+
+          const registration =
+            await navigator.serviceWorker.register(
+              "./sw.js?v=12",
+              {
+                updateViaCache: "none"
+              }
+            );
+
+          await registration.update();
+
+        } catch (error) {
+
+          console.error(
+            "ILS Service Worker Error:",
+            error
+          );
+
+        }
+
+      }
+    );
 
   }
 
