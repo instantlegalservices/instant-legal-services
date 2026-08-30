@@ -68,8 +68,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (window.ILS && typeof window.ILS.ready === 'function') {
       return window.ILS.ready();
     }
-    if (window.supabase) {
-      return window.supabase;
+    if (window.supabaseClient) {
+      return window.supabaseClient;
+    }
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+      window.supabaseClient = window.supabase.createClient(
+        "https://vckjuhmsflwiyymzvhfg.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZja2p1aG1zZmx3aXl5bXp2aGZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDY3MjAwMDAsImV4cCI6MjAyMjI5NjAwMH0.sample"
+      );
+      return window.supabaseClient;
     }
     return null;
   }
@@ -109,40 +116,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       publicChat.scrollTop = publicChat.scrollHeight;
 
       try {
-        const client = getSupabaseClient();
-        let replyText = "";
+        const res = await fetch("https://vckjuhmsflwiyymzvhfg.supabase.co/functions/v1/ai-assistant", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ prompt: q, mode: "public" })
+        });
 
-        if (client && client.functions) {
-          // Method A: Native Supabase Function Invocation (Handles Auth/Headers automatically)
-          const { data, error } = await client.functions.invoke("ai-assistant", {
-            body: { prompt: q, mode: "public" }
-          });
-
-          if (error) throw error;
-          replyText = data?.reply || data?.choices?.[0]?.message?.content || JSON.stringify(data);
-        } else {
-          // Method B: Fallback Direct Fetch if ILS SDK isn't initialized
-          const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt: q, mode: "public" })
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Server error");
-          replyText = data.reply || data.choices?.[0]?.message?.content;
-        }
-
+        const data = await res.json();
         loadingMsg.remove();
-        if (replyText) {
+
+        if (res.ok && (data.reply || data.choices?.[0]?.message?.content)) {
+          const replyText = data.reply || data.choices[0].message.content;
           addMsg(publicChat, replyText, "ai");
         } else {
-          addMsg(publicChat, "Response format invalid. Please try again.", "ai");
+          addMsg(publicChat, "Error: " + (data.error || "Unable to get response from AI."), "ai");
         }
 
       } catch (err) {
         loadingMsg.remove();
         console.error("Public AI Error:", err);
-        addMsg(publicChat, "Failed to connect to AI server: " + (err.message || "Network Error"), "ai");
+        addMsg(publicChat, "Connection Error. Please try again.", "ai");
       }
     });
   }
@@ -169,34 +164,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       advocateChat.scrollTop = advocateChat.scrollHeight;
 
       try {
-        const client = getSupabaseClient();
-        let replyText = "";
+        const res = await fetch("https://vckjuhmsflwiyymzvhfg.supabase.co/functions/v1/ai-assistant", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({ prompt: q, mode: "advocate" })
+        });
 
-        if (client && client.functions) {
-          const { data, error } = await client.functions.invoke("ai-assistant", {
-            body: { prompt: q, mode: "advocate" }
-          });
-          if (error) throw error;
-          replyText = data?.reply || data?.choices?.[0]?.message?.content;
-        } else {
-          const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${session.access_token}`
-            },
-            body: JSON.stringify({ prompt: q, mode: "advocate" })
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Research failed");
-          replyText = data.reply || data.choices?.[0]?.message?.content;
-        }
-
+        const data = await res.json();
         loadingMsg.remove();
-        if (replyText) {
+
+        if (res.ok && (data.reply || data.choices?.[0]?.message?.content)) {
+          const replyText = data.reply || data.choices[0].message.content;
           addMsg(advocateChat, replyText, "ai");
         } else {
-          addMsg(advocateChat, "No response generated.", "ai");
+          addMsg(advocateChat, "Research error: " + (data.error || "No response generated."), "ai");
         }
 
       } catch (err) {
