@@ -127,8 +127,18 @@
             </button>
           </div>
 
+          <div id="researchDocumentBox" style="margin:14px 0;padding:12px;border:1px solid #26354a;border-radius:10px;">
+            <strong>Case Document (Optional)</strong>
+            <input id="researchDocument" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="display:block;margin-top:10px;">
+            <div id="researchDocumentStatus" class="ai-disclaimer" style="margin-top:8px;">
+              Upload PDF, DOCX or TXT. The document is read in your browser; only extracted text is sent to the secured Research AI.
+            </div>
+            <div id="researchDocumentPreview" class="notice" hidden style="margin-top:8px;max-height:160px;overflow:auto;white-space:pre-wrap;"></div>
+            <button id="clearResearchDocument" type="button" class="btn btn-ghost btn-small" style="margin-top:8px;">Clear Document</button>
+          </div>
+
           <div id="advocateChat" class="chat">
-            <div class="msg ai">Approved advocates can sign in and then ask research questions.</div>
+            <div class="msg ai">Approved advocates can sign in, upload a case document if required, and ask research questions.</div>
           </div>
 
           <form id="advocateAiForm" class="chat-form">
@@ -447,6 +457,64 @@ document.addEventListener("DOMContentLoaded", () => {
     setResearchEnabled(false);
   }
 
+
+  let researchDocumentText = "";
+  let researchDocumentName = "";
+
+  function loadExternalScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("Document reader could not be loaded."));
+      document.head.appendChild(script);
+    });
+  }
+
+  async function extractResearchDocument(file) {
+    const ext = file.name.toLowerCase().split(".").pop();
+
+    if (ext === "txt") {
+      return await file.text();
+    }
+
+    if (ext === "pdf") {
+      if (!window.pdfjsLib) {
+        await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+
+      const pdf = await window.pdfjsLib.getDocument({
+        data: await file.arrayBuffer()
+      }).promise;
+
+      let text = "";
+      for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+        const page = await pdf.getPage(pageNo);
+        const content = await page.getTextContent();
+        text += `\n[Page ${pageNo}]\n`;
+        text += content.items.map(item => item.str || "").join(" ");
+      }
+      return text;
+    }
+
+    if (ext === "docx") {
+      if (!window.mammoth) {
+        await loadExternalScript(
+          "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"
+        );
+      }
+
+      const result = await window.mammoth.extractRawText({
+        arrayBuffer: await file.arrayBuffer()
+      });
+      return result.value || "";
+    }
+
+    throw new Error("Only PDF, DOCX and TXT files are supported.");
+  }
+
   async function handleAdvocateQuery(q) {
     const chat = $("advocateChat");
     if (!chat) return;
@@ -478,7 +546,9 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         body: JSON.stringify({
           question: q,
-          mode: "advocate"
+          mode: "advocate",
+          document_name: researchDocumentName,
+          document_text: researchDocumentText
         })
       });
 
@@ -558,6 +628,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (logoutBtn) {
       logoutBtn.addEventListener("click", advocateLogout);
+    }
+
+    const documentInput = $("researchDocument");
+    const documentStatus = $("researchDocumentStatus");
+    const documentPreview = $("researchDocumentPreview");
+    const clearDocument = $("clearResearchDocument");
+
+    if (documentInput) {
+      documentInput.addEventListener("change", async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+          documentStatus.innerText = "File is too large. Maximum allowed size is 10 MB.";
+          documentInput.value = "";
+          return;
+        }
+
+        documentStatus.innerText = "Reading document…";
+
+        try {
+          const extracted = await extractResearchDocument(file);
+          if (!extracted.trim()) {
+            throw new Error(
+              "No readable text found. Scanned/image-only PDFs require OCR and cannot be read yet."
+            );
+          }
+
+          researchDocumentName = file.name;
+          researchDocumentText = extracted.slice(0, 60000);
+
+          documentStatus.innerText =
+            `Read successfully: ${file.name} — ${researchDocumentText.length.toLocaleString()} characters extracted.`;
+
+          if (documentPreview) {
+            documentPreview.hidden = false;
+            documentPreview.innerText = researchDocumentText.slice(0, 5000);
+          }
+        } catch (err) {
+          researchDocumentName = "";
+          researchDocumentText = "";
+          documentInput.value = "";
+          documentStatus.innerText =
+            "Could not read document: " + (err?.message || "Unknown error.");
+          if (documentPreview) documentPreview.hidden = true;
+          console.error("Document extraction error:", err);
+        }
+      });
+    }
+
+    if (clearDocument) {
+      clearDocument.addEventListener("click", () => {
+        if (documentInput) documentInput.value = "";
+        researchDocumentName = "";
+        researchDocumentText = "";
+        if (documentPreview) {
+          documentPreview.hidden = true;
+          documentPreview.innerText = "";
+        }
+        if (documentStatus) {
+          documentStatus.innerText =
+            "Upload PDF, DOCX or TXT. The document is read in your browser.";
+        }
+      });
     }
 
     if (researchForm) {
