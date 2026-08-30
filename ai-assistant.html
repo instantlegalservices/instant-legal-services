@@ -43,13 +43,117 @@
 <div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="legacy-admin.html">Admin / Existing CRM</a><p>© 2026 Instant Legal Services</p></div>
 </div></footer>
 <script>
-document.addEventListener("DOMContentLoaded", async ()=>{
-  const publicForm=document.getElementById("publicAiForm"), publicInput=document.getElementById("publicQuestion"), publicChat=document.getElementById("publicChat");
-  const advocateForm=document.getElementById("advocateAiForm"), advocateInput=document.getElementById("advocateQuestion"), advocateChat=document.getElementById("advocateChat"), state=document.getElementById("advocateAiState");
-  function addMsg(box,cls,text){const d=document.createElement("div");d.className="msg "+cls;d.textContent=text;box.appendChild(d);box.scrollTop=box.scrollHeight;return d;}
-  async function advocateSession(){ try{const c=ILS.ready(); if(!c)return null; const {data}=await c.auth.getSession(); return data?.session||null;}catch(e){return null;} }
-  const session=await advocateSession(); if(session){state.className="notice ok";state.textContent="Authenticated session detected. Approval will be checked securely by the server.";}
-  publicForm.addEventListener("submit",async e=>{e.preventDefault();const q=publicInput.value.trim();if(!q)return;addMsg(publicChat,"user",q);publicInput.value="";const w=addMsg(publicChat,"ai","Verifying current Indian legal sources…");const r=await ILS.ai(q,"", "public");w.textContent=r.ok?(r.answer||"No verified answer returned."):(r.message||"No verified answer is available.");if(r.sources?.length){w.textContent += "\n\nSources:\n"+r.sources.map(x=>x.title?x.title+" — "+x.url:x.url).join("\n");}});
-  advocateForm.addEventListener("submit",async e=>{e.preventDefault();const q=advocateInput.value.trim();if(!q)return;addMsg(advocateChat,"user",q);advocateInput.value="";const w=addMsg(advocateChat,"ai","Checking advocate authorization and verified sources…");const r=await ILS.ai(q,"", "advocate");w.textContent=r.ok?(r.answer||"No verified research answer returned."):(r.message||"Advocate Research AI is unavailable.");if(r.sources?.length){w.textContent += "\n\nSources:\n"+r.sources.map(x=>x.title?x.title+" — "+x.url:x.url).join("\n");}});
+document.addEventListener("DOMContentLoaded", async () => {
+  const publicForm = document.getElementById("publicAiForm");
+  const publicInput = document.getElementById("publicQuestion");
+  const publicChat = document.getElementById("publicChat");
+
+  const advocateForm = document.getElementById("advocateAiForm");
+  const advocateInput = document.getElementById("advocateQuestion");
+  const advocateChat = document.getElementById("advocateChat");
+
+  function addMsg(box, text, cls) {
+    const d = document.createElement("div");
+    d.className = "msg " + cls;
+    d.textContent = text;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function advocateSession() {
+    try {
+      const c = ILS.ready();
+      if (!c) return null;
+      const { data } = await c.auth.getSession();
+      return data?.session || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  const session = await advocateSession();
+  const notice = document.getElementById("advocateAiState");
+  if (session && notice) {
+    notice.textContent = "Authenticated Session Active";
+  }
+
+  // Handle Public AI Form Submit
+  if (publicForm) {
+    publicForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const q = publicInput.value.trim();
+      if (!q) return;
+
+      addMsg(publicChat, q, "user");
+      publicInput.value = "";
+      const loadingMsg = document.createElement("div");
+      loadingMsg.className = "msg ai";
+      loadingMsg.textContent = "Searching legal sources...";
+      publicChat.appendChild(loadingMsg);
+
+      try {
+        const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ prompt: q, mode: "public" })
+        });
+
+        const data = await res.json();
+        loadingMsg.remove();
+
+        if (res.ok && data.reply) {
+          addMsg(publicChat, data.reply, "ai");
+        } else if (res.ok && data.choices && data.choices[0]?.message?.content) {
+          addMsg(publicChat, data.choices[0].message.content, "ai");
+        } else {
+          addMsg(publicChat, "Error: " + (data.error || "Failed to process request."), "ai");
+        }
+      } catch (err) {
+        loadingMsg.remove();
+        addMsg(publicChat, "Failed to connect to AI server. Please try again.", "ai");
+        console.error("AI Error:", err);
+      }
+    });
+  }
+
+  // Handle Advocate AI Form Submit
+  if (advocateForm) {
+    advocateForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const q = advocateInput.value.trim();
+      if (!q) return;
+
+      if (!session) {
+        alert("Please login as an advocate to use Advocate Research AI.");
+        return;
+      }
+
+      addMsg(advocateChat, q, "user");
+      advocateInput.value = "";
+
+      try {
+        const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({ prompt: q, mode: "advocate" })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.reply) {
+          addMsg(advocateChat, data.reply, "ai");
+        } else {
+          addMsg(advocateChat, "Error: " + (data.error || "Research request failed."), "ai");
+        }
+      } catch (err) {
+        addMsg(advocateChat, "Connection error.", "ai");
+      }
+    });
+  }
 });
-</script></body></html>
+</script>
+</body></html>
