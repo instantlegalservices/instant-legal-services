@@ -144,7 +144,7 @@ async function handleUserQuery(q) {
     let data = null;
 
     // Direct REST Endpoint Call
-    const raw = await fetch("https://odqebkdzkjfxyzybrndt.supabase.co/functions/v1/ai-assistant", {
+    const raw = await fetch("https://odqebkdzkjfxzyzbrndt.supabase.co/functions/v1/ai-assistant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: q })
