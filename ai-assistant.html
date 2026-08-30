@@ -9,6 +9,29 @@
   <link rel="canonical" href="https://instantlegalservices.in/ai-assistant.html">
   <link rel="stylesheet" href="assets/ils.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- ILS Supabase bootstrap: AI Assistant must not depend on ils-core.js to create the auth client. -->
+  <script>
+    (function () {
+      const ILS_SUPABASE_URL = "https://odqebkdzkjfxzyzbrndt.supabase.co";
+      const ILS_SUPABASE_KEY = "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+
+      if (window.supabase && !window.supabaseClient) {
+        window.supabaseClient = window.supabase.createClient(
+          ILS_SUPABASE_URL,
+          ILS_SUPABASE_KEY,
+          {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: true
+            }
+          }
+        );
+      }
+    })();
+  </script>
+
   <script src="assets/ils-core.js?v=2" defer></script>
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#07101c">
