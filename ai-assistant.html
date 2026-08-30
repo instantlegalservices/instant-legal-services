@@ -8,7 +8,7 @@
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://instantlegalservices.in/ai-assistant.html">
   <link rel="stylesheet" href="assets/ils.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@Supabase/supabase-js@2"></script>
   <script src="assets/ils-core.js?v=2" defer></script>
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#07101c">
@@ -49,6 +49,8 @@
   <section class="section alt">
     <div class="wrap">
       <div class="grid two-grid ai-dual-grid">
+
+        <!-- PUBLIC AI — EXISTING WORKING FUNCTION KEPT INTACT -->
         <div class="card ai-box">
           <div class="eyebrow">PUBLIC / CLIENT</div>
           <h2>Public Legal Information AI</h2>
@@ -63,20 +65,67 @@
           <div class="ai-disclaimer">General information only. No case-specific advice, outcome guarantee or advocate-client relationship.</div>
         </div>
 
+        <!-- ADVOCATE RESEARCH AI — NEW CONNECTION ONLY -->
         <div class="card ai-box">
           <div class="eyebrow">ADVOCATE RESEARCH</div>
           <h2>Advocate Research AI</h2>
           <p>Restricted to an authenticated and approved ILS advocate. Uses source-first research and refuses unverified legal assertions.</p>
-          <div id="advocateAiState" class="notice">Login is required before Advocate Research AI can be used.</div>
+
+          <div id="advocateAiState" class="notice">
+            Login is required before Advocate Research AI can be used.
+          </div>
+
+          <div id="advocateLoginBox" style="margin-top:14px;">
+            <form id="advocateAiLoginForm" class="chat-form" autocomplete="on">
+              <input
+                id="advocateAiEmail"
+                type="email"
+                required
+                autocomplete="username"
+                placeholder="Advocate email"
+              >
+              <input
+                id="advocateAiPassword"
+                type="password"
+                required
+                autocomplete="current-password"
+                placeholder="Password"
+              >
+              <button id="advocateAiLoginBtn" class="btn btn-primary" type="submit">
+                Advocate Login
+              </button>
+            </form>
+          </div>
+
+          <div id="advocateSessionBox" hidden style="margin-top:12px;">
+            <div class="notice" id="advocateLoggedInAs"></div>
+            <button id="advocateAiLogoutBtn" class="btn btn-ghost btn-small" type="button">
+              Sign Out
+            </button>
+          </div>
+
           <div id="advocateChat" class="chat">
             <div class="msg ai">Approved advocates can sign in and then ask research questions.</div>
           </div>
+
           <form id="advocateAiForm" class="chat-form">
-            <input id="advocateQuestion" required maxlength="6000" placeholder="Advocate research question…">
-            <button class="btn btn-primary">Research</button>
+            <input
+              id="advocateQuestion"
+              required
+              maxlength="6000"
+              disabled
+              placeholder="Advocate research question…"
+            >
+            <button id="advocateResearchBtn" class="btn btn-primary" type="submit" disabled>
+              Research
+            </button>
           </form>
-          <div class="ai-disclaimer">Research aid only. Verify the current statute/rules and original judgment before relying on the output.</div>
+
+          <div class="ai-disclaimer">
+            Research aid only. Verify the current statute/rules and original judgment before relying on the output.
+          </div>
         </div>
+
       </div>
     </div>
   </section>
@@ -143,7 +192,7 @@ async function handleUserQuery(q) {
   try {
     let data = null;
 
-    // Direct REST Endpoint Call
+    // Direct REST Endpoint Call — EXISTING PUBLIC AI FLOW
     const raw = await fetch("https://odqebkdzkjfxzyzbrndt.supabase.co/functions/v1/ai-assistant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -172,7 +221,7 @@ async function handleUserQuery(q) {
   }
 }
 
-// Event Binder for Form Search
+// Event Binder for Form Search — EXISTING PUBLIC AI FLOW
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("publicAiForm");
   const input = document.getElementById("publicQuestion");
@@ -188,6 +237,339 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+/* =========================================================
+   ADVOCATE RESEARCH AI — NECESSARY ADDITION ONLY
+   Uses the existing supabaseClient from ils-core.js.
+   Backend enforces approved-advocate access independently.
+   ========================================================= */
+
+(function initAdvocateResearchAI() {
+  const API_URL =
+    "https://odqebkdzkjfxzyzbrndt.supabase.co/functions/v1/ai-assistant";
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function setResearchEnabled(enabled) {
+    const input = $("advocateQuestion");
+    const btn = $("advocateResearchBtn");
+    if (input) input.disabled = !enabled;
+    if (btn) btn.disabled = !enabled;
+  }
+
+  function addAdvocateMessage(text, role) {
+    const chat = $("advocateChat");
+    if (!chat) return null;
+
+    const msg = document.createElement("div");
+    msg.className = "msg " + (role === "user" ? "user" : "ai");
+    msg.innerText = text;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+    return msg;
+  }
+
+  function renderSources(container, sources) {
+    if (!container || !Array.isArray(sources) || !sources.length) return;
+
+    const box = document.createElement("div");
+    box.style.marginTop = "12px";
+
+    const title = document.createElement("strong");
+    title.innerText = "Verified / Retrieved Official Sources";
+    box.appendChild(title);
+
+    const list = document.createElement("ul");
+    list.style.marginTop = "8px";
+
+    sources.forEach((source) => {
+      if (!source || !source.url) return;
+
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = source.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.innerText = source.title || source.url;
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+
+    if (list.children.length) {
+      box.appendChild(list);
+      container.appendChild(box);
+    }
+  }
+
+  async function refreshAdvocateState() {
+    const state = $("advocateAiState");
+    const loginBox = $("advocateLoginBox");
+    const sessionBox = $("advocateSessionBox");
+    const loggedInAs = $("advocateLoggedInAs");
+
+    setResearchEnabled(false);
+
+    if (!window.supabaseClient?.auth) {
+      if (state) state.innerText = "Authentication service is unavailable. Please refresh the page.";
+      return;
+    }
+
+    try {
+      const { data, error } = await window.supabaseClient.auth.getSession();
+      if (error) throw error;
+
+      const session = data?.session;
+
+      if (!session) {
+        if (state) state.innerText = "Login is required before Advocate Research AI can be used.";
+        if (loginBox) loginBox.hidden = false;
+        if (sessionBox) sessionBox.hidden = true;
+        return;
+      }
+
+      const email = session.user?.email || "authenticated advocate";
+
+      if (state) {
+        state.innerText =
+          "Authenticated session found. Access will be verified by ILS before research is processed.";
+      }
+
+      if (loginBox) loginBox.hidden = true;
+      if (sessionBox) sessionBox.hidden = false;
+      if (loggedInAs) loggedInAs.innerText = "Signed in as: " + email;
+
+      setResearchEnabled(true);
+
+    } catch (err) {
+      console.error("Advocate session check failed:", err);
+      if (state) state.innerText = "Unable to verify login session. Please sign in again.";
+      if (loginBox) loginBox.hidden = false;
+      if (sessionBox) sessionBox.hidden = true;
+    }
+  }
+
+  async function advocateLogin(email, password) {
+    const state = $("advocateAiState");
+    const btn = $("advocateAiLoginBtn");
+
+    if (!window.supabaseClient?.auth) {
+      if (state) state.innerText = "Authentication service is unavailable.";
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = "Signing in…";
+    }
+
+    try {
+      const { data, error } =
+        await window.supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+      if (error) throw error;
+
+      if (!data?.session) {
+        throw new Error("Login succeeded but no authenticated session was returned.");
+      }
+
+      if (state) {
+        state.innerText =
+          "Login successful. Checking approved ILS advocate access…";
+      }
+
+      await refreshAdvocateState();
+
+    } catch (err) {
+      console.error("Advocate login failed:", err);
+
+      if (state) {
+        state.innerText =
+          err?.message ||
+          "Login failed. Please check your advocate email and password.";
+      }
+
+      setResearchEnabled(false);
+
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = "Advocate Login";
+      }
+    }
+  }
+
+  async function advocateLogout() {
+    try {
+      if (window.supabaseClient?.auth) {
+        await window.supabaseClient.auth.signOut();
+      }
+    } catch (err) {
+      console.error("Advocate logout failed:", err);
+    }
+
+    const state = $("advocateAiState");
+    if (state) state.innerText = "Signed out. Login is required before Research AI can be used.";
+
+    const loginBox = $("advocateLoginBox");
+    const sessionBox = $("advocateSessionBox");
+
+    if (loginBox) loginBox.hidden = false;
+    if (sessionBox) sessionBox.hidden = true;
+
+    setResearchEnabled(false);
+  }
+
+  async function handleAdvocateQuery(q) {
+    const chat = $("advocateChat");
+    if (!chat) return;
+
+    addAdvocateMessage(q, "user");
+
+    const loadingMsg = addAdvocateMessage(
+      "Checking approved advocate access and researching official authorities…",
+      "ai"
+    );
+
+    try {
+      const { data:sessionData, error:sessionError } =
+        await window.supabaseClient.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      const token = sessionData?.session?.access_token;
+
+      if (!token) {
+        throw new Error("Advocate login is required for Research AI.");
+      }
+
+      const raw = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          question: q,
+          mode: "advocate"
+        })
+      });
+
+      const data = await raw.json().catch(() => ({}));
+
+      if (loadingMsg) loadingMsg.remove();
+
+      if (!raw.ok || !data?.ok) {
+        const errorMsg =
+          data?.reply ||
+          (raw.status === 403
+            ? "Advocate Research AI is available only to approved ILS Network advocates."
+            : raw.status === 401
+              ? "Advocate login is required for Research AI."
+              : "Research request failed.");
+
+        addAdvocateMessage(errorMsg, "ai");
+
+        if (raw.status === 401 || raw.status === 403) {
+          const state = $("advocateAiState");
+          if (state) state.innerText = errorMsg;
+          setResearchEnabled(false);
+        }
+
+        return;
+      }
+
+      const aiMsg = addAdvocateMessage(
+        data.reply || data.answer || "No research response received.",
+        "ai"
+      );
+
+      if (aiMsg && Array.isArray(data.sources)) {
+        renderSources(aiMsg, data.sources);
+      }
+
+      const state = $("advocateAiState");
+      if (state) {
+        state.innerText = data.verified
+          ? "Research completed with retrieved official-source references. Verify the original authority before relying on it."
+          : "Research completed, but no official-source citation was retrieved. Verify authorities manually before relying on the output.";
+      }
+
+    } catch (err) {
+      console.error("Advocate Research AI error:", err);
+
+      if (loadingMsg) {
+        loadingMsg.innerText =
+          err?.message ||
+          "Connection failed. Please check the network or advocate login.";
+      } else {
+        addAdvocateMessage(
+          err?.message || "Research request failed.",
+          "ai"
+        );
+      }
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const loginForm = $("advocateAiLoginForm");
+    const researchForm = $("advocateAiForm");
+    const logoutBtn = $("advocateAiLogoutBtn");
+
+    if (loginForm) {
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = ($("advocateAiEmail")?.value || "").trim().toLowerCase();
+        const password = $("advocateAiPassword")?.value || "";
+
+        if (!email || !password) return;
+
+        await advocateLogin(email, password);
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", advocateLogout);
+    }
+
+    if (researchForm) {
+      researchForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const input = $("advocateQuestion");
+        const val = input?.value ? input.value.trim() : "";
+
+        if (!val || input?.disabled) return;
+
+        input.value = "";
+        await handleAdvocateQuery(val);
+      });
+    }
+
+    if (window.supabaseClient?.auth) {
+      window.supabaseClient.auth.onAuthStateChange((event) => {
+        if (
+          event === "SIGNED_IN" ||
+          event === "SIGNED_OUT" ||
+          event === "TOKEN_REFRESHED"
+        ) {
+          setTimeout(refreshAdvocateState, 0);
+        }
+      });
+    }
+
+    /*
+      ils-core.js is deferred. Therefore this DOMContentLoaded callback runs
+      after the existing Supabase client has been initialized.
+    */
+    refreshAdvocateState();
+  });
+})();
 </script>
 </body>
 </html>
