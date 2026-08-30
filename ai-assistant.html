@@ -117,44 +117,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   const publicInput = document.getElementById("publicQuestion");
   const publicChat = document.getElementById("publicChat");
 
-  const advocateForm = document.getElementById("advocateAiForm");
-  const advocateInput = document.getElementById("advocateQuestion");
-  const advocateChat = document.getElementById("advocateChat");
-  const notice = document.getElementById("advocateAiState");
-
-  // Exact Deployed Supabase Function URL
-  const FUNCTION_URL = "https://odqebkdzkjfxyzybrndt.supabase.co/functions/v1/ai-assistant";
+  // Primary & Secondary Supabase Function Endpoints
+  const PRIMARY_URL = "https://odqebkdzkjfxyzybrndt.supabase.co/functions/v1/ai-assistant";
+  const FALLBACK_URL = "https://odqebkdzkjfxyzybrndt.supabase.net/functions/v1/ai-assistant";
 
   function addMsg(box, text, cls) {
     if (!box) return;
     const d = document.createElement("div");
     d.className = "msg " + cls;
-    d.style.whiteSpace = "pre-wrap"; // Formats line breaks and structured response properly
+    d.style.whiteSpace = "pre-wrap";
     d.textContent = text;
     box.appendChild(d);
     box.scrollTop = box.scrollHeight;
   }
 
-  async function getSessionToken() {
-    try {
-      if (window.ILS && typeof window.ILS.ready === 'function') {
-        const client = window.ILS.ready();
-        const { data } = await client.auth.getSession();
-        return data?.session || null;
-      }
-    } catch (e) {
-      console.warn("Session check warning:", e);
-    }
-    return null;
-  }
-
-  const session = await getSessionToken();
-  if (session && notice) {
-    notice.textContent = "Authenticated Session Active";
-    notice.classList.add("active");
-  }
-
-  // 1. Handle Public AI Form Submit
   if (publicForm) {
     publicForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -170,82 +146,38 @@ document.addEventListener("DOMContentLoaded", async () => {
       publicChat.appendChild(loadingMsg);
       publicChat.scrollTop = publicChat.scrollHeight;
 
-      try {
-        const res = await fetch(FUNCTION_URL, {
+      // Dynamic Fetch Helper
+      async function callAI(targetUrl) {
+        return fetch(targetUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt: q, mode: "public" })
         });
+      }
+
+      try {
+        let res;
+        try {
+          res = await callAI(PRIMARY_URL);
+        } catch (err) {
+          // If DNS fails on .co, automatically fallback to .net
+          res = await callAI(FALLBACK_URL);
+        }
 
         const data = await res.json();
         loadingMsg.remove();
 
         if (res.ok) {
-          const replyText = data.reply || data.answer || data.message || (data.choices && data.choices[0]?.message?.content);
-          if (replyText) {
-            addMsg(publicChat, replyText, "ai");
-          } else {
-            addMsg(publicChat, typeof data === 'string' ? data : JSON.stringify(data), "ai");
-          }
+          const replyText = data.reply || data.answer || data.message || "No response generated.";
+          addMsg(publicChat, replyText, "ai");
         } else {
           addMsg(publicChat, "Server Error: " + (data.error || res.statusText), "ai");
         }
 
       } catch (err) {
         if (loadingMsg) loadingMsg.remove();
-        console.error("Public AI Request Error:", err);
-        addMsg(publicChat, "Network connection error. Please try again.", "ai");
-      }
-    });
-  }
-
-  // 2. Handle Advocate AI Form Submit
-  if (advocateForm) {
-    advocateForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const q = advocateInput.value ? advocateInput.value.trim() : "";
-      if (!q) return;
-
-      if (!session) {
-        alert("Please login as an advocate to use Advocate Research AI.");
-        return;
-      }
-
-      addMsg(advocateChat, q, "user");
-      advocateInput.value = "";
-
-      const loadingMsg = document.createElement("div");
-      loadingMsg.className = "msg ai";
-      loadingMsg.textContent = "Analyzing precedents & statutes...";
-      advocateChat.appendChild(loadingMsg);
-      advocateChat.scrollTop = advocateChat.scrollHeight;
-
-      try {
-        const res = await fetch(FUNCTION_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({ prompt: q, mode: "advocate" })
-        });
-
-        const data = await res.json();
-        loadingMsg.remove();
-
-        if (res.ok) {
-          const replyText = data.reply || data.answer || data.message || (data.choices && data.choices[0]?.message?.content);
-          addMsg(advocateChat, replyText || "No response received.", "ai");
-        } else {
-          addMsg(advocateChat, "Research Error: " + (data.error || res.statusText), "ai");
-        }
-
-      } catch (err) {
-        if (loadingMsg) loadingMsg.remove();
-        console.error("Advocate AI Error:", err);
-        addMsg(advocateChat, "Research Connection Error. Please try again.", "ai");
+        console.error("Public AI Error:", err);
+        addMsg(publicChat, "Connection error. Please check your internet or retry.", "ai");
       }
     });
   }
