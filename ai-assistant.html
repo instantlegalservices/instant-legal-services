@@ -54,7 +54,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const advocateChat = document.getElementById("advocateChat");
   const notice = document.getElementById("advocateAiState");
 
-  // Utility to append messages
   function addMsg(box, text, cls) {
     const d = document.createElement("div");
     d.className = "msg " + cls;
@@ -63,19 +62,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     box.scrollTop = box.scrollHeight;
   }
 
-  // Helper to ensure ILS core & Supabase client is ready
-  function getSupabaseClient() {
+  // Safe Client fetcher
+  function getClient() {
     if (window.ILS && typeof window.ILS.ready === 'function') {
       return window.ILS.ready();
     }
     if (window.supabaseClient) {
-      return window.supabaseClient;
-    }
-    if (window.supabase && typeof window.supabase.createClient === 'function') {
-      window.supabaseClient = window.supabase.createClient(
-        "https://vckjuhmsflwiyymzvhfg.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZja2p1aG1zZmx3aXl5bXp2aGZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDY3MjAwMDAsImV4cCI6MjAyMjI5NjAwMH0.sample"
-      );
       return window.supabaseClient;
     }
     return null;
@@ -83,12 +75,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function advocateSession() {
     try {
-      const client = getSupabaseClient();
+      const client = getClient();
       if (!client || !client.auth) return null;
       const { data } = await client.auth.getSession();
       return data?.session || null;
     } catch (e) {
-      console.warn("Session check failed:", e);
       return null;
     }
   }
@@ -99,7 +90,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     notice.classList.add("active");
   }
 
-  // 1. Handle Public AI Form Submit
+  // Handle Public AI Form
   if (publicForm) {
     publicForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -116,33 +107,46 @@ document.addEventListener("DOMContentLoaded", async () => {
       publicChat.scrollTop = publicChat.scrollHeight;
 
       try {
-        const res = await fetch("https://vckjuhmsflwiyymzvhfg.supabase.co/functions/v1/ai-assistant", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ prompt: q, mode: "public" })
-        });
+        const client = getClient();
+        let replyText = "";
 
-        const data = await res.json();
+        if (client && client.functions) {
+          // Preferred: Use Supabase SDK Function Invocation
+          const { data, error } = await client.functions.invoke("ai-assistant", {
+            body: { prompt: q, mode: "public" }
+          });
+          if (error) throw error;
+          replyText = data?.reply || data?.choices?.[0]?.message?.content || (typeof data === 'string' ? data : JSON.stringify(data));
+        } else {
+          // Fallback Endpoint Direct Call
+          const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ prompt: q, mode: "public" })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Server response error");
+          replyText = data.reply || data.choices?.[0]?.message?.content;
+        }
+
         loadingMsg.remove();
-
-        if (res.ok && (data.reply || data.choices?.[0]?.message?.content)) {
-          const replyText = data.reply || data.choices[0].message.content;
+        if (replyText) {
           addMsg(publicChat, replyText, "ai");
         } else {
-          addMsg(publicChat, "Error: " + (data.error || "Unable to get response from AI."), "ai");
+          addMsg(publicChat, "No response generated. Please try again.", "ai");
         }
 
       } catch (err) {
         loadingMsg.remove();
         console.error("Public AI Error:", err);
-        addMsg(publicChat, "Connection Error. Please try again.", "ai");
+        addMsg(publicChat, "Error: " + (err.message || "Failed to reach AI service"), "ai");
       }
     });
   }
 
-  // 2. Handle Advocate AI Form Submit
+  // Handle Advocate AI Form
   if (advocateForm) {
     advocateForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -164,23 +168,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       advocateChat.scrollTop = advocateChat.scrollHeight;
 
       try {
-        const res = await fetch("https://vckjuhmsflwiyymzvhfg.supabase.co/functions/v1/ai-assistant", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({ prompt: q, mode: "advocate" })
-        });
+        const client = getClient();
+        let replyText = "";
 
-        const data = await res.json();
+        if (client && client.functions) {
+          const { data, error } = await client.functions.invoke("ai-assistant", {
+            body: { prompt: q, mode: "advocate" }
+          });
+          if (error) throw error;
+          replyText = data?.reply || data?.choices?.[0]?.message?.content;
+        } else {
+          const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ prompt: q, mode: "advocate" })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Research failed");
+          replyText = data.reply || data.choices?.[0]?.message?.content;
+        }
+
         loadingMsg.remove();
-
-        if (res.ok && (data.reply || data.choices?.[0]?.message?.content)) {
-          const replyText = data.reply || data.choices[0].message.content;
+        if (replyText) {
           addMsg(advocateChat, replyText, "ai");
         } else {
-          addMsg(advocateChat, "Research error: " + (data.error || "No response generated."), "ai");
+          addMsg(advocateChat, "No response generated.", "ai");
         }
 
       } catch (err) {
