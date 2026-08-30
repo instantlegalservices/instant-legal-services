@@ -42,6 +42,7 @@
 <div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="ai-assistant.html">AI Assistant</a><a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts</a><a href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">eChallan</a></div>
 <div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="legacy-admin.html">Admin / Existing CRM</a><p>© 2026 Instant Legal Services</p></div>
 </div></footer>
+
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
   const publicForm = document.getElementById("publicAiForm");
@@ -51,7 +52,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const advocateForm = document.getElementById("advocateAiForm");
   const advocateInput = document.getElementById("advocateQuestion");
   const advocateChat = document.getElementById("advocateChat");
+  const notice = document.getElementById("advocateAiState");
 
+  // Utility to append messages
   function addMsg(box, text, cls) {
     const d = document.createElement("div");
     d.className = "msg " + cls;
@@ -60,24 +63,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     box.scrollTop = box.scrollHeight;
   }
 
+  // Helper to ensure ILS core & Supabase client is ready
+  function getSupabaseClient() {
+    if (window.ILS && typeof window.ILS.ready === 'function') {
+      return window.ILS.ready();
+    }
+    if (window.supabase) {
+      return window.supabase;
+    }
+    return null;
+  }
+
   async function advocateSession() {
     try {
-      const c = ILS.ready();
-      if (!c) return null;
-      const { data } = await c.auth.getSession();
+      const client = getSupabaseClient();
+      if (!client || !client.auth) return null;
+      const { data } = await client.auth.getSession();
       return data?.session || null;
     } catch (e) {
+      console.warn("Session check failed:", e);
       return null;
     }
   }
 
   const session = await advocateSession();
-  const notice = document.getElementById("advocateAiState");
   if (session && notice) {
     notice.textContent = "Authenticated Session Active";
+    notice.classList.add("active");
   }
 
-  // Handle Public AI Form Submit
+  // 1. Handle Public AI Form Submit
   if (publicForm) {
     publicForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -86,39 +101,53 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       addMsg(publicChat, q, "user");
       publicInput.value = "";
+      
       const loadingMsg = document.createElement("div");
       loadingMsg.className = "msg ai";
       loadingMsg.textContent = "Searching legal sources...";
       publicChat.appendChild(loadingMsg);
+      publicChat.scrollTop = publicChat.scrollHeight;
 
       try {
-        const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ prompt: q, mode: "public" })
-        });
+        const client = getSupabaseClient();
+        let replyText = "";
 
-        const data = await res.json();
-        loadingMsg.remove();
+        if (client && client.functions) {
+          // Method A: Native Supabase Function Invocation (Handles Auth/Headers automatically)
+          const { data, error } = await client.functions.invoke("ai-assistant", {
+            body: { prompt: q, mode: "public" }
+          });
 
-        if (res.ok && data.reply) {
-          addMsg(publicChat, data.reply, "ai");
-        } else if (res.ok && data.choices && data.choices[0]?.message?.content) {
-          addMsg(publicChat, data.choices[0].message.content, "ai");
+          if (error) throw error;
+          replyText = data?.reply || data?.choices?.[0]?.message?.content || JSON.stringify(data);
         } else {
-          addMsg(publicChat, "Error: " + (data.error || "Failed to process request."), "ai");
+          // Method B: Fallback Direct Fetch if ILS SDK isn't initialized
+          const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: q, mode: "public" })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Server error");
+          replyText = data.reply || data.choices?.[0]?.message?.content;
         }
+
+        loadingMsg.remove();
+        if (replyText) {
+          addMsg(publicChat, replyText, "ai");
+        } else {
+          addMsg(publicChat, "Response format invalid. Please try again.", "ai");
+        }
+
       } catch (err) {
         loadingMsg.remove();
-        addMsg(publicChat, "Failed to connect to AI server. Please try again.", "ai");
-        console.error("AI Error:", err);
+        console.error("Public AI Error:", err);
+        addMsg(publicChat, "Failed to connect to AI server: " + (err.message || "Network Error"), "ai");
       }
     });
   }
 
-  // Handle Advocate AI Form Submit
+  // 2. Handle Advocate AI Form Submit
   if (advocateForm) {
     advocateForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -133,24 +162,47 @@ document.addEventListener("DOMContentLoaded", async () => {
       addMsg(advocateChat, q, "user");
       advocateInput.value = "";
 
-      try {
-        const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({ prompt: q, mode: "advocate" })
-        });
+      const loadingMsg = document.createElement("div");
+      loadingMsg.className = "msg ai";
+      loadingMsg.textContent = "Analyzing precedents & statutes...";
+      advocateChat.appendChild(loadingMsg);
+      advocateChat.scrollTop = advocateChat.scrollHeight;
 
-        const data = await res.json();
-        if (res.ok && data.reply) {
-          addMsg(advocateChat, data.reply, "ai");
+      try {
+        const client = getSupabaseClient();
+        let replyText = "";
+
+        if (client && client.functions) {
+          const { data, error } = await client.functions.invoke("ai-assistant", {
+            body: { prompt: q, mode: "advocate" }
+          });
+          if (error) throw error;
+          replyText = data?.reply || data?.choices?.[0]?.message?.content;
         } else {
-          addMsg(advocateChat, "Error: " + (data.error || "Research request failed."), "ai");
+          const res = await fetch("https://instantlegalservices.in/functions/v1/ai-assistant", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ prompt: q, mode: "advocate" })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Research failed");
+          replyText = data.reply || data.choices?.[0]?.message?.content;
         }
+
+        loadingMsg.remove();
+        if (replyText) {
+          addMsg(advocateChat, replyText, "ai");
+        } else {
+          addMsg(advocateChat, "No response generated.", "ai");
+        }
+
       } catch (err) {
-        addMsg(advocateChat, "Connection error.", "ai");
+        loadingMsg.remove();
+        console.error("Advocate AI Error:", err);
+        addMsg(advocateChat, "Research Connection Error: " + (err.message || "Failed"), "ai");
       }
     });
   }
