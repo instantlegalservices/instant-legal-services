@@ -9,91 +9,12 @@
   <link rel="canonical" href="https://instantlegalservices.in/ai-assistant.html">
   <link rel="stylesheet" href="assets/ils.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
- <script src="assets/ils-core.js?v=2" defer></script>
+  <script src="assets/ils-core.js?v=2" defer></script>
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#07101c">
   <script src="assets/pwa.js" defer></script>
 </head>
-<!-- ... aapka baki html structure (chat box, header, form) ... -->
 
-    <!-- STEP 1: Script tag ko </body> tag ke thik pehle rakhein -->
-    <script>
-      // Global Helper Function for Modal
-      function openLegalAssistanceForm() {
-        const modal = document.getElementById('legalAssistanceModal');
-        if (modal) {
-          modal.classList.remove('hidden');
-          modal.style.display = 'block';
-        } else {
-          alert("Advocate Booking Form active hai. Please contact office directly.");
-        }
-      }
-
-      // AI Message Render Logic
-      async function handleUserQuery(q) {
-        const publicChat = document.getElementById("publicChat");
-
-        // User Message
-        const userMsg = document.createElement("div");
-        userMsg.className = "msg user";
-        userMsg.innerText = q;
-        publicChat.appendChild(userMsg);
-
-        // Loading indicator
-        const loadingMsg = document.createElement("div");
-        loadingMsg.className = "msg ai";
-        loadingMsg.innerText = "Verifying Indian Legal Provisions...";
-        publicChat.appendChild(loadingMsg);
-
-        try {
-          const raw = await fetch("https://odqebkdzkjfxyzybrndt.supabase.co/functions/v1/ai-assistant", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt: q })
-          });
-          const data = await raw.json();
-
-          loadingMsg.remove();
-
-          // Main Answer Container
-          const aiMsg = document.createElement("div");
-          aiMsg.className = "msg ai";
-          aiMsg.innerText = data.reply || "No response received.";
-
-          // Append Button Box (HTML format me clean render hoga)
-          if (data.cta) {
-            const ctaContainer = document.createElement("div");
-            ctaContainer.innerHTML = data.cta;
-            aiMsg.appendChild(ctaContainer);
-          }
-
-          publicChat.appendChild(aiMsg);
-          publicChat.scrollTop = publicChat.scrollHeight;
-
-        } catch (err) {
-          loadingMsg.innerText = "Server communication error. Please try again.";
-        }
-      }
-
-      // Event Listener (Submit/Send button click par handleUserQuery trigger karne ke liye)
-      document.addEventListener("DOMContentLoaded", () => {
-        const form = document.getElementById("publicAiForm"); // Aapke search form ki ID
-        const input = document.getElementById("publicQuestion"); // Aapke input box ki ID
-
-        if (form) {
-          form.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const query = input.value ? input.value.trim() : "";
-            if (query) {
-              handleUserQuery(query);
-              input.value = "";
-            }
-          });
-        }
-      });
-    </script>
-  </body>
-</html>  
 <body>
 <header class="site-header">
   <div class="wrap navbar">
@@ -190,7 +111,7 @@
     </div>
   </div>
 </footer>
-  
+
 <script>
 function openLegalAssistanceForm() {
   const modal = document.getElementById('legalAssistanceModal');
@@ -222,21 +143,13 @@ async function handleUserQuery(q) {
   try {
     let data = null;
 
-    // Check if Supabase client SDK is initialized on your site
-    if (window.supabase && typeof window.supabase.functions?.invoke === 'function') {
-      const res = await window.supabase.functions.invoke('ai-assistant', {
-        body: { prompt: q }
-      });
-      data = res.data;
-    } else {
-      // Direct REST Endpoint Fallback
-      const raw = await fetch("https://odqebkdzkjfxyzybrndt.supabase.co/functions/v1/ai-assistant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: q })
-      });
-      data = await raw.json();
-    }
+    // Direct REST Endpoint Call
+    const raw = await fetch("https://odqebkdzkjfxyzybrndt.supabase.co/functions/v1/ai-assistant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: q })
+    });
+    data = await raw.json();
 
     loadingMsg.remove();
 
@@ -261,8 +174,8 @@ async function handleUserQuery(q) {
 
 // Event Binder for Form Search
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.querySelector("#publicAiForm") || document.querySelector("form");
-  const input = document.querySelector("#publicQuestion") || document.querySelector("input[type='text']");
+  const form = document.getElementById("publicAiForm");
+  const input = document.getElementById("publicQuestion");
 
   if (form && input) {
     form.addEventListener("submit", (e) => {
