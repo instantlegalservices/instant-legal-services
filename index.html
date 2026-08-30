@@ -24,6 +24,21 @@
 <p class="lead">Explore judgments and laws, find professional profiles, use official court tools and submit a legal requirement for coordination with an appropriate legal professional.</p>
 <div class="searchbar"><input id="homeSearch" placeholder="Search judgments, law topics or advocates" autocomplete="off"><button class="btn btn-primary" onclick="homeSearch()">Search</button></div>
 <div class="actions" style="margin-top:13px"><a class="btn btn-primary" href="portal.html#client">Get Legal Help</a><a class="btn btn-ghost" href="ai-assistant.html">Ask ILS AI</a><a class="btn btn-ghost" href="advocates.html">Find Advocate</a></div></div>
+<!-- Compact Quick Feature Actions -->
+<div class="quick-feature-actions" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px;">
+  <a href="assistance.html" class="quick-btn" style="display: inline-flex; items-center: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; border-radius: 20px; background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); text-decoration: none;">
+    📞 Instant Callback
+  </a>
+  <a href="portal.html#client" class="quick-btn" style="display: inline-flex; items-center: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; border-radius: 20px; background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); text-decoration: none;">
+    📋 Consult Advocate
+  </a>
+  <a href="assistance.html" class="quick-btn" style="display: inline-flex; items-center: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; border-radius: 20px; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); text-decoration: none;">
+    📄 Notice Drafting
+  </a>
+  <a href="assistance.html" class="quick-btn" style="display: inline-flex; items-center: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 500; border-radius: 20px; background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); text-decoration: none;">
+    ⚖️ Bail Consultation
+  </a>
+</div>
 <div class="hero-panel"><h3>Quick Legal Tools</h3><div class="mini-list">
 <a href="judgments.html">⚖️ Search Indian Judgments</a><a href="law-guide.html">📚 Law Guide & Practice Areas</a>
 <a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">🏛️ Official eCourts Case Search ↗</a>
@@ -51,8 +66,78 @@
 <section class="section"><div class="wrap"><div class="section-head"><div><h2>Featured Network Advocates</h2><p>Selected approved public profiles. Periodically refreshed.</p></div><a class="link" href="advocates.html">View all →</a></div>
 <div id="featuredAdvocates" class="grid feature-grid"><div class="empty">Loading profiles…</div></div></div></section>
 
-<section class="section alt"><div class="wrap"><div class="section-head"><div><h2>Latest Judgments</h2><p>Verified records available in the ILS judgment database.</p></div><a class="link" href="judgments.html">Search all →</a></div>
-<div id="latestJudgments" class="grid two-grid"><div class="empty">Loading judgments…</div></div></div></section>
+<section class="section alt">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2>Key Legal Precedents & Landmark Judgments</h2>
+        <p>Important Supreme Court and High Court ratios for public awareness</p>
+      </div>
+    </div>
+    
+    <div class="grid feature-grid">
+      <!-- Card 1 -->
+      <div class="card feature-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <span style="font-size: 11px; color: #f59e0b; font-weight: 600;">Supreme Court • Bail / Sec 41A</span>
+          <h3 style="margin-top: 4px; font-size: 15px;">Arnesh Kumar v. State of Bihar</h3>
+          <p style="font-size: 13px; opacity: 0.8; margin-top: 6px;">Mandatory compliance of Section 41A CrPC prior to arrest in offenses punishable under 7 years.</p>
+        </div>
+        <a href="judgments.html" style="margin-top: 12px; font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: 600;">Read Summary →</a>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card feature-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <span style="font-size: 11px; color: #f59e0b; font-weight: 600;">Supreme Court • Family Law</span>
+          <h3 style="margin-top: 4px; font-size: 15px;">Rajnesh v. Neha & Anr.</h3>
+          <p style="font-size: 13px; opacity: 0.8; margin-top: 6px;">Comprehensive guidelines regarding maintenance payment and mandatory asset affidavit disclosure.</p>
+        </div>
+        <a href="judgments.html" style="margin-top: 12px; font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: 600;">Read Summary →</a>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="card feature-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <span style="font-size: 11px; color: #f59e0b; font-weight: 600;">Supreme Court • Section 138 NI Act</span>
+          <h3 style="margin-top: 4px; font-size: 15px;">Dashrath Rupsingh Rathod v. State of Maharashtra</h3>
+          <p style="font-size: 13px; opacity: 0.8; margin-top: 6px;">Territorial jurisdiction guidelines for filing cheque bounce complaints at payee bank branch area.</p>
+        </div>
+        <a href="judgments.html" style="margin-top: 12px; font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: 600;">Read Summary →</a>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="card feature-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <span style="font-size: 11px; color: #f59e0b; font-weight: 600;">Supreme Court • Criminal Procedure</span>
+          <h3 style="margin-top: 4px; font-size: 15px;">Lalita Kumari v. Govt. of U.P.</h3>
+          <p style="font-size: 13px; opacity: 0.8; margin-top: 6px;">Registration of FIR is mandatory under Section 154 CrPC if information discloses a cognizable offense.</p>
+        </div>
+        <a href="judgments.html" style="margin-top: 12px; font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: 600;">Read Summary →</a>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="card feature-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <span style="font-size: 11px; color: #f59e0b; font-weight: 600;">Supreme Court • Consumer Law</span>
+          <h3 style="margin-top: 4px; font-size: 15px;">Lucknow Dev. Authority v. M.K. Gupta</h3>
+          <p style="font-size: 13px; opacity: 0.8; margin-top: 6px;">Statutory development authorities are amenable to Consumer Fora jurisdiction for deficiency of service.</p>
+        </div>
+        <a href="judgments.html" style="margin-top: 12px; font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: 600;">Read Summary →</a>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="card feature-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <span style="font-size: 11px; color: #f59e0b; font-weight: 600;">Supreme Court • Commercial Arbitration</span>
+          <h3 style="margin-top: 4px; font-size: 15px;">NN Global Mercantile v. Indo Unique Flame</h3>
+          <p style="font-size: 13px; opacity: 0.8; margin-top: 6px;">Enforceability principles of arbitration clauses in commercial contracts and stamping requirements.</p>
+        </div>
+        <a href="judgments.html" style="margin-top: 12px; font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: 600;">Read Summary →</a>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section class="section"><div class="wrap"><div class="section-head"><div><h2>How ILS Works</h2><p>A short, transparent process.</p></div></div>
 <div class="workflow"><div class="step"><b>01 · Requirement</b><p>Share the basic nature of your matter.</p></div><div class="step"><b>02 · Jurisdiction</b><p>Identify state, city, court or forum where relevant.</p></div><div class="step"><b>03 · Coordination</b><p>ILS coordinates with an appropriate independent professional based on matter and availability.</p></div><div class="step"><b>04 · Follow-up</b><p>Where applicable, access is provided through the existing client/advocate workflow.</p></div></div></div></section>
