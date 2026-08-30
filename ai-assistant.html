@@ -192,70 +192,85 @@
 </footer>
   
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const publicForm = document.getElementById("publicAiForm");
-  const publicInput = document.getElementById("publicQuestion");
-  const publicChat = document.getElementById("publicChat");
-
-  function addMsg(box, text, cls) {
-    if (!box) return;
-    const d = document.createElement("div");
-    d.className = "msg " + cls;
-    d.style.whiteSpace = "pre-wrap";
-    d.textContent = text;
-    box.appendChild(d);
-    box.scrollTop = box.scrollHeight;
+function openLegalAssistanceForm() {
+  const modal = document.getElementById('legalAssistanceModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
+  } else {
+    window.location.href = '/#contact';
   }
+}
 
-  if (publicForm) {
-    publicForm.addEventListener("submit", async (e) => {
+async function handleUserQuery(q) {
+  const publicChat = document.getElementById("publicChat");
+  if (!publicChat) return;
+
+  // Render User Message
+  const userMsg = document.createElement("div");
+  userMsg.className = "msg user";
+  userMsg.innerText = q;
+  publicChat.appendChild(userMsg);
+
+  // Loading Message
+  const loadingMsg = document.createElement("div");
+  loadingMsg.className = "msg ai";
+  loadingMsg.innerText = "Verifying Indian Legal Provisions...";
+  publicChat.appendChild(loadingMsg);
+  publicChat.scrollTop = publicChat.scrollHeight;
+
+  try {
+    let data = null;
+
+    // Check if Supabase client SDK is initialized on your site
+    if (window.supabase && typeof window.supabase.functions?.invoke === 'function') {
+      const res = await window.supabase.functions.invoke('ai-assistant', {
+        body: { prompt: q }
+      });
+      data = res.data;
+    } else {
+      // Direct REST Endpoint Fallback
+      const raw = await fetch("https://odqebkdzkjfxyzybrndt.supabase.co/functions/v1/ai-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: q })
+      });
+      data = await raw.json();
+    }
+
+    loadingMsg.remove();
+
+    const aiMsg = document.createElement("div");
+    aiMsg.className = "msg ai";
+    aiMsg.innerText = data?.reply || "No response received.";
+
+    if (data?.cta) {
+      const ctaBox = document.createElement("div");
+      ctaBox.innerHTML = data.cta;
+      aiMsg.appendChild(ctaBox);
+    }
+
+    publicChat.appendChild(aiMsg);
+    publicChat.scrollTop = publicChat.scrollHeight;
+
+  } catch (err) {
+    loadingMsg.innerText = "Connection failed. Please check network or API settings.";
+    console.error("AI Error:", err);
+  }
+}
+
+// Event Binder for Form Search
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector("#publicAiForm") || document.querySelector("form");
+  const input = document.querySelector("#publicQuestion") || document.querySelector("input[type='text']");
+
+  if (form && input) {
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const q = publicInput.value ? publicInput.value.trim() : "";
-      if (!q) return;
-
-      addMsg(publicChat, q, "user");
-      publicInput.value = "";
-      
-      const loadingMsg = document.createElement("div");
-      loadingMsg.className = "msg ai";
-      loadingMsg.textContent = "Analyzing legal sources & judgments...";
-      publicChat.appendChild(loadingMsg);
-      publicChat.scrollTop = publicChat.scrollHeight;
-
-      try {
-        // Core Supabase invoke (Zero CORS / DNS Failure)
-        const client = window.ILS ? window.ILS.ready() : null;
-        let data, error;
-
-        if (client && client.functions) {
-          const res = await client.functions.invoke('ai-assistant', {
-            body: { prompt: q, mode: "public" }
-          });
-          data = res.data;
-          error = res.error;
-        } else {
-          // Direct fallback if ILS object delay
-          const raw = await fetch("https://odqebkdzkjfxyzybrndt.supabase.co/functions/v1/ai-assistant", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt: q, mode: "public" })
-          });
-          data = await raw.json();
-        }
-
-        loadingMsg.remove();
-
-        if (error) {
-          addMsg(publicChat, "Error: " + (error.message || "Failed to fetch AI response"), "ai");
-        } else {
-          const replyText = data?.reply || data?.answer || "No response generated.";
-          addMsg(publicChat, replyText, "ai");
-        }
-
-      } catch (err) {
-        if (loadingMsg) loadingMsg.remove();
-        console.error("AI Error:", err);
-        addMsg(publicChat, "Connection error. Please try again.", "ai");
+      const val = input.value ? input.value.trim() : "";
+      if (val) {
+        handleUserQuery(val);
+        input.value = "";
       }
     });
   }
