@@ -78,83 +78,141 @@ window.ILS_TOOLS = (() => {
     }
   }
 
-  async function startRazorpay(data){
-    if(!window.Razorpay){
-      await new Promise((resolve,reject)=>{
-        const sc=document.createElement('script');
-        sc.src='https://checkout.razorpay.com/v1/checkout.js';
-        sc.onload=resolve;
-        sc.onerror=reject;
+async function startRazorpay(data){
+  try {
+    const sb = window.ILS?.ready?.();
+
+    if (!sb) {
+      status('Service connection unavailable.');
+      return;
+    }
+
+    if (!data?.order_id) {
+      status('Internal order ID missing. Please try again.');
+      return;
+    }
+
+    // Create Razorpay gateway order from our internal order
+    status('Preparing secure payment…');
+
+    const { data: paymentData, error: paymentError } =
+      await sb.functions.invoke('razorpay-payments', {
+        body: {
+          action: 'create',
+          order_id: data.order_id
+        }
+      });
+
+    if (paymentError || !paymentData?.ok) {
+      console.error('Razorpay order creation error:', paymentError || paymentData);
+      status(
+        paymentError?.message ||
+        paymentData?.error ||
+        'Unable to start secure payment. Please try again.'
+      );
+      return;
+    }
+
+    // Load Razorpay Checkout if not already loaded
+    if (!window.Razorpay) {
+      await new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        sc.onload = resolve;
+        sc.onerror = reject;
         document.head.appendChild(sc);
       });
     }
 
-    if(!window.Razorpay){
+    if (!window.Razorpay) {
       status('Payment checkout could not be loaded. Please try again.');
       return;
     }
 
-    const options={
-      key:data.key_id||'rzp_test_TW7vqVD2qnjvN6',
-      amount:Math.round(Number(data.amount)*100),
-      currency:data.currency,
-      name:'Instant Legal Services',
-      description:data.service_name||'ILS Legal Service',
-      order_id:data.razorpay_order_id,
+    const options = {
+      key: paymentData.key_id,
+      amount: Math.round(Number(paymentData.amount) * 100),
+      currency: paymentData.currency || 'INR',
+      name: 'Instant Legal Services',
+      description: data.service_name || 'ILS Legal Service',
+      order_id: paymentData.razorpay_order_id,
 
-      handler:async response=>{
-        status('Verifying payment…');
+      handler: async function(response) {
+        status('Verifying payment securely…');
 
-        const sb=window.ILS?.ready?.();
-
-        if(!sb){
-          status('Service connection unavailable.');
-          return;
-        }
-
-        const {data:verified,error}=await sb.functions.invoke(
-          'razorpay-payments',
-          {
-            body:{
-              action:'verify',
-              order_id:data.order_id,
-              razorpay_payment_id:response.razorpay_payment_id,
-              razorpay_signature:response.razorpay_signature
+        const verifyResult =
+          await sb.functions.invoke('razorpay-payments', {
+            body: {
+              action: 'verify',
+              order_id: data.order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
             }
-          }
-        );
+          });
 
-        if(error||!verified?.ok){
-          status(error?.message||verified?.error||'Payment verification failed. Please do not pay again until the order status is checked.');
+        const verified = verifyResult.data;
+        const verifyError = verifyResult.error;
+
+        if (verifyError || !verified?.ok) {
+          console.error(
+            'Payment verification error:',
+            verifyError || verified
+          );
+
+          status(
+            verifyError?.message ||
+            verified?.error ||
+            'Payment verification failed. Please check your order status before paying again.'
+          );
           return;
         }
 
-        const box=document.getElementById('toolStatus');
+        const box = document.getElementById('toolStatus');
 
-        if(box){
-          box.className='status ok';
-          box.innerHTML=`Payment verified successfully. Order <strong>${esc(verified.order_number||data.order_number)}</strong> is now paid.`;
+        if (box) {
+          box.className = 'status ok';
+          box.innerHTML =
+            `Payment verified successfully. ` +
+            `Order <strong>${esc(
+              verified.order_number || data.order_number
+            )}</strong> is now paid.`;
         }
       },
 
-      modal:{
-        ondismiss:()=>status('Payment window closed. Your order remains pending.')
+      modal: {
+        ondismiss: function() {
+          status(
+            'Payment window closed. Your order remains pending.'
+          );
+        }
       },
 
-      theme:{
-        color:'#0b5cff'
+      theme: {
+        color: '#0b5cff'
       }
     };
 
-    const rzp=new Razorpay(options);
+    const rzp = new Razorpay(options);
 
-    rzp.on(
-      'payment.failed',
-      r=>status(r?.error?.description||'Payment failed. Your order remains pending.')
-    );
+    rzp.on('payment.failed', function(r) {
+      console.error('Razorpay payment failed:', r);
+
+      status(
+        r?.error?.description ||
+        'Payment failed. Your order remains pending.'
+      );
+    });
 
     rzp.open();
+
+  } catch (err) {
+    console.error('startRazorpay error:', err);
+    status(
+      err?.message ||
+      'Unable to start payment. Please try again.'
+    );
   }
+}
 
   function paidCTA(slug, details={}){
     const service=serviceMap[slug];
