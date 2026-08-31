@@ -116,8 +116,8 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
         <div class="revenue-stat"><small>Failed</small><strong id="revOrdersFailed">0</strong></div>
         <div class="revenue-stat"><small>Paid Revenue</small><strong id="revRevenuePaid">₹0</strong></div>
       </div>
-      <div class="toolbar" style="margin-top:14px"><input id="revenueSearch" placeholder="Search order, service or tool…"><select id="revenueStatusFilter"><option value="">All order status</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option></select><span></span><button class="btnx secondary" id="refreshRevenueBtn" type="button">↻ Refresh Revenue</button></div>
-      <div class="table-wrap"><table><thead><tr><th>Order</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th></tr></thead><tbody id="revenueBody"><tr><td colspan="7" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
+      <div class="toolbar" style="margin-top:14px"><input id="revenueSearch" placeholder="Search order, service or tool…"><select id="revenueStatusFilter"><option value="">All order status</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option></select><select id="revenueServiceStatusFilter"><option value="">All service status</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="assigned">Assigned</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="refunded">Refunded</option></select><button class="btnx secondary" id="refreshRevenueBtn" type="button">↻ Refresh Revenue</button></div>
+      <div class="table-wrap"><table><thead><tr><th>Order</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
     </section>
 
     <section class="panel">
@@ -655,8 +655,68 @@ async function loadAdminClientCommunication(clientId){
 async function sendAdminClientMessage(){const id=$("manageLeadId")?.value,input=$("adminChatMessage"),message=(input?.value||"").trim();if(!id||!message)return;const {data,error}=await sb.rpc("admin_send_client_message",{p_client_id:Number(id),p_message:message});if(error||!data?.ok){alert(error?.message||data?.message||"Unable to send reply.");return;}input.value="";await loadAdminClientCommunication(id);}
 async function addAdminWorkProgress(){const id=$("manageLeadId")?.value,title=$("adminProgressTitle")?.value.trim();if(!id||!title){alert("Please enter a progress title.");return;}const {data,error}=await sb.rpc("admin_add_work_progress",{p_client_id:Number(id),p_status:$("adminProgressStatus").value,p_title:title,p_note:$("adminProgressNote").value.trim(),p_visible_to_client:$("adminProgressVisible").checked,p_previous_fixed_date:null,p_next_fixed_date:null,p_work_done_date:null});if(error||!data?.ok){alert(error?.message||data?.message||"Unable to add progress.");return;}$("adminProgressTitle").value="";$("adminProgressNote").value="";await loadAdminClientCommunication(id);}
 let revenueRows=[];
-async function loadRevenue(){const body=$("revenueBody");if(body)body.innerHTML='<tr><td colspan="7" style="text-align:center">Loading revenue…</td></tr>';const {data,error}=await sb.rpc("ils_admin_revenue_dashboard",{p_limit:250});if(error){console.error(error);if(body)body.innerHTML='<tr><td colspan="7" style="text-align:center">Revenue unavailable.</td></tr>';return;}const st=data?.stats||{};revenueRows=Array.isArray(data?.orders)?data.orders:[];$("revOrdersTotal").textContent=st.orders_total??0;$("revOrdersPending").textContent=st.orders_pending??0;$("revOrdersPaid").textContent=st.orders_paid??0;$("revOrdersFailed").textContent=st.orders_failed??0;$("revRevenuePaid").textContent="₹"+Number(st.revenue_paid||0).toLocaleString("en-IN");renderRevenue();}
-function renderRevenue(){const body=$("revenueBody");if(!body)return;const q=($("revenueSearch")?.value||"").toLowerCase().trim(),st=$("revenueStatusFilter")?.value||"";const rows=revenueRows.filter(r=>(!st||String(r.status||"").toLowerCase()===st)&&(!q||JSON.stringify(r).toLowerCase().includes(q)));body.innerHTML=rows.length?rows.map(r=>`<tr><td>${esc(r.order_number||r.id||"—")}</td><td>${esc(r.service_name||r.service_slug||"—")}</td><td>₹${Number(r.total||0).toLocaleString("en-IN")}</td><td class="revenue-status status-${esc(String(r.status||"").toLowerCase())}">${esc(r.status||"—")}</td><td>${esc(r.service_status||"—")}</td><td>${esc(r.source_tool_name||r.source_tool_slug||"Direct")}</td><td>${esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")}</td></tr>`).join(""):'<tr><td colspan="7" style="text-align:center">No matching orders.</td></tr>';}
+async function loadRevenue(){
+  const body=$("revenueBody");
+  if(body)body.innerHTML='<tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr>';
+  try{
+    const {data,error}=await sb.rpc("ils_admin_revenue_dashboard",{p_limit:250});
+    if(error)throw error;
+    const st=data?.stats||{};
+    revenueRows=Array.isArray(data?.orders)?data.orders:[];
+    $("revOrdersTotal").textContent=st.orders_total??0;
+    $("revOrdersPending").textContent=st.orders_pending??0;
+    $("revOrdersPaid").textContent=st.orders_paid??0;
+    $("revOrdersFailed").textContent=st.orders_failed??0;
+    $("revRevenuePaid").textContent="₹"+Number(st.revenue_paid||0).toLocaleString("en-IN");
+    renderRevenue();
+  }catch(e){
+    console.error("Revenue dashboard:",e);
+    if(body)body.innerHTML='<tr><td colspan="8" style="text-align:center">Revenue unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';
+  }
+}
+function renderRevenue(){
+  const body=$("revenueBody");if(!body)return;
+  const q=($("revenueSearch")?.value||"").toLowerCase().trim();
+  const st=($("revenueStatusFilter")?.value||"").toLowerCase();
+  const ss=($("revenueServiceStatusFilter")?.value||"").toLowerCase();
+  const rows=revenueRows.filter(r=>{
+    const os=String(r.status||"").toLowerCase(),vs=String(r.service_status||"").toLowerCase();
+    return (!st||os===st)&&(!ss||vs===ss)&&(!q||[r.order_number,r.service_name,r.service_slug,r.source_tool_name,r.source_tool_slug,r.status,r.service_status].filter(Boolean).join(" ").toLowerCase().includes(q));
+  });
+  body.innerHTML=rows.length?rows.map(r=>{
+    const current=String(r.service_status||"pending").toLowerCase();
+    const options=["pending","paid","assigned","in_progress","completed","cancelled","refunded"];
+    const opts=options.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v==="in_progress"?"In Progress":v.replace("_"," ").replace(/\b\w/g,c=>c.toUpperCase())}</option>`).join("");
+    return `<tr>
+      <td><strong>${esc(r.order_number||r.id||"—")}</strong></td>
+      <td>${esc(r.service_name||r.service_slug||"—")}</td>
+      <td>${esc(r.currency||"INR")} ₹${Number(r.total||0).toLocaleString("en-IN")}</td>
+      <td class="revenue-status status-${esc(String(r.status||"").toLowerCase())}">${esc(r.status||"—")}</td>
+      <td><select class="revenueServiceStatus" data-service-request-id="${esc(r.service_request_id||"")}" ${r.service_request_id?"":"disabled"}>${opts}</select></td>
+      <td>${esc(r.source_tool_name||r.source_tool_slug||"Direct")}</td>
+      <td>${esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")}</td>
+      <td>${r.service_request_id?`<button class="btnx secondary revenueSaveStatus" type="button" data-service-request-id="${esc(r.service_request_id)}">Save</button>`:"—"}</td>
+    </tr>`;
+  }).join(""):'<tr><td colspan="8" style="text-align:center">No matching orders.</td></tr>';
+
+  body.querySelectorAll(".revenueSaveStatus").forEach(btn=>{
+    btn.addEventListener("click",async()=>{
+      const id=btn.dataset.serviceRequestId;
+      const sel=body.querySelector(`.revenueServiceStatus[data-service-request-id="${CSS.escape(id)}"]`);
+      if(!id||!sel)return;
+      btn.disabled=true;btn.textContent="Saving…";
+      try{
+        const {data,error}=await sb.rpc("ils_admin_update_service_status",{p_service_request_id:id,p_status:sel.value});
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||"Unable to update service status.");
+        msg("appMsg","Service status updated.","ok");
+        await loadRevenue();
+      }catch(e){
+        console.error(e);
+        msg("appMsg","Service status update failed: "+(e?.message||"Unknown error"),"err");
+      }finally{btn.disabled=false;btn.textContent="Save";}
+    });
+  });
+}
 async function openApp(){
   const check=await isAdmin();
   if(!check.ok){
@@ -669,7 +729,7 @@ async function openApp(){
   $("loginView").classList.add("hidden");
   $("appView").classList.remove("hidden");
   $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
-  await Promise.all([loadStats(),loadLeads(),loadAdvocates()]);
+  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue()]);
 }
 
 $("loginForm").addEventListener("submit",async e=>{
@@ -691,7 +751,7 @@ $("logoutBtn").addEventListener("click",async()=>{
   await sb.auth.signOut();
   location.href="admin.html";
 });
-$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates()]);msg("appMsg","Dashboard refreshed.","ok")});
+$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue()]);msg("appMsg","Dashboard refreshed.","ok")});
 
 $("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
 $("adminAdvocateSearch").addEventListener("input",renderAdvocateRows);
@@ -724,6 +784,7 @@ $("addAdminProgressBtn").addEventListener("click",addAdminWorkProgress);
 $("refreshRevenueBtn").addEventListener("click",loadRevenue);
 $("revenueSearch").addEventListener("input",renderRevenue);
 $("revenueStatusFilter").addEventListener("change",renderRevenue);
+$("revenueServiceStatusFilter").addEventListener("change",renderRevenue);
 </script>
 </body>
 </html>
