@@ -682,10 +682,11 @@ content="Search Indian law, explore judgments, find advocates and get profession
       </p>
 
 
-      <form
-        id="homeSearchForm"
-        class="home-search"
-        role="search">
+<form
+  id="homeSearchForm"
+  class="home-search"
+  role="search"
+  onsubmit="return homeSearch();">
 
         <input
           id="homeSearch"
@@ -2238,5 +2239,21 @@ document.addEventListener(
 
 </script>
 
+<script>
+window.homeSearch = function () {
+  const input = document.getElementById('homeSearch');
+  const q = input ? input.value.trim() : '';
+
+  if (!q) {
+    if (input) input.focus();
+    return false;
+  }
+
+  window.location.href =
+    'legal-search.html?q=' + encodeURIComponent(q);
+
+  return false;
+};
+</script>
 </body>
 </html>
