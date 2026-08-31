@@ -95,7 +95,7 @@ window.ILS_TOOLS = (() => {
     }
 
     const options={
-      key:data.key_id,
+      key:data.key_id||'rzp_test_TW7vqVD2qnjvN6',
       amount:Math.round(Number(data.amount)*100),
       currency:data.currency,
       name:'Instant Legal Services',
