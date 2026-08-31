@@ -34,6 +34,23 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 .actions-cell{white-space:nowrap}
 @media(max-width:850px){.admin-grid{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr}.admin-top{align-items:flex-start;flex-direction:column}}
 @media(max-width:500px){.admin-grid{grid-template-columns:1fr}}
+
+/* ILS Advocate Management - restored from working CRM */
+.adv-panel{margin-top:20px}
+.adv-toolbar{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:15px}
+.adv-table{min-width:1150px}
+.adv-photo{width:48px;height:48px;border-radius:8px;object-fit:cover;border:1px solid #d7a84f;background:#08111d}
+.verify-badge{display:inline-block;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.verify-pending{background:#40351b;color:#ffd77a}.verify-approved{background:#273e31;color:#9de0ad}.verify-rejected{background:#4b1d1d;color:#ffaaaa}
+.adv-action{padding:7px 10px;border:0;border-radius:7px;cursor:pointer;font-weight:700;margin:2px}
+.adv-view{background:#d7a84f;color:#10151c}.adv-approve{background:#4b9b61;color:#fff}.adv-reject{background:#9b4b4b;color:#fff}
+.modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,5,12,.84);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}.modal-box{width:min(1050px,96vw);max-height:92vh;overflow:auto;background:#0d1a2a;border:1px solid #26354a;border-radius:16px;padding:24px;position:relative;box-shadow:0 22px 70px rgba(0,0,0,.45)}
+.modal-close{position:absolute;right:15px;top:10px;background:transparent;border:0;color:#fff;font-size:30px;cursor:pointer}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-item{background:#08111d;border:1px solid #26354a;border-radius:9px;padding:11px}.detail-item strong{display:block;color:#9ca7b6;font-size:11px;margin-bottom:4px}.detail-item span{color:#fff}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.modal-actions .btnx{flex:1;min-width:150px}
+@media(max-width:850px){.adv-toolbar{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -120,7 +137,114 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
           <tbody id="leadBody"><tr><td colspan="10" style="text-align:center">Loading…</td></tr></tbody>
         </table>
       </div>
+
     </section>
+
+    <div class="modal" id="leadModal" aria-hidden="true">
+      <div class="modal-box" style="max-width:900px">
+        <button class="modal-close" id="closeLeadModal" type="button">×</button>
+        <h2 style="margin-top:0">Manage Client Requirement</h2>
+        <div id="leadManagerSummary" class="detail-grid" style="margin:15px 0"></div>
+        <input id="manageLeadId" type="hidden">
+        <div class="detail-grid">
+          <div><label>Status</label><select id="manageStatus"><option>New</option><option>Contacted</option><option>In Progress</option><option>Closed</option></select></div>
+          <div><label>Payment Status</label><select id="managePayment"><option>Pending</option><option>Paid</option><option>Partial</option><option>Not Applicable</option></select></div>
+          <div><label>Priority</label><select id="managePriority"><option>High</option><option>Normal</option><option>Low</option></select></div>
+          <div><label>Follow-up Date</label><input id="manageFollowUp" type="date"></div>
+        </div>
+        <label>Assigned Advocates</label>
+        <select id="manageAdvocates" multiple size="6"></select>
+        <label style="margin-top:14px">Internal Notes</label>
+        <textarea id="manageNotes" rows="5" placeholder="Internal CRM notes"></textarea>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:14px"><input id="manageRelease" type="checkbox" style="width:auto"> Release assigned advocate contact to this client</label>
+        <div id="manageReleaseStatus" class="note" style="text-align:left"></div>
+        <div class="client-access-manager" style="margin-top:16px;padding:14px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.03)">
+          <strong>Client Portal Login / Private Access</strong>
+          <div class="note" style="text-align:left;margin:6px 0 10px">Generate a private client access link for this client. The main website Client Matter Portal will open through this link.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="generateClientAccessBtn" class="btnx secondary" type="button">Generate Client Login Token</button>
+            <button id="copyClientAccessBtn" class="btnx secondary" type="button" style="display:none">Copy Client Portal Link</button>
+          </div>
+          <div id="clientAccessBox" style="display:none;margin-top:10px">
+            <label>Private Client Portal Link</label>
+            <input id="manageClientAccessLink" readonly type="text" style="width:100%">
+            <div class="note" id="clientAccessMeta" style="text-align:left"></div>
+          </div>
+        </div>
+        <div id="leadManagerError" class="msg err" style="margin-top:12px"></div>
+        <div class="modal-actions">
+          <button id="saveLeadManagerBtn" class="btnx primary" type="button">Save Changes</button>
+          <button id="closeLeadManagerBtn" class="btnx secondary" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="panel adv-panel">
+      <h2>Advocate Management</h2>
+      <div class="adv-toolbar">
+        <input id="adminAdvocateSearch" type="search" placeholder="Search advocate, mobile, email, enrollment, court or practice area…">
+        <select id="adminAdvocateStatus">
+          <option value="">All Verification Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+        <button id="loadAdvocatesBtn" class="btnx primary" type="button">↻ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table class="adv-table">
+          <thead><tr>
+            <th>Photo</th><th>Advocate</th><th>Mobile</th><th>Location</th>
+            <th>Practice Area</th><th>Experience</th><th>Verification</th><th>Action</th>
+          </tr></thead>
+          <tbody id="advocateTableBody">
+            <tr><td colspan="8" style="text-align:center">Loading advocate applications…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="modal" id="advocateModal" aria-hidden="true">
+      <div class="modal-box">
+        <button class="modal-close" id="closeAdvocateModal" type="button">×</button>
+        <h2 style="margin-top:0">Advocate Management</h2>
+        <div id="advocateDetails"></div>
+
+        <div class="panel" style="margin-top:16px">
+          <h3>Editable Profile</h3>
+          <div class="detail-grid">
+            <div><label>Advocate Name</label><input id="edit_advocate_name"></div>
+            <div><label>Mobile</label><input id="edit_advocate_mobile" maxlength="10"></div>
+            <div><label>Email</label><input id="edit_advocate_email" type="email"></div>
+            <div><label>Enrollment Number</label><input id="edit_advocate_enrollment"></div>
+            <div><label>State Bar Council</label><input id="edit_advocate_bar_council"></div>
+            <div><label>Practice State</label><input id="edit_advocate_state"></div>
+            <div><label>District / Court</label><input id="edit_advocate_district"></div>
+            <div><label>Primary Practice Area</label><input id="edit_advocate_area"></div>
+            <div><label>Years of Practice</label><input id="edit_advocate_years" type="number" min="0" max="70"></div>
+          </div>
+          <button id="saveAdvocateProfileBtn" class="btnx primary" type="button" style="margin-top:14px">Save Advocate Profile</button>
+          <div id="advocateProfileSaveResult" class="msg" style="margin-top:10px"></div>
+        </div>
+
+        <label>Admin Notes</label>
+        <textarea id="advocateAdminNotes" rows="4" placeholder="Internal verification notes"></textarea>
+
+        <div class="modal-actions">
+          <button id="approveAdvocateBtn" class="btnx" style="background:#4b9b61;color:#fff" type="button">Approve Advocate</button>
+          <button id="rejectAdvocateBtn" class="btnx" style="background:#9b4b4b;color:#fff" type="button">Reject</button>
+          <button id="saveAdvocateNotesBtn" class="btnx secondary" type="button">Save Notes</button>
+        </div>
+
+        <div style="margin-top:18px">
+          <label>Temporary Advocate Password</label>
+          <input id="advocate_temp_password" type="password" minlength="8" autocomplete="new-password" placeholder="Minimum 8 characters">
+          <button id="createAdvocateLoginBtn" class="btnx secondary" type="button" style="margin-top:10px">Create / Reset Advocate Login</button>
+          <div id="advocateLoginResult" class="msg" style="margin-top:10px"></div>
+        </div>
+        <div id="advocateUpdateError" class="msg err" style="margin-top:10px"></div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -182,7 +306,9 @@ function priorityOptions(current){
   return vals.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("");
 }
 
+let leadLoadSeq=0;
 async function loadLeads(){
+  const seq=++leadLoadSeq;
   const body=$("leadBody");
   body.innerHTML='<tr><td colspan="10" style="text-align:center">Loading…</td></tr>';
 
@@ -202,12 +328,29 @@ async function loadLeads(){
     );
   }
 
-  const {data,error}=await query;
+  let {data,error}=await query;
+  if(error && /JWT issued at future/i.test(error.message||"")){
+    const refreshed=await sb.auth.refreshSession();
+    if(!refreshed.error){
+      query=sb.from("client_requirements").select("*").order("created_at",{ascending:false}).limit(100);
+      if(sf)query=query.eq("status",sf);
+      if(pf)query=query.eq("priority",pf);
+      if(term){ const s2=term.replace(/[,%()]/g," ").trim(); query=query.or(`client_name.ilike.%${s2}%,mobile.ilike.%${s2}%,district_city.ilike.%${s2}%,legal_matter.ilike.%${s2}%,brief_requirement.ilike.%${s2}%`); }
+      ({data,error}=await query);
+    }
+  }
+  if(seq!==leadLoadSeq)return;
   if(error){
     body.innerHTML='<tr><td colspan="10" style="text-align:center">Unable to load records.</td></tr>';
     msg("appMsg","CRM error: "+error.message,"err");
     return;
   }
+
+  window.__ilsLeads=data||[];
+  try{
+    const ar=await sb.from("advocate_assignments").select("lead_id,advocate_id,status");
+    window.__ilsAssignments=ar.data||[];
+  }catch(e){ window.__ilsAssignments=[]; }
 
   if(!data?.length){
     body.innerHTML='<tr><td colspan="10" style="text-align:center">No matching requirements.</td></tr>';
@@ -226,12 +369,12 @@ async function loadLeads(){
       <td><select data-status="${esc(r.id)}">${statusOptions(r.status||"New")}</select></td>
       <td><select data-priority="${esc(r.id)}">${priorityOptions(r.priority||"Normal")}</select></td>
       <td>${esc(r.payment_status||"Pending")}</td>
-      <td class="actions-cell"><button class="btnx primary saveLead" data-id="${esc(r.id)}">Save</button></td>
+      <td class="actions-cell"><button class="btnx primary manageLead" data-id="${esc(r.id)}">Manage</button></td>
     </tr>`;
   }).join("");
 
-  document.querySelectorAll(".saveLead").forEach(btn=>{
-    btn.addEventListener("click",()=>saveLead(btn.dataset.id,btn));
+  document.querySelectorAll(".manageLead").forEach(btn=>{
+    btn.addEventListener("click",()=>openLeadManager(btn.dataset.id));
   });
 }
 
@@ -256,6 +399,233 @@ async function saveLead(id,button){
   await loadStats();
 }
 
+
+// Full Client Requirements / CRM management restored.
+async function openLeadManager(id){
+  const leadId=Number(id);
+  const lead=window.__ilsLeads?.find(x=>Number(x.id)===leadId);
+  if(!lead){ msg("appMsg","Client record is not available. Refresh CRM and try again.","err"); return; }
+  $("manageLeadId").value=leadId;
+  $("manageStatus").value=lead.status||"New";
+  $("managePayment").value=lead.payment_status||"Pending";
+  $("managePriority").value=lead.priority||"Normal";
+  $("manageFollowUp").value=lead.follow_up_date||"";
+  $("manageNotes").value=lead.internal_notes||"";
+  $("manageRelease").checked=Boolean(lead.release_advocate_contact);
+  const assigned=new Set((window.__ilsAssignments||[]).filter(a=>Number(a.lead_id)===leadId && ["Assigned","Active"].includes(a.status||"Assigned")).map(a=>Number(a.advocate_id)));
+  if(lead.assigned_advocate_id) assigned.add(Number(lead.assigned_advocate_id));
+  const sel=$("manageAdvocates");
+  const approved=(allAdvocates||[]).filter(a=>(a.verification_status||a.status||"Pending")==="Approved");
+  sel.innerHTML=approved.map(a=>`<option value="${Number(a.id)}" ${assigned.has(Number(a.id))?"selected":""}>${esc(a.advocate_name||"Unnamed")} — ${esc(a.district_court||"")}${a.primary_practice_area?" | "+esc(a.primary_practice_area):""}</option>`).join("");
+  $("leadManagerSummary").innerHTML=`<div class="detail-item"><strong>Client</strong><span>${esc(lead.client_name||"—")}</span></div><div class="detail-item"><strong>Mobile</strong><span>${esc(lead.mobile||"—")}</span></div><div class="detail-item"><strong>Location</strong><span>${esc([lead.district_city,lead.state].filter(Boolean).join(", ")||"—")}</span></div><div class="detail-item"><strong>Matter</strong><span>${esc(lead.legal_matter||"—")}</span></div><div class="detail-item" style="grid-column:1/-1"><strong>Requirement</strong><span>${esc(lead.brief_requirement||"—")}</span></div>`;
+  $("manageReleaseStatus").textContent=$("manageRelease").checked ? "Contact is RELEASED for this client." : "Contact is currently LOCKED.";
+  loadExistingClientAccess(lead);
+  $("leadManagerError").style.display="none";
+  $("leadModal").classList.add("open"); $("leadModal").setAttribute("aria-hidden","false");
+}
+
+function buildClientAccessLink(token){
+  const url=new URL(window.location.href);
+  url.searchParams.set("access",token);
+  url.hash="client-access";
+  return url.toString();
+}
+
+async function generateClientAccess(){
+  const id=Number($("manageLeadId").value);
+  const lead=window.__ilsLeads?.find(x=>Number(x.id)===id);
+  if(!id || !lead){ msg("leadManagerError","Client record is not available.","err"); return; }
+  const btn=$("generateClientAccessBtn");
+  btn.disabled=true; btn.textContent="Generating…";
+  try{
+    const token=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replaceAll("-","");
+    const created=new Date();
+    const expires=new Date(created.getTime()+30*24*60*60*1000);
+    const {error}=await sb.from("client_requirements").update({
+      client_access_token:token,
+      client_access_created_at:created.toISOString(),
+      client_access_expires_at:expires.toISOString()
+    }).eq("id",id);
+    if(error) throw error;
+    $("manageClientAccessLink").value=buildClientAccessLink(token);
+    $("clientAccessBox").style.display="block";
+    $("copyClientAccessBtn").style.display="inline-flex";
+    $("clientAccessMeta").textContent="Token active for 30 days · Registered mobile: "+(lead.mobile||"—")+" · Expires: "+expires.toLocaleString("en-IN");
+    lead.client_access_token=token; lead.client_access_created_at=created.toISOString(); lead.client_access_expires_at=expires.toISOString();
+    msg("appMsg","Client portal login token generated successfully.","ok");
+  }catch(e){
+    console.error(e);
+    msg("leadManagerError","Unable to generate client login token: "+(e?.message||"Unknown error"),"err");
+  }finally{btn.disabled=false;btn.textContent="Generate Client Login Token";}
+}
+
+async function copyClientAccessLink(){
+  const input=$("manageClientAccessLink");
+  if(!input?.value)return;
+  try{await navigator.clipboard.writeText(input.value);}catch(e){input.select();document.execCommand("copy");}
+  msg("appMsg","Client portal link copied successfully.","ok");
+}
+
+function loadExistingClientAccess(lead){
+  const box=$("clientAccessBox"),input=$("manageClientAccessLink"),copy=$("copyClientAccessBtn"),meta=$("clientAccessMeta");
+  if(!box||!input||!copy||!meta)return;
+  if(lead?.client_access_token){
+    input.value=buildClientAccessLink(lead.client_access_token); box.style.display="block"; copy.style.display="inline-flex";
+    meta.textContent="Existing token · Expires: "+(lead.client_access_expires_at?new Date(lead.client_access_expires_at).toLocaleString("en-IN"):"Not specified");
+  }else{input.value="";box.style.display="none";copy.style.display="none";meta.textContent="";}
+}
+
+async function saveLeadManager(){
+  const id=Number($("manageLeadId").value);
+  const advocateIds=[...$("manageAdvocates").selectedOptions].map(o=>Number(o.value)).filter(Number.isFinite);
+  const payload={p_lead_id:id,p_status:$("manageStatus").value,p_payment_status:$("managePayment").value,p_priority:$("managePriority").value,p_assigned_advocate_ids:advocateIds,p_release_contact:Boolean($("manageRelease").checked),p_follow_up_date:$("manageFollowUp").value||null,p_internal_notes:$("manageNotes").value.trim()};
+  const btn=$("saveLeadManagerBtn"); btn.disabled=true; btn.textContent="Saving…";
+  try{
+    const {data,error}=await sb.rpc("ils_admin_save_lead_multi",payload);
+    if(error || !data?.ok) throw new Error(error?.message||data?.message||"Unable to save lead changes.");
+    $("leadModal").classList.remove("open"); $("leadModal").setAttribute("aria-hidden","true");
+    msg("appMsg","Client requirement updated successfully.","ok");
+    await loadLeads(); await loadStats();
+  }catch(e){
+    console.error(e); msg("leadManagerError","Update failed: "+(e?.message||"Unknown error"),"err");
+  }finally{ btn.disabled=false; btn.textContent="Save Changes"; }
+}
+
+function closeLeadManager(){ $("leadModal").classList.remove("open"); $("leadModal").setAttribute("aria-hidden","true"); }
+
+
+let allAdvocates = [];
+let selectedAdvocateId = null;
+
+function advocateStatus(a){
+  return a.verification_status || a.status || "Pending";
+}
+function renderAdvocateRows(){
+  const tbody=$("advocateTableBody"); if(!tbody)return;
+  const q=($("adminAdvocateSearch")?.value||"").toLowerCase().trim();
+  const sf=$("adminAdvocateStatus")?.value||"";
+  const rows=allAdvocates.filter(a=>{
+    const status=advocateStatus(a);
+    if(sf && status!==sf)return false;
+    const hay=[
+      a.advocate_name,a.mobile,a.email,a.enrollment_number,a.state_bar_council,
+      a.practice_state,a.district_court,a.primary_practice_area
+    ].filter(Boolean).join(" ").toLowerCase();
+    return !q || hay.includes(q);
+  });
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center">No matching advocate applications.</td></tr>';
+    return;
+  }
+  tbody.innerHTML=rows.map(a=>{
+    const st=advocateStatus(a);
+    const cls=st==="Approved"?"verify-approved":st==="Rejected"?"verify-rejected":"verify-pending";
+    const photo=a.photo_url||a.profile_photo_url||"";
+    const ph=photo?`<img class="adv-photo" src="${esc(photo)}" alt="Advocate photo">`:`<div class="adv-photo"></div>`;
+    return `<tr>
+      <td>${ph}</td>
+      <td><strong>${esc(a.advocate_name||"—")}</strong><br><small>${esc(a.enrollment_number||"")}</small></td>
+      <td>${esc(a.mobile||"—")}</td>
+      <td>${esc(a.district_court||"—")}<br><small>${esc(a.practice_state||"")}</small></td>
+      <td>${esc(a.primary_practice_area||"—")}</td>
+      <td>${esc(String(a.years_of_practice??"—"))} years</td>
+      <td><span class="verify-badge ${cls}">${esc(st)}</span></td>
+      <td><button class="adv-action adv-view" type="button" data-adv-view="${esc(a.id)}">Manage</button></td>
+    </tr>`;
+  }).join("");
+  tbody.querySelectorAll("[data-adv-view]").forEach(b=>b.addEventListener("click",()=>openAdvocate(b.dataset.advView)));
+}
+async function loadAdvocates(){
+  const tbody=$("advocateTableBody"); if(!tbody)return;
+  tbody.innerHTML='<tr><td colspan="8" style="text-align:center">Loading advocate applications…</td></tr>';
+  let {data,error}=await sb.from("advocate_registrations").select("*").order("created_at",{ascending:false}).limit(250);
+  if(error){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center">Unable to load advocate applications.</td></tr>';
+    msg("appMsg","Advocate Management error: "+error.message,"err"); return;
+  }
+  allAdvocates=data||[]; renderAdvocateRows();
+}
+function fillAdvocateEditFields(a){
+  $("edit_advocate_name").value=a.advocate_name||"";
+  $("edit_advocate_mobile").value=a.mobile||"";
+  $("edit_advocate_email").value=a.email||"";
+  $("edit_advocate_enrollment").value=a.enrollment_number||"";
+  $("edit_advocate_bar_council").value=a.state_bar_council||"";
+  $("edit_advocate_state").value=a.practice_state||"";
+  $("edit_advocate_district").value=a.district_court||"";
+  $("edit_advocate_area").value=a.primary_practice_area||"";
+  $("edit_advocate_years").value=a.years_of_practice??"";
+  $("advocateAdminNotes").value=a.admin_notes||"";
+}
+function openAdvocate(id){
+  const a=allAdvocates.find(x=>String(x.id)===String(id)); if(!a)return;
+  selectedAdvocateId=a.id; fillAdvocateEditFields(a);
+  const st=advocateStatus(a);
+  const photo=a.photo_url||a.profile_photo_url||"";
+  $("advocateDetails").innerHTML=`
+    ${photo?`<div style="text-align:center;margin-bottom:15px"><img src="${esc(photo)}" style="width:130px;height:130px;object-fit:cover;border-radius:12px;border:2px solid #d7a84f"></div>`:""}
+    <div class="detail-grid">
+      <div class="detail-item"><strong>Advocate</strong><span>${esc(a.advocate_name||"—")}</span></div>
+      <div class="detail-item"><strong>Verification</strong><span>${esc(st)}</span></div>
+      <div class="detail-item"><strong>Mobile</strong><span>${esc(a.mobile||"—")}</span></div>
+      <div class="detail-item"><strong>Email</strong><span>${esc(a.email||"—")}</span></div>
+      <div class="detail-item"><strong>Enrollment</strong><span>${esc(a.enrollment_number||"—")}</span></div>
+      <div class="detail-item"><strong>State Bar Council</strong><span>${esc(a.state_bar_council||"—")}</span></div>
+      <div class="detail-item"><strong>Practice State</strong><span>${esc(a.practice_state||"—")}</span></div>
+      <div class="detail-item"><strong>District / Court</strong><span>${esc(a.district_court||"—")}</span></div>
+      <div class="detail-item"><strong>Practice Area</strong><span>${esc(a.primary_practice_area||"—")}</span></div>
+      <div class="detail-item"><strong>Years</strong><span>${esc(String(a.years_of_practice??"—"))}</span></div>
+    </div>`;
+  $("advocateUpdateError").style.display="none";
+  $("advocateProfileSaveResult").style.display="none";
+  $("advocateLoginResult").style.display="none";
+  $("advocateModal").classList.add("open"); $("advocateModal").setAttribute("aria-hidden","false");
+}
+function closeAdvocate(){selectedAdvocateId=null;$("advocateModal").classList.remove("open");$("advocateModal").setAttribute("aria-hidden","true");}
+async function saveAdvocateProfile(){
+  if(!selectedAdvocateId)return;
+  const update={
+    advocate_name:$("edit_advocate_name").value.trim(),mobile:$("edit_advocate_mobile").value.trim(),
+    email:$("edit_advocate_email").value.trim(),enrollment_number:$("edit_advocate_enrollment").value.trim(),
+    state_bar_council:$("edit_advocate_bar_council").value.trim(),practice_state:$("edit_advocate_state").value.trim(),
+    district_court:$("edit_advocate_district").value.trim(),primary_practice_area:$("edit_advocate_area").value.trim(),
+    years_of_practice:Number($("edit_advocate_years").value||0)
+  };
+  const {error}=await sb.from("advocate_registrations").update(update).eq("id",selectedAdvocateId);
+  if(error){msg("advocateProfileSaveResult","Profile update failed: "+error.message,"err");return;}
+  msg("advocateProfileSaveResult","Advocate profile saved.","ok"); await loadAdvocates();
+}
+async function saveAdvocateNotes(){
+  if(!selectedAdvocateId)return;
+  const {error}=await sb.from("advocate_registrations").update({admin_notes:$("advocateAdminNotes").value.trim()}).eq("id",selectedAdvocateId);
+  if(error){msg("advocateUpdateError","Notes update failed: "+error.message,"err");return;}
+  msg("appMsg","Advocate notes saved.","ok"); await loadAdvocates();
+}
+async function setAdvocateVerification(status){
+  if(!selectedAdvocateId)return;
+  const a=allAdvocates.find(x=>String(x.id)===String(selectedAdvocateId));
+  if(!a)return;
+  if(!confirm(status==="Approved"?"Approve this advocate and make the profile eligible for the public network?":"Reject this advocate application?"))return;
+  const update={status,verification_status:status,admin_notes:$("advocateAdminNotes").value.trim(),public_profile:status==="Approved"};
+  update.approved_at=status==="Approved"?new Date().toISOString():null;
+  const {error}=await sb.from("advocate_registrations").update(update).eq("id",selectedAdvocateId);
+  if(error){msg("advocateUpdateError","Verification update failed: "+error.message,"err");return;}
+  msg("appMsg","Advocate status updated successfully.","ok"); await loadAdvocates();
+}
+async function createAdvocateLogin(){
+  if(!selectedAdvocateId)return;
+  const a=allAdvocates.find(x=>String(x.id)===String(selectedAdvocateId));
+  if(!a||!a.email){msg("advocateLoginResult","Advocate email is required.","err");return;}
+  if(advocateStatus(a)!=="Approved"){msg("advocateLoginResult","Approve the advocate first.","err");return;}
+  const password=$("advocate_temp_password").value.trim();
+  if(password.length<8){msg("advocateLoginResult","Temporary password must be at least 8 characters.","err");return;}
+  msg("advocateLoginResult","Creating / resetting secure login…","");
+  const {data,error}=await sb.functions.invoke("create-advocate-user",{body:{advocate_id:Number(selectedAdvocateId),password}});
+  if(error||!data?.ok){msg("advocateLoginResult",error?.message||data?.message||"Unable to create advocate login.","err");return;}
+  msg("advocateLoginResult","Login created/reset successfully for "+a.email+". Share the temporary password securely.","ok");
+  $("advocate_temp_password").value="";
+}
+
 async function openApp(){
   const check=await isAdmin();
   if(!check.ok){
@@ -268,7 +638,7 @@ async function openApp(){
   $("loginView").classList.add("hidden");
   $("appView").classList.remove("hidden");
   $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
-  await Promise.all([loadStats(),loadLeads()]);
+  await Promise.all([loadStats(),loadLeads(),loadAdvocates()]);
 }
 
 $("loginForm").addEventListener("submit",async e=>{
@@ -289,12 +659,33 @@ $("logoutBtn").addEventListener("click",async()=>{
   await sb.auth.signOut();
   location.href="admin.html";
 });
-$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads()]);msg("appMsg","Dashboard refreshed.","ok")});
+$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates()]);msg("appMsg","Dashboard refreshed.","ok")});
+
+$("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
+$("adminAdvocateSearch").addEventListener("input",renderAdvocateRows);
+$("adminAdvocateStatus").addEventListener("change",renderAdvocateRows);
+$("closeAdvocateModal").addEventListener("click",closeAdvocate);
+$("advocateModal").addEventListener("click",e=>{if(e.target===$("advocateModal"))closeAdvocate()});
+$("saveAdvocateProfileBtn").addEventListener("click",saveAdvocateProfile);
+$("saveAdvocateNotesBtn").addEventListener("click",saveAdvocateNotes);
+$("approveAdvocateBtn").addEventListener("click",()=>setAdvocateVerification("Approved"));
+$("rejectAdvocateBtn").addEventListener("click",()=>setAdvocateVerification("Rejected"));
+$("createAdvocateLoginBtn").addEventListener("click",createAdvocateLogin);
+
 $("loadLeadsBtn").addEventListener("click",loadLeads);
+$("leadSearch").addEventListener("input",()=>loadLeads());
 $("leadSearch").addEventListener("keydown",e=>{if(e.key==="Enter")loadLeads()});
 sb.auth.onAuthStateChange(()=>{});
 
 openApp();
+
+$("closeLeadModal").addEventListener("click",closeLeadManager);
+$("closeLeadManagerBtn").addEventListener("click",closeLeadManager);
+$("saveLeadManagerBtn").addEventListener("click",saveLeadManager);
+$("generateClientAccessBtn").addEventListener("click",generateClientAccess);
+$("copyClientAccessBtn").addEventListener("click",copyClientAccessLink);
+$("manageRelease").addEventListener("change",()=>$("manageReleaseStatus").textContent=$("manageRelease").checked?"Contact is RELEASED for this client.":"Contact is currently LOCKED.");
+$("leadModal").addEventListener("click",e=>{if(e.target.id==="leadModal")closeLeadManager();});
 </script>
 </body>
 </html>
