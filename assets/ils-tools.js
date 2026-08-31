@@ -104,14 +104,120 @@ async function startRazorpay(data){
       });
 
     if (paymentError || !paymentData?.ok) {
-      console.error('Razorpay order creation error:', paymentError || paymentData);
-      status(
-        paymentError?.message ||
-        paymentData?.error ||
-        'Unable to start secure payment. Please try again.'
-      );
-      return;
-    }
+
+  console.warn(
+    'Razorpay unavailable. Using temporary UPI payment fallback.',
+    paymentError || paymentData
+  );
+
+  const box = document.getElementById('toolStatus');
+  const amount = Number(data.amount || 0);
+  const upiId = '8445609837@axl';
+
+  if (!box) {
+    status('Payment screen could not be opened. Please try again.');
+    return;
+  }
+
+  const upiLink =
+    'upi://pay?pa=' + encodeURIComponent(upiId) +
+    '&pn=' + encodeURIComponent('Instant Legal Services') +
+    '&am=' + encodeURIComponent(amount.toFixed(2)) +
+    '&cu=INR' +
+    '&tn=' + encodeURIComponent(
+      data.order_number || 'ILS Legal Service'
+    );
+
+  box.className = 'status ok';
+
+  box.innerHTML = `
+    <div style="text-align:center;padding:18px">
+
+      <h3>Secure Payment</h3>
+
+      <p>Razorpay is temporarily unavailable.</p>
+
+      <p style="font-size:24px;font-weight:700">
+        ₹${amount.toLocaleString('en-IN')}
+      </p>
+
+      <img
+        src="assets/ils-upi-qr.jpg"
+        alt="Instant Legal Services UPI QR"
+        style="
+          width:min(280px,85vw);
+          max-width:100%;
+          background:#fff;
+          padding:10px;
+          border-radius:14px;
+        "
+      >
+
+      <p style="margin-top:12px">
+        <strong>UPI ID:</strong> ${esc(upiId)}
+      </p>
+
+      <a
+        href="${upiLink}"
+        class="btn btn-primary"
+        style="
+          display:inline-block;
+          margin-top:10px;
+          text-decoration:none;
+        "
+      >
+        Pay via UPI App
+      </a>
+
+      <button
+        type="button"
+        class="btn btn-ghost"
+        id="upiPaidBtn"
+        style="margin-top:10px"
+      >
+        I Have Paid
+      </button>
+
+      <div
+        id="upiPaidNote"
+        style="
+          display:none;
+          margin-top:14px;
+          padding:12px;
+          border-radius:10px;
+        "
+      ></div>
+
+      <small style="
+        display:block;
+        margin-top:14px;
+        opacity:.75;
+        line-height:1.5
+      ">
+        Your order will remain pending until payment
+        is manually verified.
+      </small>
+
+    </div>
+  `;
+
+  const paidBtn = document.getElementById('upiPaidBtn');
+  const paidNote = document.getElementById('upiPaidNote');
+
+  if (paidBtn && paidNote) {
+    paidBtn.onclick = () => {
+      paidNote.style.display = 'block';
+
+      paidNote.innerHTML =
+        'Payment submitted for verification. ' +
+        'Order <strong>' +
+        esc(data.order_number || '') +
+        '</strong> remains pending until payment is verified.';
+    };
+  }
+
+  return;
+}
 
     // Load Razorpay Checkout if not already loaded
     if (!window.Razorpay) {
