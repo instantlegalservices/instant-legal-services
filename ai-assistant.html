@@ -270,7 +270,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+// HOME PAGE SEARCH → PUBLIC AI
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const homeQuestion = (params.get("q") || "").trim();
 
+  if (!homeQuestion) return;
+
+  const publicQuestion = document.getElementById("publicQuestion");
+
+  if (publicQuestion) {
+    publicQuestion.value = homeQuestion;
+
+    setTimeout(() => {
+      handleUserQuery(homeQuestion);
+      publicQuestion.value = "";
+    }, 300);
+  }
+});
 /* =========================================================
    ADVOCATE RESEARCH AI — NECESSARY ADDITION ONLY
    Uses the existing supabaseClient from ils-core.js.
