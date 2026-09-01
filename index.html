@@ -326,6 +326,24 @@ content="Search Indian law, explore judgments, find advocates and get profession
   min-width:0;
 }
 
+/* Featured advocate — related/practising court */
+.adv-court{
+  display:flex;
+  align-items:flex-start;
+  gap:6px;
+  margin-top:7px;
+  color:var(--home-accent-2);
+  font-size:12px;
+  line-height:1.45;
+  font-weight:650;
+}
+.adv-court .court-icon{
+  flex:none;
+  font-size:12px;
+  line-height:1.45;
+}
+
+
 .home-loading{
   grid-column:1/-1;
   padding:30px;
@@ -1728,6 +1746,20 @@ function renderAdvocates(rows){
           a.practice_state ||
           "India";
 
+        /*
+         * Related/practising court.
+         * Supports the common field names used by ILS advocate records
+         * without changing the backend query or data model.
+         */
+        const court =
+          a.court_name ||
+          a.court ||
+          a.district_court ||
+          a.practising_court ||
+          a.practice_court ||
+          a.court_location ||
+          a.court_name_display ||
+          "";
 
         const areas =
           (
@@ -1798,6 +1830,17 @@ function renderAdvocates(rows){
                 '<div class="verified">' +
                   '✓ Verified' +
                 '</div>' +
+
+                (
+                  court
+                  ?
+                  '<div class="adv-court">' +
+                    '<span class="court-icon">⚖</span>' +
+                    '<span>' + esc(court) + '</span>' +
+                  '</div>'
+                  :
+                  ''
+                ) +
 
                 '<div class="meta">' +
                   esc(state) +
