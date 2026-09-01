@@ -538,7 +538,7 @@ function renderAdvocateRows(){
   tbody.innerHTML=rows.map(a=>{
     const st=advocateStatus(a);
     const cls=st==="Approved"?"verify-approved":st==="Rejected"?"verify-rejected":"verify-pending";
-    const photo=a.photo_url||a.profile_photo_url||"";
+    const photo=a.photo_url||a.profile_photo_url||a.__pendingPhotoUrl||"";
     const ph=photo?`<img class="adv-photo" src="${esc(photo)}" alt="Advocate photo">`:`<div class="adv-photo"></div>`;
     return `<tr>
       <td>${ph}</td>
@@ -554,14 +554,108 @@ function renderAdvocateRows(){
   tbody.querySelectorAll("[data-adv-view]").forEach(b=>b.addEventListener("click",()=>openAdvocate(b.dataset.advView)));
 }
 async function loadAdvocates(){
-  const tbody=$("advocateTableBody"); if(!tbody)return;
-  tbody.innerHTML='<tr><td colspan="8" style="text-align:center">Loading advocate applications…</td></tr>';
-  let {data,error}=await sb.from("advocate_registrations").select("*").order("created_at",{ascending:false}).limit(250);
+
+  const tbody=$("advocateTableBody");
+
+  if(!tbody)return;
+
+  tbody.innerHTML=
+    '<tr><td colspan="8" style="text-align:center">Loading advocate applications…</td></tr>';
+
+  let {data,error}=await sb
+    .from("advocate_registrations")
+    .select("*")
+    .order("created_at",{ascending:false})
+    .limit(250);
+
   if(error){
-    tbody.innerHTML='<tr><td colspan="8" style="text-align:center">Unable to load advocate applications.</td></tr>';
-    msg("appMsg","Advocate Management error: "+error.message,"err"); return;
+
+    tbody.innerHTML=
+      '<tr><td colspan="8" style="text-align:center">Unable to load advocate applications.</td></tr>';
+
+    msg(
+      "appMsg",
+      "Advocate Management error: "+error.message,
+      "err"
+    );
+
+    return;
   }
-  allAdvocates=data||[]; renderAdvocateRows();
+
+
+  allAdvocates=data||[];
+
+
+  /* ==========================================
+     RESOLVE PENDING PHOTOS FOR ADMIN ONLY
+  ========================================== */
+
+  await Promise.all(
+
+    allAdvocates.map(async function(a){
+
+      a.__pendingPhotoUrl="";
+
+      if(
+        a.photo_url ||
+        a.profile_photo_url ||
+        !a.photo_storage_path
+      ){
+
+        return;
+
+      }
+
+
+      const path=
+        String(a.photo_storage_path)
+          .replace(/^\/+/,"");
+
+
+      if(!path.startsWith("pending/")){
+
+        return;
+
+      }
+
+
+      try{
+
+        const {data:signed,error:signedError}=
+          await sb.storage
+            .from("advocate-photo-pending")
+            .createSignedUrl(
+              path,
+              3600
+            );
+
+
+        if(
+          !signedError &&
+          signed?.signedUrl
+        ){
+
+          a.__pendingPhotoUrl=
+            signed.signedUrl;
+
+        }
+
+      }catch(e){
+
+        console.warn(
+          "Pending advocate photo fetch failed:",
+          e
+        );
+
+      }
+
+    })
+
+  );
+
+
+  renderAdvocateRows();
+
 }
 function fillAdvocateEditFields(a){
   $("edit_advocate_name").value=a.advocate_name||"";
