@@ -1612,12 +1612,7 @@ const districtSelect=$("district");
 stateSelect.addEventListener("change",function(){
 
     districtSelect.innerHTML=
-      '<option value="">Select district</option>';
-
-    courtSelect.innerHTML=
-      '<option value="">Select District first</option>';
-
-    courtSelect.disabled=true;
+      '<option value="">Select District</option>';
 
     const list=districts[stateSelect.value] || [];
 
@@ -1636,7 +1631,6 @@ stateSelect.addEventListener("change",function(){
 
     });
 
-
     if(!list.length){
 
         const option=document.createElement("option");
@@ -1644,7 +1638,7 @@ stateSelect.addEventListener("change",function(){
         option.value="";
 
         option.textContent=
-          "District list — enter court manually below";
+          "District list not available";
 
         districtSelect.appendChild(option);
 
@@ -1653,8 +1647,6 @@ stateSelect.addEventListener("change",function(){
     districtSelect.disabled=false;
 
 });
-
-
 
 /* =====================================================
    COURT SELECTION — MINIMUM 1 / MAXIMUM 2
