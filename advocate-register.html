@@ -1,40 +1,2160 @@
-<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Join ILS Network | Advocate Registration</title><meta name="description" content="Join the Instant Legal Services professional network by submitting advocate details for review."><meta name="robots" content="index,follow">
-<link rel="canonical" href="https://instantlegalservices.in/advocate-register.html">
-<link rel="stylesheet" href="assets/ils.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js" defer></script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js" defer></script></head>
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Join ILS Network | Advocate Registration</title>
+
+<meta name="description"
+      content="Join the Instant Legal Services professional advocate network. Submit advocate details and profile photo for verification.">
+
+<meta name="robots" content="index,follow">
+
+<link rel="canonical"
+      href="https://instantlegalservices.in/advocate-register.html">
+
+<link rel="stylesheet" href="assets/ils.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/ils-core.js" defer></script>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#07101c">
+
+<script src="assets/pwa.js" defer></script>
+
+<style>
+/* Registration enhancements */
+
+.reg-photo-box{
+  border:1px dashed rgba(255,255,255,.25);
+  border-radius:18px;
+  padding:18px;
+  margin:8px 0 20px;
+  text-align:center;
+  background:rgba(255,255,255,.025);
+}
+
+.photo-preview{
+  width:125px;
+  height:125px;
+  object-fit:cover;
+  border-radius:16px;
+  display:none;
+  margin:0 auto 14px;
+  border:2px solid rgba(255,255,255,.15);
+}
+
+.photo-actions{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.photo-actions label{
+  cursor:pointer;
+}
+
+.practice-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:8px;
+}
+
+.practice-item{
+  position:relative;
+}
+
+.practice-item input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.practice-item label{
+  display:block;
+  cursor:pointer;
+  padding:13px 12px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  background:rgba(255,255,255,.025);
+  transition:.2s;
+}
+
+.practice-item input:checked + label{
+  border-color:#f4c35b;
+  background:rgba(244,195,91,.12);
+  box-shadow:0 0 0 1px rgba(244,195,91,.25);
+}
+
+.practice-item input:disabled + label{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.practice-counter{
+  font-size:13px;
+  opacity:.75;
+  margin:5px 0 10px;
+}
+
+.photo-help{
+  font-size:13px;
+  opacity:.7;
+  margin-top:10px;
+}
+
+@media(max-width:650px){
+
+  .practice-grid{
+    grid-template-columns:1fr;
+  }
+
+}
+</style>
+</head>
+
+
 <body>
-<header class="site-header"><div class="wrap navbar">
-<a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
+
+<header class="site-header">
+
+<div class="wrap navbar">
+
+<a class="brand" href="index.html">
+
+<img class="brand-logo"
+     src="assets/ils-logo.jpg"
+     alt="Instant Legal Services logo">
+
+<span class="brand-text">
+INSTANT <span>LEGAL SERVICES</span>
+</span>
+
+</a>
+
+
 <nav class="navlinks">
-<a class="" href="index.html">Home</a>
-<a class="" href="advocates.html">Find Advocate</a>
-<a class="" href="judgments.html">Judgments</a>
-<a class="" href="law-guide.html">Law Guide</a>
-<a class="" href="ai-assistant.html">AI Assistant</a>
-<a class="" href="about.html">About</a>
-<a class="" href="faq.html">FAQ</a>
-<a class="btn btn-primary btn-small" href="assistance.html">Get Legal Help</a>
+
+<a href="index.html">Home</a>
+
+<a href="advocates.html">Find Advocate</a>
+
+<a href="judgments.html">Judgments</a>
+
+<a href="law-guide.html">Law Guide</a>
+
+<a href="ai-assistant.html">AI Assistant</a>
+
+<a href="about.html">About</a>
+
+<a href="faq.html">FAQ</a>
+
+<a class="btn btn-primary btn-small"
+   href="assistance.html">
+Get Legal Help
+</a>
+
 </nav>
-<button class="menu" data-menu aria-label="Open menu">☰</button><button class="btn btn-ghost btn-small" data-install-app hidden>Install App</button>
-</div></header>
-<main><section class="page-hero"><div class="wrap"><span class="eyebrow">Professional Network</span><h1>Join ILS Network</h1><p>Submit professional details for review. Approval and public listing remain subject to the site's verification workflow.</p></div></section>
-<section class="section alt"><div class="wrap"><form id="regForm" class="card form-card"><div class="form-row"><div><label>Advocate name</label><input id="aname" required maxlength="120"></div><div><label>Email</label><input id="aemail" type="email" required maxlength="160"></div></div>
-<div class="form-row"><div><label>Mobile</label><input id="amobile" inputmode="numeric" maxlength="10" required></div><div><label>Enrollment number</label><input id="enrollment" required maxlength="80"></div></div>
-<div class="form-row"><div><label>State Bar Council</label><input id="bar" required maxlength="120"></div><div><label>Practice state</label><input id="state" required maxlength="80"></div></div>
-<label>District / Court</label><input id="court" required maxlength="160">
-<label>Primary practice areas</label><input id="areas" required maxlength="500" placeholder="Example: Criminal Law | Bail & Anticipatory Bail">
-<div class="form-row"><div><label>Years of practice</label><input id="years" type="number" min="0" max="80" required></div><div><label>Password</label><input id="password" type="password" minlength="8" required></div></div>
-<label>Confirm password</label><input id="password2" type="password" minlength="8" required>
-<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input id="agree" type="checkbox" style="width:18px;margin-top:2px" required><span>I confirm the professional information submitted is accurate and understand that approval is subject to review.</span></label>
-<button class="btn btn-primary" type="submit">Submit for Review</button><div id="regStatus" class="status"></div>
-<div class="notice" style="margin-top:12px">This simplified registration page is intentionally separate from the existing CRM. If your current production registration requires photo upload or additional fields, use the existing <a href="legacy-admin.html">working CRM page</a> until those fields are migrated to the new route.</div>
-</form><div class="notice" style="margin-top:14px">For the full existing registration/photo workflow, <a class="link" href="portal.html#advocate">open the working ILS registration form →</a></div></div></section></main>
-<footer class="footer"><div class="wrap footer-grid">
-<div><strong>Instant Legal Services</strong><p>Legal information, research access and professional network coordination.</p><p>Public information only. No guarantee of outcome or professional ranking is intended.</p></div>
-<div><strong>Explore</strong><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="advocates.html">Advocates</a><a href="faq.html">FAQ</a></div>
-<div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="ai-assistant.html">AI Assistant</a><a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts</a><a href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">eChallan</a></div>
-<div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="legacy-admin.html">Admin / Existing CRM</a><p>© 2026 Instant Legal Services</p></div>
-</div></footer>
+
+
+<button class="menu"
+        data-menu
+        aria-label="Open menu">
+☰
+</button>
+
+
+<button class="btn btn-ghost btn-small"
+        data-install-app
+        hidden>
+Install App
+</button>
+
+</div>
+
+</header>
+
+
+<main>
+
+<section class="page-hero">
+
+<div class="wrap">
+
+<span class="eyebrow">
+Professional Network
+</span>
+
+<h1>
+Join ILS Network
+</h1>
+
+<p>
+Create your professional advocate profile. Your information will be reviewed before public listing.
+</p>
+
+</div>
+
+</section>
+
+
+
+<section class="section alt">
+
+<div class="wrap">
+
+
+<form id="regForm"
+      class="card form-card"
+      novalidate>
+
+
+<!-- =========================
+     BASIC DETAILS
+========================= -->
+
+<div class="form-row">
+
+<div>
+
+<label for="aname">
+Advocate Name
+</label>
+
+<input id="aname"
+       autocomplete="name"
+       maxlength="120"
+       required>
+
+</div>
+
+
+<div>
+
+<label for="aemail">
+Email
+</label>
+
+<input id="aemail"
+       type="email"
+       autocomplete="email"
+       maxlength="160"
+       required>
+
+</div>
+
+</div>
+
+
+
+<div class="form-row">
+
+<div>
+
+<label for="amobile">
+Mobile Number
+</label>
+
+<input id="amobile"
+       inputmode="numeric"
+       autocomplete="tel"
+       maxlength="10"
+       pattern="[0-9]{10}"
+       required>
+
+</div>
+
+
+<div>
+
+<label for="enrollment">
+Enrollment Number
+</label>
+
+<input id="enrollment"
+       maxlength="80"
+       required>
+
+</div>
+
+</div>
+
+
+
+<div class="form-row">
+
+<div>
+
+<label for="enrollmentYear">
+Enrollment Year
+</label>
+
+<select id="enrollmentYear"
+        required>
+
+<option value="">
+Select enrollment year
+</option>
+
+</select>
+
+</div>
+
+
+<div>
+
+<label for="bar">
+State Bar Council
+</label>
+
+<input id="bar"
+       maxlength="120"
+       required>
+
+</div>
+
+</div>
+
+
+
+<!-- =========================
+     PROFILE PHOTO
+========================= -->
+
+<label>
+Profile Photo
+</label>
+
+
+<div class="reg-photo-box">
+
+<img id="photoPreview"
+     class="photo-preview"
+     alt="Advocate profile photo preview">
+
+
+<div class="photo-actions">
+
+
+<label class="btn btn-primary">
+
+📷 Take Photo
+
+<input id="cameraInput"
+       type="file"
+       accept="image/jpeg,image/png,image/webp"
+       capture="user"
+       hidden>
+
+</label>
+
+
+<label class="btn btn-ghost">
+
+🖼️ Choose from Gallery
+
+<input id="galleryInput"
+       type="file"
+       accept="image/jpeg,image/png,image/webp"
+       hidden>
+
+</label>
+
+
+</div>
+
+
+<div id="photoStatus"
+     class="photo-help">
+
+JPG, PNG or WebP · Maximum 2 MB
+
+</div>
+
+</div>
+
+
+
+<!-- =========================
+     PRACTISING STATE
+========================= -->
+
+<label for="state">
+Practising State / UT
+</label>
+
+<select id="state"
+        required>
+
+<option value="">
+Select State / UT
+</option>
+
+</select>
+
+
+
+<!-- =========================
+     DISTRICT
+========================= -->
+
+<label for="district">
+District
+</label>
+
+<select id="district"
+        required
+        disabled>
+
+<option value="">
+Select State first
+</option>
+
+</select>
+
+
+
+<!-- =========================
+     COURT
+========================= -->
+
+<label for="court">
+Court Name / Court Complex
+</label>
+
+<select id="court"
+        disabled>
+
+<option value="">
+Select District first
+</option>
+
+</select>
+
+
+<input id="courtOther"
+       maxlength="160"
+       placeholder="If your court is not listed, enter court name"
+       style="margin-top:8px">
+
+
+
+<!-- =========================
+     PRACTICE AREAS
+========================= -->
+
+<label style="margin-top:18px">
+
+Practice Areas
+
+</label>
+
+
+<div class="practice-counter">
+
+Select maximum <strong>4</strong> practice areas.
+
+<span id="practiceCounter">
+0/4
+</span>
+
+</div>
+
+
+<div id="practiceGrid"
+     class="practice-grid">
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice1"
+       value="Criminal Law">
+
+<label for="practice1">
+Criminal Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice2"
+       value="Civil Law">
+
+<label for="practice2">
+Civil Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice3"
+       value="Matrimonial / Family Law">
+
+<label for="practice3">
+Matrimonial / Family Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice4"
+       value="Consumer Law">
+
+<label for="practice4">
+Consumer Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice5"
+       value="NI Act / Cheque Bounce">
+
+<label for="practice5">
+NI Act / Cheque Bounce
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice6"
+       value="NDPS Law">
+
+<label for="practice6">
+NDPS Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice7"
+       value="Commercial Law">
+
+<label for="practice7">
+Commercial Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice8"
+       value="Labour / Employment Law">
+
+<label for="practice8">
+Labour / Employment Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice9"
+       value="Property Law">
+
+<label for="practice9">
+Property Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice10"
+       value="Tax / GST">
+
+<label for="practice10">
+Tax / GST
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice11"
+       value="Cyber Crime Law">
+
+<label for="practice11">
+Cyber Crime Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice12"
+       value="Service Matters">
+
+<label for="practice12">
+Service Matters
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice13"
+       value="Writ / Constitutional Law">
+
+<label for="practice13">
+Writ / Constitutional Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice14"
+       value="Arbitration / ADR">
+
+<label for="practice14">
+Arbitration / ADR
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice15"
+       value="Motor Vehicle Law">
+
+<label for="practice15">
+Motor Vehicle Law
+</label>
+
+</div>
+
+
+<div class="practice-item">
+
+<input type="checkbox"
+       class="practiceOption"
+       id="practice16"
+       value="Legal Drafting">
+
+<label for="practice16">
+Legal Drafting
+</label>
+
+</div>
+
+
+</div>
+
+
+
+<!-- =========================
+     EXPERIENCE / PASSWORD
+========================= -->
+
+<div class="form-row"
+     style="margin-top:18px">
+
+
+<div>
+
+<label for="years">
+Years of Practice
+</label>
+
+<input id="years"
+       type="number"
+       min="0"
+       max="80"
+       required>
+
+</div>
+
+
+<div>
+
+<label for="password">
+Password
+</label>
+
+<input id="password"
+       type="password"
+       minlength="8"
+       autocomplete="new-password"
+       required>
+
+</div>
+
+
+</div>
+
+
+
+<label for="password2">
+Confirm Password
+</label>
+
+<input id="password2"
+       type="password"
+       minlength="8"
+       autocomplete="new-password"
+       required>
+
+
+
+<label style="
+display:flex;
+gap:8px;
+align-items:flex-start;
+font-weight:500;
+margin-top:15px">
+
+<input id="agree"
+       type="checkbox"
+       style="width:18px;margin-top:2px"
+       required>
+
+<span>
+
+I confirm that the professional information submitted is accurate and understand that approval is subject to verification and review.
+
+</span>
+
+</label>
+
+
+
+<button class="btn btn-primary"
+        type="submit"
+        id="submitBtn"
+        style="margin-top:18px">
+
+Submit for Review
+
+</button>
+
+
+<div id="regStatus"
+     class="status">
+
+</div>
+
+
+</form>
+
+
+</div>
+
+</section>
+
+</main>
+
+
+
+<footer class="footer">
+
+<div class="wrap footer-grid">
+
+
+<div>
+
+<strong>
+Instant Legal Services
+</strong>
+
+<p>
+Legal information, research access and professional network coordination.
+</p>
+
+<p>
+Public information only. No guarantee of outcome or professional ranking is intended.
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Explore
+</strong>
+
+<a href="judgments.html">
+Judgments
+</a>
+
+<a href="law-guide.html">
+Law Guide
+</a>
+
+<a href="advocates.html">
+Advocates
+</a>
+
+<a href="faq.html">
+FAQ
+</a>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Services
+</strong>
+
+<a href="assistance.html">
+Legal Assistance
+</a>
+
+<a href="ai-assistant.html">
+AI Assistant
+</a>
+
+<a href="https://services.ecourts.gov.in/ecourtindia_v6/"
+   target="_blank"
+   rel="noopener">
+eCourts
+</a>
+
+<a href="https://echallan.parivahan.gov.in/index/accused-challan"
+   target="_blank"
+   rel="noopener">
+eChallan
+</a>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Professional Network
+</strong>
+
+<a href="advocate-register.html">
+Join ILS Network
+</a>
+
+<a href="legacy-admin.html">
+Admin / Existing CRM
+</a>
+
+<p>
+© 2026 Instant Legal Services
+</p>
+
+</div>
+
+
+</div>
+
+</footer>
+
+
+
 <script>
-document.addEventListener("DOMContentLoaded",()=>regForm.addEventListener("submit",async e=>{e.preventDefault();const s=regStatus;s.className="status";s.textContent="Submitting…";s.style.display="block";const mobile=amobile.value.trim();if(!/^[0-9]{10}$/.test(mobile)){s.className="status err";s.textContent="Enter a valid 10-digit mobile number.";return}if(password.value!==password2.value){s.className="status err";s.textContent="Passwords do not match.";return}try{const c=ILS.ready();if(!c)throw new Error("Service connection unavailable.");const {data,error}=await c.functions.invoke("register-advocate",{body:{advocate_name:aname.value.trim(),email:aemail.value.trim().toLowerCase(),mobile, enrollment_number:enrollment.value.trim(),state_bar_council:bar.value.trim(),practice_state:state.value.trim(),district_court:court.value.trim(),primary_practice_area:areas.value.trim(),years_of_practice:Number(years.value),password:password.value}});if(error||!data?.ok)throw new Error(data?.message||error?.message||"Registration failed.");s.className="status ok";s.textContent=data.message||"Registration submitted successfully.";regForm.reset()}catch(err){s.className="status err";s.textContent=err.message||"Registration service unavailable."}}));
-</script></body></html>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+
+const $ = function(id){
+    return document.getElementById(id);
+};
+
+
+/* =====================================================
+   ENROLLMENT YEAR
+===================================================== */
+
+const enrollmentYear = $("enrollmentYear");
+
+const thisYear = new Date().getFullYear();
+
+for(let year=thisYear; year>=1950; year--){
+
+    const option=document.createElement("option");
+
+    option.value=String(year);
+
+    option.textContent=String(year);
+
+    enrollmentYear.appendChild(option);
+
+}
+
+
+
+/* =====================================================
+   INDIA STATES / UTs
+===================================================== */
+
+const stateNames = [
+
+"Andaman and Nicobar Islands",
+"Andhra Pradesh",
+"Arunachal Pradesh",
+"Assam",
+"Bihar",
+"Chandigarh",
+"Chhattisgarh",
+"Dadra and Nagar Haveli and Daman and Diu",
+"Delhi",
+"Goa",
+"Gujarat",
+"Haryana",
+"Himachal Pradesh",
+"Jammu and Kashmir",
+"Jharkhand",
+"Karnataka",
+"Kerala",
+"Ladakh",
+"Lakshadweep",
+"Madhya Pradesh",
+"Maharashtra",
+"Manipur",
+"Meghalaya",
+"Mizoram",
+"Nagaland",
+"Odisha",
+"Puducherry",
+"Punjab",
+"Rajasthan",
+"Sikkim",
+"Tamil Nadu",
+"Telangana",
+"Tripura",
+"Uttar Pradesh",
+"Uttarakhand",
+"West Bengal"
+
+];
+
+
+const stateSelect=$("state");
+
+
+stateNames
+.sort()
+.forEach(function(state){
+
+    const option=document.createElement("option");
+
+    option.value=state;
+
+    option.textContent=state;
+
+    stateSelect.appendChild(option);
+
+});
+
+
+
+/* =====================================================
+   DISTRICT DATA
+===================================================== */
+
+/*
+  The registration form deliberately avoids inventing
+  district names. For states where a verified local list
+  is not embedded below, the district field remains usable
+  through the manual court entry.
+
+  Core frequently-used states have district lists here.
+*/
+
+const districts={
+
+
+"Uttar Pradesh":[
+"Agra",
+"Aligarh",
+"Ambedkar Nagar",
+"Amethi",
+"Amroha",
+"Auraiya",
+"Ayodhya",
+"Azamgarh",
+"Baghpat",
+"Bahraich",
+"Ballia",
+"Balrampur",
+"Banda",
+"Barabanki",
+"Bareilly",
+"Basti",
+"Bhadohi",
+"Bijnor",
+"Budaun",
+"Bulandshahr",
+"Chandauli",
+"Chitrakoot",
+"Deoria",
+"Etah",
+"Etawah",
+"Farrukhabad",
+"Fatehpur",
+"Firozabad",
+"Gautam Buddha Nagar",
+"Ghaziabad",
+"Ghazipur",
+"Gonda",
+"Gorakhpur",
+"Hamirpur",
+"Hapur",
+"Hardoi",
+"Hathras",
+"Jalaun",
+"Jaunpur",
+"Jhansi",
+"Kannauj",
+"Kanpur Dehat",
+"Kanpur Nagar",
+"Kasganj",
+"Kaushambi",
+"Kushinagar",
+"Lakhimpur Kheri",
+"Lalitpur",
+"Lucknow",
+"Maharajganj",
+"Mahoba",
+"Mainpuri",
+"Mathura",
+"Mau",
+"Meerut",
+"Mirzapur",
+"Moradabad",
+"Muzaffarnagar",
+"Pilibhit",
+"Pratapgarh",
+"Prayagraj",
+"Raebareli",
+"Rampur",
+"Saharanpur",
+"Sambhal",
+"Shahjahanpur",
+"Shamli",
+"Shravasti",
+"Siddharthnagar",
+"Sitapur",
+"Sonbhadra",
+"Sultanpur",
+"Unnao",
+"Varanasi"
+],
+
+
+"Delhi":[
+"Central Delhi",
+"East Delhi",
+"New Delhi",
+"North Delhi",
+"North East Delhi",
+"North West Delhi",
+"Shahdara",
+"South Delhi",
+"South East Delhi",
+"South West Delhi",
+"West Delhi"
+],
+
+
+"Haryana":[
+"Ambala",
+"Bhiwani",
+"Charkhi Dadri",
+"Faridabad",
+"Fatehabad",
+"Gurugram",
+"Hisar",
+"Jhajjar",
+"Jind",
+"Kaithal",
+"Karnal",
+"Kurukshetra",
+"Mahendragarh",
+"Nuh",
+"Palwal",
+"Panchkula",
+"Panipat",
+"Rewari",
+"Rohtak",
+"Sirsa",
+"Sonipat",
+"Yamunanagar"
+],
+
+
+"Punjab":[
+"Amritsar",
+"Barnala",
+"Bathinda",
+"Faridkot",
+"Fatehgarh Sahib",
+"Fazilka",
+"Ferozepur",
+"Gurdaspur",
+"Hoshiarpur",
+"Jalandhar",
+"Kapurthala",
+"Ludhiana",
+"Malerkotla",
+"Mansa",
+"Moga",
+"Pathankot",
+"Patiala",
+"Rupnagar",
+"Sangrur",
+"Sri Muktsar Sahib",
+"Tarn Taran"
+],
+
+
+"Rajasthan":[
+"Ajmer",
+"Alwar",
+"Anupgarh",
+"Balotra",
+"Banswara",
+"Baran",
+"Barmer",
+"Beawar",
+"Bharatpur",
+"Bhilwara",
+"Bikaner",
+"Bundi",
+"Chittorgarh",
+"Churu",
+"Dausa",
+"Deeg",
+"Dholpur",
+"Didwana-Kuchamana",
+"Dungarpur",
+"Hanumangarh",
+"Jaipur",
+"Jaisalmer",
+"Jalore",
+"Jhalawar",
+"Jhunjhunu",
+"Jodhpur",
+"Karauli",
+"Kota",
+"Nagaur",
+"Pali",
+"Pratapgarh",
+"Rajsamand",
+"Sawai Madhopur",
+"Sikar",
+"Sirohi",
+"Sri Ganganagar",
+"Tonk",
+"Udaipur"
+],
+
+
+"Uttarakhand":[
+"Almora",
+"Bageshwar",
+"Chamoli",
+"Champawat",
+"Dehradun",
+"Haridwar",
+"Nainital",
+"Pauri Garhwal",
+"Pithoragarh",
+"Rudraprayag",
+"Tehri Garhwal",
+"Udham Singh Nagar",
+"Uttarkashi"
+],
+
+
+"Bihar":[
+"Araria",
+"Arwal",
+"Aurangabad",
+"Banka",
+"Begusarai",
+"Bhagalpur",
+"Bhojpur",
+"Buxar",
+"Darbhanga",
+"East Champaran",
+"Gaya",
+"Gopalganj",
+"Jamui",
+"Jehanabad",
+"Kaimur",
+"Katihar",
+"Khagaria",
+"Kishanganj",
+"Lakhisarai",
+"Madhepura",
+"Madhubani",
+"Munger",
+"Muzaffarpur",
+"Nalanda",
+"Nawada",
+"Patna",
+"Purnia",
+"Rohtas",
+"Saharsa",
+"Samastipur",
+"Saran",
+"Sheikhpura",
+"Sheohar",
+"Sitamarhi",
+"Siwan",
+"Supaul",
+"Vaishali",
+"West Champaran"
+],
+
+
+"Gujarat":[
+"Ahmedabad",
+"Amreli",
+"Anand",
+"Aravalli",
+"Banaskantha",
+"Bharuch",
+"Bhavnagar",
+"Botad",
+"Chhota Udaipur",
+"Dahod",
+"Devbhumi Dwarka",
+"Gandhinagar",
+"Gir Somnath",
+"Jamnagar",
+"Junagadh",
+"Kheda",
+"Kutch",
+"Mahisagar",
+"Mehsana",
+"Morbi",
+"Narmada",
+"Navsari",
+"Panchmahal",
+"Patan",
+"Porbandar",
+"Rajkot",
+"Sabarkantha",
+"Surat",
+"Surendranagar",
+"Tapi",
+"Vadodara",
+"Valsad"
+],
+
+
+"Maharashtra":[
+"Ahmednagar",
+"Akola",
+"Amravati",
+"Beed",
+"Bhandara",
+"Buldhana",
+"Chandrapur",
+"Dhule",
+"Gadchiroli",
+"Gondia",
+"Hingoli",
+"Jalgaon",
+"Jalna",
+"Kolhapur",
+"Latur",
+"Mumbai City",
+"Mumbai Suburban",
+"Nagpur",
+"Nanded",
+"Nandurbar",
+"Nashik",
+"Osmanabad",
+"Palghar",
+"Parbhani",
+"Pune",
+"Raigad",
+"Ratnagiri",
+"Sangli",
+"Satara",
+"Sindhudurg",
+"Solapur",
+"Thane",
+"Wardha",
+"Washim",
+"Yavatmal"
+],
+
+
+"Karnataka":[
+"Bagalkot",
+"Ballari",
+"Belagavi",
+"Bengaluru Rural",
+"Bengaluru Urban",
+"Bidar",
+"Chamarajanagar",
+"Chikkaballapur",
+"Chikkamagaluru",
+"Chitradurga",
+"Dakshina Kannada",
+"Davanagere",
+"Dharwad",
+"Gadag",
+"Hassan",
+"Haveri",
+"Kalaburagi",
+"Kodagu",
+"Kolar",
+"Koppal",
+"Mandya",
+"Mysuru",
+"Raichur",
+"Ramanagara",
+"Shivamogga",
+"Tumakuru",
+"Udupi",
+"Uttara Kannada",
+"Vijayapura",
+"Yadgir"
+],
+
+
+"Madhya Pradesh":[
+"Agar Malwa",
+"Alirajpur",
+"Anuppur",
+"Ashoknagar",
+"Balaghat",
+"Barwani",
+"Betul",
+"Bhind",
+"Bhopal",
+"Burhanpur",
+"Chhatarpur",
+"Chhindwara",
+"Damoh",
+"Datia",
+"Dewas",
+"Dhar",
+"Dindori",
+"Guna",
+"Gwalior",
+"Harda",
+"Indore",
+"Jabalpur",
+"Jhabua",
+"Katni",
+"Khandwa",
+"Khargone",
+"Mandla",
+"Mandsaur",
+"Morena",
+"Narmadapuram",
+"Narsinghpur",
+"Neemuch",
+"Panna",
+"Raisen",
+"Rajgarh",
+"Ratlam",
+"Rewa",
+"Sagar",
+"Satna",
+"Sehore",
+"Seoni",
+"Shahdol",
+"Shajapur",
+"Sheopur",
+"Shivpuri",
+"Sidhi",
+"Singrauli",
+"Tikamgarh",
+"Ujjain",
+"Umaria",
+"Vidisha"
+],
+
+
+"Tamil Nadu":[
+"Ariyalur",
+"Chengalpattu",
+"Chennai",
+"Coimbatore",
+"Cuddalore",
+"Dharmapuri",
+"Dindigul",
+"Erode",
+"Kallakurichi",
+"Kancheepuram",
+"Karur",
+"Krishnagiri",
+"Madurai",
+"Mayiladuthurai",
+"Nagapattinam",
+"Namakkal",
+"Nilgiris",
+"Perambalur",
+"Pudukkottai",
+"Ramanathapuram",
+"Ranipet",
+"Salem",
+"Sivaganga",
+"Tenkasi",
+"Thanjavur",
+"Theni",
+"Thoothukudi",
+"Tiruchirappalli",
+"Tirunelveli",
+"Tirupathur",
+"Tiruppur",
+"Tiruvallur",
+"Tiruvarur",
+"Vellore",
+"Viluppuram",
+"Virudhunagar"
+],
+
+
+"Telangana":[
+"Adilabad",
+"Bhadradri Kothagudem",
+"Hanamkonda",
+"Hyderabad",
+"Jagtial",
+"Jangaon",
+"Jayashankar Bhupalpally",
+"Jogulamba Gadwal",
+"Kamareddy",
+"Karimnagar",
+"Khammam",
+"Komaram Bheem Asifabad",
+"Mahabubabad",
+"Mahbubnagar",
+"Mancherial",
+"Medak",
+"Medchal-Malkajgiri",
+"Mulugu",
+"Nagarkurnool",
+"Nalgonda",
+"Narayanpet",
+"Nirmal",
+"Nizamabad",
+"Peddapalli",
+"Rajanna Sircilla",
+"Rangareddy",
+"Sangareddy",
+"Siddipet",
+"Suryapet",
+"Vikarabad",
+"Wanaparthy",
+"Warangal",
+"Yadadri Bhuvanagiri"
+],
+
+
+"West Bengal":[
+"Alipurduar",
+"Bankura",
+"Birbhum",
+"Cooch Behar",
+"Dakshin Dinajpur",
+"Darjeeling",
+"Hooghly",
+"Howrah",
+"Jalpaiguri",
+"Jhargram",
+"Kalimpong",
+"Kolkata",
+"Malda",
+"Murshidabad",
+"Nadia",
+"North 24 Parganas",
+"Paschim Bardhaman",
+"Paschim Medinipur",
+"Purba Bardhaman",
+"Purba Medinipur",
+"South 24 Parganas",
+"Uttar Dinajpur"
+]
+
+};
+
+
+
+/* =====================================================
+   STATE CHANGE
+===================================================== */
+
+const districtSelect=$("district");
+const courtSelect=$("court");
+
+stateSelect.addEventListener("change",function(){
+
+    districtSelect.innerHTML=
+      '<option value="">Select district</option>';
+
+    courtSelect.innerHTML=
+      '<option value="">Select District first</option>';
+
+    courtSelect.disabled=true;
+
+    const list=districts[stateSelect.value] || [];
+
+    list
+    .slice()
+    .sort()
+    .forEach(function(district){
+
+        const option=document.createElement("option");
+
+        option.value=district;
+
+        option.textContent=district;
+
+        districtSelect.appendChild(option);
+
+    });
+
+
+    if(!list.length){
+
+        const option=document.createElement("option");
+
+        option.value="";
+
+        option.textContent=
+          "District list — enter court manually below";
+
+        districtSelect.appendChild(option);
+
+    }
+
+    districtSelect.disabled=false;
+
+});
+
+
+
+/* =====================================================
+   COURT CHANGE
+===================================================== */
+
+districtSelect.addEventListener("change",function(){
+
+    const district=districtSelect.value;
+
+    if(!district){
+        courtSelect.disabled=true;
+        return;
+    }
+
+    courtSelect.innerHTML="";
+
+    const courts=[
+
+      `${district} District Court`,
+      `${district} Family Court`,
+      `${district} Consumer Commission`,
+      `${district} Commercial Court`,
+      `${district} Other Court`
+
+    ];
+
+
+    const first=document.createElement("option");
+
+    first.value="";
+
+    first.textContent="Select court";
+
+    courtSelect.appendChild(first);
+
+
+    courts.forEach(function(court){
+
+        const option=document.createElement("option");
+
+        option.value=court;
+
+        option.textContent=court;
+
+        courtSelect.appendChild(option);
+
+    });
+
+
+    courtSelect.disabled=false;
+
+});
+
+
+
+/* =====================================================
+   PRACTICE AREAS — MAXIMUM 4
+===================================================== */
+
+const practiceOptions=[
+  ...document.querySelectorAll(".practiceOption")
+];
+
+const practiceCounter=$("practiceCounter");
+
+
+function updatePracticeCounter(){
+
+    const selected=
+      practiceOptions.filter(function(input){
+        return input.checked;
+      }).length;
+
+
+    practiceCounter.textContent=
+      `${selected}/4`;
+
+
+    practiceOptions.forEach(function(input){
+
+        if(!input.checked){
+
+            input.disabled=
+              selected>=4;
+
+        }else{
+
+            input.disabled=false;
+
+        }
+
+    });
+
+}
+
+
+practiceOptions.forEach(function(input){
+
+    input.addEventListener(
+      "change",
+      updatePracticeCounter
+    );
+
+});
+
+
+/* Initial state */
+
+updatePracticeCounter();
+
+
+
+/* =====================================================
+   PHOTO
+===================================================== */
+
+let selectedPhoto=null;
+
+
+function processPhoto(file){
+
+    if(!file){
+        return;
+    }
+
+
+    const allowedTypes=[
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+
+    if(!allowedTypes.includes(file.type)){
+
+        $("photoStatus").textContent=
+          "Only JPG, PNG or WebP images are allowed.";
+
+        selectedPhoto=null;
+
+        return;
+    }
+
+
+    if(file.size > 2*1024*1024){
+
+        $("photoStatus").textContent=
+          "Photo must be 2 MB or smaller.";
+
+        selectedPhoto=null;
+
+        return;
+    }
+
+
+    selectedPhoto=file;
+
+
+    const reader=new FileReader();
+
+
+    reader.onload=function(event){
+
+        $("photoPreview").src=
+          event.target.result;
+
+        $("photoPreview").style.display=
+          "block";
+
+        $("photoStatus").textContent=
+          "Photo selected successfully.";
+
+    };
+
+
+    reader.readAsDataURL(file);
+
+}
+
+
+$("cameraInput").addEventListener(
+  "change",
+  function(event){
+      processPhoto(event.target.files[0]);
+  }
+);
+
+
+$("galleryInput").addEventListener(
+  "change",
+  function(event){
+      processPhoto(event.target.files[0]);
+  }
+);
+
+
+
+/* =====================================================
+   FORM SUBMISSION
+===================================================== */
+
+$("regForm").addEventListener(
+"submit",
+async function(event){
+
+    event.preventDefault();
+
+
+    const status=$("regStatus");
+
+    const submitButton=$("submitBtn");
+
+
+    status.className="status";
+
+    status.style.display="block";
+
+    status.textContent=
+      "Submitting registration…";
+
+
+    submitButton.disabled=true;
+
+
+    try{
+
+
+        /* -------------------------
+           BASIC VALIDATION
+        ------------------------- */
+
+        const mobile=
+          $("amobile").value.trim();
+
+
+        if(!/^[0-9]{10}$/.test(mobile)){
+
+            throw new Error(
+              "Enter a valid 10-digit mobile number."
+            );
+
+        }
+
+
+        const password=
+          $("password").value;
+
+
+        if(password.length<8){
+
+            throw new Error(
+              "Password must contain at least 8 characters."
+            );
+
+        }
+
+
+        if(password!==$("password2").value){
+
+            throw new Error(
+              "Passwords do not match."
+            );
+
+        }
+
+
+        const selectedAreas=
+          practiceOptions
+          .filter(function(input){
+              return input.checked;
+          })
+          .map(function(input){
+              return input.value;
+          });
+
+
+        if(selectedAreas.length===0){
+
+            throw new Error(
+              "Please select at least one practice area."
+            );
+
+        }
+
+
+        if(selectedAreas.length>4){
+
+            throw new Error(
+              "Maximum 4 practice areas can be selected."
+            );
+
+        }
+
+
+        if(!selectedPhoto){
+
+            throw new Error(
+              "Please upload your profile photo."
+            );
+
+        }
+
+
+        const courtOther=
+          $("courtOther").value.trim();
+
+
+        const courtName=
+          courtOther ||
+          courtSelect.value;
+
+
+        if(!courtName){
+
+            throw new Error(
+              "Please select or enter your court name."
+            );
+
+        }
+
+
+        if(!districtSelect.value){
+
+            throw new Error(
+              "Please select your district."
+            );
+
+        }
+
+
+        if(!$("state").value){
+
+            throw new Error(
+              "Please select your practising state."
+            );
+
+        }
+
+
+
+        /* -------------------------
+           SUPABASE CLIENT
+        ------------------------- */
+
+        const client=ILS.ready();
+
+
+        if(!client){
+
+            throw new Error(
+              "Service connection unavailable."
+            );
+
+        }
+
+
+
+        /* -------------------------
+           PHOTO PATH
+        ------------------------- */
+
+        const extension=
+          selectedPhoto.type==="image/png"
+          ? "png"
+          : selectedPhoto.type==="image/webp"
+          ? "webp"
+          : "jpg";
+
+
+        const photoPath=
+          `pending/${crypto.randomUUID()}.${extension}`;
+
+
+
+        /* -------------------------
+           PHOTO UPLOAD
+        ------------------------- */
+
+        const uploadResult=
+          await client
+          .storage
+          .from("advocate-photo")
+          .upload(
+              photoPath,
+              selectedPhoto,
+              {
+                cacheControl:"3600",
+                upsert:false,
+                contentType:selectedPhoto.type
+              }
+          );
+
+
+        if(uploadResult.error){
+
+            throw new Error(
+              "Photo upload failed: "+
+              uploadResult.error.message
+            );
+
+        }
+
+
+
+        /* -------------------------
+           REGISTRATION PAYLOAD
+        ------------------------- */
+
+        const payload={
+
+          advocate_name:
+            $("aname").value.trim(),
+
+          email:
+            $("aemail").value.trim().toLowerCase(),
+
+          mobile:
+            mobile,
+
+          enrollment_number:
+            $("enrollment").value.trim(),
+
+          enrollment_year:
+            Number($("enrollmentYear").value),
+
+          state_bar_council:
+            $("bar").value.trim(),
+
+          practice_state:
+            $("state").value,
+
+          district:
+            districtSelect.value,
+
+          court_name:
+            courtName,
+
+          district_court:
+            `${districtSelect.value} / ${courtName}`,
+
+          primary_practice_area:
+            selectedAreas.join(" | "),
+
+          practice_areas:
+            selectedAreas,
+
+          years_of_practice:
+            Number($("years").value),
+
+          photo_storage_path:
+            photoPath,
+
+          password:
+            password
+
+        };
+
+
+
+        /* -------------------------
+           EDGE FUNCTION
+        ------------------------- */
+
+        const result=
+          await client.functions.invoke(
+            "register-advocate",
+            {
+              body:payload
+            }
+          );
+
+
+        const data=result.data;
+
+        const error=result.error;
+
+
+        if(error){
+
+            throw new Error(
+              error.message ||
+              "Registration service failed."
+            );
+
+        }
+
+
+        if(!data || !data.ok){
+
+            throw new Error(
+              data?.message ||
+              "Registration failed."
+            );
+
+        }
+
+
+
+        /* -------------------------
+           SUCCESS
+        ------------------------- */
+
+        status.className=
+          "status ok";
+
+
+        status.textContent=
+          data.message ||
+          "Registration submitted successfully for review.";
+
+
+        $("regForm").reset();
+
+
+        selectedPhoto=null;
+
+
+        $("photoPreview").src="";
+
+        $("photoPreview").style.display=
+          "none";
+
+
+        $("photoStatus").textContent=
+          "JPG, PNG or WebP · Maximum 2 MB";
+
+
+        districtSelect.innerHTML=
+          '<option value="">Select State first</option>';
+
+        districtSelect.disabled=true;
+
+
+        courtSelect.innerHTML=
+          '<option value="">Select District first</option>';
+
+        courtSelect.disabled=true;
+
+
+        updatePracticeCounter();
+
+
+    }
+
+
+    catch(error){
+
+        status.className=
+          "status err";
+
+
+        status.textContent=
+          error?.message ||
+          "Registration service unavailable.";
+
+    }
+
+
+    finally{
+
+        submitButton.disabled=false;
+
+    }
+
+});
+
+});
+</script>
+
+</body>
+</html>
