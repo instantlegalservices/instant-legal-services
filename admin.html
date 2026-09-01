@@ -620,15 +620,227 @@ async function saveAdvocateNotes(){
   msg("appMsg","Advocate notes saved.","ok"); await loadAdvocates();
 }
 async function setAdvocateVerification(status){
+
   if(!selectedAdvocateId)return;
-  const a=allAdvocates.find(x=>String(x.id)===String(selectedAdvocateId));
+
+  const a=allAdvocates.find(
+    x=>String(x.id)===String(selectedAdvocateId)
+  );
+
   if(!a)return;
-  if(!confirm(status==="Approved"?"Approve this advocate and make the profile eligible for the public network?":"Reject this advocate application?"))return;
-  const update={status,verification_status:status,admin_notes:$("advocateAdminNotes").value.trim(),public_profile:status==="Approved"};
-  update.approved_at=status==="Approved"?new Date().toISOString():null;
-  const {error}=await sb.from("advocate_registrations").update(update).eq("id",selectedAdvocateId);
-  if(error){msg("advocateUpdateError","Verification update failed: "+error.message,"err");return;}
-  msg("appMsg","Advocate status updated successfully.","ok"); await loadAdvocates();
+
+  if(!confirm(
+    status==="Approved"
+      ? "Approve this advocate and make the profile public?"
+      : "Reject this advocate application?"
+  ))return;
+
+  try{
+
+    let photoUrl =
+      a.photo_url ||
+      a.profile_photo_url ||
+      null;
+
+    let approvedPhotoPath =
+      a.photo_storage_path ||
+      null;
+
+
+    /* =========================================
+       PROMOTE PENDING PHOTO WHEN APPROVING
+    ========================================= */
+
+    if(
+      status==="Approved" &&
+      a.photo_storage_path
+    ){
+
+      const pendingPath =
+        String(a.photo_storage_path)
+          .replace(/^\/+/,"");
+
+
+      const photoResult =
+        await sb.storage
+          .from("advocate-photo-pending")
+          .download(pendingPath);
+
+
+      if(photoResult.error){
+
+        throw new Error(
+          "Pending photo fetch failed: "+
+          photoResult.error.message
+        );
+
+      }
+
+
+      const ext =
+        pendingPath.match(
+          /\.(jpg|jpeg|png|webp)$/i
+        )?.[1] || "jpg";
+
+
+      const finalPath =
+        "approved/" +
+        String(a.id) +
+        "-" +
+        Date.now() +
+        "." +
+        ext;
+
+
+      const uploadResult =
+        await sb.storage
+          .from("advocate-photo")
+          .upload(
+            finalPath,
+            photoResult.data,
+            {
+              contentType:
+                photoResult.data.type ||
+                "image/jpeg",
+              cacheControl:"3600",
+              upsert:true
+            }
+          );
+
+
+      if(uploadResult.error){
+
+        throw new Error(
+          "Approved photo upload failed: "+
+          uploadResult.error.message
+        );
+
+      }
+
+
+      const publicResult =
+        sb.storage
+          .from("advocate-photo")
+          .getPublicUrl(finalPath);
+
+
+      photoUrl =
+        publicResult?.data?.publicUrl ||
+        null;
+
+
+      approvedPhotoPath =
+        finalPath;
+
+
+      /* Remove pending copy only after
+         approved upload succeeds */
+
+      const removeResult =
+        await sb.storage
+          .from("advocate-photo-pending")
+          .remove([pendingPath]);
+
+
+      if(removeResult.error){
+
+        console.warn(
+          "Pending photo cleanup warning:",
+          removeResult.error.message
+        );
+
+      }
+
+    }
+
+
+    /* =========================================
+       UPDATE ADVOCATE RECORD
+    ========================================= */
+
+    const update={
+
+      status:status,
+
+      verification_status:status,
+
+      admin_notes:
+        $("advocateAdminNotes")
+          ? $("advocateAdminNotes").value.trim()
+          : "",
+
+      public_profile:
+        status==="Approved",
+
+      approved_at:
+        status==="Approved"
+          ? new Date().toISOString()
+          : null
+
+    };
+
+
+    if(
+      status==="Approved" &&
+      photoUrl
+    ){
+
+      update.photo_url =
+        photoUrl;
+
+      update.profile_photo_url =
+        photoUrl;
+
+      update.photo_storage_path =
+        approvedPhotoPath;
+
+    }
+
+
+    const {error}=await sb
+      .from("advocate_registrations")
+      .update(update)
+      .eq("id",selectedAdvocateId);
+
+
+    if(error){
+
+      throw new Error(
+        "Verification update failed: "+
+        error.message
+      );
+
+    }
+
+
+    msg(
+      "appMsg",
+      status==="Approved"
+        ? "Advocate approved successfully. Photo published."
+        : "Advocate application rejected.",
+      "ok"
+    );
+
+
+    await loadAdvocates();
+
+
+  }catch(err){
+
+    console.error(
+      "Advocate verification error:",
+      err
+    );
+
+    msg(
+      "advocateUpdateError",
+      err?.message ||
+      "Advocate verification failed.",
+      "err"
+    );
+
+  }
+
 }
 async function createAdvocateLogin(){
   if(!selectedAdvocateId)return;
