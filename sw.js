@@ -1,4 +1,4 @@
-const CACHE = "ils-v12-final";
+const CACHE = "ils-v13-final";
 
 const STATIC_ASSETS = [
   "./",
