@@ -95,6 +95,15 @@
   cursor:not-allowed;
 }
 
+.court-grid{
+  margin-top:8px;
+}
+
+.courtOption:focus-visible + label{
+  outline:2px solid #f4c35b;
+  outline-offset:2px;
+}
+
 .practice-counter{
   font-size:13px;
   opacity:.75;
@@ -419,26 +428,85 @@ Select State first
 
 
 <!-- =========================
-     COURT
+     COURT / JURISDICTION
 ========================= -->
 
-<label for="court">
-Court Name / Court Complex
+<label style="margin-top:18px">
+  Court / Jurisdiction
 </label>
 
-<select id="court"
-        disabled>
+<div class="practice-counter">
+  Select minimum <strong>1</strong> and maximum <strong>2</strong> courts.
+  <span id="courtCounter">0/2</span>
+</div>
 
-<option value="">
-Select District first
-</option>
+<div id="courtGrid" class="practice-grid court-grid">
 
-</select>
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court1" value="District & Sessions Court">
+    <label for="court1">District & Sessions Court</label>
+  </div>
 
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court2" value="Commercial Court">
+    <label for="court2">Commercial Court</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court3" value="Tehsil Court">
+    <label for="court3">Tehsil Court</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court4" value="Consumer Court / Consumer Commission">
+    <label for="court4">Consumer Court / Consumer Commission</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court5" value="Labour Court">
+    <label for="court5">Labour Court</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court6" value="Family Court">
+    <label for="court6">Family Court</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court7" value="Munsif Court / Civil Judge (Junior Division)">
+    <label for="court7">Munsif Court / Civil Judge (Junior Division)</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court8" value="Civil Judge / Senior Civil Court">
+    <label for="court8">Civil Judge / Senior Civil Court</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court9" value="Magistrate Court / JM / CJM">
+    <label for="court9">Magistrate Court / JM / CJM</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court10" value="High Court">
+    <label for="court10">High Court</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court11" value="Supreme Court of India">
+    <label for="court11">Supreme Court of India</label>
+  </div>
+
+  <div class="practice-item">
+    <input type="checkbox" class="courtOption" id="court12" value="Other Court">
+    <label for="court12">Other Court</label>
+  </div>
+
+</div>
 
 <input id="courtOther"
        maxlength="160"
-       placeholder="If your court is not listed, enter court name"
+       placeholder="Optional: enter specific court / bench / complex name"
        style="margin-top:8px">
 
 
@@ -1539,7 +1607,7 @@ const districts={
 ===================================================== */
 
 const districtSelect=$("district");
-const courtSelect=$("court");
+
 
 stateSelect.addEventListener("change",function(){
 
@@ -1589,56 +1657,40 @@ stateSelect.addEventListener("change",function(){
 
 
 /* =====================================================
-   COURT CHANGE
+   COURT SELECTION — MINIMUM 1 / MAXIMUM 2
 ===================================================== */
 
-districtSelect.addEventListener("change",function(){
+const courtOptions = [
+  ...document.querySelectorAll(".courtOption")
+];
 
-    const district=districtSelect.value;
+const courtCounter = $("courtCounter");
 
-    if(!district){
-        courtSelect.disabled=true;
-        return;
-    }
+function updateCourtCounter(){
 
-    courtSelect.innerHTML="";
+    const selected = courtOptions.filter(function(input){
+        return input.checked;
+    }).length;
 
-    const courts=[
+    courtCounter.textContent = `${selected}/2`;
 
-      `${district} District Court`,
-      `${district} Family Court`,
-      `${district} Consumer Commission`,
-      `${district} Commercial Court`,
-      `${district} Other Court`
+    courtOptions.forEach(function(input){
 
-    ];
-
-
-    const first=document.createElement("option");
-
-    first.value="";
-
-    first.textContent="Select court";
-
-    courtSelect.appendChild(first);
-
-
-    courts.forEach(function(court){
-
-        const option=document.createElement("option");
-
-        option.value=court;
-
-        option.textContent=court;
-
-        courtSelect.appendChild(option);
+        if(!input.checked){
+            input.disabled = selected >= 2;
+        }else{
+            input.disabled = false;
+        }
 
     });
 
+}
 
-    courtSelect.disabled=false;
-
+courtOptions.forEach(function(input){
+    input.addEventListener("change", updateCourtCounter);
 });
+
+updateCourtCounter();
 
 
 
@@ -1890,39 +1942,52 @@ async function(event){
         }
 
 
-        const courtOther=
+        const selectedCourts =
+          courtOptions
+          .filter(function(input){
+              return input.checked;
+          })
+          .map(function(input){
+              return input.value;
+          });
+
+        if(selectedCourts.length < 1){
+            throw new Error(
+              "Please select at least 1 court / jurisdiction."
+            );
+        }
+
+        if(selectedCourts.length > 2){
+            throw new Error(
+              "You can select a maximum of 2 courts / jurisdictions."
+            );
+        }
+
+        const courtOther =
           $("courtOther").value.trim();
 
+        const courtName =
+          selectedCourts.join(" | ") +
+          (courtOther ? " | " + courtOther : "");
 
-        const courtName=
-          courtOther ||
-          courtSelect.value;
+        const requiresDistrict =
+          selectedCourts.some(function(court){
+              return ![
+                "High Court",
+                "Supreme Court of India"
+              ].includes(court);
+          });
 
-
-        if(!courtName){
-
+        if(requiresDistrict && !districtSelect.value){
             throw new Error(
-              "Please select or enter your court name."
+              "Please select your district for the selected local court."
             );
-
         }
-
-
-        if(!districtSelect.value){
-
-            throw new Error(
-              "Please select your district."
-            );
-
-        }
-
 
         if(!$("state").value){
-
             throw new Error(
               "Please select your practising state."
             );
-
         }
 
 
@@ -1968,7 +2033,7 @@ async function(event){
         const uploadResult=
           await client
           .storage
-          .from("advocate-photo")
+          .from("advocate-photo-pending")
           .upload(
               photoPath,
               selectedPhoto,
@@ -2025,7 +2090,10 @@ async function(event){
             courtName,
 
           district_court:
-            `${districtSelect.value} / ${courtName}`,
+            `${districtSelect.value || "Higher Court"} / ${courtName}`,
+
+          court_selections:
+            selectedCourts,
 
           primary_practice_area:
             selectedAreas.join(" | "),
@@ -2120,12 +2188,13 @@ async function(event){
         districtSelect.disabled=true;
 
 
-        courtSelect.innerHTML=
-          '<option value="">Select District first</option>';
+        courtOptions.forEach(function(input){
+          input.checked=false;
+        });
 
-        courtSelect.disabled=true;
+        $("courtOther").value="";
 
-
+        updateCourtCounter();
         updatePracticeCounter();
 
 
