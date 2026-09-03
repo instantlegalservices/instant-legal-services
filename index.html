@@ -26,7 +26,6 @@ content="Search Indian law, explore judgments, find advocates and get profession
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/ils-core.js?v=13" defer></script>
-<script src="assets/ils-search-router.js" defer></script>
 
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#07101c">
@@ -686,7 +685,8 @@ content="Search Indian law, explore judgments, find advocates and get profession
 <form
   id="homeSearchForm"
   class="home-search"
-  role="search">
+  role="search"
+  onsubmit="return homeSearch();">
 
         <input
           id="homeSearch"
@@ -2124,15 +2124,22 @@ document.addEventListener(
     if(form){
 
       form.addEventListener(
-  "submit",
-  function(event){
+        "submit",
+        function(event){
 
-    event.preventDefault();
+          event.preventDefault();
 
-    homeSearch();
+          performSearch(
+            input
+              ? input.value
+              : ""
+          );
 
-  }
-);
+        }
+      );
+
+    }
+
 
     document
       .querySelectorAll(
@@ -2232,47 +2239,13 @@ document.addEventListener(
 
 <script>
 window.homeSearch = function () {
-  const input = document.getElementById("homeSearch");
-  const q = input ? input.value.trim() : "";
+  const input = document.getElementById('homeSearch');
+  const q = input ? input.value.trim() : '';
 
   if (!q) {
     if (input) input.focus();
     return false;
   }
-
-  if (
-    window.ILS_SEARCH_ROUTER &&
-    typeof ILS_SEARCH_ROUTER.search === "function"
-  ) {
-    ILS_SEARCH_ROUTER.search(q)
-      .then(function (result) {
-        const destination =
-          ILS_SEARCH_ROUTER.primaryDestination(result);
-
-        if (destination) {
-          window.location.href = destination;
-          return;
-        }
-
-        window.location.href =
-          "legal-search.html?q=" +
-          encodeURIComponent(q);
-      })
-      .catch(function (error) {
-        console.error("ILS UNIFIED SEARCH ERROR:", error);
-
-        window.location.href =
-          "legal-search.html?q=" +
-          encodeURIComponent(q);
-      });
-  } else {
-    window.location.href =
-      "legal-search.html?q=" +
-      encodeURIComponent(q);
-  }
-
-  return false;
-};
 
   window.location.href =
     'ai-assistant.html?q=' + encodeURIComponent(q);
