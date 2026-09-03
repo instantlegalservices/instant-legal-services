@@ -143,6 +143,59 @@ const ALL_SECTION_INDEX = [
   {act:"NDPS Act 1985",sec:"42",title:"Power of entry, search, seizure and arrest without warrant or authorisation",url:"",keywords:"NDPS search seizure arrest"}
 ];
 
+
+/* ILS Legal Intent Engine v1 */
+const LEGAL_INTENTS = [
+{name:"Anticipatory Bail",keys:["anticipatory bail","अग्रिम जमानत","गिरफ्तारी से पहले जमानत"],sections:[["BNSS 2023","482"]]},
+{name:"Regular Bail",keys:["regular bail","bail","जमानत","बेल"],sections:[["BNSS 2023","478"],["BNSS 2023","480"],["BNSS 2023","483"],["NDPS Act 1985","37"]]},
+{name:"FIR / Cognizable Information",keys:["fir","first information report","cognizable case","एफआईआर","रिपोर्ट लिखाना"],sections:[["BNSS 2023","173"]]},
+{name:"Arrest & 24-Hour Rule",keys:["arrest","arrested","police arrest","24 hours","गिरफ्तार","गिरफ्तारी","24 घंटे"],sections:[["BNSS 2023","43"],["BNSS 2023","47"],["BNSS 2023","48"],["BNSS 2023","58"]]},
+{name:"Police Remand / Investigation",keys:["police remand","remand","custody","रिमांड","पुलिस कस्टडी"],sections:[["BNSS 2023","187"]]},
+{name:"Undertrial Detention",keys:["undertrial","under trial","maximum detention","विचाराधीन कैदी"],sections:[["BNSS 2023","479"]]},
+{name:"Cheque Bounce",keys:["cheque bounce","check bounce","cheque dishonour","dishonour of cheque","138 ni","138 cheque","चेक बाउंस","चेक डिसऑनर"],sections:[["Negotiable Instruments Act 1881","138"],["Negotiable Instruments Act 1881","139"],["Negotiable Instruments Act 1881","141"],["Negotiable Instruments Act 1881","142"],["Negotiable Instruments Act 1881","143"],["Negotiable Instruments Act 1881","143A"]]},
+{name:"Divorce",keys:["divorce","तलाक","mutual consent divorce","judicial separation"],sections:[["Hindu Marriage Act 1955","13"],["Hindu Marriage Act 1955","13B"],["Hindu Marriage Act 1955","10"]]},
+{name:"Matrimonial Maintenance",keys:["wife maintenance","husband maintenance","maintenance wife","alimony","interim maintenance","भरण पोषण","गुजारा भत्ता","पत्नी का खर्च"],sections:[["Hindu Marriage Act 1955","24"],["Hindu Marriage Act 1955","25"],["Protection of Women from Domestic Violence Act 2005","20"]]},
+{name:"Domestic Violence",keys:["domestic violence","dv act","protection order","residence order","shared household","घरेलू हिंसा","प्रोटेक्शन ऑर्डर"],sections:[["Protection of Women from Domestic Violence Act 2005","3"],["Protection of Women from Domestic Violence Act 2005","12"],["Protection of Women from Domestic Violence Act 2005","17"],["Protection of Women from Domestic Violence Act 2005","18"],["Protection of Women from Domestic Violence Act 2005","19"],["Protection of Women from Domestic Violence Act 2005","20"],["Protection of Women from Domestic Violence Act 2005","23"]]},
+{name:"Child Custody",keys:["child custody","custody of child","minor custody","बच्चे की कस्टडी"],sections:[["Hindu Marriage Act 1955","26"],["Protection of Women from Domestic Violence Act 2005","21"]]},
+{name:"NDPS / Drug Case",keys:["ndps","ganja","cannabis","charas","drug case","narcotic","गांजा","चरस","नशीली दवा"],sections:[["NDPS Act 1985","20"],["NDPS Act 1985","35"],["NDPS Act 1985","36A"],["NDPS Act 1985","37"],["NDPS Act 1985","42"]]},
+{name:"Electronic Evidence",keys:["electronic evidence","digital evidence","electronic record","digital record","डिजिटल साक्ष्य"],sections:[["BSA 2023","61"],["BSA 2023","62"],["BSA 2023","63"],["BSA 2023","65"],["BSA 2023","66"]]},
+{name:"Civil Revision",keys:["cpc revision","revision petition","civil revision","रिवीजन","सिविल रिवीजन"],sections:[["Code of Civil Procedure 1908","115"]]},
+{name:"Property / Injunction",keys:["property injunction","injunction","property dispute","specific performance","संपत्ति विवाद","इंजंक्शन","स्टे"],sections:[["Code of Civil Procedure 1908","115"]]},
+{name:"RTI",keys:["rti","right to information","सूचना का अधिकार","आरटीआई"],sections:[["Right to Information Act 2005",""]]},
+{name:"Consumer Dispute",keys:["consumer complaint","consumer court","deficiency in service","unfair trade practice","उपभोक्ता शिकायत","कंज्यूमर कोर्ट"],sections:[["Consumer Protection Act 2019",""]]},
+{name:"Cyber Crime",keys:["cyber crime","online fraud","cyber fraud","hacking","upi fraud","साइबर क्राइम","ऑनलाइन फ्रॉड"],sections:[["Information Technology Act 2000",""]]}
+];
+function normalizeLegalQuery(s){
+ return norm(String(s||""))
+  .replace(/\b(chahiye|kaise|hai|hain|mujhe|mera|meri|mein|me|ke|ki|ka)\b/g," ")
+  .replace(/\s+/g," ").trim();
+}
+function detectLegalIntents(q){
+ const n=normalizeLegalQuery(q);
+ return LEGAL_INTENTS.map(i=>{
+   let best=0;
+   i.keys.forEach(k=>{
+     const x=normalizeLegalQuery(k);
+     if(n===x) best=Math.max(best,100);
+     else if(n.includes(x)) best=Math.max(best,85);
+     else {
+       const w=x.split(/\s+/).filter(Boolean), h=w.filter(v=>n.includes(v)).length;
+       if(w.length && h===w.length) best=Math.max(best,70);
+       else if(w.length>1 && h>=Math.ceil(w.length*.6)) best=Math.max(best,45);
+     }
+   });
+   return {...i,_score:best};
+ }).filter(i=>i._score>0).sort((a,b)=>b._score-a._score).slice(0,3);
+}
+function resolveIntentSections(intents){
+ const out=[];
+ intents.forEach(i=>i.sections.forEach(pair=>{
+   const hit=ALL_SECTION_INDEX.find(s=>norm(s.act)===norm(pair[0]) && (!pair[1]||String(s.sec).toLowerCase()===String(pair[1]).toLowerCase()));
+   if(hit&&!out.some(x=>x.act===hit.act&&String(x.sec).toLowerCase()===String(hit.sec).toLowerCase())) out.push({...hit,intent:i.name});
+ }));
+ return out;
+}
+
 const TOPIC_PAGES = [
  {keywords:"case status cnr court status",title:"How to check a case status",url:"legal-topic-case-status.html"},
  {keywords:"supreme court judgment supreme court judgments",title:"Find Supreme Court judgments",url:"legal-topic-supreme-court-judgments.html"},
@@ -211,7 +264,27 @@ function sectionLawMatches(item, law){
  return a.includes(l) || norm(aliases[l]||"").includes(a) || a.includes(norm(aliases[l]||""));
 }
 
-async function runSearch(){
+async 
+/* ILS Judgment Intelligence v1 — non-invasive ranking layer */
+function judgmentIntentScore(j,intents,q){
+ const text=norm(Object.keys(j||{}).map(k=>j[k]).filter(v=>typeof v==="string").join(" "));
+ const nq=normalizeLegalQuery(q);
+ let score=nq&&text.includes(nq)?90:0;
+ intents.forEach(i=>i.keys.forEach(k=>{
+   const x=normalizeLegalQuery(k);
+   if(x&&text.includes(x))score+=35;
+ }));
+ return score;
+}
+function rankJudgments(rows,intents,q){
+ return (Array.isArray(rows)?rows:[]).map(j=>({...j,_intentScore:judgmentIntentScore(j,intents,q)}))
+   .sort((a,b)=>b._intentScore-a._intentScore);
+}
+
+function runSearch(){
+ const detectedIntents=detectLegalIntents(document.getElementById("legalSearch").value);
+ const intentSections=resolveIntentSections(detectedIntents);
+
  const input=document.getElementById("legalSearch"), q=input.value.trim();
  if(!q) return;
  history.replaceState(null,"","legal-search.html?q="+encodeURIComponent(q));
@@ -253,6 +326,7 @@ async function runSearch(){
  }catch(e){console.warn("ILS search fallback:",e);}
 
  let html="";
+ if(detectedIntents.length){intentSections.forEach(s=>{if(!sectionExact.some(x=>x.act===s.act&&String(x.sec).toLowerCase()===String(s.sec).toLowerCase()))sectionExact.unshift(s);});}
  sectionExact.slice(0,6).forEach(s=>html+=sectionCard(s));
  actExact.slice(0,4).forEach(a=>html+=actCard(a,/^(crpc|ipc|indian evidence act)/i.test(a.name)));
  sectionRelated.filter(s=>!sectionExact.some(x=>x.url===s.url)).slice(0,6).forEach(s=>html+=sectionCard(s));
