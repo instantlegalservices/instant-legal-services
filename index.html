@@ -686,7 +686,7 @@ content="Search Indian law, explore judgments, find advocates and get profession
   id="homeSearchForm"
   class="home-search"
   role="search"
-  onsubmit="return homeSearch();">
+  >
 
         <input
           id="homeSearch"
@@ -2072,32 +2072,97 @@ async function loadHome(){
 
 function performSearch(query){
 
-  const q =
-    String(query || "").trim();
-
+  const q = String(query || "").trim();
 
   if(!q){
-
-    const input =
-      document.getElementById(
-        "homeSearch"
-      );
-
-    if(input){
-
-      input.focus();
-
-    }
-
+    const input = document.getElementById("homeSearch");
+    if(input) input.focus();
     return;
-
   }
 
+  const normalized = q.toLowerCase().replace(/\s+/g," ").trim();
+
+  const sectionRules = [
+    [/^(section\s*)?115(\s+bns)?$/i, "sections/bns-115.html"],
+    [/^(bns\s*)?115$/i, "sections/bns-115.html"],
+    [/^(section\s*)?318(\s+bns)?$/i, "sections/bns-318.html"],
+    [/^(bns\s*)?318$/i, "sections/bns-318.html"],
+    [/^(section\s*)?173(\s+bnss)?$/i, "sections/bnss-173.html"],
+    [/^(bnss\s*)?173$/i, "sections/bnss-173.html"],
+    [/^(section\s*)?187(\s+bnss)?$/i, "sections/bnss-187.html"],
+    [/^(bnss\s*)?187$/i, "sections/bnss-187.html"],
+    [/^(section\s*)?479(\s+bnss)?$/i, "sections/bnss-479.html"],
+    [/^(bnss\s*)?479$/i, "sections/bnss-479.html"],
+    [/^(section\s*)?480(\s+bnss)?$/i, "sections/bnss-480.html"],
+    [/^(bnss\s*)?480$/i, "sections/bnss-480.html"],
+    [/^(section\s*)?482(\s+bnss)?$/i, "sections/bnss-482.html"],
+    [/^(bnss\s*)?482$/i, "sections/bnss-482.html"],
+    [/^(section\s*)?63(\s+bsa)?$/i, "sections/bsa-63.html"],
+    [/^(bsa\s*)?63$/i, "sections/bsa-63.html"],
+    [/^(section\s*)?138(\s+(ni|negotiable instruments)(\s+act)?)?$/i, "sections/ni-138.html"],
+    [/^(ni\s+act\s*)?138$/i, "sections/ni-138.html"],
+    [/^(section\s*)?13(\s+hma)?$/i, "sections/hma-13.html"],
+    [/^(hma\s*)?13$/i, "sections/hma-13.html"],
+    [/^(section\s*)?12(\s+(dv|domestic violence)(\s+act)?)?$/i, "sections/dv-12.html"],
+    [/^(dv\s+act\s*)?12$/i, "sections/dv-12.html"],
+    [/^(section\s*)?20(\s+ndps)?$/i, "sections/ndps-20.html"],
+    [/^(ndps\s*)?20$/i, "sections/ndps-20.html"],
+    [/^(section\s*)?37(\s+ndps)?$/i, "sections/ndps-37.html"],
+    [/^(ndps\s*)?37$/i, "sections/ndps-37.html"],
+    [/^(section\s*)?115(\s+cpc)?$/i, "sections/cpc-115-up.html"]
+  ];
+
+  for(const [rule,path] of sectionRules){
+    if(rule.test(normalized)){
+      window.location.href = path;
+      return;
+    }
+  }
+
+  const acts = [
+    ["bns","acts/bns-2023.html"],
+    ["bnss","acts/bnss-2023.html"],
+    ["bsa","acts/bsa-2023.html"],
+    ["constitution","acts/constitution-of-india.html"],
+    ["constitution of india","acts/constitution-of-india.html"],
+    ["cpc","acts/code-of-civil-procedure-1908.html"],
+    ["civil procedure code","acts/code-of-civil-procedure-1908.html"],
+    ["hindu marriage act","acts/hindu-marriage-act-1955.html"],
+    ["domestic violence act","acts/domestic-violence-act-2005.html"],
+    ["negotiable instruments act","acts/negotiable-instruments-act-1881.html"],
+    ["ni act","acts/negotiable-instruments-act-1881.html"],
+    ["consumer protection act","acts/consumer-protection-act-2019.html"],
+    ["ndps act","acts/ndps-act-1985.html"]
+  ];
+
+  const exactAct = acts.find(([name]) => normalized === name);
+  if(exactAct){
+    window.location.href = exactAct[1];
+    return;
+  }
+
+  if(/\b(tool|tools|calculator|calculation|limitation|court fee|stamp duty|interest calculator|maintenance calculator|case timeline|case checklist|legal diagnostic)\b/i.test(normalized)){
+    window.location.href = "tools.html";
+    return;
+  }
+
+  if(/\b(advocate|lawyer|lawyers|vakil|counsel|find advocate|law firm)\b/i.test(normalized)){
+    window.location.href = "advocates.html?q=" + encodeURIComponent(q);
+    return;
+  }
+
+  if(/\b(judgment|judgement|case law|case-law|supreme court|high court|verdict|precedent|citation|case)\b/i.test(normalized)){
+    window.location.href = "judgments.html?q=" + encodeURIComponent(q);
+    return;
+  }
+
+  if(/\b(what|why|how|can|whether|is it|am i|my|police|arrest|bail|divorce|maintenance|property|cheque|cyber|criminal|civil|legal notice|rights|law)\b/i.test(normalized)){
+    window.location.href = "ai-assistant.html?q=" + encodeURIComponent(q);
+    return;
+  }
 
   window.location.href =
-    "legal-search.html?q=" +
-    encodeURIComponent(q);
-
+    "legal-search.html?q=" + encodeURIComponent(q);
 }
 
 
@@ -2239,17 +2304,8 @@ document.addEventListener(
 
 <script>
 window.homeSearch = function () {
-  const input = document.getElementById('homeSearch');
-  const q = input ? input.value.trim() : '';
-
-  if (!q) {
-    if (input) input.focus();
-    return false;
-  }
-
-  window.location.href =
-    'ai-assistant.html?q=' + encodeURIComponent(q);
-
+  const input = document.getElementById("homeSearch");
+  performSearch(input ? input.value : "");
   return false;
 };
 </script>
