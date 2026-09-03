@@ -1,23 +1,179 @@
 <!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Indian Legal Search | Judgments, Laws, Cases & Advocates | Instant Legal Services</title>
-<meta name="description" content="Search verified Indian judgments, legal topics and advocate profiles on Instant Legal Services. Use official eCourts and India Code links for case status and statutory text.">
+<meta name="description" content="Search Indian Acts, law sections, verified judgments, legal topics and advocate profiles on Instant Legal Services. Use official eCourts and India Code links for authoritative services and statutory text.">
 <meta name="robots" content="index,follow"><link rel="canonical" href="https://instantlegalservices.in/legal-search.html">
 <link rel="stylesheet" href="assets/ils.css"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js" defer></script><script src="assets/pwa.js" defer></script>
 </head><body><header class="site-header"><div class="wrap navbar"><a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a><nav class="navlinks"><a href="index.html">Home</a><a class="active" href="legal-search.html">Legal Search</a><a href="advocates.html">Find Advocate</a><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="ai-assistant.html">AI Assistant</a><a href="about.html">About</a><a href="faq.html">FAQ</a><a class="btn btn-primary btn-small" href="assistance.html">Get Legal Help</a></nav><button class="menu" data-menu aria-label="Open menu">☰</button><button class="btn btn-ghost btn-small" data-install-app hidden>Install App</button></div></header>
-<main><section class="hero"><div class="wrap"><span class="eyebrow">Indian Legal Search</span><h1>Search law, judgments & legal resources</h1><p class="lead">Use one search page to discover verified ILS judgments, legal topics and advocate profiles. For live case status and statutory text, open the relevant official service.</p><div class="searchbar"><input id="legalSearch" placeholder="Try: anticipatory bail, NDPS, cheque bounce, property dispute" autocomplete="off"><button class="btn btn-primary" onclick="runSearch()">Search</button></div><p class="meta" style="margin-top:10px">Search results from the ILS database are informational. Official court and statutory sources remain the authoritative source.</p></div><div id="intent"></div></section>
-<section class="section"><div class="wrap"><div class="grid feature-grid"><a class="card feature-card" href="acts/"><h3>📜 Indian Acts Library</h3><p>Browse important Indian Acts and move to official statutory sources and related ILS section research.</p></a><a class="card feature-card" href="judgments.html"><h3>⚖️ Verified Judgments</h3><p>Search ILS judgment records that meet the site's verification and processing requirements.</p></a><a class="card feature-card" href="law-guide.html"><h3>📚 Law Guide</h3><p>Browse legal practice areas and common Indian-law topics.</p></a><a class="card feature-card" href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener"><h3>🏛️ Official eCourts</h3><p>Use the official court-services portal for case-status related services.</p></a><a class="card feature-card" href="https://www.indiacode.nic.in/" target="_blank" rel="noopener"><h3>📜 India Code</h3><p>Consult the Government of India's statutory repository for legislation.</p></a><a class="card feature-card" href="advocates.html"><h3>👨‍⚖️ Advocate Directory</h3><p>Browse approved public professional profiles available through ILS.</p></a><a class="card feature-card" href="ai-assistant.html"><h3>🤖 Verified-source AI</h3><p>Ask a legal question and receive research-oriented answers only when source verification requirements are met.</p></a></div></div></section>
+<main><section class="hero"><div class="wrap"><span class="eyebrow">Indian Legal Search</span><h1>Search law, judgments & legal resources</h1><p class="lead">Search Acts, sections, judgments, legal topics and advocate profiles from one place. Dedicated ILS section pages are shown when available; otherwise you can open the official statutory source.</p><div class="searchbar"><input id="legalSearch" placeholder="Try: BNSS 482, IPC 302, CPC 115, NI Act 138, divorce, NDPS 37" autocomplete="off"><button class="btn btn-primary" onclick="runSearch()">Search</button></div><p class="meta" style="margin-top:10px">ILS results are informational. The current official statute, amendments, notifications and court records remain authoritative.</p></div><div id="intent"></div></section>
+<section class="section"><div class="wrap"><div class="grid feature-grid"><a class="card feature-card" href="acts/"><h3>📜 Indian Acts Library</h3><p>Browse major Indian Acts and official statutory sources.</p></a><a class="card feature-card" href="sections/"><h3>⚖️ Law Sections</h3><p>Open dedicated ILS section-level research pages where available.</p></a><a class="card feature-card" href="judgments.html"><h3>⚖️ Verified Judgments</h3><p>Search ILS judgment records.</p></a><a class="card feature-card" href="law-guide.html"><h3>📚 Law Guide</h3><p>Browse legal practice areas and common Indian-law topics.</p></a><a class="card feature-card" href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener"><h3>🏛️ Official eCourts</h3><p>Use the official court-services portal for live case-status services.</p></a><a class="card feature-card" href="https://www.indiacode.nic.in/" target="_blank" rel="noopener"><h3>📜 India Code</h3><p>Consult the Government of India's statutory repository.</p></a><a class="card feature-card" href="advocates.html"><h3>👨‍⚖️ Advocate Directory</h3><p>Browse approved public professional profiles.</p></a><a class="card feature-card" href="ai-assistant.html"><h3>🤖 Verified-source AI</h3><p>Ask a legal question for research-oriented guidance.</p></a></div></div></section>
 <section class="section alt"><div class="wrap"><div class="section-head"><div><h2>Search results</h2><p id="resultMeta">Enter a query above.</p></div></div><div id="results" class="grid two-grid"><div class="empty">No search performed yet.</div></div></div></section>
 <section class="section"><div class="wrap"><div class="section-head"><div><h2>Popular legal research paths</h2><p>High-intent starting points for litigants and legal professionals.</p></div></div><div class="grid feature-grid">
 <a class="card feature-card" href="legal-topic-case-status.html"><h3>How to check a case status</h3><p>Learn the basic route to official court case-status services and CNR-based searches.</p></a>
 <a class="card feature-card" href="legal-topic-supreme-court-judgments.html"><h3>Find Supreme Court judgments</h3><p>Search ILS records and use the official Supreme Court source when reviewing a judgment.</p></a>
 <a class="card feature-card" href="legal-topic-indian-laws.html"><h3>Search Indian laws & sections</h3><p>Find legal topics and move to the authoritative statutory repository for the actual text.</p></a>
 <a class="card feature-card" href="legal-topic-bail.html"><h3>Bail & anticipatory bail research</h3><p>Start with a research topic and verify the applicable current law and judgments.</p></a>
-<a class="card feature-card" href="legal-topic-cheque-bounce.html"><h3>Cheque bounce research</h3><p>Explore the topic and verify the current statutory provisions and case law before relying on it.</p></a>
+<a class="card feature-card" href="legal-topic-cheque-bounce.html"><h3>Cheque bounce research</h3><p>Explore the topic and verify the current statutory provisions and case law.</p></a>
 <a class="card feature-card" href="legal-topic-ndps.html"><h3>NDPS law research</h3><p>Use source-first research for provisions, procedure and relevant judgments.</p></a>
 </div></div></section>
 </main><footer class="footer"><div class="wrap footer-grid"><div><strong>Instant Legal Services</strong><p>Legal information, research access and professional network coordination.</p><p>General information only; not a substitute for case-specific legal advice.</p></div><div><strong>Explore</strong><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="advocates.html">Advocates</a><a href="ai-assistant.html">AI Assistant</a></div><div><strong>Official resources</strong><a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts</a><a href="https://www.indiacode.nic.in/" target="_blank" rel="noopener">India Code</a><a href="https://www.sci.gov.in/" target="_blank" rel="noopener">Supreme Court</a></div><div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="advocate-register.html">Join ILS Network</a><p>© 2026 Instant Legal Services</p></div></div></footer>
+
 <script>
-function card(title,text,url,label){return `<article class="card"><h3>${ILS.esc(title)}</h3><p>${ILS.esc(text)}</p><a class="btn btn-ghost btn-small" href="${url}">${ILS.esc(label||'Open')}</a></article>`}
-async function runSearch(){const q=document.getElementById('legalSearch').value.trim();if(!q)return;history.replaceState(null,'','legal-search.html?q='+encodeURIComponent(q));const r=document.getElementById('results');document.getElementById('resultMeta').textContent='Searching verified ILS records for “'+q+'”…';document.getElementById('intent').innerHTML=ILS.searchIntentHTML(q);r.innerHTML='<div class="empty">Searching…</div>';const [jud,adv]=await Promise.all([ILS.judgments({limit:12,q}),ILS.advocates({limit:8,q})]);let html='';if(jud.length) html += jud.map(j=>`<article class="card judgment-card"><div class="judgment-top"><span class="badge">${ILS.esc(j.court_name||'Judgment')}</span><span class="judgment-date">${ILS.formatDate(j.judgment_date)}</span></div><h3>${ILS.esc(j.case_title||'Judgment')}</h3><p>${ILS.esc(j.short_summary||j.legal_principle||'Verified judgment record.')}</p><div class="actions">${j.official_source_url?`<a class="btn btn-primary btn-small" href="${ILS.esc(j.official_source_url)}" target="_blank" rel="noopener">Official source ↗</a>`:''}${j.source_pdf_url?`<a class="btn btn-ghost btn-small" href="${ILS.esc(j.source_pdf_url)}" target="_blank" rel="noopener">PDF ↗</a>`:''}</div></article>`).join('');if(adv.length) html += adv.map(a=>`<article class="card"><h3>👨‍⚖️ ${ILS.esc(a.advocate_name||'Advocate')}</h3><p>${ILS.esc(a.practice_state||'India')} · ${ILS.esc(a.district_court||'Jurisdiction not specified')}<br>${ILS.esc(a.primary_practice_area||'Practice details available on profile.')}</p><a class="btn btn-ghost btn-small" href="advocates.html?q=${encodeURIComponent(q)}">View advocate directory</a></article>`).join('');html += card('Search official case status','For a live court-service lookup, use the official eCourts portal.','https://services.ecourts.gov.in/ecourtindia_v6/','Open eCourts ↗');html += card('Search statutory text','For the current statutory text, consult India Code or the relevant official publication.','https://www.indiacode.nic.in/','Open India Code ↗');r.innerHTML=html;document.getElementById('resultMeta').textContent=`${jud.length} verified judgment record(s) and ${adv.length} advocate profile result(s) found, plus official research links.`}
-document.addEventListener('DOMContentLoaded',()=>{const q=new URLSearchParams(location.search).get('q');if(q){document.getElementById('legalSearch').value=q;runSearch()}});
-</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Instant Legal Services","url":"https://instantlegalservices.in/","potentialAction":{"@type":"SearchAction","target":"https://instantlegalservices.in/legal-search.html?q={search_term_string}","query-input":"required name=search_term_string"}}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://instantlegalservices.in/"},{"@type":"ListItem","position":2,"name":"Legal Search","item":"https://instantlegalservices.in/legal-search.html"}]}</script></body></html>
+(function(){
+'use strict';
+
+const MAJOR_ACTS = [
+ {key:"BNS 2023",name:"Bharatiya Nyaya Sanhita, 2023",keywords:"bns bharatiya nyaya sanhita criminal offences",official:"https://www.indiacode.nic.in/"},
+ {key:"BNSS 2023",name:"Bharatiya Nagarik Suraksha Sanhita, 2023",keywords:"bnss bharatiya nagarik suraksha sanhita criminal procedure fir arrest bail remand",official:"https://www.indiacode.nic.in/"},
+ {key:"BSA 2023",name:"Bharatiya Sakshya Adhiniyam, 2023",keywords:"bsa bharatiya sakshya adhiniyam evidence electronic records admissibility",official:"https://www.indiacode.nic.in/"},
+ {key:"Family Courts Act 1984",name:"Family Courts Act, 1984",keywords:"family court family courts matrimonial maintenance custody family dispute",official:"https://www.indiacode.nic.in/"},
+ {key:"Hindu Marriage Act 1955",name:"Hindu Marriage Act, 1955",keywords:"hindu marriage act divorce marriage restitution judicial separation alimony",official:"https://www.indiacode.nic.in/"},
+ {key:"Hindu Succession Act 1956",name:"Hindu Succession Act, 1956",keywords:"hindu succession inheritance coparcenary property succession",official:"https://www.indiacode.nic.in/"},
+ {key:"Hindu Adoptions and Maintenance Act 1956",name:"Hindu Adoptions and Maintenance Act, 1956",keywords:"hama adoption maintenance hindu law",official:"https://www.indiacode.nic.in/"},
+ {key:"Hindu Minority and Guardianship Act 1956",name:"Hindu Minority and Guardianship Act, 1956",keywords:"hmga minority guardianship guardian custody minor",official:"https://www.indiacode.nic.in/"},
+ {key:"Special Marriage Act 1954",name:"Special Marriage Act, 1954",keywords:"special marriage court marriage registration divorce",official:"https://www.indiacode.nic.in/"},
+ {key:"Muslim Personal Law Shariat Application Act 1937",name:"Muslim Personal Law (Shariat) Application Act, 1937",keywords:"muslim law shariat personal law muslim marriage inheritance",official:"https://www.indiacode.nic.in/"},
+ {key:"Muslim Women Act 1986",name:"Muslim Women (Protection of Rights on Divorce) Act, 1986",keywords:"muslim women divorce maintenance mahr",official:"https://www.indiacode.nic.in/"},
+ {key:"Negotiable Instruments Act 1881",name:"Negotiable Instruments Act, 1881",keywords:"ni act negotiable instruments cheque cheque bounce section 138",official:"https://www.indiacode.nic.in/"},
+ {key:"Code of Civil Procedure 1908",name:"Code of Civil Procedure, 1908",keywords:"cpc civil procedure suit injunction execution appeal revision",official:"https://www.indiacode.nic.in/"},
+ {key:"Code of Criminal Procedure 1973",name:"Code of Criminal Procedure, 1973",keywords:"crpc criminal procedure bail arrest trial legacy",official:"https://www.indiacode.nic.in/"},
+ {key:"Indian Penal Code 1860",name:"Indian Penal Code, 1860",keywords:"ipc indian penal code offences legacy criminal law",official:"https://www.indiacode.nic.in/"},
+ {key:"Indian Evidence Act 1872",name:"Indian Evidence Act, 1872",keywords:"indian evidence act evidence proof admissibility legacy",official:"https://www.indiacode.nic.in/"},
+ {key:"Protection of Women from Domestic Violence Act 2005",name:"Protection of Women from Domestic Violence Act, 2005",keywords:"dv act domestic violence protection order residence monetary relief",official:"https://www.indiacode.nic.in/"},
+ {key:"Dowry Prohibition Act 1961",name:"Dowry Prohibition Act, 1961",keywords:"dowry dowry prohibition marriage offence",official:"https://www.indiacode.nic.in/"},
+ {key:"Juvenile Justice Act 2015",name:"Juvenile Justice (Care and Protection of Children) Act, 2015",keywords:"juvenile justice child child in conflict law child protection",official:"https://www.indiacode.nic.in/"},
+ {key:"POCSO Act 2012",name:"Protection of Children from Sexual Offences Act, 2012",keywords:"pocso child sexual offence special court",official:"https://www.indiacode.nic.in/"},
+ {key:"NDPS Act 1985",name:"Narcotic Drugs and Psychotropic Substances Act, 1985",keywords:"ndps narcotic cannabis ganja drugs section 20 section 37 bail",official:"https://www.indiacode.nic.in/"},
+ {key:"Legal Services Authorities Act 1987",name:"Legal Services Authorities Act, 1987",keywords:"legal aid nalsa dlsa free legal services",official:"https://www.indiacode.nic.in/"},
+ {key:"Arbitration and Conciliation Act 1996",name:"Arbitration and Conciliation Act, 1996",keywords:"arbitration conciliation commercial dispute",official:"https://www.indiacode.nic.in/"},
+ {key:"Consumer Protection Act 2019",name:"Consumer Protection Act, 2019",keywords:"consumer complaint deficiency unfair trade practice consumer forum",official:"https://www.indiacode.nic.in/"},
+ {key:"Motor Vehicles Act 1988",name:"Motor Vehicles Act, 1988",keywords:"motor vehicle accident compensation driving licence vehicle mv act",official:"https://www.indiacode.nic.in/"},
+ {key:"Information Technology Act 2000",name:"Information Technology Act, 2000",keywords:"it act cyber crime electronic records online offence",official:"https://www.indiacode.nic.in/"},
+ {key:"Right to Information Act 2005",name:"Right to Information Act, 2005",keywords:"rti right to information information commission transparency",official:"https://www.indiacode.nic.in/"},
+ {key:"Specific Relief Act 1963",name:"Specific Relief Act, 1963",keywords:"specific relief specific performance injunction declaration",official:"https://www.indiacode.nic.in/"},
+ {key:"Limitation Act 1963",name:"Limitation Act, 1963",keywords:"limitation period condonation prescribed period",official:"https://www.indiacode.nic.in/"},
+ {key:"Transfer of Property Act 1882",name:"Transfer of Property Act, 1882",keywords:"tpa property sale mortgage lease transfer",official:"https://www.indiacode.nic.in/"},
+ {key:"Registration Act 1908",name:"Registration Act, 1908",keywords:"registration property deed document registration",official:"https://www.indiacode.nic.in/"},
+ {key:"Court-fees Act 1870",name:"Court-fees Act, 1870",keywords:"court fee valuation civil proceedings",official:"https://www.indiacode.nic.in/"},
+ {key:"Indian Contract Act 1872",name:"Indian Contract Act, 1872",keywords:"contract agreement breach damages indemnity guarantee",official:"https://www.indiacode.nic.in/"}
+];
+
+const SECTION_PAGES = [
+ {act:"BNS 2023",sec:"115",title:"Section 115 — Voluntarily causing hurt",url:"sections/bns-115.html",keywords:"hurt voluntarily causing hurt bns 115"},
+ {act:"BNS 2023",sec:"318",title:"Section 318 — Cheating",url:"sections/bns-318.html",keywords:"cheating bns 318"},
+ {act:"BNSS 2023",sec:"173",title:"Section 173 — Information in cognizable cases",url:"sections/bnss-173.html",keywords:"fir information cognizable cases bnss 173"},
+ {act:"BNSS 2023",sec:"187",title:"Section 187 — Investigation beyond 24 hours",url:"sections/bnss-187.html",keywords:"remand investigation 24 hours bnss 187"},
+ {act:"BNSS 2023",sec:"479",title:"Section 479 — Maximum under-trial detention",url:"sections/bnss-479.html",keywords:"undertrial detention bnss 479"},
+ {act:"BNSS 2023",sec:"480",title:"Section 480 — Bail in non-bailable offences",url:"sections/bnss-480.html",keywords:"bail non bailable bnss 480"},
+ {act:"BNSS 2023",sec:"482",title:"Section 482 — Anticipatory bail",url:"sections/bnss-482.html",keywords:"anticipatory bail arrest apprehending arrest bnss 482"},
+ {act:"BSA 2023",sec:"63",title:"Section 63 — Electronic records",url:"sections/bsa-63.html",keywords:"electronic record evidence bsa 63"},
+ {act:"NDPS Act 1985",sec:"20",title:"Section 20 — Cannabis",url:"sections/ndps-20.html",keywords:"cannabis ganja charas ndps 20"},
+ {act:"NDPS Act 1985",sec:"37",title:"Section 37 — Cognizable and non-bailable",url:"sections/ndps-37.html",keywords:"ndps bail cognizable non bailable 37"},
+ {act:"Negotiable Instruments Act 1881",sec:"138",title:"Section 138 — Dishonour of cheque",url:"sections/ni-138.html",keywords:"ni 138 cheque bounce dishonour cheque"},
+ {act:"Hindu Marriage Act 1955",sec:"13",title:"Section 13 — Divorce",url:"sections/hma-13.html",keywords:"hindu marriage divorce hma 13"},
+ {act:"Protection of Women from Domestic Violence Act 2005",sec:"12",title:"Section 12 — Application to Magistrate",url:"sections/dv-12.html",keywords:"domestic violence magistrate application dv 12"},
+ {act:"Code of Civil Procedure 1908",sec:"115",title:"Section 115 — Revision (UP)",url:"sections/cpc-115-up.html",keywords:"cpc revision section 115 up"}
+];
+
+const TOPIC_PAGES = [
+ {keywords:"case status cnr court status",title:"How to check a case status",url:"legal-topic-case-status.html"},
+ {keywords:"supreme court judgment supreme court judgments",title:"Find Supreme Court judgments",url:"legal-topic-supreme-court-judgments.html"},
+ {keywords:"indian laws sections law section",title:"Search Indian laws & sections",url:"legal-topic-indian-laws.html"},
+ {keywords:"bail anticipatory bail",title:"Bail & anticipatory bail research",url:"legal-topic-bail.html"},
+ {keywords:"cheque bounce cheque dishonour section 138",title:"Cheque bounce research",url:"legal-topic-cheque-bounce.html"},
+ {keywords:"ndps narcotic drugs psychotropic",title:"NDPS law research",url:"legal-topic-ndps.html"}
+];
+
+const norm = s => String(s||"").toLowerCase().replace(/[–—]/g,"-").replace(/[^\p{L}\p{N}\s-]/gu," ").replace(/\s+/g," ").trim();
+const esc = s => (window.ILS && ILS.esc) ? ILS.esc(String(s)) : String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function card(title,text,url,label){
+ return `<article class="card"><h3>${esc(title)}</h3><p>${esc(text)}</p><a class="btn btn-ghost btn-small" href="${url}" ${/^https?:/i.test(url)?'target="_blank" rel="noopener"':''}>${esc(label||"Open")}</a></article>`;
+}
+function sectionCard(s){
+ return `<article class="card"><span class="badge">${esc(s.act)}</span><h3>${esc(s.title)}</h3><p>Dedicated ILS section research page.</p><a class="btn btn-primary btn-small" href="${s.url}">Open ILS section ↗</a></article>`;
+}
+function actCard(a,legacy){
+ return `<article class="card"><span class="badge">${legacy?"Legacy / historical reference":"Indian Act"}</span><h3>📜 ${esc(a.name)}</h3><p>${esc(a.keywords)}</p><div class="actions"><a class="btn btn-primary btn-small" href="${a.official}" target="_blank" rel="noopener">Official India Code ↗</a><a class="btn btn-ghost btn-small" href="acts/">Acts Library</a></div></article>`;
+}
+function score(item,q){
+ const n=norm(q), hay=norm([item.key,item.name,item.title,item.keywords,item.act,item.sec].filter(Boolean).join(" "));
+ if(!n) return 0;
+ let sc = hay===n ? 100 : (hay.includes(n) ? 70 : 0);
+ const toks=n.split(" ").filter(Boolean);
+ sc += toks.reduce((x,t)=>x+(hay.includes(t)?6:0),0);
+ return sc;
+}
+function extractSectionQuery(q){
+ const n=norm(q);
+ let m=n.match(/\b(bns|bnss|bsa|ipc|crpc|cpc|ndps|ni act|negotiable instruments act|hma|hindu marriage act|dv act|domestic violence act)\s*(?:section|sec|s)?\s*(\d+[a-z]?(?:\(\d+\))?)\b/i);
+ if(m) return {law:m[1],sec:m[2]};
+ m=n.match(/\bsection\s*(\d+[a-z]?(?:\(\d+\))?)\s*(?:of|under)?\s*(bns|bnss|bsa|ipc|crpc|cpc|ndps|ni act|hma|dv act)?\b/i);
+ if(m) return {law:m[2]||"",sec:m[1]};
+ return null;
+}
+
+async function runSearch(){
+ const input=document.getElementById("legalSearch"), q=input.value.trim();
+ if(!q) return;
+ history.replaceState(null,"","legal-search.html?q="+encodeURIComponent(q));
+ const r=document.getElementById("results"), meta=document.getElementById("resultMeta");
+ meta.textContent="Searching ILS Acts, sections, judgments and advocates for “"+q+"”…";
+ document.getElementById("intent").innerHTML=(window.ILS&&ILS.searchIntentHTML)?ILS.searchIntentHTML(q):"";
+ r.innerHTML='<div class="empty">Searching…</div>';
+
+ const sectionQuery=extractSectionQuery(q);
+ const sectionExact=[], sectionRelated=[];
+ SECTION_PAGES.forEach(s=>{const sc=score(s,q);if(sc>=100)sectionExact.push(s);else if(sc>=50)sectionRelated.push(s);});
+ if(sectionQuery){
+   const law=norm(sectionQuery.law), sec=sectionQuery.sec.toLowerCase();
+   const matches=SECTION_PAGES.filter(s=>norm(s.act).includes(law)||norm(law).includes(norm(s.act).split(" ")[0])).filter(s=>String(s.sec).toLowerCase()===sec);
+   matches.forEach(s=>{if(!sectionExact.some(x=>x.url===s.url))sectionExact.push(s)});
+ }
+
+ const actExact=[],actRelated=[];
+ MAJOR_ACTS.forEach(a=>{const sc=score(a,q);if(sc>=100)actExact.push(a);else if(sc>=50)actRelated.push(a)});
+ const topicRelated=TOPIC_PAGES.filter(t=>score(t,q)>=50);
+
+ let jud=[],adv=[];
+ try{
+   [jud,adv]=await Promise.all([
+     (window.ILS&&ILS.judgments)?ILS.judgments({limit:12,q}):[],
+     (window.ILS&&ILS.advocates)?ILS.advocates({limit:8,q}):[]
+   ]);
+ }catch(e){console.warn("ILS search fallback:",e);}
+
+ let html="";
+ sectionExact.slice(0,6).forEach(s=>html+=sectionCard(s));
+ actExact.slice(0,4).forEach(a=>html+=actCard(a,/^(crpc|ipc|indian evidence act)/i.test(a.name)));
+ sectionRelated.filter(s=>!sectionExact.some(x=>x.url===s.url)).slice(0,6).forEach(s=>html+=sectionCard(s));
+ actRelated.filter(a=>!actExact.some(x=>x.key===a.key)).slice(0,6).forEach(a=>html+=actCard(a,/^(crpc|ipc|indian evidence act)/i.test(a.name)));
+
+ if(topicRelated.length) topicRelated.slice(0,3).forEach(t=>html+=card(t.title,"Verified ILS legal-topic research page.",t.url,"Open topic ↗"));
+
+ if(jud.length) html += jud.map(j=>`<article class="card judgment-card"><div class="judgment-top"><span class="badge">${esc(j.court_name||"Judgment")}</span><span class="judgment-date">${window.ILS?ILS.formatDate(j.judgment_date):esc(j.judgment_date||"")}</span></div><h3>${esc(j.case_title||"Judgment")}</h3><p>${esc(j.short_summary||j.legal_principle||"Verified judgment record.")}</p><div class="actions">${j.official_source_url?`<a class="btn btn-primary btn-small" href="${esc(j.official_source_url)}" target="_blank" rel="noopener">Official source ↗</a>`:""}${j.source_pdf_url?`<a class="btn btn-ghost btn-small" href="${esc(j.source_pdf_url)}" target="_blank" rel="noopener">PDF ↗</a>`:""}</div></article>`).join("");
+
+ if(adv.length) html += adv.map(a=>`<article class="card"><h3>👨‍⚖️ ${esc(a.advocate_name||"Advocate")}</h3><p>${esc(a.practice_state||"India")} · ${esc(a.district_court||"Jurisdiction not specified")}<br>${esc(a.primary_practice_area||"Practice details available on profile.")}</p><a class="btn btn-ghost btn-small" href="advocates.html?q=${encodeURIComponent(q)}">View advocate directory</a></article>`).join("");
+
+ // Exact statutory-section query with no dedicated ILS page: never guess a page.
+ if(sectionQuery && !sectionExact.length){
+   html += card("Section not yet a dedicated ILS page",
+     `No verified ILS page for ${sectionQuery.law.toUpperCase()} Section ${sectionQuery.sec}. Open India Code for the authoritative current text, amendments and applicability.`,
+     "https://www.indiacode.nic.in/","Open India Code ↗");
+ }
+ if(!html){
+   html += card("Search official statutory text","For an exact current section or Act text, consult the authoritative India Code repository.","https://www.indiacode.nic.in/","Open India Code ↗");
+   html += card("Search official case status","For live case status and court-service lookup, use the official eCourts portal.","https://services.ecourts.gov.in/ecourtindia_v6/","Open eCourts ↗");
+ }
+ r.innerHTML=html;
+ meta.textContent=`Found ${sectionExact.length+sectionRelated.length} ILS section result(s), ${actExact.length+actRelated.length} Act result(s), ${jud.length} judgment record(s) and ${adv.length} advocate result(s).`;
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+ const input=document.getElementById("legalSearch");
+ input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();runSearch();}});
+ const q=new URLSearchParams(location.search).get("q");
+ if(q){input.value=q;runSearch();}
+});
+window.runSearch=runSearch;
+})();
+</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Instant Legal Services","url":"https://instantlegalservices.in/","potentialAction":{"@type":"SearchAction","target":"https://instantlegalservices.in/legal-search.html?q={search_term_string}","query-input":"required name=search_term_string"}}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://instantlegalservices.in/"},{"@type":"ListItem","position":2,"name":"Legal Search","item":"https://instantlegalservices.in/legal-search.html"}]}</script></body></html>
