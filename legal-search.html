@@ -264,11 +264,53 @@ function sectionLawMatches(item, law){
  return a.includes(l) || norm(aliases[l]||"").includes(a) || a.includes(norm(aliases[l]||""));
 }
 
-async 
-/* ILS Judgment Intelligence v1 — non-invasive ranking layer */
+/* ILS Research Answer Layer v5 — deterministic research navigation */
+/* ILS Semantic Legal Search v7 — issue mapping without replacing existing search */
+const SEMANTIC_LEGAL_MAP=[
+ {name:"Arrest / Bail",keys:["arrest","arrested","pakad","giraftar","police le gayi","police ne arrest","bail","zamanat","anticipatory bail","girftari se bachna"],intents:["Arrest & 24-Hour Rule","Regular Bail","Anticipatory Bail"],terms:["BNSS 2023","arrest","bail","custody","24 hours"]},
+ {name:"FIR / Criminal Complaint",keys:["fir","report likh","police complaint","cognizable","case darj","mukadma darj"],intents:["FIR / Cognizable Information"],terms:["BNSS 2023","FIR","cognizable information"]},
+ {name:"Cheque Dishonour",keys:["cheque bounce","check bounce","cheque nahi laga","payment nahi mila","dishonour","138 cheque","check dishonour"],intents:["Cheque Bounce"],terms:["Negotiable Instruments Act 1881","Section 138","notice"]},
+ {name:"Matrimonial / Divorce",keys:["divorce","talaq","talak","shaadi tod","mutual divorce","judicial separation","pati patni"],intents:["Divorce","Matrimonial Maintenance"],terms:["Hindu Marriage Act 1955","Family Courts Act 1984","maintenance"]},
+ {name:"Domestic Violence",keys:["domestic violence","ghar me maar","pati marta","protection order","residence order","shared household","gharelu hinsa"],intents:["Domestic Violence"],terms:["Protection of Women from Domestic Violence Act 2005","protection order","residence order"]},
+ {name:"Property / Civil Dispute",keys:["property dispute","zameen vivad","kabza","injunction","stay","specific performance","hissa","property case"],intents:["Property / Injunction","Civil Revision"],terms:["Code of Civil Procedure 1908","Specific Relief Act 1963","injunction"]},
+ {name:"NDPS / Drug Case",keys:["ndps","drug case","ganja","charas","heroin","narcotics","drugs","ndps bail"],intents:["NDPS / Drug Case"],terms:["NDPS Act 1985","Section 37","Section 42"]},
+ {name:"Cyber Fraud",keys:["cyber fraud","online fraud","upi fraud","account fraud","otp fraud","hacking","cyber crime","online scam"],intents:["Cyber Crime"],terms:["Information Technology Act 2000","cyber crime","electronic evidence"]},
+ {name:"Electronic Evidence",keys:["whatsapp evidence","chat evidence","electronic evidence","digital evidence","screenshot evidence","call recording"],intents:["Electronic Evidence"],terms:["Bharatiya Sakshya Adhiniyam 2023","electronic evidence","digital record"]},
+ {name:"Consumer Dispute",keys:["consumer complaint","consumer court","defective product","service kharab","deficiency in service","refund nahi","consumer case"],intents:["Consumer Dispute"],terms:["Consumer Protection Act 2019","deficiency in service"]}
+];
+function semanticLegalProfile(q,intents){
+ const n=normalizeLegalQuery(q), hits=[];
+ SEMANTIC_LEGAL_MAP.forEach(m=>{let score=0;m.keys.forEach(k=>{const x=normalizeLegalQuery(k);if(x&&n.includes(x))score+=x.split(/\s+/).length>1?40:18;});if(score)hits.push({...m,_score:score});});
+ (intents||[]).forEach(i=>{const hit=SEMANTIC_LEGAL_MAP.find(m=>m.intents.includes(i.name));if(hit&&!hits.some(h=>h.name===hit.name))hits.push({...hit,_score:25});});
+ return hits.sort((a,b)=>b._score-a._score).slice(0,3);
+}
+function semanticSearchScore(item,q,profile){
+ let sc=score(item,q);const hay=norm([item.key,item.name,item.title,item.keywords,item.act,item.sec].filter(Boolean).join(" "));
+ (profile||[]).forEach(p=>p.terms.forEach(t=>{const x=norm(t);if(x&&hay.includes(x))sc+=18;}));
+ return sc;
+}
+function semanticResearchHTML(q,profile){
+ if(!profile.length)return "";
+ return `<div class="meta" style="margin:8px 0 12px"><strong>Semantic issue map:</strong> ${profile.map(p=>esc(p.name)).join(" · ")} <span>— matched legal concepts, not a legal conclusion.</span></div>`;
+}
+
+function researchAnswerHTML(q,intents,sections,acts,judgments){
+ const safeIntents=Array.isArray(intents)?intents:[], safeSections=Array.isArray(sections)?sections:[], safeActs=Array.isArray(acts)?acts:[], safeJudgments=Array.isArray(judgments)?judgments:[];
+ if(!safeIntents.length&&!safeSections.length&&!safeActs.length&&!safeJudgments.length)return "";
+ const actNames=[...new Set(safeSections.map(s=>s.act).filter(Boolean))];
+ safeActs.slice(0,3).forEach(a=>{if(a&&a.name&&!actNames.includes(a.name))actNames.push(a.name);});
+ const uniqueSections=[]; safeSections.forEach(x=>{const k=String(x.act||"")+"|"+String(x.sec||"");if(!uniqueSections.some(y=>String(y.act||"")+"|"+String(y.sec||"")===k))uniqueSections.push(x);});
+ const sectionHTML=uniqueSections.slice(0,6).map(x=>`<a class="chip" href="${esc(x.url||"https://www.indiacode.nic.in/")}" ${x.url?'':'target="_blank" rel="noopener"'}>${esc(x.act+" § "+x.sec)}</a>`).join("");
+ const judgmentHTML=safeJudgments.slice(0,3).map(j=>`<li><strong>${esc(j.case_title||j.title||"Judgment")}</strong>${j.court_name?` — ${esc(j.court_name)}`:""}</li>`).join("");
+ return `<section class="card research-answer" style="grid-column:1/-1"><div class="judgment-top"><span class="badge">Research Answer</span><span class="meta">Navigation layer</span></div><h3>Likely research path for “${esc(q)}”</h3>${safeIntents.length?`<p><strong>Legal intent:</strong> ${safeIntents.map(i=>esc(i.name)).join(", ")}</p>`:""}${actNames.length?`<p><strong>Applicable Act(s):</strong> ${actNames.slice(0,5).map(esc).join(" · ")}</p>`:""}${sectionHTML?`<div><strong>Relevant sections</strong><div class="chips">${sectionHTML}</div></div>`:""}${judgmentHTML?`<div style="margin-top:12px"><strong>Relevant judgments found:</strong><ol>${judgmentHTML}</ol></div>`:`<p><strong>Relevant judgments:</strong> No matching ILS judgment records were returned for this query.</p>`}<div class="actions"><a class="btn btn-primary btn-small" href="https://www.indiacode.nic.in/" target="_blank" rel="noopener">India Code ↗</a><a class="btn btn-ghost btn-small" href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts ↗</a></div><p class="meta" style="margin-top:12px">Research navigation only. Verify the current statute, amendments, notifications and binding precedent before relying on any result.</p></section>`;
+}
+
+/* ILS Judgment Intelligence v3 — safe relevance + duplicate suppression */
+function judgmentText(j){
+ return norm(Object.keys(j||{}).map(k=>j[k]).filter(v=>typeof v==="string").join(" "));
+}
 function judgmentIntentScore(j,intents,q){
- const text=norm(Object.keys(j||{}).map(k=>j[k]).filter(v=>typeof v==="string").join(" "));
- const nq=normalizeLegalQuery(q);
+ const text=judgmentText(j), nq=normalizeLegalQuery(q);
  let score=nq&&text.includes(nq)?90:0;
  intents.forEach(i=>i.keys.forEach(k=>{
    const x=normalizeLegalQuery(k);
@@ -276,28 +318,59 @@ function judgmentIntentScore(j,intents,q){
  }));
  return score;
 }
+function judgmentKey(j){
+ const title=normalizeLegalQuery(j.case_title||j.title||"");
+ const number=normalizeLegalQuery(j.case_number||"");
+ const date=normalizeLegalQuery(j.judgment_date||"");
+ return title+"|"+number+"|"+date;
+}
+function judgmentCrossLinks(j,intents,q){
+ const text=judgmentText(j), sections=[];
+ ALL_SECTION_INDEX.forEach(x=>{
+   const hay=norm([x.act,x.title,x.keywords].filter(Boolean).join(" "));
+   if(hay && text.includes(hay.split(" ").slice(0,3).join(" "))){
+     if(!sections.some(y=>y.act===x.act&&String(y.sec).toLowerCase()===String(x.sec).toLowerCase())) sections.push(x);
+   }
+ });
+ intents.forEach(i=>i.sections.forEach(pair=>{
+   const hit=ALL_SECTION_INDEX.find(x=>norm(x.act)===norm(pair[0])&&(!pair[1]||String(x.sec).toLowerCase()===String(pair[1]).toLowerCase()));
+   if(hit&&!sections.some(y=>y.act===hit.act&&String(y.sec).toLowerCase()===String(hit.sec).toLowerCase())) sections.push(hit);
+ }));
+ return sections.slice(0,4);
+}
 function rankJudgments(rows,intents,q){
- return (Array.isArray(rows)?rows:[]).map(j=>({...j,_intentScore:judgmentIntentScore(j,intents,q)}))
-   .sort((a,b)=>b._intentScore-a._intentScore);
+ const seen=new Set(), unique=[];
+ (Array.isArray(rows)?rows:[]).forEach(j=>{
+   const key=judgmentKey(j);
+   if(key && seen.has(key)) return;
+   if(key) seen.add(key);
+   unique.push({...j,_intentScore:judgmentIntentScore(j,intents,q),_linkedSections:judgmentCrossLinks(j,intents,q)});
+ });
+ return unique.sort((a,b)=>{
+   if(b._intentScore!==a._intentScore) return b._intentScore-a._intentScore;
+   const ad=Date.parse(a.judgment_date||"")||0, bd=Date.parse(b.judgment_date||"")||0;
+   return bd-ad;
+ });
 }
 
-function runSearch(){
+async function runSearch(){
  const detectedIntents=detectLegalIntents(document.getElementById("legalSearch").value);
  const intentSections=resolveIntentSections(detectedIntents);
+ const semanticProfile=semanticLegalProfile(document.getElementById("legalSearch").value,detectedIntents);
 
  const input=document.getElementById("legalSearch"), q=input.value.trim();
  if(!q) return;
  history.replaceState(null,"","legal-search.html?q="+encodeURIComponent(q));
  const r=document.getElementById("results"), meta=document.getElementById("resultMeta");
  meta.textContent="Searching ILS Acts, sections, judgments and advocates for “"+q+"”…";
- document.getElementById("intent").innerHTML=(window.ILS&&ILS.searchIntentHTML)?ILS.searchIntentHTML(q):"";
+ 
  r.innerHTML='<div class="empty">Searching…</div>';
 
  const sectionQuery=extractSectionQuery(q);
  const sectionExact=[], sectionRelated=[];
- SECTION_PAGES.forEach(s=>{const sc=score(s,q);if(sc>=100)sectionExact.push(s);else if(sc>=50)sectionRelated.push(s);});
+ SECTION_PAGES.forEach(s=>{const sc=semanticSearchScore(s,q,semanticProfile);if(sc>=100)sectionExact.push(s);else if(sc>=50)sectionRelated.push(s);});
  ALL_SECTION_INDEX.forEach(s=>{
-   const sc=score(s,q);
+   const sc=semanticSearchScore(s,q,semanticProfile);
    if(sc>=100 && !sectionExact.some(x=>x.act===s.act && String(x.sec).toLowerCase()===String(s.sec).toLowerCase()))
      sectionExact.push(s);
    else if(sc>=50 && !sectionRelated.some(x=>x.act===s.act && String(x.sec).toLowerCase()===String(s.sec).toLowerCase()))
@@ -314,8 +387,8 @@ function runSearch(){
  }
 
  const actExact=[],actRelated=[];
- MAJOR_ACTS.forEach(a=>{const sc=score(a,q);if(sc>=100)actExact.push(a);else if(sc>=50)actRelated.push(a)});
- const topicRelated=TOPIC_PAGES.filter(t=>score(t,q)>=50);
+ MAJOR_ACTS.forEach(a=>{const sc=semanticSearchScore(a,q,semanticProfile);if(sc>=100)actExact.push(a);else if(sc>=50)actRelated.push(a)});
+ const topicRelated=TOPIC_PAGES.filter(t=>semanticSearchScore(t,q,semanticProfile)>=50);
 
  let jud=[],adv=[];
  try{
@@ -323,7 +396,10 @@ function runSearch(){
      (window.ILS&&ILS.judgments)?ILS.judgments({limit:12,q}):[],
      (window.ILS&&ILS.advocates)?ILS.advocates({limit:8,q}):[]
    ]);
+   jud=rankJudgments(jud,detectedIntents,q);
  }catch(e){console.warn("ILS search fallback:",e);}
+
+ document.getElementById("intent").innerHTML=((window.ILS&&ILS.searchIntentHTML)?ILS.searchIntentHTML(q):"")+semanticResearchHTML(q,semanticProfile)+researchAnswerHTML(q,detectedIntents,intentSections,[...actExact,...actRelated],jud);
 
  let html="";
  if(detectedIntents.length){intentSections.forEach(s=>{if(!sectionExact.some(x=>x.act===s.act&&String(x.sec).toLowerCase()===String(s.sec).toLowerCase()))sectionExact.unshift(s);});}
@@ -334,7 +410,7 @@ function runSearch(){
 
  if(topicRelated.length) topicRelated.slice(0,3).forEach(t=>html+=card(t.title,"Verified ILS legal-topic research page.",t.url,"Open topic ↗"));
 
- if(jud.length) html += jud.map(j=>`<article class="card judgment-card"><div class="judgment-top"><span class="badge">${esc(j.court_name||"Judgment")}</span><span class="judgment-date">${window.ILS?ILS.formatDate(j.judgment_date):esc(j.judgment_date||"")}</span></div><h3>${esc(j.case_title||"Judgment")}</h3><p>${esc(j.short_summary||j.legal_principle||"Verified judgment record.")}</p><div class="actions">${j.official_source_url?`<a class="btn btn-primary btn-small" href="${esc(j.official_source_url)}" target="_blank" rel="noopener">Official source ↗</a>`:""}${j.source_pdf_url?`<a class="btn btn-ghost btn-small" href="${esc(j.source_pdf_url)}" target="_blank" rel="noopener">PDF ↗</a>`:""}</div></article>`).join("");
+ if(jud.length) html += jud.map(j=>`<article class="card judgment-card"><div class="judgment-top"><span class="badge">${esc(j.court_name||"Judgment")}</span><span class="judgment-date">${window.ILS?ILS.formatDate(j.judgment_date):esc(j.judgment_date||"")}</span></div><h3>${esc(j.case_title||"Judgment")}</h3><p>${esc(j.short_summary||j.legal_principle||"Verified judgment record.")}</p>${j._intentScore>0?`<div class="meta">Relevance match: ${j._intentScore}</div>`:""}${j._linkedSections&&j._linkedSections.length?`<div class="chips">${j._linkedSections.map(s=>`<a class="chip" href="${esc(s.url||"https://www.indiacode.nic.in/")}" ${s.url?'':'target="_blank" rel="noopener"'}>${esc(s.act+" § "+s.sec)}</a>`).join("")}</div>`:""}<div class="actions">${j.official_source_url?`<a class="btn btn-primary btn-small" href="${esc(j.official_source_url)}" target="_blank" rel="noopener">Official source ↗</a>`:""}${j.source_pdf_url?`<a class="btn btn-ghost btn-small" href="${esc(j.source_pdf_url)}" target="_blank" rel="noopener">PDF ↗</a>`:""}</div></article>`).join("");
 
  if(adv.length) html += adv.map(a=>`<article class="card"><h3>👨‍⚖️ ${esc(a.advocate_name||"Advocate")}</h3><p>${esc(a.practice_state||"India")} · ${esc(a.district_court||"Jurisdiction not specified")}<br>${esc(a.primary_practice_area||"Practice details available on profile.")}</p><a class="btn btn-ghost btn-small" href="advocates.html?q=${encodeURIComponent(q)}">View advocate directory</a></article>`).join("");
 
