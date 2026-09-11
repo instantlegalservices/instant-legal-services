@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ILS — TEST Operator Bootstrap</title>
+<style>
+body{margin:0;background:#08101f;color:#eef3ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;display:grid;place-items:center;padding:20px;box-sizing:border-box}
+.card{width:min(520px,100%);background:#121b31;border:1px solid #263452;border-radius:22px;padding:28px;box-sizing:border-box;box-shadow:0 20px 60px #0006}
+h1{font-size:28px;margin:0 0 8px}.sub{color:#aeb9d1;margin-bottom:24px;line-height:1.45}
+.warn{font-size:13px;color:#ffd98a;background:#302611;border:1px solid #6b5424;padding:12px;border-radius:12px;margin-bottom:18px}
+label{display:block;margin:12px 0 6px;color:#cdd7ea}
+input{width:100%;box-sizing:border-box;padding:14px 15px;border-radius:12px;border:1px solid #3b4968;background:#0b1325;color:#fff;font-size:16px}
+button{width:100%;padding:14px;border:0;border-radius:12px;background:#2f6df6;color:white;font-size:16px;font-weight:700;margin-top:16px}
+button:disabled{opacity:.55}
+#status{margin-top:16px;padding:14px;border-radius:12px;background:#070c17;white-space:pre-wrap;line-height:1.45;min-height:20px}
+.ok{border:1px solid #2d8a57}.err{border:1px solid #9b3d45}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>ILS — TEST Operator Bootstrap</h1>
+<div class="sub">TEST ONLY · one-time · non-production operator binding</div>
+<div class="warn">The bootstrap secret is never requested or exposed here. Use only the legitimate TEST Auth account.</div>
+<form id="f">
+<label for="email">TEST Auth email</label>
+<input id="email" type="email" autocomplete="username" required>
+<label for="password">TEST Auth password</label>
+<input id="password" type="password" autocomplete="current-password" required>
+<button id="go" type="submit">Sign in + Run 1084 Bootstrap</button>
+</form>
+<div id="status">Ready.</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const CONFIG_URL="https://bgsbuepolooybdqrzmoa.supabase.co/functions/v1/ils-test-operator-bootstrap-public-config";
+let sb=null;
+const f=document.getElementById("f"),go=document.getElementById("go"),status=document.getElementById("status");
+function setStatus(t,ok=false){status.textContent=t;status.className=ok?"ok":"err"}
+(async()=>{try{const r=await fetch(CONFIG_URL,{cache:"no-store"});const x=await r.json();if(!r.ok||!x.ok)throw new Error(x.error||"PUBLIC_CONFIG_UNAVAILABLE");sb=supabase.createClient(x.supabaseUrl,x.publishableKey,{auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:false}});setStatus("Ready.");}catch(e){setStatus(String(e?.message||e));go.disabled=true}})();
+f.addEventListener("submit",async e=>{
+ e.preventDefault();go.disabled=true;setStatus("Authenticating TEST Auth user…");
+ try{
+  const {data,error}=await sb.auth.signInWithPassword({email:document.getElementById("email").value.trim(),password:document.getElementById("password").value});
+  if(error||!data.session)throw new Error(error?.message||"TEST_AUTH_SESSION_NOT_CREATED");
+  setStatus("Authenticated. Running one-time TEST operator bootstrap…");
+  const {data:result,error:invokeError}=await sb.functions.invoke("ils-test-operator-bootstrap-ui-bridge",{body:{action:"BOOTSTRAP_TEST_OPERATOR"}});
+  if(invokeError)throw new Error(invokeError.message||"BOOTSTRAP_BRIDGE_FAILED");
+  if(!result?.ok)throw new Error(JSON.stringify(result,null,2));
+  setStatus(JSON.stringify(result,null,2),true);
+  await sb.auth.signOut();
+  go.textContent="Bootstrap complete";
+ }catch(err){setStatus(String(err?.message||err));go.disabled=false}
+});
+</script>
+</body>
+</html>
