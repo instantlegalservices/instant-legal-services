@@ -7,6 +7,8 @@
 <title>ILS — TEST Synthetic Provisioning</title>
 
 <style>
+*{box-sizing:border-box}
+
 body{
 margin:0;
 background:#08101f;
@@ -15,8 +17,7 @@ font-family:system-ui,-apple-system,Segoe UI,sans-serif;
 min-height:100vh;
 display:grid;
 place-items:center;
-padding:20px;
-box-sizing:border-box
+padding:20px
 }
 
 .card{
@@ -24,8 +25,7 @@ width:min(620px,100%);
 background:#121b31;
 border:1px solid #263452;
 border-radius:22px;
-padding:28px;
-box-sizing:border-box
+padding:28px
 }
 
 h1{
@@ -63,7 +63,6 @@ margin:12px 0 6px
 
 input{
 width:100%;
-box-sizing:border-box;
 padding:14px;
 border-radius:12px;
 border:1px solid #3b4968;
@@ -100,6 +99,12 @@ border-color:#2d8a57
 
 .err{
 border-color:#9b3d45
+}
+
+.small{
+font-size:12px;
+color:#8e9ab5;
+margin-top:10px
 }
 </style>
 </head>
@@ -143,7 +148,7 @@ autocomplete="current-password"
 required
 >
 
-<button id="login" type="button" disabled>
+<button id="login" type="button">
 Sign in
 </button>
 
@@ -183,8 +188,12 @@ Run Canonical Provisioning
 </div>
 
 
-<div id="status" class="step err">
-Loading TEST configuration…
+<div id="status" class="step">
+Ready — enter the legitimate TEST Auth credentials.
+</div>
+
+<div class="small">
+This page is for controlled TEST validation only.
 </div>
 
 </main>
@@ -192,37 +201,47 @@ Loading TEST configuration…
 
 <script>
 
+"use strict";
+
+
 const BASE =
 "https://bgsbuepolooybdqrzmoa.supabase.co";
 
-const CONFIG =
-BASE +
-"/functions/v1/ils-test-operator-bootstrap-public-config";
+
+const KEY =
+"sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2";
+
 
 const PREP =
 BASE +
 "/functions/v1/ils-test-synthetic-provision-prep-v2";
 
+
 const PROVISION =
 BASE +
 "/functions/v1/ils-test-synthetic-auth-provision-v7";
+
 
 const RPC =
 BASE +
 "/rest/v1/rpc/ils_record_synthetic_operator_approval_v1";
 
 
-let key = "";
 let token = "";
 
 let requestId = "";
+
 let bindingId = "";
+
 let nonce = "";
+
 let snapshot = "";
 
 
-const $ = id =>
+const $ =
+id =>
 document.getElementById(id);
+
 
 const status =
 $("status");
@@ -242,7 +261,28 @@ status.className =
 }
 
 
-async function readResponse(response){
+function authHeaders(){
+
+return {
+
+"apikey":
+KEY,
+
+"Authorization":
+"Bearer " + token,
+
+"Content-Type":
+"application/json",
+
+"Accept":
+"application/json"
+
+};
+
+}
+
+
+async function readJson(response){
 
 const text =
 await response.text();
@@ -255,6 +295,7 @@ data =
 JSON.parse(text);
 
 }
+
 catch{
 
 data = {
@@ -271,82 +312,11 @@ data
 }
 
 
-/* --------------------------------
-   LOAD PUBLIC TEST CONFIG
--------------------------------- */
 
-async function loadConfig(){
+/* ==========================================
+   STEP 1 — TEST AUTH LOGIN
+========================================== */
 
-try{
-
-const r =
-await fetch(
-CONFIG,
-{
-method:"GET",
-cache:"no-store",
-headers:{
-"Accept":"application/json"
-}
-}
-);
-
-const result =
-await readResponse(r);
-
-const x =
-result.data;
-
-
-if(!r.ok || !x.ok){
-
-throw new Error(
-x.error ||
-"PUBLIC_CONFIG_UNAVAILABLE"
-);
-
-}
-
-
-if(!x.supabaseUrl ||
-!x.publishableKey){
-
-throw new Error(
-"PUBLIC_CONFIG_INCOMPLETE"
-);
-
-}
-
-
-key =
-x.publishableKey;
-
-
-$("login").disabled =
-false;
-
-
-show("Ready.");
-
-}
-catch(error){
-
-$("login").disabled =
-true;
-
-show(
-"CONFIG ERROR\n\n" +
-(error.message || error)
-);
-
-}
-
-}
-
-
-/* --------------------------------
-   DIRECT SUPABASE AUTH LOGIN
--------------------------------- */
 
 $("login").onclick =
 async function(){
@@ -356,13 +326,10 @@ try{
 $("login").disabled =
 true;
 
-show(
-"Authenticating TEST operator…"
-);
-
 
 const email =
 $("email").value.trim();
+
 
 const password =
 $("password").value;
@@ -377,37 +344,55 @@ throw new Error(
 }
 
 
-const response =
-await fetch(
-BASE +
-"/auth/v1/token?grant_type=password",
-{
-method:"POST",
-
-headers:{
-"Content-Type":
-"application/json",
-
-"apikey":
-key,
-
-"Accept":
-"application/json"
-},
-
-body:
-JSON.stringify({
-email:email,
-password:password
-}),
-
-cache:"no-store"
-}
+show(
+"Authenticating TEST operator…"
 );
 
 
+const response =
+await fetch(
+
+BASE +
+"/auth/v1/token?grant_type=password",
+
+{
+
+method:
+"POST",
+
+headers:{
+
+"apikey":
+KEY,
+
+"Content-Type":
+"application/json",
+
+"Accept":
+"application/json"
+
+},
+
+cache:
+"no-store",
+
+body:
+JSON.stringify({
+
+email:
+email,
+
+password:
+password
+
+})
+
+});
+
+
 const result =
-await readResponse(response);
+await readJson(response);
+
 
 const x =
 result.data;
@@ -419,7 +404,8 @@ if(
 ){
 
 throw new Error(
-"HTTP " +
+
+"AUTH HTTP " +
 response.status +
 "\n\n" +
 JSON.stringify(
@@ -427,6 +413,7 @@ x,
 null,
 2
 )
+
 );
 
 }
@@ -439,31 +426,41 @@ x.access_token;
 $("email").disabled =
 true;
 
+
 $("password").disabled =
 true;
 
+
 $("prepare").disabled =
 false;
+
 
 $("login").textContent =
 "Authenticated";
 
 
 show(
+
 "TEST Auth authentication successful.\n\n" +
 "Step 1 complete.\n" +
-"Now continue with Prepare 1085 Request.",
+"Continue with Prepare 1085 Request.",
+
 true
+
 );
 
 
 }
+
 catch(error){
 
 show(
+
 "AUTH ERROR\n\n" +
 (error.message || error)
+
 );
+
 
 $("login").disabled =
 false;
@@ -473,9 +470,11 @@ false;
 };
 
 
-/* --------------------------------
-   STEP 2 — PREPARE
--------------------------------- */
+
+/* ==========================================
+   STEP 2 — PREPARE + BIND
+========================================== */
+
 
 $("prepare").onclick =
 async function(){
@@ -484,6 +483,7 @@ try{
 
 $("prepare").disabled =
 true;
+
 
 show(
 "Preparing TEST synthetic request…"
@@ -500,3 +500,390 @@ throw new Error(
 
 
 const response =
+await fetch(
+
+PREP,
+
+{
+
+method:
+"POST",
+
+headers:
+authHeaders(),
+
+cache:
+"no-store",
+
+body:
+JSON.stringify({
+
+action:
+"PREPARE_SYNTHETIC_PROVISION"
+
+})
+
+}
+
+);
+
+
+const result =
+await readJson(response);
+
+
+const x =
+result.data;
+
+
+if(
+!response.ok ||
+!x.ok
+){
+
+throw new Error(
+
+"PREP HTTP " +
+response.status +
+"\n\n" +
+JSON.stringify(
+x,
+null,
+2
+)
+
+);
+
+}
+
+
+requestId =
+x.request_id;
+
+
+bindingId =
+x.binding_id;
+
+
+nonce =
+x.approval_nonce;
+
+
+snapshot =
+x.request_snapshot_hash;
+
+
+$("approve").disabled =
+false;
+
+
+show({
+
+ok:
+true,
+
+step:
+"2",
+
+request_id:
+requestId,
+
+binding_id:
+bindingId,
+
+approval_expiry:
+x.expires_at,
+
+message:
+"Request prepared and approval binding created. Continue to explicit operator approval."
+
+},true);
+
+
+}
+
+catch(error){
+
+show(
+
+"PREPARE ERROR\n\n" +
+(error.message || error)
+
+);
+
+
+$("prepare").disabled =
+false;
+
+}
+
+};
+
+
+
+/* ==========================================
+   STEP 3 — EXPLICIT OPERATOR APPROVAL
+========================================== */
+
+
+$("approve").onclick =
+async function(){
+
+try{
+
+$("approve").disabled =
+true;
+
+
+show(
+"Recording explicit operator approval…"
+);
+
+
+if(
+!token ||
+!requestId ||
+!bindingId ||
+!nonce ||
+!snapshot
+){
+
+throw new Error(
+"APPROVAL_CONTEXT_INCOMPLETE"
+);
+
+}
+
+
+const response =
+await fetch(
+
+RPC,
+
+{
+
+method:
+"POST",
+
+headers:
+authHeaders(),
+
+cache:
+"no-store",
+
+body:
+JSON.stringify({
+
+p_request_id:
+requestId,
+
+p_binding_id:
+bindingId,
+
+p_approval_nonce:
+nonce,
+
+p_request_snapshot_hash:
+snapshot
+
+})
+
+}
+
+);
+
+
+const result =
+await readJson(response);
+
+
+const x =
+result.data;
+
+
+if(!response.ok){
+
+throw new Error(
+
+"APPROVAL HTTP " +
+response.status +
+"\n\n" +
+JSON.stringify(
+x,
+null,
+2
+)
+
+);
+
+}
+
+
+$("provision").disabled =
+false;
+
+
+show({
+
+ok:
+true,
+
+step:
+"3",
+
+approval:
+x,
+
+message:
+"Explicit operator approval recorded. Continue to canonical provisioning."
+
+},true);
+
+
+}
+
+catch(error){
+
+show(
+
+"APPROVAL ERROR\n\n" +
+(error.message || error)
+
+);
+
+
+$("approve").disabled =
+false;
+
+}
+
+};
+
+
+
+/* ==========================================
+   STEP 4 — CANONICAL PROVISIONING
+========================================== */
+
+
+$("provision").onclick =
+async function(){
+
+try{
+
+$("provision").disabled =
+true;
+
+
+show(
+"Running canonical TEST synthetic provisioning…"
+);
+
+
+const response =
+await fetch(
+
+PROVISION,
+
+{
+
+method:
+"POST",
+
+headers:
+authHeaders(),
+
+cache:
+"no-store",
+
+body:
+JSON.stringify({
+
+request_id:
+requestId,
+
+binding_id:
+bindingId,
+
+approval_nonce:
+nonce,
+
+request_snapshot_hash:
+snapshot
+
+})
+
+}
+
+);
+
+
+const result =
+await readJson(response);
+
+
+const x =
+result.data;
+
+
+if(
+!response.ok ||
+!x.ok
+){
+
+throw new Error(
+
+"PROVISION HTTP " +
+response.status +
+"\n\n" +
+JSON.stringify(
+x,
+null,
+2
+)
+
+);
+
+}
+
+
+show({
+
+ok:
+true,
+
+step:
+"4",
+
+result:
+x,
+
+security:
+"No password/JWT returned; TEST synthetic path only."
+
+},true);
+
+
+}
+
+catch(error){
+
+show(
+
+"PROVISION ERROR\n\n" +
+(error.message || error)
+
+);
+
+
+$("provision").disabled =
+false;
+
+}
+
+};
+
+</script>
+
+</body>
+</html>
