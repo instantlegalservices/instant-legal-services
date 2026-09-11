@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ILS — TEST Synthetic Provisioning</title>
+<style>
+body{margin:0;background:#08101f;color:#eef3ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;display:grid;place-items:center;padding:20px}
+.card{width:min(620px,100%);background:#121b31;border:1px solid #263452;border-radius:22px;padding:28px;box-sizing:border-box}
+h1{font-size:28px}.sub{color:#aeb9d1;line-height:1.45}.warn{color:#ffd98a;background:#302611;border:1px solid #6b5424;padding:12px;border-radius:12px}
+.step{margin-top:18px;padding:16px;background:#070c17;border-radius:12px;border:1px solid #263452}
+label{display:block;margin:12px 0 6px}input{width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:1px solid #3b4968;background:#0b1325;color:#fff;font-size:16px}
+button{width:100%;padding:14px;border:0;border-radius:12px;background:#2f6df6;color:#fff;font-size:16px;font-weight:700;margin-top:14px}
+button:disabled{opacity:.55}pre{white-space:pre-wrap;overflow:auto}.ok{border-color:#2d8a57}.err{border-color:#9b3d45}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>ILS — TEST Synthetic Provisioning</h1>
+<div class="sub">TEST ONLY · synthetic identity · no production/customer data</div>
+<div class="warn">No bootstrap secret, service-role key, synthetic password, or JWT is displayed or requested. Synthetic credentials are generated server-side and never returned.</div>
+
+<div class="step">
+<b>Step 1 — Authenticate TEST Operator</b>
+<label>TEST Auth email</label>
+<input id="email" type="email" autocomplete="username" required>
+<label>TEST Auth password</label>
+<input id="password" type="password" autocomplete="current-password" required>
+<button id="login">Sign in</button>
+</div>
+
+<div class="step">
+<b>Step 2 — Prepare + Bind</b>
+<button id="prepare" disabled>Prepare 1085 Request</button>
+</div>
+
+<div class="step">
+<b>Step 3 — Explicit Operator Approval</b>
+<button id="approve" disabled>Approve This Synthetic Request</button>
+</div>
+
+<div class="step">
+<b>Step 4 — Canonical Provisioning</b>
+<button id="provision" disabled>Run Canonical Provisioning</button>
+</div>
+
+<div id="status" class="step">Ready.</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const BASE="https://bgsbuepolooybdqrzmoa.supabase.co/functions/v1/";
+const CONFIG=BASE+"ils-test-operator-bootstrap-public-config";
+const PREP=BASE+"ils-test-synthetic-provision-prep-v2";
+const PROVISION=BASE+"ils-test-synthetic-auth-provision-v7";
+
+let sb=null,key="",requestId="",bindingId="",nonce="",snapshot="";
+
+const $=id=>document.getElementById(id);
+const status=$("status");
+
+function show(x,ok=false){
+  status.textContent=typeof x==="string"?x:JSON.stringify(x,null,2);
+  status.className="step "+(ok?"ok":"err");
+}
+
+async function raw(url,token,body){
+  const r=await fetch(url,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Accept":"application/json",
+      "Authorization":"Bearer "+token,
+      "apikey":key
+    },
+    body:JSON.stringify(body),
+    cache:"no-store"
+  });
+
+  const t=await r.text();
+  let x;
+  try{x=JSON.parse(t)}catch{x={raw_response:t}}
+  return {r,x};
+}
+
+(async()=>{
+  try{
+    const r=await fetch(CONFIG,{cache:"no-store"});
+    const x=await r.json();
+
+    if(!r.ok||!x.ok)
+      throw Error(x.error||"CONFIG_UNAVAILABLE");
+
+    key=x.publishableKey;
+
+    sb=supabase.createClient(
+      x.supabaseUrl,
+      key,
+      {
+        auth:{
+          persistSession:false,
+          autoRefreshToken:true,
+          detectSessionInUrl:false
+        }
+      }
+    );
+
+    show("Ready.");
+  }catch(e){
+    show("CONFIG ERROR
+"+(e.message||e));
+  }
+})();
+
+$("login").onclick=async()=>{
+  try{
+    show("Authenticating TEST operator…");
+
+    const {data,error}=await sb.auth.signInWithPassword({
+      email:$("email").value.trim(),
+      password:$("password").value
+    });
+
+    if(error||!data.session)
+      throw Error(error?.message||"AUTH_FAILED");
+
+    $("prepare").disabled=false;
+    $("login").disabled=true;
+
+    show(
+      "Authenticated as TEST operator. Now prepare the synthetic request.",
+      true
+    );
+  }catch(e){
+    show("AUTH ERROR
+"+(e.message||e));
+  }
+};
+
+$("prepare").onclick=async()=>{
+  try{
+    $("prepare").disabled=true;
+    show("Preparing TEST synthetic request…");
+
+    const {data:{session}}=await sb.auth.getSession();
+
+    if(!session)
+      throw Error("SESSION_NOT_FOUND");
+
+    const {r,x}=await raw(
+      PREP,
+      session.access_token,
+      {action:"PREPARE_SYNTHETIC_PROVISION"}
+    );
+
+    if(!r.ok||!x.ok)
+      throw Error(
+        "HTTP "+r.status+"
+"+JSON.stringify(x,null,2)
+      );
+
+    requestId=x.request_id;
+    bindingId=x.binding_id;
+    nonce=x.approval_nonce;
+    snapshot=x.request_snapshot_hash;
+
+    $("approve").disabled=false;
+
+    show(x,true);
+  }catch(e){
+    show(e.message||String(e));
+    $("prepare").disabled=false;
+  }
+};
+
+$("approve").onclick=async()=>{
+  try{
+    $("approve").disabled=true;
+    show("Recording explicit operator approval…");
+
+    const {data:{session}}=await sb.auth.getSession();
+
+    if(!session)
+      throw Error("SESSION_NOT_FOUND");
+
+    const {data,error}=await sb.rpc(
+      "ils_record_synthetic_operator_approval_v1",
+      {
+        p_request_id:requestId,
+        p_binding_id:bindingId,
+        p_approval_nonce:nonce,
+        p_request_snapshot_hash:snapshot
+      }
+    );
+
+    if(error)
+      throw Error(error.message);
+
+    if(!data)
+      throw Error("APPROVAL_NO_RESULT");
+
+    $("provision").disabled=false;
+
+    show(data,true);
+  }catch(e){
+    show("APPROVAL ERROR
+"+(e.message||e));
+    $("approve").disabled=false;
+  }
+};
+
+$("provision").onclick=async()=>{
+  try{
+    $("provision").disabled=true;
+    show("Running canonical 1085 provisioning…");
+
+    const {data:{session}}=await sb.auth.getSession();
+
+    if(!session)
+      throw Error("SESSION_NOT_FOUND");
+
+    const {r,x}=await raw(
+      PROVISION,
+      session.access_token,
+      {
+        action:"CREATE_APPROVED_SYNTHETIC_IDENTITY",
+        request_id:requestId,
+        binding_id:bindingId
+      }
+    );
+
+    if(!r.ok||!x.ok)
+      throw Error(
+        "HTTP "+r.status+"
+"+JSON.stringify(x,null,2)
+      );
+
+    show(x,true);
+    await sb.auth.signOut();
+  }catch(e){
+    show("PROVISION ERROR
+"+(e.message||e));
+    $("provision").disabled=false;
+  }
+};
+</script>
+</body>
+</html>
