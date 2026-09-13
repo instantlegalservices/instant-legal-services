@@ -19,18 +19,26 @@ function escapeHtml(value = "") {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function arrayValue(value) {
-  if (Array.isArray(value)) return value.filter(Boolean);
+  if (Array.isArray(value)) {
+    return value
+      .map(v => String(v).trim())
+      .filter(Boolean);
+  }
+
   if (!value) return [];
+
   if (typeof value === "string") {
     return value
-      .split(",")
+      .split(/\s*,\s*|\s*\|\s*|\s*;\s*|\n/)
       .map(v => v.trim())
       .filter(Boolean);
   }
+
   return [];
 }
 
@@ -41,6 +49,282 @@ function getValue(obj, names) {
     }
   }
   return "";
+}
+
+function parseDistrictCourt(value) {
+  const raw = String(value || "").trim();
+
+  if (!raw) {
+    return {
+      district: "",
+      court: ""
+    };
+  }
+
+  const districtMatch = raw.match(
+    /(?:^|\|)\s*District\s*:\s*([^|]+)/i
+  );
+
+  const courtMatch = raw.match(
+    /(?:^|\|)\s*Court\s*:\s*([^|]+)/i
+  );
+
+  if (districtMatch || courtMatch) {
+    return {
+      district: districtMatch ? districtMatch[1].trim() : "",
+      court: courtMatch ? courtMatch[1].trim() : ""
+    };
+  }
+
+  const parts = raw
+    .split(/\s*\|\s*/)
+    .map(v => v.trim())
+    .filter(Boolean);
+
+  if (parts.length >= 2) {
+    return {
+      district: parts[0],
+      court: parts.slice(1).join(" | ")
+    };
+  }
+
+  return {
+    district: raw,
+    court: ""
+  };
+}
+
+function isTruthyPublicFlag(value) {
+  return (
+    value === true ||
+    value === 1 ||
+    String(value).trim().toLowerCase() === "true" ||
+    String(value).trim() === "1"
+  );
+}
+
+function uniqueStrings(values) {
+  return [...new Set(
+    values
+      .map(value => String(value || "").trim())
+      .filter(Boolean)
+  )];
+}
+
+// VERIFIED OFFICIAL GOVERNMENT ROUTES.
+// These are navigation references only. ILS is not the government portal,
+// does not collect government credentials, and does not replace the official service.
+const GOVERNMENT_SERVICES = [
+  {
+    slug: "up-jansunwai",
+    title: "UP Jansunwai – Samadhan",
+    category: "Uttar Pradesh Government",
+    description: "Official Uttar Pradesh grievance registration, status tracking, reminder and feedback route.",
+    officialUrl: "https://jansunwai.up.nic.in/"
+  },
+  {
+    slug: "up-property-registration",
+    title: "UP Property Registration – IGRSUP",
+    category: "Uttar Pradesh Government",
+    description: "Official Uttar Pradesh Stamp and Registration Department route for property registration and related services.",
+    officialUrl: "https://igrsup.gov.in/"
+  },
+  {
+    slug: "ecourts-case-status",
+    title: "eCourts Case Status",
+    category: "Government of India",
+    description: "Official eCourts case-status search route for Indian courts.",
+    officialUrl: "https://services.ecourts.gov.in/ecourtindia_v6/casestatus/"
+  },
+  {
+    slug: "cyber-crime-reporting",
+    title: "National Cyber Crime Reporting Portal",
+    category: "Government of India",
+    description: "Official route for reporting cyber crime; financial cyber fraud should be reported immediately through the official 1930 route.",
+    officialUrl: "https://www.cybercrime.gov.in/"
+  },
+  {
+    slug: "echallan",
+    title: "eChallan – Digital Traffic/Transport Enforcement",
+    category: "Government of India",
+    description: "Official eChallan route for traffic and transport enforcement services.",
+    officialUrl: "https://echallan.parivahan.nic.in/login"
+  },
+  {
+    slug: "cpgrams-grievance",
+    title: "CPGRAMS Public Grievance",
+    category: "Government of India",
+    description: "Official Centralised Public Grievance Redress and Monitoring System for government-service grievances.",
+    officialUrl: "https://pgportal.gov.in/"
+  },
+  {
+    slug: "consumer-helpline",
+    title: "National Consumer Helpline",
+    category: "Government of India",
+    description: "Official National Consumer Helpline route for consumer grievances and tracking.",
+    officialUrl: "https://consumerhelpline.gov.in/"
+  },
+  {
+    slug: "udyam-registration",
+    title: "Udyam Registration",
+    category: "Government of India",
+    description: "Official Ministry of MSME Udyam Registration portal. Registration is handled through the official government route.",
+    officialUrl: "https://udyamregistration.gov.in/"
+  },
+  {
+    slug: "income-tax-e-filing",
+    title: "Income Tax e-Filing",
+    category: "Government of India",
+    description: "Official Income Tax Department e-Filing portal for tax filing and related online services.",
+    officialUrl: "https://www.incometax.gov.in/iec/foportal/"
+  },
+  {
+    slug: "mca-services",
+    title: "MCA21 – Ministry of Corporate Affairs",
+    category: "Government of India",
+    description: "Official Ministry of Corporate Affairs portal for company and LLP related online services and filings.",
+    officialUrl: "https://www.mca.gov.in/"
+  },
+  {
+    slug: "epfo-services",
+    title: "EPFO Services",
+    category: "Government of India",
+    description: "Official Employees' Provident Fund Organisation information and member-service route.",
+    officialUrl: "https://www.epfindia.gov.in/"
+  },
+  {
+    slug: "epfigms-grievance",
+    title: "EPFiGMS Grievance",
+    category: "Government of India",
+    description: "Official EPFO grievance-management route for members, pensioners, employers and other users.",
+    officialUrl: "https://epfigms.gov.in/"
+  },
+  {
+    slug: "rbi-complaint-management",
+    title: "RBI Complaint Management System",
+    category: "Reserve Bank of India",
+    description: "Official RBI complaint route for eligible complaints against regulated entities.",
+    officialUrl: "https://cms.rbi.org.in/"
+  },
+  {
+    slug: "gst-portal",
+    title: "GST Portal",
+    category: "Government of India",
+    description: "Official GST portal for GST services, filings, notices and taxpayer workflows.",
+    officialUrl: "https://www.gst.gov.in/"
+  }
+];
+
+function governmentPageContent(service) {
+  const verifiedDate = new Date().toISOString().slice(0, 10);
+
+  return `
+<div class="card">
+  <p><strong>Official category:</strong> ${escapeHtml(service.category)}</p>
+  <p>${escapeHtml(service.description)}</p>
+
+  <div class="card" style="background:#fafafa">
+    <h2>Official Government Route</h2>
+    <p>
+      <a href="${escapeHtml(service.officialUrl)}"
+         target="_blank"
+         rel="noopener noreferrer">
+        Open ${escapeHtml(service.title)} ↗
+      </a>
+    </p>
+    <p><small>Official source checked during page generation: ${escapeHtml(verifiedDate)}</small></p>
+  </div>
+
+  <div class="card">
+    <h2>How ILS fits</h2>
+    <p>
+      ILS is an independent information and assistance platform. The official
+      government portal remains the authoritative route for government
+      applications, logins, payments, submissions and decisions.
+    </p>
+    <p>
+      Where permitted, ILS may help users understand the official route,
+      organise information or provide non-legal digital/administrative
+      assistance. Legal judgment, drafting, strategy or representation is
+      handled separately by an appropriate independent professional.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Important safety rule</h2>
+    <p>
+      Do not share OTPs, passwords, Aadhaar details, payment credentials or
+      other sensitive authentication information with ILS or any third party.
+      Use the official government portal for sensitive authentication and
+      payment steps.
+    </p>
+  </div>
+
+  <p><a href="${SITE_URL}/government/">← Government Services Navigator</a></p>
+</div>`;
+}
+
+function writeGovernmentPages() {
+  const route = "government";
+  const canonical = `${SITE_URL}/${route}/`;
+
+  const cards = GOVERNMENT_SERVICES.map(service => `
+<div class="card">
+  <h2><a href="${SITE_URL}/government/${escapeHtml(service.slug)}/">${escapeHtml(service.title)}</a></h2>
+  <p>${escapeHtml(service.description)}</p>
+  <p><small>${escapeHtml(service.category)}</small></p>
+</div>`).join("");
+
+  writePage(route, pageTemplate({
+    title: "Government Services Navigator | Official Government Portals | Instant Legal Services",
+    description: "Find verified links to selected official government services, understand the route and use ILS assistance where permitted.",
+    canonical,
+    heading: "Government Services Navigator",
+    content: `
+<p>
+  Find verified official government routes and useful guidance in one place.
+  ILS does not operate, replace or impersonate government portals.
+</p>
+${cards}
+<p><strong>Source rule:</strong> Government fees, eligibility, processing and final decisions remain with the relevant official authority.</p>`,
+    schema: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Government Services Navigator",
+      "url": canonical,
+      "about": {
+        "@type": "Thing",
+        "name": "Official Government Services"
+      }
+    }
+  }));
+
+  for (const service of GOVERNMENT_SERVICES) {
+    const serviceRoute = `government/${service.slug}`;
+    const serviceCanonical = `${SITE_URL}/${serviceRoute}/`;
+
+    writePage(serviceRoute, pageTemplate({
+      title: `${service.title} | Official Government Route | Instant Legal Services`,
+      description: `${service.description} Find the official route and understand how ILS can assist without replacing the government portal.`,
+      canonical: serviceCanonical,
+      heading: service.title,
+      content: governmentPageContent(service),
+      schema: {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": `ILS Guide: ${service.title}`,
+        "serviceType": "Official government route information and navigation",
+        "url": serviceCanonical,
+        "areaServed": service.category,
+        "provider": {
+          "@type": "Organization",
+          "name": "Instant Legal Services",
+          "url": SITE_URL
+        },
+        "sameAs": [service.officialUrl]
+      }
+    }));
+  }
 }
 
 function pageTemplate({ title, description, canonical, heading, content, schema }) {
@@ -174,7 +458,7 @@ async function main() {
         "status",
         "approval_status"
       ])
-    ).toLowerCase();
+    ).trim().toLowerCase();
 
     const isPublic = getValue(advocate, [
       "public_profile",
@@ -182,11 +466,7 @@ async function main() {
       "profile_public"
     ]);
 
-    return status === "approved" &&
-      (isPublic === true ||
-       String(isPublic).toLowerCase() === "true" ||
-       isPublic === 1 ||
-       String(isPublic) === "1");
+    return status === "approved" && isTruthyPublicFlag(isPublic);
   });
 
   console.log(`Approved public advocates: ${approvedAdvocates.length}`);
@@ -205,29 +485,59 @@ async function main() {
     ]);
 
     const state = getValue(advocate, [
+      "practice_state",
       "state",
       "state_name"
     ]);
 
-    const district = getValue(advocate, [
-      "district",
-      "district_name",
-      "city"
+    const districtCourt = getValue(advocate, [
+      "district_court"
     ]);
 
-    const court = getValue(advocate, [
-      "court",
-      "court_name"
-    ]);
+    const parsedDistrictCourt = parseDistrictCourt(districtCourt);
 
-    const practiceAreas = arrayValue(
+    const district =
       getValue(advocate, [
-        "practice_areas",
-        "practice_area",
-        "specialization",
-        "specialisations"
-      ])
+        "district",
+        "district_name",
+        "city"
+      ]) || parsedDistrictCourt.district;
+
+    const court =
+      getValue(advocate, [
+        "court",
+        "court_name"
+      ]) || parsedDistrictCourt.court;
+
+    const practiceAreas = uniqueStrings(
+      arrayValue(
+        getValue(advocate, [
+          "primary_practice_area",
+          "practice_areas",
+          "practice_area",
+          "specialization",
+          "specialisations"
+        ])
+      )
     );
+
+    const yearsOfPractice = getValue(advocate, [
+      "years_of_practice"
+    ]);
+
+    const enrollmentNumber = getValue(advocate, [
+      "enrollment_number"
+    ]);
+
+    const stateBarCouncil = getValue(advocate, [
+      "state_bar_council"
+    ]);
+
+    const verificationStatus = getValue(advocate, [
+      "verification_status",
+      "status",
+      "approval_status"
+    ]);
 
     // STATE
     if (state) {
@@ -294,9 +604,19 @@ async function main() {
       const route = `advocate/${advocateSlug}`;
       const canonical = `${SITE_URL}/${route}/`;
 
-      const description =
-        `${name} - Advocate available through Instant Legal Services. ` +
-        `View advocate profile, court, district, state and practice information.`;
+      const locationParts = uniqueStrings([
+        district,
+        state
+      ]);
+
+      const descriptionParts = [
+        `${name} - Advocate profile on Instant Legal Services`,
+        locationParts.length ? `Location: ${locationParts.join(", ")}` : "",
+        court ? `Court: ${court}` : "",
+        practiceAreas.length ? `Practice areas: ${practiceAreas.slice(0, 4).join(", ")}` : ""
+      ].filter(Boolean);
+
+      const description = `${descriptionParts.join(". ")}.`;
 
       const photo = getValue(advocate, [
         "photo_url",
@@ -311,7 +631,8 @@ async function main() {
         "jobTitle": "Advocate",
         "url": canonical,
         ...(photo ? { image: photo } : {}),
-        "worksFor": {
+        ...(practiceAreas.length ? { knowsAbout: practiceAreas } : {}),
+        "memberOf": {
           "@type": "Organization",
           "name": "Instant Legal Services",
           "url": SITE_URL
@@ -322,10 +643,18 @@ async function main() {
 <div class="card">
 ${photo ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(name)}" style="max-width:180px;border-radius:10px">` : ""}
 <h2>${escapeHtml(name)}</h2>
-${court ? `<p><strong>Court:</strong> ${escapeHtml(court)}</p>` : ""}
+<p><strong>Professional Profile:</strong> Approved public advocate profile.</p>
+${enrollmentNumber ? `<p><strong>Enrollment / Registration:</strong> ${escapeHtml(enrollmentNumber)}</p>` : ""}
+${stateBarCouncil ? `<p><strong>State Bar Council:</strong> ${escapeHtml(stateBarCouncil)}</p>` : ""}
+${state ? `<p><strong>Practice State:</strong> ${escapeHtml(state)}</p>` : ""}
 ${district ? `<p><strong>District:</strong> ${escapeHtml(district)}</p>` : ""}
-${state ? `<p><strong>State:</strong> ${escapeHtml(state)}</p>` : ""}
-${practiceAreas.length ? `<p><strong>Practice Areas:</strong> ${escapeHtml(practiceAreas.join(", "))}</p>` : ""}
+${court ? `<p><strong>Court / Jurisdiction:</strong> ${escapeHtml(court)}</p>` : ""}
+${yearsOfPractice !== "" ? `<p><strong>Years of Practice:</strong> ${escapeHtml(yearsOfPractice)}</p>` : ""}
+${verificationStatus ? `<p><strong>Verification Status:</strong> ${escapeHtml(verificationStatus)}</p>` : ""}
+${practiceAreas.length ? `<div class="card"><h3>Practice Areas</h3><p>${escapeHtml(practiceAreas.join(", "))}</p></div>` : ""}
+<div class="card">
+  <p>This public professional profile is informational. It is not a ranking, guarantee of result, or government endorsement.</p>
+</div>
 </div>`;
 
       writePage(
@@ -341,6 +670,10 @@ ${practiceAreas.length ? `<p><strong>Practice Areas:</strong> ${escapeHtml(pract
       );
     }
   }
+
+  // GOVERNMENT / OFFICIAL ROUTE PAGES
+  // Generated from a manually verified official-source registry.
+  writeGovernmentPages();
 
   // STATE PAGES
   for (const [slug, data] of states) {
