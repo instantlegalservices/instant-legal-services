@@ -12,7 +12,12 @@ window.ILS = (() => {
     }[c]));
 
   const split = (v) => {
-    if (Array.isArray(v)) return v.map(x => String(x ?? "").trim()).filter(Boolean);
+    if (Array.isArray(v)) {
+      return v
+        .map(x => String(x ?? "").trim())
+        .filter(Boolean);
+    }
+
     return String(v || "")
       .split(/\s*\|\s*|\s*;\s*|\n/)
       .map(x => x.trim())
@@ -35,6 +40,71 @@ window.ILS = (() => {
         });
   };
 
+  /*
+    Parse combined district/court information safely.
+
+    Supported examples:
+    District: Bareilly | Court: District & Sessions Court
+    District: Bareilly | Court: District Court
+    Bareilly | District & Sessions Court
+    Bareilly
+  */
+  const parseDistrictCourt = (value) => {
+
+    const raw = String(value || "").trim();
+
+    if (!raw) {
+      return {
+        district: "",
+        court: ""
+      };
+    }
+
+    let district = "";
+    let court = "";
+
+    const districtMatch = raw.match(
+      /(?:^|\|)\s*District\s*:\s*([^|]+)/i
+    );
+
+    const courtMatch = raw.match(
+      /(?:^|\|)\s*Court\s*:\s*([^|]+)/i
+    );
+
+    if (districtMatch) {
+      district = districtMatch[1].trim();
+    }
+
+    if (courtMatch) {
+      court = courtMatch[1].trim();
+    }
+
+    /*
+      If explicit labels were not found,
+      retain the original value rather than
+      inventing or incorrectly splitting data.
+    */
+    if (!district && !court) {
+
+      const parts = raw
+        .split(/\s*\|\s*/)
+        .map(x => x.trim())
+        .filter(Boolean);
+
+      if (parts.length >= 2) {
+        district = parts[0];
+        court = parts.slice(1).join(" | ");
+      } else {
+        district = raw;
+      }
+    }
+
+    return {
+      district,
+      court
+    };
+  };
+
   let client = null;
 
   function ready() {
@@ -43,6 +113,7 @@ window.ILS = (() => {
 
   function goSearch(q) {
     const el = document.querySelector("#globalSearch");
+
     if (el) {
       el.value = q || "";
       el.focus();
@@ -50,7 +121,9 @@ window.ILS = (() => {
   }
 
   async function init() {
+
     if (window.supabase && !client) {
+
       client = window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_KEY,
@@ -65,27 +138,35 @@ window.ILS = (() => {
     }
 
     document.querySelectorAll("[data-menu]").forEach((b) => {
+
       if (b.dataset.ilsBound) return;
 
       b.dataset.ilsBound = "1";
 
       b.addEventListener("click", () => {
+
         document
           .querySelector(".navlinks")
           ?.classList.toggle("open");
+
       });
+
     });
 
     document.querySelectorAll(".navlinks a").forEach((a) => {
+
       if (a.dataset.ilsBound) return;
 
       a.dataset.ilsBound = "1";
 
       a.addEventListener("click", () => {
+
         document
           .querySelector(".navlinks")
           ?.classList.remove("open");
+
       });
+
     });
 
     return client;
@@ -131,26 +212,32 @@ window.ILS = (() => {
       .trim();
 
     if (safeQ) {
+
       query = query.or(
         `advocate_name.ilike.%${safeQ}%,` +
         `practice_state.ilike.%${safeQ}%,` +
         `district_court.ilike.%${safeQ}%,` +
         `primary_practice_area.ilike.%${safeQ}%`
       );
+
     }
 
     if (state) {
+
       query = query.ilike(
         "practice_state",
         `%${String(state).replace(/[%]/g, "")}%`
       );
+
     }
 
     if (area) {
+
       query = query.ilike(
         "primary_practice_area",
         `%${String(area).replace(/[%]/g, "")}%`
       );
+
     }
 
     const fetchLimit = featured
@@ -158,20 +245,29 @@ window.ILS = (() => {
       : limit;
 
     const { data, error } = await query
-      .order("created_at", { ascending: false })
+      .order("created_at", {
+        ascending: false
+      })
       .limit(fetchLimit);
 
     if (error) {
-      console.error("ILS Advocate Error:", error);
+
+      console.error(
+        "ILS Advocate Error:",
+        error
+      );
+
       return [];
     }
 
     let rows = data || [];
 
     if (featured && rows.length > limit) {
+
       rows = rows
         .sort(() => Math.random() - 0.5)
         .slice(0, limit);
+
     }
 
     return rows;
@@ -226,45 +322,57 @@ window.ILS = (() => {
       .eq("summary_status", "completed");
 
     /* Direct judgment lookup */
+
     if (id) {
       query = query.eq("id", id);
     }
 
     /* Court filter */
+
     if (court) {
+
       const safeCourt = String(court)
         .replace(/[,%()]/g, " ")
         .trim();
 
       if (safeCourt) {
+
         query = query.or(
           `court_name.ilike.%${safeCourt}%,` +
           `court_type.ilike.%${safeCourt}%`
         );
+
       }
     }
 
     /* Category filter */
+
     if (category) {
+
       const safeCategory = String(category)
         .replace(/[%]/g, "")
         .trim();
 
       if (safeCategory) {
+
         query = query.ilike(
           "primary_category",
           `%${safeCategory}%`
         );
+
       }
     }
 
     /* Search */
+
     if (q) {
+
       const safeQ = String(q)
         .replace(/[,%()]/g, " ")
         .trim();
 
       if (safeQ) {
+
         /*
           IMPORTANT:
           keywords is JSONB.
@@ -285,6 +393,7 @@ window.ILS = (() => {
           `statutes_and_sections.ilike.%${safeQ}%,` +
           `search_text.ilike.%${safeQ}%`
         );
+
       }
     }
 
@@ -301,7 +410,12 @@ window.ILS = (() => {
     const { data, error } = await query;
 
     if (error) {
-      console.error("ILS Judgment Error:", error);
+
+      console.error(
+        "ILS Judgment Error:",
+        error
+      );
+
       return [];
     }
 
@@ -317,19 +431,38 @@ window.ILS = (() => {
     if (!client) await init();
 
     if (!client) {
-      throw new Error("Service connection unavailable.");
+      throw new Error(
+        "Service connection unavailable."
+      );
     }
 
     const lead = {
-      client_name: String(payload.name || "").trim(),
-      mobile: String(payload.mobile || "").trim(),
-      state: payload.state,
-      district_city: String(payload.city || "").trim(),
-      legal_matter: payload.matter,
-      brief_requirement: String(payload.brief || "").trim(),
-      status: "New",
-      payment_status: "Pending",
-      priority: "Normal"
+      client_name:
+        String(payload.name || "").trim(),
+
+      mobile:
+        String(payload.mobile || "").trim(),
+
+      state:
+        payload.state,
+
+      district_city:
+        String(payload.city || "").trim(),
+
+      legal_matter:
+        payload.matter,
+
+      brief_requirement:
+        String(payload.brief || "").trim(),
+
+      status:
+        "New",
+
+      payment_status:
+        "Pending",
+
+      priority:
+        "Normal"
     };
 
     const { error } = await client
@@ -352,10 +485,13 @@ window.ILS = (() => {
     if (!client) await init();
 
     if (!client) {
+
       return {
         ok: false,
-        message: "AI connection unavailable."
+        message:
+          "AI connection unavailable."
       };
+
     }
 
     try {
@@ -373,6 +509,7 @@ window.ILS = (() => {
         );
 
       if (error || !data?.ok) {
+
         return {
           ok: false,
           message:
@@ -380,6 +517,7 @@ window.ILS = (() => {
             error?.message ||
             "AI service is not configured yet."
         };
+
       }
 
       return data;
@@ -392,6 +530,7 @@ window.ILS = (() => {
           e.message ||
           "AI service unavailable."
       };
+
     }
   }
 
@@ -400,20 +539,91 @@ window.ILS = (() => {
      ========================================================= */
 
   const SECTION_LINKS = [
-    [/\bBNS\s*(?:Act\s*)?115\b/i, "BNS 115", "sections/bns-115.html"],
-    [/\bBNS\s*(?:Act\s*)?318\b/i, "BNS 318", "sections/bns-318.html"],
-    [/\bBNSS\s*173\b/i, "BNSS 173", "sections/bnss-173.html"],
-    [/\bBNSS\s*187\b/i, "BNSS 187", "sections/bnss-187.html"],
-    [/\bBNSS\s*479\b/i, "BNSS 479", "sections/bnss-479.html"],
-    [/\bBNSS\s*480\b/i, "BNSS 480", "sections/bnss-480.html"],
-    [/\bBNSS\s*482\b/i, "BNSS 482", "sections/bnss-482.html"],
-    [/\bBSA\s*63\b/i, "BSA 63", "sections/bsa-63.html"],
-    [/\bNDPS\s*(?:Act\s*)?20\b/i, "NDPS 20", "sections/ndps-20.html"],
-    [/\bNDPS\s*(?:Act\s*)?37\b/i, "NDPS 37", "sections/ndps-37.html"],
-    [/\bNI\s*Act\s*(?:Section\s*)?138\b|\bNegotiable\s+Instruments\s+Act\s*(?:Section\s*)?138\b/i, "NI Act 138", "sections/ni-138.html"],
-    [/\bHMA\s*(?:1955\s*)?(?:Section\s*)?13\b|\bHindu\s+Marriage\s+Act\s*(?:Section\s*)?13\b/i, "HMA 13", "sections/hma-13.html"],
-    [/\bDV\s*Act\s*(?:2005\s*)?(?:Section\s*)?12\b|\bDomestic\s+Violence\s+Act\s*(?:Section\s*)?12\b/i, "DV Act 12", "sections/dv-12.html"],
-    [/\bCPC\s*(?:1908\s*)?(?:Section\s*)?115\b/i, "CPC 115 (UP)", "sections/cpc-115-up.html"]
+
+    [
+      /\bBNS\s*(?:Act\s*)?115\b/i,
+      "BNS 115",
+      "sections/bns-115.html"
+    ],
+
+    [
+      /\bBNS\s*(?:Act\s*)?318\b/i,
+      "BNS 318",
+      "sections/bns-318.html"
+    ],
+
+    [
+      /\bBNSS\s*173\b/i,
+      "BNSS 173",
+      "sections/bnss-173.html"
+    ],
+
+    [
+      /\bBNSS\s*187\b/i,
+      "BNSS 187",
+      "sections/bnss-187.html"
+    ],
+
+    [
+      /\bBNSS\s*479\b/i,
+      "BNSS 479",
+      "sections/bnss-479.html"
+    ],
+
+    [
+      /\bBNSS\s*480\b/i,
+      "BNSS 480",
+      "sections/bnss-480.html"
+    ],
+
+    [
+      /\bBNSS\s*482\b/i,
+      "BNSS 482",
+      "sections/bnss-482.html"
+    ],
+
+    [
+      /\bBSA\s*63\b/i,
+      "BSA 63",
+      "sections/bsa-63.html"
+    ],
+
+    [
+      /\bNDPS\s*(?:Act\s*)?20\b/i,
+      "NDPS 20",
+      "sections/ndps-20.html"
+    ],
+
+    [
+      /\bNDPS\s*(?:Act\s*)?37\b/i,
+      "NDPS 37",
+      "sections/ndps-37.html"
+    ],
+
+    [
+      /\bNI\s*Act\s*(?:Section\s*)?138\b|\bNegotiable\s+Instruments\s+Act\s*(?:Section\s*)?138\b/i,
+      "NI Act 138",
+      "sections/ni-138.html"
+    ],
+
+    [
+      /\bHMA\s*(?:1955\s*)?(?:Section\s*)?13\b|\bHindu\s+Marriage\s+Act\s*(?:Section\s*)?13\b/i,
+      "HMA 13",
+      "sections/hma-13.html"
+    ],
+
+    [
+      /\bDV\s*Act\s*(?:2005\s*)?(?:Section\s*)?12\b|\bDomestic\s+Violence\s+Act\s*(?:Section\s*)?12\b/i,
+      "DV Act 12",
+      "sections/dv-12.html"
+    ],
+
+    [
+      /\bCPC\s*(?:1908\s*)?(?:Section\s*)?115\b/i,
+      "CPC 115 (UP)",
+      "sections/cpc-115-up.html"
+    ]
+
   ];
 
   function relatedSections(text) {
@@ -423,9 +633,15 @@ window.ILS = (() => {
     const seen = new Set();
     const out = [];
 
-    for (const [rx, label, url] of SECTION_LINKS) {
+    for (
+      const [rx, label, url]
+      of SECTION_LINKS
+    ) {
 
-      if (rx.test(t) && !seen.has(url)) {
+      if (
+        rx.test(t) &&
+        !seen.has(url)
+      ) {
 
         seen.add(url);
 
@@ -433,13 +649,17 @@ window.ILS = (() => {
           label,
           url
         });
+
       }
     }
 
     return out;
   }
 
-  function sectionLinksHTML(text, base = "") {
+  function sectionLinksHTML(
+    text,
+    base = ""
+  ) {
 
     return relatedSections(text)
       .map(
@@ -457,7 +677,8 @@ window.ILS = (() => {
 
   function searchIntentHTML(q = "") {
 
-    const query = String(q || "").trim();
+    const query =
+      String(q || "").trim();
 
     const hi = query
       ? `हिंदी में खोजें: ${esc(query)}`
@@ -468,8 +689,10 @@ window.ILS = (() => {
       : "Search in English for a law, section, judgment or legal topic";
 
     return `
-      <div class="ils-search-intent"
-           aria-label="Bilingual legal search intent">
+      <div
+        class="ils-search-intent"
+        aria-label="Bilingual legal search intent"
+      >
         <span>${hi}</span>
         <span>${en}</span>
       </div>
@@ -490,6 +713,29 @@ window.ILS = (() => {
     const areas =
       split(a.primary_practice_area);
 
+    const location =
+      parseDistrictCourt(
+        a.district_court
+      );
+
+    const district =
+      location.district ||
+      "";
+
+    const court =
+      location.court ||
+      "";
+
+    const jurisdictionText =
+      district && court
+        ? `${district} · ${court}`
+        : (
+            a.district_court ||
+            district ||
+            court ||
+            "Jurisdiction not specified"
+          );
+
     return `
       <div class="profile-head">
 
@@ -497,14 +743,21 @@ window.ILS = (() => {
           photo
             ? `<img
                 src="${esc(photo)}"
-                alt="${esc(a.advocate_name || "Advocate")}"
+                alt="${esc(
+                  a.advocate_name ||
+                  "Advocate"
+                )}"
               >`
             : `<div class="adv-photo"></div>`
         }
 
         <div>
+
           <h2 style="margin:0 0 5px">
-            ${esc(a.advocate_name || "Advocate")}
+            ${esc(
+              a.advocate_name ||
+              "Advocate"
+            )}
           </h2>
 
           <div class="verified">
@@ -512,13 +765,14 @@ window.ILS = (() => {
           </div>
 
           <div class="meta">
-            ${esc(a.practice_state || "India")}
-            ·
             ${esc(
-              a.district_court ||
-              "Jurisdiction not specified"
+              a.practice_state ||
+              "India"
             )}
+            ·
+            ${esc(jurisdictionText)}
           </div>
+
         </div>
 
       </div>
@@ -556,11 +810,25 @@ window.ILS = (() => {
         </div>
 
         <div class="profile-item">
-          <small>Jurisdiction / Court</small>
+          <small>District</small>
           <strong>
             ${esc(
-              a.district_court ||
+              district ||
               "Not specified"
+            )}
+          </strong>
+        </div>
+
+        <div class="profile-item">
+          <small>Court / Jurisdiction</small>
+          <strong>
+            ${esc(
+              court ||
+              (
+                district
+                  ? a.district_court
+                  : "Not specified"
+              )
             )}
           </strong>
         </div>
@@ -578,7 +846,10 @@ window.ILS = (() => {
         <div class="profile-item">
           <small>Profile Status</small>
           <strong>
-            Verified public profile
+            ${esc(
+              a.verification_status ||
+              "Verified public profile"
+            )}
           </strong>
         </div>
 
@@ -624,7 +895,9 @@ window.ILS = (() => {
 
         <a
           class="btn btn-primary"
-          href="assistance.html?advocate=${encodeURIComponent(a.id)}"
+          href="assistance.html?advocate=${encodeURIComponent(
+            a.id
+          )}"
         >
           Request Legal Assistance
         </a>
