@@ -19,6 +19,19 @@
  *     current_route
  *   }
  * ]
+ *
+ * Location route convention:
+ * - STATE       -> legacy-owned for now
+ * - DISTRICT    -> legacy-owned for now
+ * - TEHSIL      -> /tehsil/{slug}/
+ * - LOCAL_BODY  -> /local-body/{slug}/
+ * - AUTHORITY   -> /authority/{slug}/
+ *
+ * Important:
+ * - canonical_slug is NOT the identity of a location.
+ * - Registry id is the stable identity.
+ * - STATE/DISTRICT are intentionally not forced into the new
+ *   route convention until explicit legacy ownership handover.
  */
 
 const SITE_URL = "https://instantlegalservices.in";
@@ -32,12 +45,61 @@ const ALLOWED_LOCATION_TYPES = new Set([
   "AUTHORITY"
 ]);
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const CANONICAL_SLUG_RE =
+  /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const CONTROL_CHAR_RE =
+  /[\u0000-\u001F\u007F]/;
+
+const TYPED_ROUTE_PREFIXES = Object.freeze({
+  TEHSIL: "/tehsil/",
+  LOCAL_BODY: "/local-body/",
+  AUTHORITY: "/authority/"
+});
+
 function assertNonEmptyString(value, field) {
   if (typeof value !== "string" || !value.trim()) {
     throw new Error(`${field} must be a non-empty string`);
   }
 
   return value.trim();
+}
+
+function assertUuid(value, field) {
+  const id = assertNonEmptyString(value, field);
+
+  if (!UUID_RE.test(id)) {
+    throw new Error(`${field} must be a valid UUID`);
+  }
+
+  return id.toLowerCase();
+}
+
+function assertCanonicalSlug(value, field) {
+  const slug = assertNonEmptyString(value, field);
+
+  if (slug !== slug.trim()) {
+    throw new Error(
+      `${field} must not contain surrounding whitespace`
+    );
+  }
+
+  if (slug !== slug.toLowerCase()) {
+    throw new Error(
+      `${field} must be lowercase: ${slug}`
+    );
+  }
+
+  if (!CANONICAL_SLUG_RE.test(slug)) {
+    throw new Error(
+      `${field} is not a valid canonical slug: ${slug}`
+    );
+  }
+
+  return slug;
 }
 
 function assertCanonicalRoute(value, field) {
@@ -58,6 +120,41 @@ function assertCanonicalRoute(value, field) {
   if (!value.startsWith("/") || !value.endsWith("/")) {
     throw new Error(
       `${field} is not a canonical route: ${value}`
+    );
+  }
+
+  /*
+   * Reject characters that can make route interpretation
+   * ambiguous or unsafe.
+   */
+  if (CONTROL_CHAR_RE.test(value)) {
+    throw new Error(
+      `${field} contains control characters`
+    );
+  }
+
+  /*
+   * Backslashes are deliberately forbidden.
+   * They can be interpreted differently by URL/path layers.
+   */
+  if (value.includes("\\")) {
+    throw new Error(
+      `${field} must not contain backslashes`
+    );
+  }
+
+  /*
+   * Canonical routes must not contain dot-segments.
+   */
+  const pathSegments = value.split("/");
+
+  if (
+    pathSegments.some(
+      segment => segment === "." || segment === ".."
+    )
+  ) {
+    throw new Error(
+      `${field} must not contain dot-segments`
     );
   }
 
@@ -107,7 +204,44 @@ function assertCanonicalUrl(route) {
     );
   }
 
+  /*
+   * Ensure URL parsing did not normalize the supplied route
+   * into a different pathname.
+   */
+  if (url.pathname !== canonicalRoute) {
+    throw new Error(
+      `Canonical route changes after URL normalization: ${canonicalRoute}`
+    );
+  }
+
   return url.href;
+}
+
+function assertRouteMatchesLocationType(
+  locationType,
+  canonicalSlug,
+  currentRoute
+) {
+  /*
+   * STATE and DISTRICT intentionally remain outside this
+   * strict convention until explicit legacy ownership handover.
+   */
+  const prefix =
+    TYPED_ROUTE_PREFIXES[locationType];
+
+  if (!prefix) {
+    return;
+  }
+
+  const expectedRoute =
+    `${prefix}${canonicalSlug}/`;
+
+  if (currentRoute !== expectedRoute) {
+    throw new Error(
+      `current_route does not match ${locationType} canonical_slug: ` +
+      `${currentRoute} != ${expectedRoute}`
+    );
+  }
 }
 
 function escapeXml(value) {
@@ -125,10 +259,12 @@ function escapeXml(value) {
  * Fail closed:
  * - malformed rows
  * - unsupported location types
+ * - invalid UUIDs
  * - duplicate IDs
  * - duplicate current routes
- * - uppercase slugs
+ * - invalid canonical slugs
  * - invalid canonical routes
+ * - typed route/slug mismatches
  */
 function validateRows(rows) {
   if (!Array.isArray(rows)) {
@@ -151,7 +287,7 @@ function validateRows(rows) {
       );
     }
 
-    const id = assertNonEmptyString(
+    const id = assertUuid(
       row.id,
       "id"
     );
@@ -166,7 +302,7 @@ function validateRows(rows) {
       "canonical_name"
     );
 
-    const canonicalSlug = assertNonEmptyString(
+    const canonicalSlug = assertCanonicalSlug(
       row.canonical_slug,
       "canonical_slug"
     );
@@ -194,29 +330,21 @@ function validateRows(rows) {
       );
     }
 
-    if (
-      canonicalSlug !==
-      canonicalSlug.toLowerCase()
-    ) {
-      throw new Error(
-        `canonical_slug must be lowercase: ${canonicalSlug}`
-      );
-    }
-
-    /*
-     * Reject whitespace around slug.
-     */
-    if (canonicalSlug !== canonicalSlug.trim()) {
-      throw new Error(
-        `canonical_slug must not contain surrounding whitespace`
-      );
-    }
-
     /*
      * Sitemap must only contain canonical URLs
      * on the ILS HTTPS host.
      */
     assertCanonicalUrl(currentRoute);
+
+    /*
+     * Enforce the new route convention only for
+     * Registry-owned location namespaces.
+     */
+    assertRouteMatchesLocationType(
+      locationType,
+      canonicalSlug,
+      currentRoute
+    );
 
     locationIds.add(id);
     currentRoutes.add(currentRoute);
