@@ -36,6 +36,7 @@
 
 const SITE_URL = "https://instantlegalservices.in";
 const CANONICAL_HOST = "instantlegalservices.in";
+const SITEMAP_LOC_MAX_LENGTH = 2048;
 
 const ALLOWED_LOCATION_TYPES = new Set([
   "STATE",
