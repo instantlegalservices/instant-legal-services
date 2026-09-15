@@ -1283,6 +1283,177 @@ expectPass(
 
 console.log("");
 
+/*
+ * ---------------------------------------------------------
+ * 17. Sitemap protocol hard-limit tests
+ * ---------------------------------------------------------
+ */
+
+/*
+ * Deterministic RFC-compatible UUID v4 generator.
+ *
+ * Guarantees:
+ * - valid UUID format
+ * - version 4
+ * - RFC-compatible variant
+ * - unique IDs for this test range
+ */
+function testUuid(index) {
+  if (index === 0) {
+    return VALID_UUID;
+  }
+
+  return (
+    "00000000-0000-4000-8000-" +
+    index.toString(16).padStart(12, "0")
+  );
+}
+
+/*
+ * Generate a large but completely valid Registry feed.
+ *
+ * These rows intentionally stay inside the TEHSIL
+ * route convention so the test measures Sitemap limits,
+ * not route-validation failures.
+ */
+function largeValidRows(count) {
+  return Array.from(
+    { length: count },
+    (_, index) => ({
+      id: testUuid(index),
+      location_type: "TEHSIL",
+      canonical_name:
+        `Location ${index}`,
+      canonical_slug:
+        `location-${index}`,
+      current_route:
+        `/tehsil/location-${index}/`
+    })
+  );
+}
+
+/*
+ * Exactly 50,000 URLs is permitted by the Sitemap protocol.
+ */
+expectPass(
+  "accept exactly 50,000 sitemap URLs",
+  () => {
+    const rows =
+      largeValidRows(50000);
+
+    const result =
+      validateRows(rows);
+
+    assert.equal(
+      result.length,
+      50000
+    );
+  }
+);
+
+/*
+ * 50,001 URLs must be rejected.
+ */
+expectFail(
+  "reject 50,001 sitemap URLs",
+  () => {
+    const rows =
+      largeValidRows(50001);
+
+    validateRows(rows);
+  },
+  "Sitemap cannot contain more than 50000 URLs"
+);
+
+/*
+ * Verify that the actual generator can produce a
+ * maximum-count sitemap without failing the URL-count
+ * guard.
+ */
+expectPass(
+  "generate sitemap with exactly 50,000 URLs",
+  () => {
+    const rows =
+      largeValidRows(50000);
+
+    const xml =
+      generateLocationSitemap(rows);
+
+    assert.equal(
+      typeof xml,
+      "string"
+    );
+
+    assert.equal(
+      validateGeneratedSitemap(xml),
+      true
+    );
+  }
+);
+
+/*
+ * Sitemap maximum uncompressed size:
+ * 50 MiB = 52,428,800 bytes.
+ *
+ * Anything above that must fail before structural
+ * XML validation.
+ */
+expectFail(
+  "reject sitemap above 50 MB uncompressed",
+  () => {
+    const oversizedXml =
+      "x".repeat(52_428_801);
+
+    validateGeneratedSitemap(
+      oversizedXml
+    );
+  },
+  "maximum uncompressed size of 52428800 bytes"
+);
+
+/*
+ * Verify that size validation is based on UTF-8 BYTES,
+ * not JavaScript character count.
+ *
+ * 😀 occupies 4 UTF-8 bytes.
+ *
+ * 13,107,201 × 4
+ * = 52,428,804 bytes
+ *
+ * Therefore it must be rejected.
+ */
+expectFail(
+  "reject multibyte UTF-8 sitemap above 50 MB",
+  () => {
+    const oversizedXml =
+      "😀".repeat(13_107_201);
+
+    validateGeneratedSitemap(
+      oversizedXml
+    );
+  },
+  "maximum uncompressed size of 52428800 bytes"
+);
+
+/*
+ * Final regression check:
+ * normal generated Sitemap must continue to
+ * pass after all hard-limit protections.
+ */
+expectPass(
+  "normal generated sitemap passes hard-limit validation",
+  () => {
+    const xml =
+      generateLocationSitemap([
+        row()
+      ]);
+
+    assert.equal(
+      validateGeneratedSitemap(xml),
+      true
+    );
+  }
+);
 console.log(
   "1088.370 LOCATION SITEMAP ADVERSARIAL TEST SUITE: PASS"
 );
