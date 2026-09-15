@@ -902,6 +902,126 @@ expectPass(
 
 /*
  * ---------------------------------------------------------
+ * 13A. Sitemap <loc> length boundary tests
+ * ---------------------------------------------------------
+ */
+
+expectPass(
+  "accept canonical URL at 2047 characters",
+  () => {
+    const absolutePrefix =
+      "https://instantlegalservices.in/tehsil/";
+
+    const slugLength =
+      2047 - absolutePrefix.length - 1;
+
+    const slug =
+      "a".repeat(slugLength);
+
+    const route =
+      `/tehsil/${slug}/`;
+
+    assert.equal(
+      `https://instantlegalservices.in${route}`.length,
+      2047
+    );
+
+    validateRows([
+      row({
+        canonical_slug: slug,
+        current_route: route
+      })
+    ]);
+  }
+);
+
+expectFail(
+  "reject canonical URL at 2048 characters",
+  () => {
+    const absolutePrefix =
+      "https://instantlegalservices.in/tehsil/";
+
+    const slugLength =
+      2048 - absolutePrefix.length - 1;
+
+    const slug =
+      "a".repeat(slugLength);
+
+    const route =
+      `/tehsil/${slug}/`;
+
+    assert.equal(
+      `https://instantlegalservices.in${route}`.length,
+      2048
+    );
+
+    validateRows([
+      row({
+        canonical_slug: slug,
+        current_route: route
+      })
+    ]);
+  },
+  "exceeds the Sitemap <loc> maximum length of 2048 characters"
+);
+
+/*
+ * ---------------------------------------------------------
+ * 13B. Strict <url> / <loc> structural tests
+ * ---------------------------------------------------------
+ */
+
+expectFail(
+  "reject sitemap with two url elements but only one loc",
+  () => {
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+      "  <url>\n" +
+      "    <loc>https://instantlegalservices.in/tehsil/bareilly/</loc>\n" +
+      "  </url>\n" +
+      "  <url>\n" +
+      "  </url>\n" +
+      "</urlset>\n";
+
+    validateGeneratedSitemap(xml);
+  },
+  "exactly one <loc> per <url>"
+);
+
+expectFail(
+  "reject sitemap with one url element but two loc elements",
+  () => {
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+      "  <url>\n" +
+      "    <loc>https://instantlegalservices.in/tehsil/bareilly/</loc>\n" +
+      "    <loc>https://instantlegalservices.in/tehsil/rampur/</loc>\n" +
+      "  </url>\n" +
+      "</urlset>\n";
+
+    validateGeneratedSitemap(xml);
+  },
+  "exactly one <loc> per <url>"
+);
+
+expectFail(
+  "reject sitemap loc outside url element",
+  () => {
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+      "  <loc>https://instantlegalservices.in/tehsil/bareilly/</loc>\n" +
+      "</urlset>\n";
+
+    validateGeneratedSitemap(xml);
+  },
+  "exactly one <loc> per <url>"
+);
+
+/*
+ * ---------------------------------------------------------
  * 14. Historical-route isolation
  * ---------------------------------------------------------
  */
@@ -1060,7 +1180,7 @@ expectPass(
 console.log("");
 
 console.log(
-  "1088.365 LOCATION SITEMAP ADVERSARIAL TEST SUITE: PASS"
+  "1088.368 LOCATION SITEMAP ADVERSARIAL TEST SUITE: PASS"
 );
 
 console.log(
