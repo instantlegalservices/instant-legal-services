@@ -19,7 +19,18 @@ const ALLOWED_LOCATION_TYPES = new Set([
   "LOCAL_BODY",
   "AUTHORITY"
 ]);
+function assertNonEmptyString(value, field) {
+  if (
+    typeof value !== "string" ||
+    !value.trim()
+  ) {
+    throw new Error(
+      `${field} must be a non-empty string`
+    );
+  }
 
+  return value.trim();
+}
 function assertCanonicalRoute(value, field) {
   if (typeof value !== "string") {
     throw new Error(
