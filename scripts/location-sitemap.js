@@ -36,7 +36,10 @@
 
 const SITE_URL = "https://instantlegalservices.in";
 const CANONICAL_HOST = "instantlegalservices.in";
+
 const SITEMAP_LOC_MAX_LENGTH = 2048;
+const SITEMAP_MAX_URLS = 50000;
+const SITEMAP_MAX_BYTES = 52_428_800;
 
 const ALLOWED_LOCATION_TYPES = new Set([
   "STATE",
@@ -215,7 +218,19 @@ function assertCanonicalUrl(route) {
     );
   }
 
-  return url.href;
+  const href = url.href;
+
+  /*
+   * Official Sitemap protocol requires the <loc> value
+   * to be less than 2,048 characters.
+   */
+  if (href.length >= SITEMAP_LOC_MAX_LENGTH) {
+    throw new Error(
+      `current_route exceeds the Sitemap <loc> maximum length of ${SITEMAP_LOC_MAX_LENGTH} characters`
+    );
+  }
+
+  return href;
 }
 
 function assertRouteMatchesLocationType(
@@ -255,6 +270,16 @@ function escapeXml(value) {
 }
 
 /**
+ * Return UTF-8 byte length.
+ *
+ * Sitemap size limit is defined in bytes, not JavaScript
+ * character count.
+ */
+function getUtf8ByteLength(value) {
+  return Buffer.byteLength(value, "utf8");
+}
+
+/**
  * Validate and normalize Registry SEO feed rows.
  *
  * Fail closed:
@@ -266,11 +291,18 @@ function escapeXml(value) {
  * - invalid canonical slugs
  * - invalid canonical routes
  * - typed route/slug mismatches
+ * - more than 50,000 URLs
  */
 function validateRows(rows) {
   if (!Array.isArray(rows)) {
     throw new Error(
       "Location sitemap input must be an array"
+    );
+  }
+
+  if (rows.length > SITEMAP_MAX_URLS) {
+    throw new Error(
+      `Sitemap cannot contain more than ${SITEMAP_MAX_URLS} URLs`
     );
   }
 
@@ -395,35 +427,52 @@ function validateRows(rows) {
  * Only current_route is emitted.
  */
 function generateLocationSitemap(rows) {
-  const normalizedRows = validateRows(rows);
+  const normalizedRows =
+    validateRows(rows);
 
-  const urlEntries = normalizedRows.map(row => {
-    const loc = escapeXml(
-      assertCanonicalUrl(
-        row.current_route
-      )
-    );
+  const urlEntries =
+    normalizedRows.map(row => {
+      const loc = escapeXml(
+        assertCanonicalUrl(
+          row.current_route
+        )
+      );
 
-    return [
-      "  <url>",
-      `    <loc>${loc}</loc>`,
-      "  </url>"
-    ].join("\n");
-  });
+      return [
+        "  <url>",
+        `    <loc>${loc}</loc>`,
+        "  </url>"
+      ].join("\n");
+    });
 
-  return [
+  const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ...urlEntries,
     "</urlset>",
     ""
   ].join("\n");
+
+  /*
+   * Enforce the uncompressed Sitemap file-size limit
+   * before returning generated XML.
+   */
+  const byteLength =
+    getUtf8ByteLength(xml);
+
+  if (byteLength > SITEMAP_MAX_BYTES) {
+    throw new Error(
+      `Generated sitemap exceeds the maximum uncompressed size of ${SITEMAP_MAX_BYTES} bytes`
+    );
+  }
+
+  return xml;
 }
 
 /**
- * Validate generated sitemap XML at a structural level.
+ * Validate generated sitemap XML.
  *
- * This is intentionally dependency-free.
+ * This is intentionally dependency-free and fail-closed.
  */
 function validateGeneratedSitemap(xml) {
   if (typeof xml !== "string") {
@@ -438,19 +487,37 @@ function validateGeneratedSitemap(xml) {
     );
   }
 
-  if (
-    !xml.startsWith(
-      '<?xml version="1.0" encoding="UTF-8"?>'
-    )
-  ) {
+  /*
+   * Sitemap size is measured uncompressed in UTF-8 bytes.
+   */
+  const byteLength =
+    getUtf8ByteLength(xml);
+
+  if (byteLength > SITEMAP_MAX_BYTES) {
+    throw new Error(
+      `Generated sitemap exceeds the maximum uncompressed size of ${SITEMAP_MAX_BYTES} bytes`
+    );
+  }
+
+  const XML_DECLARATION =
+    '<?xml version="1.0" encoding="UTF-8"?>';
+
+  const URLSET_OPEN =
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
+  const URLSET_CLOSE =
+    "</urlset>";
+
+  if (!xml.startsWith(XML_DECLARATION)) {
     throw new Error(
       "Invalid sitemap XML declaration"
     );
   }
 
   if (
-    !xml.includes(
-      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    !xml.startsWith(
+      `\n${URLSET_OPEN}\n`,
+      XML_DECLARATION.length
     )
   ) {
     throw new Error(
@@ -458,32 +525,98 @@ function validateGeneratedSitemap(xml) {
     );
   }
 
-  if (!xml.includes("</urlset>")) {
+  if (!xml.endsWith(`${URLSET_CLOSE}\n`)) {
     throw new Error(
       "Sitemap urlset is not closed"
     );
   }
 
-  const locMatches =
-    xml.match(/<loc>[\s\S]*?<\/loc>/g) || [];
+  const bodyStart =
+    XML_DECLARATION.length +
+    1 +
+    URLSET_OPEN.length +
+    1;
+
+  const bodyEnd =
+    xml.length -
+    (URLSET_CLOSE.length + 1);
+
+  const body =
+    xml.slice(bodyStart, bodyEnd);
+
+  /*
+   * Empty Sitemap is valid.
+   */
+  if (!body) {
+    return true;
+  }
+
+  const urlBlocks =
+    body.split("\n  </url>");
+
+  /*
+   * Official Sitemap protocol:
+   * maximum 50,000 <url> entries.
+   */
+  if (
+    urlBlocks.length >
+    SITEMAP_MAX_URLS
+  ) {
+    throw new Error(
+      `Sitemap cannot contain more than ${SITEMAP_MAX_URLS} URLs`
+    );
+  }
 
   const locs = new Set();
 
-  for (const entry of locMatches) {
-    const value = entry
-      .replace(/^<loc>/, "")
-      .replace(/<\/loc>$/, "");
+  for (const block of urlBlocks) {
+    const prefix =
+      "  <url>\n    <loc>";
 
-    const decoded = value
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'");
+    /*
+     * This exact structure ensures:
+     * - every <url> has one <loc>
+     * - <loc> cannot exist outside <url>
+     * - extra XML between <url> and <loc> is rejected
+     * - missing </loc> is rejected
+     */
+    if (
+      !block.startsWith(prefix) ||
+      !block.endsWith("</loc>")
+    ) {
+      throw new Error(
+        "Sitemap must contain exactly one <loc> per <url>"
+      );
+    }
 
-    const canonical = assertCanonicalUrl(
-      decoded
-    );
+    const value =
+      block.slice(
+        prefix.length,
+        -"</loc>".length
+      );
+
+    /*
+     * A nested or additional <loc> is structurally invalid.
+     */
+    if (
+      value.includes("<loc>") ||
+      value.includes("</loc>")
+    ) {
+      throw new Error(
+        "Sitemap must contain exactly one <loc> per <url>"
+      );
+    }
+
+    const decoded =
+      value
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'");
+
+    const canonical =
+      assertCanonicalUrl(decoded);
 
     if (locs.has(canonical)) {
       throw new Error(
