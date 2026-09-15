@@ -49,17 +49,28 @@ function row(overrides = {}) {
 function expectPass(name, fn) {
   try {
     fn();
+
     console.log(`PASS  ${name}`);
   } catch (error) {
     console.error(`FAIL  ${name}`);
+
     console.error(
-      `      ${error && error.message ? error.message : error}`
+      `      ${
+        error && error.message
+          ? error.message
+          : error
+      }`
     );
+
     throw error;
   }
 }
 
-function expectFail(name, fn, expectedMessage) {
+function expectFail(
+  name,
+  fn,
+  expectedMessage
+) {
   try {
     fn();
   } catch (error) {
@@ -80,6 +91,7 @@ function expectFail(name, fn, expectedMessage) {
     }
 
     console.log(`PASS  ${name}`);
+
     return;
   }
 
@@ -148,15 +160,21 @@ expectPass(
 expectPass(
   "valid TEHSIL row",
   () => {
-    const result = validateRows([
-      row()
-    ]);
+    const result =
+      validateRows([
+        row()
+      ]);
 
-    assert.equal(result.length, 1);
+    assert.equal(
+      result.length,
+      1
+    );
+
     assert.equal(
       result[0].id,
       VALID_UUID
     );
+
     assert.equal(
       result[0].current_route,
       "/tehsil/bareilly/"
@@ -220,7 +238,9 @@ expectFail(
   "reject arbitrary string as UUID",
   () => {
     validateRows([
-      row({ id: "not-a-uuid" })
+      row({
+        id: "not-a-uuid"
+      })
     ]);
   },
   "id must be a valid UUID"
@@ -265,12 +285,13 @@ expectFail(
 expectPass(
   "accept uppercase hexadecimal UUID",
   () => {
-    const result = validateRows([
-      row({
-        id:
-          "550E8400-E29B-41D4-A716-446655440000"
-      })
-    ]);
+    const result =
+      validateRows([
+        row({
+          id:
+            "550E8400-E29B-41D4-A716-446655440000"
+        })
+      ]);
 
     assert.equal(
       result[0].id,
@@ -290,6 +311,7 @@ expectFail(
   () => {
     validateRows([
       row(),
+
       row({
         canonical_name:
           "Another Bareilly",
@@ -308,6 +330,7 @@ expectFail(
   () => {
     validateRows([
       row(),
+
       row({
         id: VALID_UUID_2,
         canonical_name:
@@ -802,6 +825,7 @@ expectPass(
         current_route:
           "/tehsil/zeta/"
       }),
+
       row({
         id: VALID_UUID_2,
         canonical_name:
@@ -811,6 +835,7 @@ expectPass(
         current_route:
           "/tehsil/alpha/"
       }),
+
       row({
         id: VALID_UUID,
         canonical_name:
@@ -827,7 +852,8 @@ expectPass(
 
     assert.deepEqual(
       result.map(
-        item => item.canonical_name
+        item =>
+          item.canonical_name
       ),
       [
         "Alpha",
@@ -875,6 +901,7 @@ expectPass(
     const xml =
       generateLocationSitemap([
         row(),
+
         row({
           id: VALID_UUID_2,
           location_type:
@@ -889,12 +916,14 @@ expectPass(
       ]);
 
     assert.equal(
-      (xml.match(/<url>/g) || []).length,
+      (xml.match(/<url>/g) || [])
+        .length,
       2
     );
 
     assert.equal(
-      (xml.match(/<loc>/g) || []).length,
+      (xml.match(/<loc>/g) || [])
+        .length,
       2
     );
   }
@@ -903,6 +932,12 @@ expectPass(
 /*
  * ---------------------------------------------------------
  * 13A. Sitemap <loc> length boundary tests
+ *
+ * Official Sitemap protocol:
+ * <loc> must be less than 2,048 characters.
+ * Therefore:
+ * - 2047 = PASS
+ * - 2048 = FAIL
  * ---------------------------------------------------------
  */
 
@@ -913,7 +948,9 @@ expectPass(
       "https://instantlegalservices.in/tehsil/";
 
     const slugLength =
-      2047 - absolutePrefix.length - 1;
+      2047 -
+      absolutePrefix.length -
+      1;
 
     const slug =
       "a".repeat(slugLength);
@@ -928,8 +965,10 @@ expectPass(
 
     validateRows([
       row({
-        canonical_slug: slug,
-        current_route: route
+        canonical_slug:
+          slug,
+        current_route:
+          route
       })
     ]);
   }
@@ -942,7 +981,9 @@ expectFail(
       "https://instantlegalservices.in/tehsil/";
 
     const slugLength =
-      2048 - absolutePrefix.length - 1;
+      2048 -
+      absolutePrefix.length -
+      1;
 
     const slug =
       "a".repeat(slugLength);
@@ -957,8 +998,10 @@ expectFail(
 
     validateRows([
       row({
-        canonical_slug: slug,
-        current_route: route
+        canonical_slug:
+          slug,
+        current_route:
+          route
       })
     ]);
   },
@@ -1022,6 +1065,62 @@ expectFail(
 
 /*
  * ---------------------------------------------------------
+ * 13C. XML protocol / encoding tests
+ * ---------------------------------------------------------
+ */
+
+expectPass(
+  "generated sitemap declares UTF-8",
+  () => {
+    const xml =
+      generateLocationSitemap([
+        row()
+      ]);
+
+    assert.ok(
+      xml.startsWith(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+      )
+    );
+  }
+);
+
+expectPass(
+  "XML special characters are safely escaped and validated",
+  () => {
+    const xml =
+      generateLocationSitemap([
+        row({
+          location_type:
+            "STATE",
+          canonical_name:
+            "A & B < Test >",
+          canonical_slug:
+            "a-b",
+          current_route:
+            "/state/a-&-b/"
+        })
+      ]);
+
+    assert.match(
+      xml,
+      /\/state\/a-&amp;-b\//
+    );
+
+    assert.doesNotMatch(
+      xml,
+      /\/state\/a-&-b\//
+    );
+
+    assert.equal(
+      validateGeneratedSitemap(xml),
+      true
+    );
+  }
+);
+
+/*
+ * ---------------------------------------------------------
  * 14. Historical-route isolation
  * ---------------------------------------------------------
  */
@@ -1043,8 +1142,10 @@ expectPass(
      * This module has no previous_routes input
      * and therefore cannot emit historical routes.
      */
+
     assert.equal(
-      (xml.match(/<loc>/g) || []).length,
+      (xml.match(/<loc>/g) || [])
+        .length,
       1
     );
   }
@@ -1135,6 +1236,7 @@ expectPass(
     const xml =
       buildLocationSitemap([
         row(),
+
         row({
           id: VALID_UUID_2,
           location_type:
@@ -1146,6 +1248,7 @@ expectPass(
           current_route:
             "/local-body/bareilly-nagar-nigam/"
         }),
+
         row({
           id: VALID_UUID_3,
           location_type:
@@ -1165,7 +1268,8 @@ expectPass(
     );
 
     assert.equal(
-      (xml.match(/<loc>/g) || []).length,
+      (xml.match(/<loc>/g) || [])
+        .length,
       3
     );
   }
@@ -1180,7 +1284,7 @@ expectPass(
 console.log("");
 
 console.log(
-  "1088.368 LOCATION SITEMAP ADVERSARIAL TEST SUITE: PASS"
+  "1088.370 LOCATION SITEMAP ADVERSARIAL TEST SUITE: PASS"
 );
 
 console.log(
