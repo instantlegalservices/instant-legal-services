@@ -34,6 +34,8 @@
  *   route convention until explicit legacy ownership handover.
  */
 
+"use strict";
+
 const SITE_URL = "https://instantlegalservices.in";
 const CANONICAL_HOST = "instantlegalservices.in";
 
@@ -165,6 +167,10 @@ function assertCanonicalRoute(value, field) {
   return value;
 }
 
+/**
+ * Validate a Registry current_route and return
+ * its canonical absolute HTTPS URL.
+ */
 function assertCanonicalUrl(route) {
   const canonicalRoute = assertCanonicalRoute(
     route,
@@ -231,6 +237,140 @@ function assertCanonicalUrl(route) {
   }
 
   return href;
+}
+
+/**
+ * Validate an already-generated Sitemap <loc>.
+ *
+ * IMPORTANT:
+ * - Generated <loc> is an absolute URL.
+ * - Registry current_route is a route path.
+ *
+ * Therefore <loc> must NOT be passed directly to
+ * assertCanonicalUrl(), because that function validates
+ * current_route paths.
+ *
+ * This function validates:
+ * - absolute HTTPS URL
+ * - exact canonical host
+ * - no query
+ * - no fragment
+ * - no credentials
+ * - canonical serialized URL
+ * - canonical route pathname
+ * - Sitemap <loc> length
+ */
+function assertCanonicalSitemapLoc(value) {
+  if (typeof value !== "string") {
+    throw new Error(
+      "Sitemap <loc> must be a string"
+    );
+  }
+
+  if (!value.trim()) {
+    throw new Error(
+      "Sitemap <loc> must not be empty"
+    );
+  }
+
+  if (value !== value.trim()) {
+    throw new Error(
+      "Sitemap <loc> must not contain leading or trailing whitespace"
+    );
+  }
+
+  if (CONTROL_CHAR_RE.test(value)) {
+    throw new Error(
+      "Sitemap <loc> contains control characters"
+    );
+  }
+
+  let url;
+
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(
+      `Invalid Sitemap <loc> URL: ${value}`
+    );
+  }
+
+  /*
+   * Sitemap <loc> must be an absolute HTTPS URL.
+   */
+  if (url.protocol !== "https:") {
+    throw new Error(
+      `Sitemap <loc> must use HTTPS: ${value}`
+    );
+  }
+
+  /*
+   * Only the canonical ILS host is permitted.
+   */
+  if (url.hostname !== CANONICAL_HOST) {
+    throw new Error(
+      `Sitemap <loc> has invalid hostname: ${url.hostname}`
+    );
+  }
+
+  /*
+   * No query strings, fragments or credentials.
+   */
+  if (
+    url.search ||
+    url.hash ||
+    url.username ||
+    url.password
+  ) {
+    throw new Error(
+      `Sitemap <loc> contains forbidden URL components: ${value}`
+    );
+  }
+
+  /*
+   * Reject URLs whose serialization changes after parsing.
+   * This prevents non-canonical representations from
+   * entering the sitemap.
+   */
+  if (url.href !== value) {
+    throw new Error(
+      `Sitemap <loc> is not a canonical URL: ${value}`
+    );
+  }
+
+  /*
+   * Validate the pathname using the same strict route
+   * validation used by Registry current_route.
+   */
+  const route =
+    assertCanonicalRoute(
+      url.pathname,
+      "current_route"
+    );
+
+  /*
+   * Reconstruct the canonical absolute URL from the
+   * validated route and require exact equality.
+   */
+  const canonicalHref =
+    `${SITE_URL}${route}`;
+
+  if (canonicalHref !== value) {
+    throw new Error(
+      `Sitemap <loc> does not match canonical route: ${value}`
+    );
+  }
+
+  /*
+   * Sitemap <loc> maximum length.
+   */
+  if (value.length >= SITEMAP_LOC_MAX_LENGTH) {
+    throw new Error(
+      `Sitemap <loc> exceeds the maximum length of ${SITEMAP_LOC_MAX_LENGTH} characters`
+    );
+  }
+
+  return value;
 }
 
 function assertRouteMatchesLocationType(
@@ -607,6 +747,10 @@ function validateGeneratedSitemap(xml) {
       );
     }
 
+    /*
+     * Decode the XML entities produced by escapeXml()
+     * before validating the absolute URL.
+     */
     const decoded =
       value
         .replace(/&amp;/g, "&")
@@ -615,8 +759,14 @@ function validateGeneratedSitemap(xml) {
         .replace(/&quot;/g, '"')
         .replace(/&apos;/g, "'");
 
+    /*
+     * IMPORTANT:
+     * Generated <loc> is an absolute URL, therefore use
+     * assertCanonicalSitemapLoc() instead of
+     * assertCanonicalUrl(), which validates route paths.
+     */
     const canonical =
-      assertCanonicalUrl(decoded);
+      assertCanonicalSitemapLoc(decoded);
 
     if (locs.has(canonical)) {
       throw new Error(
