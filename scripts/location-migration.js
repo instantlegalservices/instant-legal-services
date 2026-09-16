@@ -568,8 +568,16 @@ function normalizeManifestEntry(
           "generatorVersion"
         );
 
-  const contentHash =
-    raw.contentHash ||
+    /*
+   * Content-hash integrity is strict.
+   *
+   * We ALWAYS calculate the expected hash from the
+   * canonical manifest payload.
+   *
+   * If a contentHash was supplied by the caller,
+   * it MUST exactly match the calculated value.
+   */
+  const calculatedContentHash =
     calculateContentHash({
       sourceId,
       locationType,
@@ -578,16 +586,36 @@ function normalizeManifestEntry(
       previousRoutes
     });
 
-  if (
-    !/^[a-f0-9]{64}$/i.test(
-      contentHash
-    )
-  ) {
-    fail(
-      `Invalid contentHash for ${sourceId}`
+  const hasSuppliedContentHash =
+    Object.prototype.hasOwnProperty.call(
+      raw,
+      "contentHash"
     );
+
+  if (hasSuppliedContentHash) {
+    if (
+      typeof raw.contentHash !== "string" ||
+      !/^[a-f0-9]{64}$/i.test(
+        raw.contentHash
+      )
+    ) {
+      fail(
+        `Invalid contentHash for ${sourceId}`
+      );
+    }
+
+    if (
+      raw.contentHash.toLowerCase() !==
+      calculatedContentHash
+    ) {
+      fail(
+        `contentHash integrity mismatch for ${sourceId}`
+      );
+    }
   }
 
+  const contentHash =
+    calculatedContentHash;
   return {
     sourceId,
     locationType,
