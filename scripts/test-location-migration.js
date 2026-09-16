@@ -695,9 +695,9 @@ test(
     );
 
     assert.strictEqual(
-      restored.status,
-      "PASS"
-    );
+  restored.status,
+  "ROLLBACK-PASS"
+);
   }
 );
 
