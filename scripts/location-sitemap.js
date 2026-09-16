@@ -798,8 +798,10 @@ function validateGeneratedSitemap(xml) {
     }
 
     locs.add(canonical);
-  }
+   }
 
+  return true;
+}
 /**
  * Complete generation pipeline.
  *
