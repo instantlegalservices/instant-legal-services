@@ -63,9 +63,8 @@ function expectThrow(name, fn) {
 const BASE_LOCATION = {
   sourceId: "location-bareilly",
   locationType: "DISTRICT",
-  name: "Bareilly",
   route: "/bareilly/",
-  canonical: "https://instantlegalservices.in/bareilly/",
+  canonical: "/bareilly/",
   status: ACTIVE_STATUS || "ACTIVE",
   previousRoutes: [],
   generatorVersion: "location-migration-v1",
@@ -88,11 +87,9 @@ test("normalize valid ACTIVE manifest entry", () => {
   const entry = normalizeManifestEntry(makeEntry());
 
   assert.strictEqual(entry.sourceId, "location-bareilly");
+  assert.strictEqual(entry.locationType, "DISTRICT");
   assert.strictEqual(entry.route, "/bareilly/");
-  assert.strictEqual(
-    entry.canonical,
-    "https://instantlegalservices.in/bareilly/"
-  );
+  assert.strictEqual(entry.canonical, "/bareilly/");
   assert.strictEqual(entry.status, "ACTIVE");
   assert.deepStrictEqual(entry.previousRoutes, []);
   assert.ok(/^[a-f0-9]{64}$/.test(entry.contentHash));
@@ -100,16 +97,16 @@ test("normalize valid ACTIVE manifest entry", () => {
 
 /*
  * --------------------------------------------------------------------------
- * 2. Canonical must equal route
+ * 2. Canonical equals current route
  * --------------------------------------------------------------------------
  */
 
-test("canonical is deterministically derived from current route", () => {
+test("canonical equals current route", () => {
   const entry = normalizeManifestEntry(makeEntry());
 
   assert.strictEqual(
     entry.canonical,
-    `https://instantlegalservices.in${entry.route}`
+    entry.route
   );
 });
 
@@ -123,7 +120,10 @@ test("contentHash is deterministic", () => {
   const a = normalizeManifestEntry(makeEntry());
   const b = normalizeManifestEntry(makeEntry());
 
-  assert.strictEqual(a.contentHash, b.contentHash);
+  assert.strictEqual(
+    a.contentHash,
+    b.contentHash
+  );
 });
 
 test("changing route changes contentHash", () => {
@@ -132,29 +132,52 @@ test("changing route changes contentHash", () => {
   const b = normalizeManifestEntry(
     makeEntry({
       route: "/uttar-pradesh/bareilly/",
-      canonical: "https://instantlegalservices.in/uttar-pradesh/bareilly/",
+      canonical: "/uttar-pradesh/bareilly/",
     })
   );
 
-  assert.notStrictEqual(a.contentHash, b.contentHash);
+  assert.notStrictEqual(
+    a.contentHash,
+    b.contentHash
+  );
 });
 
 /*
  * --------------------------------------------------------------------------
  * 4. Supplied hash integrity
- *
- * Audit requirement:
- * supplied contentHash must match the canonical payload.
- * A random 64-character hash must NOT be accepted.
  * --------------------------------------------------------------------------
  */
 
-expectThrow("incorrect supplied contentHash is rejected", () => {
-  normalizeManifestEntry(
+expectThrow(
+  "incorrect supplied contentHash is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        contentHash:
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      })
+    );
+  }
+);
+
+test("correct supplied contentHash is accepted", () => {
+  const calculated = calculateContentHash({
+    sourceId: "location-bareilly",
+    locationType: "DISTRICT",
+    route: "/bareilly/",
+    canonical: "/bareilly/",
+    previousRoutes: [],
+  });
+
+  const entry = normalizeManifestEntry(
     makeEntry({
-      contentHash:
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      contentHash: calculated,
     })
+  );
+
+  assert.strictEqual(
+    entry.contentHash,
+    calculated
   );
 });
 
@@ -164,17 +187,20 @@ expectThrow("incorrect supplied contentHash is rejected", () => {
  * --------------------------------------------------------------------------
  */
 
-expectThrow("duplicate sourceId is rejected", () => {
-  buildManifestIndex([
-    makeEntry({
-      route: "/bareilly/",
-    }),
-    makeEntry({
-      route: "/other-route/",
-      canonical: "https://instantlegalservices.in/other-route/",
-    }),
-  ]);
-});
+expectThrow(
+  "duplicate sourceId is rejected",
+  () => {
+    buildManifestIndex([
+      makeEntry({
+        route: "/bareilly/",
+      }),
+      makeEntry({
+        route: "/other-route/",
+        canonical: "/other-route/",
+      }),
+    ]);
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -182,16 +208,19 @@ expectThrow("duplicate sourceId is rejected", () => {
  * --------------------------------------------------------------------------
  */
 
-expectThrow("duplicate current route is rejected", () => {
-  buildManifestIndex([
-    makeEntry({
-      sourceId: "location-one",
-    }),
-    makeEntry({
-      sourceId: "location-two",
-    }),
-  ]);
-});
+expectThrow(
+  "duplicate current route is rejected",
+  () => {
+    buildManifestIndex([
+      makeEntry({
+        sourceId: "location-one",
+      }),
+      makeEntry({
+        sourceId: "location-two",
+      }),
+    ]);
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -199,43 +228,53 @@ expectThrow("duplicate current route is rejected", () => {
  * --------------------------------------------------------------------------
  */
 
-expectThrow("route without leading slash is rejected", () => {
-  normalizeManifestEntry(
-    makeEntry({
-      route: "bareilly/",
-      canonical: "https://instantlegalservices.in/bareilly/",
-    })
-  );
-});
+expectThrow(
+  "route without leading slash is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        route: "bareilly/",
+        canonical: "bareilly/",
+      })
+    );
+  }
+);
 
-expectThrow("route without trailing slash is rejected", () => {
-  normalizeManifestEntry(
-    makeEntry({
-      route: "/bareilly",
-      canonical: "https://instantlegalservices.in/bareilly",
-    })
-  );
-});
+expectThrow(
+  "route without trailing slash is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        route: "/bareilly",
+        canonical: "/bareilly",
+      })
+    );
+  }
+);
 
-expectThrow("dot-segment route is rejected", () => {
-  normalizeManifestEntry(
-    makeEntry({
-      route: "/district/../bareilly/",
-      canonical:
-        "https://instantlegalservices.in/district/../bareilly/",
-    })
-  );
-});
+expectThrow(
+  "dot-segment route is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        route: "/district/../bareilly/",
+        canonical: "/district/../bareilly/",
+      })
+    );
+  }
+);
 
-expectThrow("backslash route is rejected", () => {
-  normalizeManifestEntry(
-    makeEntry({
-      route: "/district\\bareilly/",
-      canonical:
-        "https://instantlegalservices.in/district\\bareilly/",
-    })
-  );
-});
+expectThrow(
+  "backslash route is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        route: "/district\\bareilly/",
+        canonical: "/district\\bareilly/",
+      })
+    );
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -247,41 +286,49 @@ test("previousRoutes are preserved", () => {
   const entry = normalizeManifestEntry(
     makeEntry({
       route: "/uttar-pradesh/bareilly/",
-      canonical:
-        "https://instantlegalservices.in/uttar-pradesh/bareilly/",
+      canonical: "/uttar-pradesh/bareilly/",
       previousRoutes: ["/bareilly/"],
-      status: REDIRECT_STATUS || "REDIRECT-REQUIRED",
+      status: ACTIVE_STATUS || "ACTIVE",
     })
   );
 
-  assert.deepStrictEqual(entry.previousRoutes, ["/bareilly/"]);
+  assert.deepStrictEqual(
+    entry.previousRoutes,
+    ["/bareilly/"]
+  );
 });
 
-expectThrow("current route cannot also be historical route", () => {
-  buildManifestIndex([
-    makeEntry({
-      route: "/bareilly/",
-      previousRoutes: ["/bareilly/"],
-    }),
-  ]);
-});
+expectThrow(
+  "current route cannot also be historical route",
+  () => {
+    buildManifestIndex([
+      makeEntry({
+        route: "/bareilly/",
+        previousRoutes: ["/bareilly/"],
+      }),
+    ]);
+  }
+);
 
-expectThrow("historical route collision between locations is rejected", () => {
-  buildManifestIndex([
-    makeEntry({
-      sourceId: "location-one",
-      route: "/one/",
-      canonical: "https://instantlegalservices.in/one/",
-      previousRoutes: ["/legacy/"],
-    }),
-    makeEntry({
-      sourceId: "location-two",
-      route: "/two/",
-      canonical: "https://instantlegalservices.in/two/",
-      previousRoutes: ["/legacy/"],
-    }),
-  ]);
-});
+expectThrow(
+  "historical route collision between locations is rejected",
+  () => {
+    buildManifestIndex([
+      makeEntry({
+        sourceId: "location-one",
+        route: "/one/",
+        canonical: "/one/",
+        previousRoutes: ["/legacy/"],
+      }),
+      makeEntry({
+        sourceId: "location-two",
+        route: "/two/",
+        canonical: "/two/",
+        previousRoutes: ["/legacy/"],
+      }),
+    ]);
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -289,45 +336,56 @@ expectThrow("historical route collision between locations is rejected", () => {
  * --------------------------------------------------------------------------
  */
 
-test("route migration produces REDIRECT-REQUIRED", () => {
-  const current = [
-    makeEntry({
-      route: "/bareilly/",
-      canonical: "https://instantlegalservices.in/bareilly/",
-    }),
-  ];
+test(
+  "route migration produces new ACTIVE route and redirect",
+  () => {
+    const current = [
+      makeEntry({
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+      }),
+    ];
 
-  const result = migrateLocations(current, [
-    {
-      sourceId: "location-bareilly",
-      newRoute: "/uttar-pradesh/bareilly/",
-    },
-  ]);
+    const result = migrateLocations(
+      current,
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
 
-  assert.strictEqual(result.entries.length, 1);
+    assert.strictEqual(
+      result.migratedManifest.length,
+      1
+    );
 
-  const migrated = result.entries[0];
+    const migrated =
+      result.migratedManifest[0];
 
-  assert.strictEqual(
-    migrated.route,
-    "/uttar-pradesh/bareilly/"
-  );
+    assert.strictEqual(
+      migrated.route,
+      "/uttar-pradesh/bareilly/"
+    );
 
-  assert.strictEqual(
-    migrated.canonical,
-    "https://instantlegalservices.in/uttar-pradesh/bareilly/"
-  );
+    assert.strictEqual(
+      migrated.canonical,
+      "/uttar-pradesh/bareilly/"
+    );
 
-  assert.strictEqual(
-    migrated.status,
-    "REDIRECT-REQUIRED"
-  );
+    assert.strictEqual(
+      migrated.status,
+      "ACTIVE"
+    );
 
-  assert.deepStrictEqual(
-    migrated.previousRoutes,
-    ["/bareilly/"]
-  );
-});
+    assert.deepStrictEqual(
+      migrated.previousRoutes,
+      ["/bareilly/"]
+    );
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -335,38 +393,63 @@ test("route migration produces REDIRECT-REQUIRED", () => {
  * --------------------------------------------------------------------------
  */
 
-test("migration creates exact old-route to new-route redirect", () => {
-  const result = migrateLocations(
-    [
-      makeEntry({
-        route: "/bareilly/",
-        canonical: "https://instantlegalservices.in/bareilly/",
-      }),
-    ],
-    [
-      {
-        sourceId: "location-bareilly",
-        newRoute: "/uttar-pradesh/bareilly/",
-      },
-    ]
-  );
+test(
+  "migration creates exact old-route to new-route redirect",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
 
-  assert.ok(Array.isArray(result.redirects));
-  assert.strictEqual(result.redirects.length, 1);
+    assert.ok(
+      Array.isArray(result.redirects)
+    );
 
-  const redirect = result.redirects[0];
+    assert.strictEqual(
+      result.redirects.length,
+      1
+    );
 
-  assert.strictEqual(redirect.route, "/bareilly/");
-  assert.strictEqual(
-    redirect.redirectTo,
-    "/uttar-pradesh/bareilly/"
-  );
+    const redirect =
+      result.redirects[0];
 
-  assert.strictEqual(
-    redirect.status,
-    "REDIRECT-REQUIRED"
-  );
-});
+    assert.strictEqual(
+      redirect.sourceId,
+      "location-bareilly"
+    );
+
+    assert.strictEqual(
+      redirect.locationType,
+      "DISTRICT"
+    );
+
+    assert.strictEqual(
+      redirect.from,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      redirect.to,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      redirect.status,
+      "REDIRECT-REQUIRED"
+    );
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -374,25 +457,41 @@ test("migration creates exact old-route to new-route redirect", () => {
  * --------------------------------------------------------------------------
  */
 
-test("unchanged route does not create migration redirect", () => {
-  const result = migrateLocations(
-    [
-      makeEntry({
-        route: "/bareilly/",
-        canonical: "https://instantlegalservices.in/bareilly/",
-      }),
-    ],
-    [
-      {
-        sourceId: "location-bareilly",
-        newRoute: "/bareilly/",
-      },
-    ]
-  );
+test(
+  "unchanged route does not create migration redirect",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/bareilly/",
+        },
+      ]
+    );
 
-  assert.strictEqual(result.redirects.length, 0);
-  assert.strictEqual(result.entries[0].status, "ACTIVE");
-});
+    assert.strictEqual(
+      result.redirects.length,
+      0
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].status,
+      "ACTIVE"
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].route,
+      "/bareilly/"
+    );
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -400,28 +499,32 @@ test("unchanged route does not create migration redirect", () => {
  * --------------------------------------------------------------------------
  */
 
-expectThrow("new route owned by another location is rejected", () => {
-  migrateLocations(
-    [
-      makeEntry({
-        sourceId: "location-one",
-        route: "/one/",
-        canonical: "https://instantlegalservices.in/one/",
-      }),
-      makeEntry({
-        sourceId: "location-two",
-        route: "/two/",
-        canonical: "https://instantlegalservices.in/two/",
-      }),
-    ],
-    [
-      {
-        sourceId: "location-one",
-        newRoute: "/two/",
-      },
-    ]
-  );
-});
+expectThrow(
+  "new route owned by another location is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-one",
+          route: "/one/",
+          canonical: "/one/",
+        }),
+        makeEntry({
+          sourceId: "location-two",
+          route: "/two/",
+          canonical: "/two/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-one",
+          locationType: "DISTRICT",
+          newRoute: "/two/",
+        },
+      ]
+    );
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -429,97 +532,115 @@ expectThrow("new route owned by another location is rejected", () => {
  * --------------------------------------------------------------------------
  */
 
-expectThrow("new route cannot steal another location's historical route", () => {
-  migrateLocations(
-    [
-      makeEntry({
-        sourceId: "location-one",
-        route: "/one/",
-        canonical: "https://instantlegalservices.in/one/",
-        previousRoutes: ["/legacy/"],
-      }),
-      makeEntry({
-        sourceId: "location-two",
-        route: "/two/",
-        canonical: "https://instantlegalservices.in/two/",
-      }),
-    ],
-    [
-      {
-        sourceId: "location-two",
-        newRoute: "/legacy/",
-      },
-    ]
-  );
-});
+expectThrow(
+  "new route cannot steal another location's historical route",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-one",
+          route: "/one/",
+          canonical: "/one/",
+          previousRoutes: ["/legacy/"],
+        }),
+        makeEntry({
+          sourceId: "location-two",
+          route: "/two/",
+          canonical: "/two/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-two",
+          locationType: "DISTRICT",
+          newRoute: "/legacy/",
+        },
+      ]
+    );
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
- * 14. Self redirect must never be produced
+ * 14. Self redirect
  * --------------------------------------------------------------------------
  */
 
-test("migration never creates self redirect", () => {
-  const result = migrateLocations(
-    [
-      makeEntry({
-        route: "/bareilly/",
-        canonical: "https://instantlegalservices.in/bareilly/",
-      }),
-    ],
-    [
-      {
-        sourceId: "location-bareilly",
-        newRoute: "/bareilly/",
-      },
-    ]
-  );
-
-  for (const redirect of result.redirects) {
-    assert.notStrictEqual(
-      redirect.route,
-      redirect.redirectTo
+test(
+  "migration never creates self redirect",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/bareilly/",
+        },
+      ]
     );
+
+    for (
+      const redirect of result.redirects
+    ) {
+      assert.notStrictEqual(
+        redirect.from,
+        redirect.to
+      );
+    }
   }
-});
+);
 
 /*
  * --------------------------------------------------------------------------
  * 15. Sitemap isolation
- *
- * Migration result must expose current routes only.
- * Historical routes must never become sitemap entries.
  * --------------------------------------------------------------------------
  */
 
-test("sitemap routes contain only current routes", () => {
-  const result = migrateLocations(
-    [
-      makeEntry({
-        route: "/bareilly/",
-        canonical: "https://instantlegalservices.in/bareilly/",
-      }),
-    ],
-    [
-      {
-        sourceId: "location-bareilly",
-        newRoute: "/uttar-pradesh/bareilly/",
-      },
-    ]
-  );
+test(
+  "sitemap routes contain only current routes",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
 
-  assert.ok(Array.isArray(result.sitemapRoutes));
+    assert.ok(
+      Array.isArray(
+        result.sitemapRoutes
+      )
+    );
 
-  assert.ok(
-    result.sitemapRoutes.includes(
-      "/uttar-pradesh/bareilly/"
-    )
-  );
+    assert.ok(
+      result.sitemapRoutes.includes(
+        "/uttar-pradesh/bareilly/"
+      )
+    );
 
-  assert.ok(
-    !result.sitemapRoutes.includes("/bareilly/")
-  );
-});
+    assert.ok(
+      !result.sitemapRoutes.includes(
+        "/bareilly/"
+      )
+    );
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -527,91 +648,198 @@ test("sitemap routes contain only current routes", () => {
  * --------------------------------------------------------------------------
  */
 
-test("rollback restores original manifest", () => {
-  const original = [
-    normalizeManifestEntry(
-      makeEntry({
-        route: "/bareilly/",
-        canonical: "https://instantlegalservices.in/bareilly/",
-      })
-    ),
-  ];
+test(
+  "rollback restores original manifest",
+  () => {
+    const original = [
+      normalizeManifestEntry(
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        })
+      ),
+    ];
 
-  const migrationResult = migrateLocations(
-    original,
-    [
+    const migrationResult =
+      migrateLocations(
+        original,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType: "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const restored =
+      rollbackMigration(
+        migrationResult.rollback
+      );
+
+    assert.deepStrictEqual(
+      restored.manifest,
+      original
+    );
+
+    assert.strictEqual(
+      restored.restored,
+      true
+    );
+
+    assert.strictEqual(
+      restored.sha256,
+      migrationResult.rollback.sha256
+    );
+
+    assert.strictEqual(
+      restored.status,
+      "PASS"
+    );
+  }
+);
+
+/*
+ * --------------------------------------------------------------------------
+ * 17. Manifest serialization
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "manifest serialization is deterministic",
+  () => {
+    const entries = [
+      normalizeManifestEntry(
+        makeEntry()
+      ),
+    ];
+
+    const a =
+      serializeManifest(entries);
+
+    const b =
+      serializeManifest(entries);
+
+    assert.strictEqual(a, b);
+  }
+);
+
+/*
+ * --------------------------------------------------------------------------
+ * 18. Redirect serialization
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "redirect serialization is deterministic",
+  () => {
+    const redirects = [
       {
-        sourceId: "location-bareilly",
-        newRoute: "/uttar-pradesh/bareilly/",
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        from: "/bareilly/",
+        to:
+          "/uttar-pradesh/bareilly/",
+        status:
+          "REDIRECT-REQUIRED",
       },
-    ]
-  );
+    ];
 
-  const restored = rollbackMigration(
-    migrationResult.rollbackSnapshot
-  );
+    const a =
+      serializeRedirects(
+        redirects
+      );
 
-  assert.deepStrictEqual(
-    restored,
-    original
-  );
-});
+    const b =
+      serializeRedirects(
+        redirects
+      );
 
-/*
- * --------------------------------------------------------------------------
- * 17. Serialization determinism
- * --------------------------------------------------------------------------
- */
-
-test("manifest serialization is deterministic", () => {
-  const entries = [
-    normalizeManifestEntry(makeEntry()),
-  ];
-
-  const a = serializeManifest(entries);
-  const b = serializeManifest(entries);
-
-  assert.strictEqual(a, b);
-});
-
-test("redirect serialization is deterministic", () => {
-  const redirects = [
-    {
-      route: "/bareilly/",
-      redirectTo: "/uttar-pradesh/bareilly/",
-      status: "REDIRECT-REQUIRED",
-    },
-  ];
-
-  const a = serializeRedirects(redirects);
-  const b = serializeRedirects(redirects);
-
-  assert.strictEqual(a, b);
-});
+    assert.strictEqual(a, b);
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
- * 18. SHA-256 determinism
+ * 19. SHA-256 determinism
  * --------------------------------------------------------------------------
  */
 
-test("sha256Json is deterministic", () => {
-  const value = {
-    sourceId: "location-bareilly",
-    route: "/bareilly/",
-  };
+test(
+  "sha256Json is deterministic",
+  () => {
+    const value = {
+      sourceId:
+        "location-bareilly",
+      route:
+        "/bareilly/",
+    };
 
-  assert.strictEqual(
-    sha256Json(value),
-    sha256Json(value)
-  );
+    const hashA =
+      sha256Json(value);
 
-  assert.ok(
-    /^[a-f0-9]{64}$/.test(
-      sha256Json(value)
-    )
-  );
-});
+    const hashB =
+      sha256Json(value);
+
+    assert.strictEqual(
+      hashA,
+      hashB
+    );
+
+    assert.ok(
+      /^[a-f0-9]{64}$/.test(
+        hashA
+      )
+    );
+  }
+);
+
+/*
+ * --------------------------------------------------------------------------
+ * 20. Migration summary
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "successful migration returns PASS summary",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry(),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.summary.status,
+      "PASS"
+    );
+
+    assert.strictEqual(
+      result.summary.migrated,
+      1
+    );
+
+    assert.strictEqual(
+      result.summary.redirects,
+      1
+    );
+  }
+);
 
 /*
  * --------------------------------------------------------------------------
@@ -620,17 +848,42 @@ test("sha256Json is deterministic", () => {
  */
 
 console.log("");
-console.log("==============================================");
-console.log("LOCATION MIGRATION TEST RESULT");
-console.log("==============================================");
-console.log(`PASS: ${passed}`);
-console.log(`FAIL: ${failed}`);
-console.log(`TOTAL: ${passed + failed}`);
-console.log("==============================================");
+
+console.log(
+  "=============================================="
+);
+
+console.log(
+  "LOCATION MIGRATION TEST RESULT"
+);
+
+console.log(
+  "=============================================="
+);
+
+console.log(
+  `PASS: ${passed}`
+);
+
+console.log(
+  `FAIL: ${failed}`
+);
+
+console.log(
+  `TOTAL: ${passed + failed}`
+);
+
+console.log(
+  "=============================================="
+);
 
 if (failed > 0) {
-  console.error("LOCATION_MIGRATION_TEST=FAIL");
+  console.error(
+    "LOCATION_MIGRATION_TEST=FAIL"
+  );
   process.exitCode = 1;
 } else {
-  console.log("LOCATION_MIGRATION_TEST=PASS");
+  console.log(
+    "LOCATION_MIGRATION_TEST=PASS"
+  );
 }
