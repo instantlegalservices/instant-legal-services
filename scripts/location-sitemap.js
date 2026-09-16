@@ -691,8 +691,16 @@ function validateGeneratedSitemap(xml) {
     return true;
   }
 
+    /*
+   * Parse complete <url> blocks instead of splitting on
+   * the closing tag. This keeps XML-escaped characters
+   * inside <loc> from affecting structural parsing.
+   */
+  const URL_BLOCK_RE =
+    /  <url>\n    <loc>[\s\S]*?<\/loc>\n  <\/url>/g;
+
   const urlBlocks =
-    body.split("\n  </url>");
+    body.match(URL_BLOCK_RE) || [];
 
   /*
    * Official Sitemap protocol:
@@ -707,22 +715,38 @@ function validateGeneratedSitemap(xml) {
     );
   }
 
+  /*
+   * Reconstruct the body exactly.
+   *
+   * Any content outside valid <url> blocks is rejected.
+   * This includes:
+   * - <loc> outside <url>
+   * - empty <url>
+   * - multiple <loc> elements
+   * - arbitrary XML between blocks
+   * - malformed URL blocks
+   */
+  const reconstructedBody =
+    urlBlocks.join("\n");
+
+  if (reconstructedBody !== body) {
+    throw new Error(
+      "Sitemap must contain exactly one <loc> per <url>"
+    );
+  }
+
   const locs = new Set();
 
   for (const block of urlBlocks) {
     const prefix =
       "  <url>\n    <loc>";
 
-    /*
-     * This exact structure ensures:
-     * - every <url> has one <loc>
-     * - <loc> cannot exist outside <url>
-     * - extra XML between <url> and <loc> is rejected
-     * - missing </loc> is rejected
-     */
+    const suffix =
+      "</loc>\n  </url>";
+
     if (
       !block.startsWith(prefix) ||
-      !block.endsWith("</loc>")
+      !block.endsWith(suffix)
     ) {
       throw new Error(
         "Sitemap must contain exactly one <loc> per <url>"
@@ -732,7 +756,7 @@ function validateGeneratedSitemap(xml) {
     const value =
       block.slice(
         prefix.length,
-        -"</loc>".length
+        -suffix.length
       );
 
     /*
@@ -748,8 +772,8 @@ function validateGeneratedSitemap(xml) {
     }
 
     /*
-     * Decode the XML entities produced by escapeXml()
-     * before validating the absolute URL.
+     * Decode XML entities produced by escapeXml()
+     * before validating the absolute Sitemap URL.
      */
     const decoded =
       value
@@ -760,10 +784,9 @@ function validateGeneratedSitemap(xml) {
         .replace(/&apos;/g, "'");
 
     /*
-     * IMPORTANT:
-     * Generated <loc> is an absolute URL, therefore use
-     * assertCanonicalSitemapLoc() instead of
-     * assertCanonicalUrl(), which validates route paths.
+     * Generated Sitemap <loc> is an absolute URL.
+     * Therefore validate it with the dedicated
+     * Sitemap <loc> validator.
      */
     const canonical =
       assertCanonicalSitemapLoc(decoded);
@@ -776,9 +799,6 @@ function validateGeneratedSitemap(xml) {
 
     locs.add(canonical);
   }
-
-  return true;
-}
 
 /**
  * Complete generation pipeline.
