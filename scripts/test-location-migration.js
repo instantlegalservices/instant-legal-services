@@ -276,6 +276,44 @@ expectThrow(
   }
 );
 
+// YAHAN paste karo
+
+expectThrow(
+  "route with leading whitespace is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        route: " /bareilly/",
+        canonical: " /bareilly/",
+      })
+    );
+  }
+);
+
+expectThrow(
+  "route with trailing whitespace is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        route: "/bareilly/ ",
+        canonical: "/bareilly/ ",
+      })
+    );
+  }
+);
+
+expectThrow(
+  "route with surrounding whitespace is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        route: " /bareilly/ ",
+        canonical: " /bareilly/ ",
+      })
+    );
+  }
+);
+
 /*
  * --------------------------------------------------------------------------
  * 8. Historical route validation
