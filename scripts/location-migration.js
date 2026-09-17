@@ -885,9 +885,6 @@ function migrateLocations(
   const generatorVersion =
     options.generatorVersion ||
     "location-migration-v1";
-  const generatorVersion =
-    options.generatorVersion ||
-    "location-migration-v1";
 
   const currentEntries =
     assertArray(
