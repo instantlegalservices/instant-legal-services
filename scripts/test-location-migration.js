@@ -1697,7 +1697,7 @@ test(
 );
 
 test(
-  "migration does not inherit a non-ACTIVE status",
+  "migration keeps migrated entry status ACTIVE",
   () => {
     const result = migrateLocations(
       [
