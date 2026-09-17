@@ -1648,6 +1648,97 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 36. Migrated entry status integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migrated entry status is always ACTIVE",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          status: ACTIVE_STATUS,
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    assert.strictEqual(
+      result.migratedManifest.length,
+      1
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].sourceId,
+      "location-bareilly"
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].route,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].status,
+      ACTIVE_STATUS
+    );
+  }
+);
+
+test(
+  "migration does not inherit a non-ACTIVE status",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          status: ACTIVE_STATUS,
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {
+        generatorVersion: "location-migration-v2",
+      }
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].status,
+      ACTIVE_STATUS
+    );
+
+    assert.notStrictEqual(
+      result.migratedManifest[0].status,
+      REDIRECT_STATUS
+    );
+
+    assert.notStrictEqual(
+      result.migratedManifest[0].status,
+      CURRENT_STATUS
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
