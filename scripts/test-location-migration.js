@@ -1390,6 +1390,172 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 34. Strict generatorVersion option handling
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "missing generatorVersion uses default",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {}
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].generatorVersion,
+      "location-migration-v1"
+    );
+  }
+);
+
+test(
+  "valid generatorVersion is preserved",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {
+        generatorVersion: "location-migration-v2",
+      }
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].generatorVersion,
+      "location-migration-v2"
+    );
+  }
+);
+
+expectThrow(
+  "empty generatorVersion is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry(),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {
+        generatorVersion: "",
+      }
+    );
+  }
+);
+
+expectThrow(
+  "whitespace generatorVersion is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry(),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {
+        generatorVersion: "   ",
+      }
+    );
+  }
+);
+
+expectThrow(
+  "null generatorVersion is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry(),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {
+        generatorVersion: null,
+      }
+    );
+  }
+);
+
+expectThrow(
+  "boolean generatorVersion is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry(),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {
+        generatorVersion: false,
+      }
+    );
+  }
+);
+
+expectThrow(
+  "numeric generatorVersion is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry(),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {
+        generatorVersion: 0,
+      }
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
