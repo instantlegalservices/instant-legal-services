@@ -212,12 +212,20 @@ function assertLocationType(value) {
  */
 
 function assertRoute(value, field = "route") {
+  if (typeof value === "string") {
+    if (value !== value.trim()) {
+      fail(
+        `${field} must not contain leading or trailing whitespace`
+      );
+    }
+  }
+
   const route =
     assertNonEmptyString(
       value,
       field
     );
-
+  
   if (
     !route.startsWith("/")
   ) {
