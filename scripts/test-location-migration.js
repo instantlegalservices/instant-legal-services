@@ -1981,8 +1981,9 @@ test(
 test(
   "migration rejects target that is another location's historical route",
   () => {
-    expectThrow(
-      () =>
+   expectThrow(
+  "migration rejects target that is another location's current route",
+  () =>
         migrateLocations(
           [
             makeEntry({
@@ -2010,8 +2011,7 @@ test(
                 "/uttar-pradesh/bareilly/",
             },
           ]
-        ),
-      
+       )
     );
   }
 );
@@ -2020,7 +2020,8 @@ test(
   "migration rejects target that is another location's current route",
   () => {
     expectThrow(
-      () =>
+  "migration rejects target that is another location's current route",
+  () =>
         migrateLocations(
           [
             makeEntry({
@@ -2047,8 +2048,7 @@ test(
                 "/uttar-pradesh/bareilly/",
             },
           ]
-        ),
-    
+        )
     );
   }
 );
