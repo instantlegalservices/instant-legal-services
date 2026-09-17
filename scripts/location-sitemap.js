@@ -864,9 +864,6 @@ function validateGeneratedSitemap(xml) {
     locs.add(canonical);
   }
 
-    locs.add(canonical);
-   }
-
   return true;
 }
 /**
