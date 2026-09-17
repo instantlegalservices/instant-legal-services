@@ -1556,6 +1556,98 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 35. Strict manifest status handling
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "missing status defaults to ACTIVE",
+  () => {
+    const entry = normalizeManifestEntry(
+      makeEntry({
+        status: undefined,
+      })
+    );
+
+    assert.strictEqual(
+      entry.status,
+      ACTIVE_STATUS
+    );
+  }
+);
+
+test(
+  "ACTIVE status is accepted",
+  () => {
+    const entry = normalizeManifestEntry(
+      makeEntry({
+        status: ACTIVE_STATUS,
+      })
+    );
+
+    assert.strictEqual(
+      entry.status,
+      ACTIVE_STATUS
+    );
+  }
+);
+
+expectThrow(
+  "CURRENT status is rejected as manifest status",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        status: "CURRENT",
+      })
+    );
+  }
+);
+
+expectThrow(
+  "REDIRECT-REQUIRED status is rejected as manifest status",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        status: REDIRECT_STATUS,
+      })
+    );
+  }
+);
+
+expectThrow(
+  "arbitrary manifest status is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        status: "BROKEN",
+      })
+    );
+  }
+);
+
+expectThrow(
+  "empty manifest status is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        status: "",
+      })
+    );
+  }
+);
+
+expectThrow(
+  "whitespace manifest status is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        status: "   ",
+      })
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
