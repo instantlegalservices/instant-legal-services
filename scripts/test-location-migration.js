@@ -1337,6 +1337,59 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 33. Migration options contract
+ * --------------------------------------------------------------------------
+ */
+
+expectThrow(
+  "migration rejects null options",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [],
+      null
+    );
+  }
+);
+
+expectThrow(
+  "migration rejects array options",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [],
+      []
+    );
+  }
+);
+
+expectThrow(
+  "migration rejects primitive options",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [],
+      "invalid-options"
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
