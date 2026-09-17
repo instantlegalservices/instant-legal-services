@@ -1974,6 +1974,140 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 36. Redirect chain / historical route collision protection
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migration rejects target that is another location's historical route",
+  () => {
+    expectThrow(
+      () =>
+        migrateLocations(
+          [
+            makeEntry({
+              sourceId: "location-bareilly",
+              locationType: "DISTRICT",
+              route: "/bareilly/",
+              canonical: "/bareilly/",
+              previousRoutes: [],
+            }),
+            makeEntry({
+              sourceId: "location-lucknow",
+              locationType: "DISTRICT",
+              route: "/lucknow/",
+              canonical: "/lucknow/",
+              previousRoutes: [
+                "/uttar-pradesh/bareilly/",
+              ],
+            }),
+          ],
+          [
+            {
+              sourceId: "location-bareilly",
+              locationType: "DISTRICT",
+              newRoute:
+                "/uttar-pradesh/bareilly/",
+            },
+          ]
+        ),
+      "historical route"
+    );
+  }
+);
+
+test(
+  "migration rejects target that is another location's current route",
+  () => {
+    expectThrow(
+      () =>
+        migrateLocations(
+          [
+            makeEntry({
+              sourceId: "location-bareilly",
+              locationType: "DISTRICT",
+              route: "/bareilly/",
+              canonical: "/bareilly/",
+              previousRoutes: [],
+            }),
+            makeEntry({
+              sourceId: "location-lucknow",
+              locationType: "DISTRICT",
+              route: "/uttar-pradesh/bareilly/",
+              canonical:
+                "/uttar-pradesh/bareilly/",
+              previousRoutes: [],
+            }),
+          ],
+          [
+            {
+              sourceId: "location-bareilly",
+              locationType: "DISTRICT",
+              newRoute:
+                "/uttar-pradesh/bareilly/",
+            },
+          ]
+        ),
+      "current route"
+    );
+  }
+);
+
+test(
+  "migration cannot create a redirect whose target is historical",
+  () => {
+    const currentManifest = [
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [
+          "/old-bareilly/",
+        ],
+      }),
+    ];
+
+    const result = migrateLocations(
+      currentManifest,
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    const redirect = result.redirects[0];
+
+    assert.strictEqual(
+      redirect.from,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      redirect.to,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.ok(
+      !result.sitemapRoutes.includes(
+        "/old-bareilly/"
+      )
+    );
+
+    assert.ok(
+      !result.redirects.some(
+        (item) =>
+          item.to === "/old-bareilly/"
+      )
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
