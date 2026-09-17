@@ -691,16 +691,101 @@ function validateGeneratedSitemap(xml) {
     return true;
   }
 
-    /*
-   * Parse complete <url> blocks instead of splitting on
-   * the closing tag. This keeps XML-escaped characters
-   * inside <loc> from affecting structural parsing.
+      /*
+   * Parse Sitemap <url> blocks deterministically.
+   *
+   * We deliberately avoid a broad regular expression here.
+   * The generated XML format is known and controlled by this
+   * module, so exact boundary scanning gives us stronger
+   * structural validation without introducing an XML dependency.
    */
-  const URL_BLOCK_RE =
-    /  <url>\n    <loc>[\s\S]*?<\/loc>\n  <\/url>/g;
+  const URL_OPEN =
+    "  <url>\n    <loc>";
 
-  const urlBlocks =
-    body.match(URL_BLOCK_RE) || [];
+  const LOC_CLOSE =
+    "</loc>\n  </url>";
+
+  const urlBlocks = [];
+
+  let cursor = 0;
+
+  while (cursor < body.length) {
+    if (!body.startsWith(URL_OPEN, cursor)) {
+      throw new Error(
+        "Sitemap must contain exactly one <loc> per <url>"
+      );
+    }
+
+    const valueStart =
+      cursor + URL_OPEN.length;
+
+    const locCloseIndex =
+      body.indexOf(
+        "</loc>",
+        valueStart
+      );
+
+    if (locCloseIndex === -1) {
+      throw new Error(
+        "Sitemap must contain exactly one <loc> per <url>"
+      );
+    }
+
+    const value =
+      body.slice(
+        valueStart,
+        locCloseIndex
+      );
+
+    if (
+      value.includes("<loc>") ||
+      value.includes("</loc>")
+    ) {
+      throw new Error(
+        "Sitemap must contain exactly one <loc> per <url>"
+      );
+    }
+
+    const suffixStart =
+      locCloseIndex;
+
+    if (
+      !body.startsWith(
+        LOC_CLOSE,
+        suffixStart
+      )
+    ) {
+      throw new Error(
+        "Sitemap must contain exactly one <loc> per <url>"
+      );
+    }
+
+    const blockEnd =
+      suffixStart + LOC_CLOSE.length;
+
+    const block =
+      body.slice(
+        cursor,
+        blockEnd
+      );
+
+    urlBlocks.push({
+      block,
+      value
+    });
+
+    cursor = blockEnd;
+
+    if (cursor < body.length) {
+      if (body[cursor] !== "\n") {
+        throw new Error(
+          "Sitemap must contain exactly one <loc> per <url>"
+        );
+      }
+
+      cursor += 1;
+    }
+  }
 
   /*
    * Official Sitemap protocol:
@@ -715,29 +800,14 @@ function validateGeneratedSitemap(xml) {
     );
   }
 
-  /*
-   * Reconstruct the body exactly.
-   *
-   * Any content outside valid <url> blocks is rejected.
-   * This includes:
-   * - <loc> outside <url>
-   * - empty <url>
-   * - multiple <loc> elements
-   * - arbitrary XML between blocks
-   * - malformed URL blocks
-   */
-  const reconstructedBody =
-    urlBlocks.join("\n");
-
-  if (reconstructedBody !== body) {
-    throw new Error(
-      "Sitemap must contain exactly one <loc> per <url>"
-    );
-  }
-
   const locs = new Set();
 
-  for (const block of urlBlocks) {
+  for (const entry of urlBlocks) {
+    const {
+      block,
+      value
+    } = entry;
+
     const prefix =
       "  <url>\n    <loc>";
 
@@ -752,12 +822,6 @@ function validateGeneratedSitemap(xml) {
         "Sitemap must contain exactly one <loc> per <url>"
       );
     }
-
-    const value =
-      block.slice(
-        prefix.length,
-        -suffix.length
-      );
 
     /*
      * A nested or additional <loc> is structurally invalid.
@@ -796,6 +860,9 @@ function validateGeneratedSitemap(xml) {
         `Duplicate sitemap <loc>: ${canonical}`
       );
     }
+
+    locs.add(canonical);
+  }
 
     locs.add(canonical);
    }
