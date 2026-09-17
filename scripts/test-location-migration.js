@@ -1868,6 +1868,112 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 35. Redirect multi-hop protection
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migration redirect targets final route directly",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [
+            "/old-bareilly/",
+          ],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    assert.strictEqual(
+      result.redirects.length,
+      1
+    );
+
+    const redirect =
+      result.redirects[0];
+
+    assert.strictEqual(
+      redirect.from,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      redirect.to,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.notStrictEqual(
+      redirect.to,
+      "/old-bareilly/"
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].route,
+      "/uttar-pradesh/bareilly/"
+    );
+  }
+);
+
+test(
+  "historical routes do not become redirect intermediaries",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [
+            "/old-bareilly/",
+          ],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    const redirect =
+      result.redirects[0];
+
+    assert.notStrictEqual(
+      redirect.to,
+      "/old-bareilly/"
+    );
+
+    assert.ok(
+      result.migratedManifest[0]
+        .previousRoutes
+        .includes("/old-bareilly/")
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].route,
+      redirect.to
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
