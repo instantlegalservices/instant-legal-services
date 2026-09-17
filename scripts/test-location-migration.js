@@ -2138,7 +2138,7 @@ test(
     );
 
     const tamperedSnapshot = {
-      ...result.rollbackSnapshot,
+      ...result.rollback,
       manifest: result.rollbackSnapshot.manifest.map(
         (entry) => ({
           ...entry,
@@ -2182,7 +2182,7 @@ test(
     );
 
     const tamperedSnapshot = {
-      ...result.rollbackSnapshot,
+      ...result.rollback,
       sha256:
         "0000000000000000000000000000000000000000000000000000000000000000",
     };
