@@ -2108,6 +2108,94 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 37. Rollback snapshot tampering protection
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "rollback rejects tampered snapshot manifest",
+  () => {
+    const originalManifest = [
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const result = migrateLocations(
+      originalManifest,
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    const tamperedSnapshot = {
+      ...result.rollbackSnapshot,
+      manifest: result.rollbackSnapshot.manifest.map(
+        (entry) => ({
+          ...entry,
+          route: "/tampered/",
+          canonical: "/tampered/",
+        })
+      ),
+    };
+
+    assert.throws(() =>
+      rollbackMigration(
+        tamperedSnapshot
+      )
+    );
+  }
+);
+
+test(
+  "rollback rejects tampered snapshot hash",
+  () => {
+    const originalManifest = [
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const result = migrateLocations(
+      originalManifest,
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    const tamperedSnapshot = {
+      ...result.rollbackSnapshot,
+      sha256:
+        "0000000000000000000000000000000000000000000000000000000000000000",
+    };
+
+    assert.throws(() =>
+      rollbackMigration(
+        tamperedSnapshot
+      )
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
