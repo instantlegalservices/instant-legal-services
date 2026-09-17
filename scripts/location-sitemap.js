@@ -654,6 +654,31 @@ function validateGeneratedSitemap(xml) {
     );
   }
 
+  /*
+   * If the canonical <urlset> opening is present
+   * but the required closing tag is missing, report
+   * the structural error before strict formatting
+   * validation.
+   *
+   * This keeps malformed-but-recognizable Sitemap
+   * documents fail-closed with the correct error.
+   */
+  const afterDeclaration =
+    xml.slice(XML_DECLARATION.length);
+
+  if (
+    afterDeclaration.startsWith(URLSET_OPEN) &&
+    !xml.endsWith(`${URLSET_CLOSE}\n`)
+  ) {
+    throw new Error(
+      "Sitemap urlset is not closed"
+    );
+  }
+
+  /*
+   * Require the exact generated Sitemap namespace
+   * and deterministic newline formatting.
+   */
   if (
     !xml.startsWith(
       `\n${URLSET_OPEN}\n`,
@@ -691,7 +716,7 @@ function validateGeneratedSitemap(xml) {
     return true;
   }
 
-      /*
+  /*
    * Parse Sitemap <url> blocks deterministically.
    *
    * We deliberately avoid a broad regular expression here.
@@ -737,6 +762,9 @@ function validateGeneratedSitemap(xml) {
         locCloseIndex
       );
 
+    /*
+     * Reject nested or additional <loc> elements.
+     */
     if (
       value.includes("<loc>") ||
       value.includes("</loc>")
@@ -776,6 +804,10 @@ function validateGeneratedSitemap(xml) {
 
     cursor = blockEnd;
 
+    /*
+     * Every <url> block must be separated by exactly
+     * one newline.
+     */
     if (cursor < body.length) {
       if (body[cursor] !== "\n") {
         throw new Error(
