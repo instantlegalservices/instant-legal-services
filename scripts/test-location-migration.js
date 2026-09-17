@@ -738,7 +738,89 @@ test(
     );
   }
 );
+/*
+ * --------------------------------------------------------------------------
+ * 17. Rollback snapshot integrity
+ * --------------------------------------------------------------------------
+ */
 
+expectThrow(
+  "rollback rejects tampered snapshot hash",
+  () => {
+    const migrationResult =
+      migrateLocations(
+        [
+          makeEntry({
+            route: "/bareilly/",
+            canonical: "/bareilly/",
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const tamperedSnapshot =
+      JSON.parse(
+        JSON.stringify(
+          migrationResult.rollback
+        )
+      );
+
+    tamperedSnapshot.sha256 =
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+    rollbackMigration(
+      tamperedSnapshot
+    );
+  }
+);
+
+expectThrow(
+  "rollback rejects tampered manifest",
+  () => {
+    const migrationResult =
+      migrateLocations(
+        [
+          makeEntry({
+            route: "/bareilly/",
+            canonical: "/bareilly/",
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const tamperedSnapshot =
+      JSON.parse(
+        JSON.stringify(
+          migrationResult.rollback
+        )
+      );
+
+    tamperedSnapshot.manifest[0].route =
+      "/tampered/";
+
+    rollbackMigration(
+      tamperedSnapshot
+    );
+  }
+);
 /*
  * --------------------------------------------------------------------------
  * 17. Manifest serialization
