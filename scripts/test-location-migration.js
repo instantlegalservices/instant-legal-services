@@ -1252,6 +1252,33 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 31. Unknown sourceId
+ * --------------------------------------------------------------------------
+ */
+
+expectThrow(
+  "unknown sourceId is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-does-not-exist",
+          locationType: "DISTRICT",
+          newRoute: "/unknown-location/",
+        },
+      ]
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
