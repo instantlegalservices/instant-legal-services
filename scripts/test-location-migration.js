@@ -1279,6 +1279,64 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 32. Generator version handling
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "custom generatorVersion is preserved in migrated manifest",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {
+        generatorVersion: "location-migration-v2",
+      }
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].generatorVersion,
+      "location-migration-v2"
+    );
+  }
+);
+
+expectThrow(
+  "invalid generatorVersion type is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ],
+      {
+        generatorVersion: 123
+      }
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
