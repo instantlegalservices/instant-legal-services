@@ -2011,7 +2011,7 @@ test(
             },
           ]
         ),
-      "historical route"
+      
     );
   }
 );
@@ -2048,7 +2048,7 @@ test(
             },
           ]
         ),
-      "current route"
+    
     );
   }
 );
