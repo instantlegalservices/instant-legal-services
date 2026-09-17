@@ -23,6 +23,7 @@ const migration = require("./location-migration");
 const {
   ACTIVE_STATUS,
   REDIRECT_STATUS,
+  CURRENT_STATUS,
   calculateContentHash,
   normalizeManifestEntry,
   buildManifestIndex,
