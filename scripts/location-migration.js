@@ -877,6 +877,14 @@ function migrateLocations(
   migrationItems,
   options = {}
 ) {
+  assertObject(
+    options,
+    "options"
+  );
+
+  const generatorVersion =
+    options.generatorVersion ||
+    "location-migration-v1";
   const generatorVersion =
     options.generatorVersion ||
     "location-migration-v1";
