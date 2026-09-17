@@ -1740,6 +1740,135 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 37. Redirect integrity after migration
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migration redirect points directly from old route to final current route",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    assert.strictEqual(
+      result.redirects.length,
+      1
+    );
+
+    const redirect =
+      result.redirects[0];
+
+    assert.strictEqual(
+      redirect.sourceId,
+      "location-bareilly"
+    );
+
+    assert.strictEqual(
+      redirect.from,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      redirect.to,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].route,
+      redirect.to
+    );
+  }
+);
+
+test(
+  "migrated old route is excluded from sitemap",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    assert.deepStrictEqual(
+      result.sitemapRoutes,
+      [
+        "/uttar-pradesh/bareilly/",
+      ]
+    );
+
+    assert.ok(
+      !result.sitemapRoutes.includes(
+        "/bareilly/"
+      )
+    );
+  }
+);
+
+test(
+  "old route is preserved only as historical route",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    const entry =
+      result.migratedManifest[0];
+
+    assert.ok(
+      entry.previousRoutes.includes(
+        "/bareilly/"
+      )
+    );
+
+    assert.strictEqual(
+      entry.route,
+      "/uttar-pradesh/bareilly/"
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
