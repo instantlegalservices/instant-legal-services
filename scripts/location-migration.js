@@ -561,12 +561,20 @@ function normalizeManifestEntry(
     );
 
   const status =
-    raw.status === undefined
-      ? ACTIVE_STATUS
-      : assertNonEmptyString(
-          raw.status,
-          "status"
-        );
+  raw.status === undefined
+    ? ACTIVE_STATUS
+    : assertNonEmptyString(
+        raw.status,
+        "status"
+      );
+
+if (
+  status !== ACTIVE_STATUS
+) {
+  fail(
+    `Unsupported manifest status: ${status}`
+  );
+}
 
   const generatorVersion =
     raw.generatorVersion === undefined
