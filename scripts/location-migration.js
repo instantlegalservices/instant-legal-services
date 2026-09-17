@@ -878,14 +878,23 @@ function migrateLocations(
   options = {}
 ) {
   assertObject(
+  options,
+  "options"
+);
+
+const hasGeneratorVersion =
+  Object.prototype.hasOwnProperty.call(
     options,
-    "options"
+    "generatorVersion"
   );
 
-  const generatorVersion =
-    options.generatorVersion ||
-    "location-migration-v1";
-
+const generatorVersion =
+  hasGeneratorVersion
+    ? assertNonEmptyString(
+        options.generatorVersion,
+        "options.generatorVersion"
+      )
+    : "location-migration-v1";
   const currentEntries =
     assertArray(
       currentManifest,
