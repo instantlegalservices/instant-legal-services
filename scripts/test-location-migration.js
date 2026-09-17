@@ -1103,7 +1103,71 @@ expectThrow(
     );
   }
 );
+/*
+ * --------------------------------------------------------------------------
+ * 30. Batch atomicity / fail-closed behavior
+ * --------------------------------------------------------------------------
+ */
 
+test(
+  "failed migration batch does not partially mutate original manifest",
+  () => {
+    const current = [
+      makeEntry({
+        sourceId: "location-one",
+        route: "/one/",
+        canonical: "/one/",
+      }),
+      makeEntry({
+        sourceId: "location-two",
+        route: "/two/",
+        canonical: "/two/",
+      }),
+    ];
+
+    const before = JSON.parse(
+      JSON.stringify(current)
+    );
+
+    assert.throws(() => {
+      migrateLocations(
+        current,
+        [
+          {
+            sourceId: "location-one",
+            locationType: "DISTRICT",
+            newRoute: "/one-new/",
+          },
+          {
+            sourceId: "location-two",
+            locationType: "DISTRICT",
+            newRoute: "/two/",
+          },
+          {
+            sourceId: "location-missing",
+            locationType: "DISTRICT",
+            newRoute: "/missing/",
+          },
+        ]
+      );
+    });
+
+    assert.deepStrictEqual(
+      current,
+      before
+    );
+
+    assert.strictEqual(
+      current[0].route,
+      "/one/"
+    );
+
+    assert.strictEqual(
+      current[1].route,
+      "/two/"
+    );
+  }
+);
 /*
  * --------------------------------------------------------------------------
  * Final report
