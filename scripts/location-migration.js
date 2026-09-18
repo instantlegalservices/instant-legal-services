@@ -369,6 +369,132 @@ function assertRoute(value, field = "route") {
 }
 
 /**
+ * ---------- LOCATION TYPE ↔ ROUTE VALIDATION ----------
+ *
+ * Validates the namespace of a NEW migration route
+ * against the declared locationType.
+ *
+ * Legacy/current routes are not reinterpreted here.
+ * This validation applies to migration target routes.
+ */
+
+function assertRouteMatchesLocationType(
+  locationType,
+  route,
+  field = "route"
+) {
+  const type =
+    assertLocationType(
+      locationType
+    );
+
+  const safeRoute =
+    assertRoute(
+      route,
+      field
+    );
+
+  const typedNamespaces = [
+    TYPED_PREFIXES.TEHSIL,
+    TYPED_PREFIXES.LOCAL_BODY,
+    TYPED_PREFIXES.AUTHORITY
+  ];
+
+  /*
+   * TEHSIL must use the tehsil namespace.
+   */
+  if (
+    type === "TEHSIL" &&
+    !safeRoute.startsWith(
+      TYPED_PREFIXES.TEHSIL
+    )
+  ) {
+    fail(
+      `${field} is incompatible with TEHSIL locationType: ${safeRoute}`
+    );
+  }
+
+  /*
+   * LOCAL_BODY must use the local-body namespace.
+   */
+  if (
+    type === "LOCAL_BODY" &&
+    !safeRoute.startsWith(
+      TYPED_PREFIXES.LOCAL_BODY
+    )
+  ) {
+    fail(
+      `${field} is incompatible with LOCAL_BODY locationType: ${safeRoute}`
+    );
+  }
+
+  /*
+   * AUTHORITY must use the authority namespace.
+   */
+  if (
+    type === "AUTHORITY" &&
+    !safeRoute.startsWith(
+      TYPED_PREFIXES.AUTHORITY
+    )
+  ) {
+    fail(
+      `${field} is incompatible with AUTHORITY locationType: ${safeRoute}`
+    );
+  }
+
+  /*
+   * DISTRICT must not use a typed namespace reserved
+   * for another location type.
+   *
+   * Valid district routes remain hierarchical, e.g.
+   * /uttar-pradesh/bareilly/
+   */
+  if (
+    type === "DISTRICT"
+  ) {
+    for (
+      const namespace
+      of typedNamespaces
+    ) {
+      if (
+        safeRoute.startsWith(
+          namespace
+        )
+      ) {
+        fail(
+          `${field} is incompatible with DISTRICT locationType: ${safeRoute}`
+        );
+      }
+    }
+  }
+
+  /*
+   * COURT routes are hierarchical and must not use
+   * namespaces reserved for TEHSIL / LOCAL_BODY /
+   * AUTHORITY.
+   */
+  if (
+    type === "COURT"
+  ) {
+    for (
+      const namespace
+      of typedNamespaces
+    ) {
+      if (
+        safeRoute.startsWith(
+          namespace
+        )
+      ) {
+        fail(
+          `${field} is incompatible with COURT locationType: ${safeRoute}`
+        );
+      }
+    }
+  }
+
+  return safeRoute;
+}
+/**
  * ---------- CANONICAL VALIDATION ----------
  */
 
