@@ -3500,6 +3500,285 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 45. End-to-end serialization round-trip integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migrated manifest survives serialize and parse round-trip",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const serialized =
+      serializeManifest(
+        result.migratedManifest
+      );
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    assert.deepStrictEqual(
+      parsed,
+      result.migratedManifest
+    );
+  }
+);
+
+test(
+  "migrated manifest preserves content hash after round-trip",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const parsed =
+      JSON.parse(
+        serializeManifest(
+          result.migratedManifest
+        )
+      );
+
+    const entry =
+      parsed[0];
+
+    assert.strictEqual(
+      entry.contentHash,
+      calculateContentHash(
+        entry
+      )
+    );
+  }
+);
+
+test(
+  "redirects survive serialize and parse round-trip",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const serialized =
+      serializeRedirects(
+        result.redirects
+      );
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    assert.deepStrictEqual(
+      parsed,
+      result.redirects
+    );
+  }
+);
+
+test(
+  "round-trip preserves migrated route and historical route separation",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const manifest =
+      JSON.parse(
+        serializeManifest(
+          result.migratedManifest
+        )
+      );
+
+    const redirects =
+      JSON.parse(
+        serializeRedirects(
+          result.redirects
+        )
+      );
+
+    assert.strictEqual(
+      manifest[0].route,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.ok(
+      manifest[0].previousRoutes.includes(
+        "/bareilly/"
+      )
+    );
+
+    assert.strictEqual(
+      redirects[0].from,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      redirects[0].to,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.notStrictEqual(
+      manifest[0].route,
+      redirects[0].from
+    );
+  }
+);
+
+test(
+  "round-trip preserves sitemap isolation",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const manifest =
+      JSON.parse(
+        serializeManifest(
+          result.migratedManifest
+        )
+      );
+
+    const historicalRoutes =
+      new Set(
+        manifest.flatMap(
+          entry =>
+            entry.previousRoutes
+        )
+      );
+
+    const sitemapRoutes =
+      result.sitemapRoutes;
+
+    for (
+      const route
+      of sitemapRoutes
+    ) {
+      assert.strictEqual(
+        historicalRoutes.has(
+          route
+        ),
+        false
+      );
+    }
+
+    assert.deepStrictEqual(
+      sitemapRoutes,
+      [
+        "/uttar-pradesh/bareilly/",
+      ]
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
