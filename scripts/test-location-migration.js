@@ -8485,6 +8485,427 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 60. Summary vs manifest integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "summary historicalRoutes exactly matches manifest history",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [
+              "/old-bareilly/",
+            ],
+          }),
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [
+              "/old-pilibhit-1/",
+              "/old-pilibhit-2/",
+            ],
+          }),
+        ],
+        []
+      );
+
+    const actualHistoricalCount =
+      result.migratedManifest.reduce(
+        (total, entry) =>
+          total +
+          entry.previousRoutes.length,
+        0
+      );
+
+    assert.strictEqual(
+      result.summary.historicalRoutes,
+      actualHistoricalCount
+    );
+
+    assert.strictEqual(
+      result.summary.currentRoutes,
+      result.migratedManifest.length
+    );
+
+    assert.strictEqual(
+      result.summary.currentRoutes,
+      result.sitemapRoutes.length
+    );
+
+    assert.strictEqual(
+      result.summary.migrated,
+      0
+    );
+
+    assert.strictEqual(
+      result.summary.redirectsRequired,
+      0
+    );
+  }
+);
+
+test(
+  "summary historicalRoutes increases by exactly one after a route migration",
+  () => {
+    const initialManifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [
+          "/old-bareilly/",
+        ],
+      }),
+    ];
+
+    const before =
+      migrateLocations(
+        initialManifest,
+        []
+      );
+
+    const after =
+      migrateLocations(
+        initialManifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      before.summary.historicalRoutes,
+      1
+    );
+
+    assert.strictEqual(
+      after.summary.historicalRoutes,
+      2
+    );
+
+    assert.strictEqual(
+      after.summary.historicalRoutes,
+      before.summary.historicalRoutes + 1
+    );
+  }
+);
+
+test(
+  "summary currentRoutes remains equal to manifest size after sequential migrations",
+  () => {
+    const first =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const second =
+      migrateLocations(
+        first.migratedManifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly-district/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      first.summary.currentRoutes,
+      first.migratedManifest.length
+    );
+
+    assert.strictEqual(
+      second.summary.currentRoutes,
+      second.migratedManifest.length
+    );
+
+    assert.strictEqual(
+      second.summary.currentRoutes,
+      2
+    );
+  }
+);
+
+test(
+  "summary migrated equals redirect count for sequential migration",
+  () => {
+    const first =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const second =
+      migrateLocations(
+        first.migratedManifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly-district/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      first.summary.migrated,
+      first.redirects.length
+    );
+
+    assert.strictEqual(
+      second.summary.migrated,
+      second.redirects.length
+    );
+
+    assert.strictEqual(
+      second.summary.redirectsRequired,
+      second.redirects.length
+    );
+  }
+);
+
+test(
+  "summary currentRoutes counts only current routes, never historical routes",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [
+              "/old-bareilly-1/",
+              "/old-bareilly-2/",
+            ],
+          }),
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [
+              "/old-pilibhit/",
+            ],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.summary.currentRoutes,
+      2
+    );
+
+    assert.strictEqual(
+      result.summary.historicalRoutes,
+      4
+    );
+
+    assert.strictEqual(
+      result.sitemapRoutes.length,
+      result.summary.currentRoutes
+    );
+
+    for (
+      const historicalRoute
+      of [
+        "/old-bareilly-1/",
+        "/old-bareilly-2/",
+        "/bareilly/",
+        "/old-pilibhit/",
+      ]
+    ) {
+      assert.ok(
+        !result.sitemapRoutes.includes(
+          historicalRoute
+        )
+      );
+    }
+  }
+);
+
+test(
+  "successful migration summary always reports rollbackReady true",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+          {
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/pilibhit/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.summary.rollbackReady,
+      true
+    );
+
+    assert.ok(
+      result.rollback &&
+      Array.isArray(
+        result.rollback.manifest
+      )
+    );
+
+    assert.ok(
+      typeof result.rollback.sha256 ===
+        "string"
+    );
+
+    assert.strictEqual(
+      result.summary.status,
+      "PASS"
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
