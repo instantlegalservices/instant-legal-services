@@ -9195,6 +9195,320 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 62. Route structure / depth integrity
+ * --------------------------------------------------------------------------
+ */
+
+expectThrow(
+  "DISTRICT migration rejects flat legacy-style target route",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute: "/lucknow/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "DISTRICT migration rejects three-level target route",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/city/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "DISTRICT migration rejects uppercase route segment",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/Uttar-Pradesh/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "DISTRICT migration rejects invalid underscore route segment",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar_pradesh/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "DISTRICT migration rejects whitespace route segment",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar pradesh/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+test(
+  "DISTRICT migration accepts exact two-level hierarchical route",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].route,
+      "/uttar-pradesh/bareilly/"
+    );
+  }
+);
+
+expectThrow(
+  "COURT migration rejects two-level target route",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "COURT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "COURT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "COURT migration rejects four-level target route",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "COURT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "COURT",
+          newRoute:
+            "/uttar-pradesh/bareilly/district-court/extra/",
+        },
+      ]
+    );
+  }
+);
+
+test(
+  "COURT migration accepts exact three-level hierarchical route",
+  () => {
+    const result = migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "COURT",
+          route: "/bareilly/",
+          canonical: "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "COURT",
+          newRoute:
+            "/uttar-pradesh/bareilly/district-court/",
+        },
+      ]
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0].route,
+      "/uttar-pradesh/bareilly/district-court/"
+    );
+  }
+);
+
+expectThrow(
+  "TEHSIL migration rejects extra route depth",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "TEHSIL",
+          route: "/tehsil/bareilly/",
+          canonical: "/tehsil/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "TEHSIL",
+          newRoute:
+            "/tehsil/bareilly/extra/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "LOCAL_BODY migration rejects extra route depth",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "LOCAL_BODY",
+          route: "/local-body/bareilly/",
+          canonical: "/local-body/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "LOCAL_BODY",
+          newRoute:
+            "/local-body/bareilly/extra/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "AUTHORITY migration rejects extra route depth",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-bareilly",
+          locationType: "AUTHORITY",
+          route: "/authority/bareilly/",
+          canonical: "/authority/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "AUTHORITY",
+          newRoute:
+            "/authority/bareilly/extra/",
+        },
+      ]
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
