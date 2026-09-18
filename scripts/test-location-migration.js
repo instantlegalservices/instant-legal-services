@@ -6948,6 +6948,121 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 55. Malformed input / fail-closed boundary
+ * --------------------------------------------------------------------------
+ */
+
+expectThrow(
+  "null current manifest is rejected",
+  () => {
+    migrateLocations(
+      null,
+      []
+    );
+  }
+);
+
+expectThrow(
+  "null migration items are rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      null
+    );
+  }
+);
+
+expectThrow(
+  "non-object migration item is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        null,
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "manifest entry with malformed previousRoutes is rejected",
+  () => {
+    normalizeManifestEntry(
+      makeEntry({
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes:
+          "not-an-array",
+      })
+    );
+  }
+);
+
+expectThrow(
+  "migration item with malformed newRoute is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "not-a-route",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "null migration options are rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [],
+      null
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
