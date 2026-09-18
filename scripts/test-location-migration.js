@@ -2198,6 +2198,117 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 38. Rollback snapshot isolation
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "rollback snapshot is isolated from migrated manifest mutations",
+  () => {
+    const originalManifest = [
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const result = migrateLocations(
+      originalManifest,
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    result.migratedManifest[0].route =
+      "/tampered-current/";
+
+    result.migratedManifest[0].canonical =
+      "/tampered-current/";
+
+    const restored =
+      rollbackMigration(
+        result.rollback
+      );
+
+    assert.strictEqual(
+      restored.manifest[0].route,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      restored.manifest[0].canonical,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      restored.status,
+      "ROLLBACK-PASS"
+    );
+  }
+);
+
+test(
+  "rollback snapshot is isolated from original manifest mutations",
+  () => {
+    const originalManifest = [
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const result = migrateLocations(
+      originalManifest,
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    originalManifest[0].route =
+      "/tampered-original/";
+
+    originalManifest[0].canonical =
+      "/tampered-original/";
+
+    const restored =
+      rollbackMigration(
+        result.rollback
+      );
+
+    assert.strictEqual(
+      restored.manifest[0].route,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      restored.manifest[0].canonical,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      restored.status,
+      "ROLLBACK-PASS"
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
