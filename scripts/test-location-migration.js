@@ -4465,6 +4465,244 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 48. Input immutability / normalization boundary
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migration does not mutate migration items",
+  () => {
+    const migrationItems = [
+      {
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        newRoute:
+          "/uttar-pradesh/bareilly/",
+      },
+    ];
+
+    const before =
+      JSON.stringify(
+        migrationItems
+      );
+
+    migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      migrationItems
+    );
+
+    assert.strictEqual(
+      JSON.stringify(
+        migrationItems
+      ),
+      before
+    );
+  }
+);
+
+test(
+  "migration does not mutate migration item route",
+  () => {
+    const migrationItem = {
+      sourceId:
+        "location-bareilly",
+      locationType:
+        "DISTRICT",
+      newRoute:
+        "/uttar-pradesh/bareilly/",
+    };
+
+    migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        migrationItem,
+      ]
+    );
+
+    assert.strictEqual(
+      migrationItem.newRoute,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      migrationItem.canonical,
+      undefined
+    );
+  }
+);
+
+test(
+  "migration does not mutate original previousRoutes array",
+  () => {
+    const previousRoutes = [
+      "/old-bareilly/",
+      "/older-bareilly/",
+    ];
+
+    const manifest = [
+      makeEntry({
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes,
+      }),
+    ];
+
+    const before =
+      JSON.stringify(
+        previousRoutes
+      );
+
+    migrateLocations(
+      manifest,
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    assert.strictEqual(
+      JSON.stringify(
+        previousRoutes
+      ),
+      before
+    );
+
+    assert.deepStrictEqual(
+      previousRoutes,
+      [
+        "/old-bareilly/",
+        "/older-bareilly/",
+      ]
+    );
+  }
+);
+
+test(
+  "normalizing manifest does not mutate raw manifest entry",
+  () => {
+    const rawEntry = {
+      sourceId:
+        "location-bareilly",
+      locationType:
+        "DISTRICT",
+      route:
+        "/bareilly/",
+      canonical:
+        "/bareilly/",
+      previousRoutes: [
+        "/z-old/",
+        "/a-old/",
+        "/z-old/",
+      ],
+    };
+
+    const before =
+      JSON.stringify(
+        rawEntry
+      );
+
+    normalizeManifestEntry(
+      rawEntry
+    );
+
+    assert.strictEqual(
+      JSON.stringify(
+        rawEntry
+      ),
+      before
+    );
+
+    assert.deepStrictEqual(
+      rawEntry.previousRoutes,
+      [
+        "/z-old/",
+        "/a-old/",
+        "/z-old/",
+      ]
+    );
+  }
+);
+
+test(
+  "migration output does not share previousRoutes array with input",
+  () => {
+    const previousRoutes = [
+      "/old-bareilly/",
+    ];
+
+    const manifest = [
+      makeEntry({
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes,
+      }),
+    ];
+
+    const result =
+      migrateLocations(
+        manifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    result.migratedManifest[0]
+      .previousRoutes.push(
+        "/tampered-output/"
+      );
+
+    assert.deepStrictEqual(
+      previousRoutes,
+      [
+        "/old-bareilly/",
+      ]
+    );
+
+    assert.deepStrictEqual(
+      manifest[0].previousRoutes,
+      [
+        "/old-bareilly/",
+      ]
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
