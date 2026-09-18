@@ -7063,6 +7063,309 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 56. Rollback exact-state integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "rollback restores exact pre-migration manifest",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-pilibhit",
+        locationType:
+          "DISTRICT",
+        route:
+          "/pilibhit/",
+        canonical:
+          "/pilibhit/",
+        previousRoutes: [
+          "/old-pilibhit/",
+        ],
+      }),
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [
+          "/old-bareilly/",
+        ],
+      }),
+    ];
+
+    const expected =
+      JSON.stringify(
+        manifest
+          .map(
+            normalizeManifestEntry
+          )
+          .sort(
+            (a, b) =>
+              a.sourceId.localeCompare(
+                b.sourceId
+              )
+          )
+      );
+
+    const result =
+      migrateLocations(
+        manifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+          {
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/pilibhit/",
+          },
+        ]
+      );
+
+    const rollback =
+      rollbackMigration(
+        result.rollback
+      );
+
+    assert.strictEqual(
+      rollback.status,
+      "ROLLBACK-PASS"
+    );
+
+    assert.strictEqual(
+      JSON.stringify(
+        rollback.manifest
+      ),
+      expected
+    );
+  }
+);
+
+test(
+  "rollback snapshot hash matches its exact manifest",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.rollback.sha256,
+      sha256Json(
+        result.rollback.manifest
+      )
+    );
+  }
+);
+
+test(
+  "rollback snapshot is sorted by sourceId",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [],
+          }),
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        []
+      );
+
+    assert.deepStrictEqual(
+      result.rollback.manifest.map(
+        (entry) =>
+          entry.sourceId
+      ),
+      [
+        "location-bareilly",
+        "location-pilibhit",
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "rollback rejects tampered snapshot route",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const tampered =
+      JSON.parse(
+        JSON.stringify(
+          result.rollback
+        )
+      );
+
+    tampered.manifest[0].route =
+      "/tampered/";
+
+    rollbackMigration(
+      tampered
+    );
+  }
+);
+
+expectThrow(
+  "rollback rejects tampered snapshot previousRoutes",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const tampered =
+      JSON.parse(
+        JSON.stringify(
+          result.rollback
+        )
+      );
+
+    tampered.manifest[0]
+      .previousRoutes.push(
+        "/tampered-history/"
+      );
+
+    rollbackMigration(
+      tampered
+    );
+  }
+);
+
+expectThrow(
+  "rollback rejects tampered snapshot sourceId",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const tampered =
+      JSON.parse(
+        JSON.stringify(
+          result.rollback
+        )
+      );
+
+    tampered.manifest[0].sourceId =
+      "location-tampered";
+
+    rollbackMigration(
+      tampered
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
