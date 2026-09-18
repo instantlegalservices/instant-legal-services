@@ -940,11 +940,12 @@ function normalizeMigrationItem(
       raw.locationType
     );
 
-  const newRoute =
-    assertRoute(
-      raw.newRoute,
-      "newRoute"
-    );
+ const newRoute =
+  assertRouteMatchesLocationType(
+    locationType,
+    raw.newRoute,
+    "newRoute"
+  );
 
   const canonical =
     raw.canonical === undefined
