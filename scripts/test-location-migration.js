@@ -3318,6 +3318,188 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 44. Manifest serialization normalization contract
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "manifest serialization applies default status and generatorVersion",
+  () => {
+    const serialized =
+      serializeManifest([
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        },
+      ]);
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    assert.strictEqual(
+      parsed[0].status,
+      ACTIVE_STATUS
+    );
+
+    assert.strictEqual(
+      parsed[0].generatorVersion,
+      "location-migration-v1"
+    );
+  }
+);
+
+test(
+  "manifest serialization sorts and deduplicates previousRoutes",
+  () => {
+    const serialized =
+      serializeManifest([
+        makeEntry({
+          previousRoutes: [
+            "/z-old/",
+            "/a-old/",
+            "/z-old/",
+          ],
+        }),
+      ]);
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    assert.deepStrictEqual(
+      parsed[0].previousRoutes,
+      [
+        "/a-old/",
+        "/z-old/",
+      ]
+    );
+  }
+);
+
+test(
+  "manifest serialization normalizes uppercase valid content hash",
+  () => {
+    const entry =
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      });
+
+    const validHash =
+      calculateContentHash(
+        entry
+      );
+
+    const serialized =
+      serializeManifest([
+        {
+          ...entry,
+          contentHash:
+            validHash.toUpperCase(),
+        },
+      ]);
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    assert.strictEqual(
+      parsed[0].contentHash,
+      validHash
+    );
+
+    assert.strictEqual(
+      parsed[0].contentHash,
+      parsed[0].contentHash.toLowerCase()
+    );
+  }
+);
+
+test(
+  "manifest serialization removes unsupported extra fields",
+  () => {
+    const serialized =
+      serializeManifest([
+        makeEntry({
+          extraField:
+            "must-not-be-serialized",
+          internalFlag:
+            true,
+        }),
+      ]);
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    assert.strictEqual(
+      Object.prototype.hasOwnProperty.call(
+        parsed[0],
+        "extraField"
+      ),
+      false
+    );
+
+    assert.strictEqual(
+      Object.prototype.hasOwnProperty.call(
+        parsed[0],
+        "internalFlag"
+      ),
+      false
+    );
+  }
+);
+
+test(
+  "manifest serialization produces empty JSON array for empty manifest",
+  () => {
+    const serialized =
+      serializeManifest([]);
+
+    assert.strictEqual(
+      serialized,
+      "[]\n"
+    );
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    assert.deepStrictEqual(
+      parsed,
+      []
+    );
+  }
+);
+
+expectThrow(
+  "manifest serialization rejects non-array input",
+  () => {
+    serializeManifest(
+      {}
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
