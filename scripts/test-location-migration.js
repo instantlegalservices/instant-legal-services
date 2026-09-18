@@ -6135,9 +6135,26 @@ test(
 );
 
 test(
-  "status and generatorVersion do not alter content hash payload",
+  "default and explicit ACTIVE status do not alter content hash payload",
   () => {
-    const base =
+    const defaultStatus =
+      normalizeManifestEntry(
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+          generatorVersion:
+            "location-migration-v1",
+        })
+      );
+
+    const explicitActiveStatus =
       normalizeManifestEntry(
         makeEntry({
           sourceId:
@@ -6152,48 +6169,40 @@ test(
           status:
             ACTIVE_STATUS,
           generatorVersion:
-            "location-migration-v1",
-        })
-      );
-
-    const changedMetadata =
-      normalizeManifestEntry(
-        makeEntry({
-          sourceId:
-            "location-bareilly",
-          locationType:
-            "DISTRICT",
-          route:
-            "/bareilly/",
-          canonical:
-            "/bareilly/",
-          previousRoutes: [],
-          status:
-            CURRENT_STATUS,
-          generatorVersion:
             "location-migration-test-v2",
         })
       );
 
     assert.strictEqual(
-      base.contentHash,
-      changedMetadata.contentHash
+      defaultStatus.status,
+      ACTIVE_STATUS
     );
 
     assert.strictEqual(
-      base.contentHash,
-      calculateContentHash(base)
+      explicitActiveStatus.status,
+      ACTIVE_STATUS
     );
 
     assert.strictEqual(
-      changedMetadata.contentHash,
+      defaultStatus.contentHash,
+      explicitActiveStatus.contentHash
+    );
+
+    assert.strictEqual(
+      defaultStatus.contentHash,
       calculateContentHash(
-        changedMetadata
+        defaultStatus
+      )
+    );
+
+    assert.strictEqual(
+      explicitActiveStatus.contentHash,
+      calculateContentHash(
+        explicitActiveStatus
       )
     );
   }
-);
-/*
+);/*
  * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
