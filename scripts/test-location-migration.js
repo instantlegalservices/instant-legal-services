@@ -3021,6 +3021,324 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 43. Manifest serialization integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "manifest serialization returns valid normalized JSON",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const serialized =
+      serializeManifest(
+        manifest
+      );
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    assert.strictEqual(
+      parsed.length,
+      1
+    );
+
+    assert.strictEqual(
+      parsed[0].sourceId,
+      "location-bareilly"
+    );
+
+    assert.strictEqual(
+      parsed[0].route,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      parsed[0].canonical,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      parsed[0].status,
+      ACTIVE_STATUS
+    );
+  }
+);
+
+test(
+  "manifest serialization recalculates valid content hash",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+        contentHash:
+          "0".repeat(64),
+      }),
+    ];
+
+    const serialized =
+      serializeManifest(
+        manifest
+      );
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    const expectedHash =
+      calculateContentHash(
+        parsed[0]
+      );
+
+    assert.strictEqual(
+      parsed[0].contentHash,
+      expectedHash
+    );
+  }
+);
+
+expectThrow(
+  "manifest serialization rejects missing sourceId",
+  () => {
+    serializeManifest([
+      {
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        status:
+          ACTIVE_STATUS,
+        previousRoutes: [],
+      },
+    ]);
+  }
+);
+
+expectThrow(
+  "manifest serialization rejects invalid status",
+  () => {
+    serializeManifest([
+      makeEntry({
+        status:
+          "INVALID-STATUS",
+      }),
+    ]);
+  }
+);
+
+expectThrow(
+  "manifest serialization rejects duplicate sourceId",
+  () => {
+    serializeManifest([
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+      }),
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/lucknow/",
+        canonical:
+          "/lucknow/",
+      }),
+    ]);
+  }
+);
+
+expectThrow(
+  "manifest serialization rejects duplicate current routes",
+  () => {
+    serializeManifest([
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/same/",
+        canonical:
+          "/same/",
+      }),
+      makeEntry({
+        sourceId:
+          "location-lucknow",
+        route:
+          "/same/",
+        canonical:
+          "/same/",
+      }),
+    ]);
+  }
+);
+
+expectThrow(
+  "manifest serialization rejects current route colliding with historical route",
+  () => {
+    serializeManifest([
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [
+          "/old-bareilly/",
+        ],
+      }),
+      makeEntry({
+        sourceId:
+          "location-lucknow",
+        route:
+          "/old-bareilly/",
+        canonical:
+          "/old-bareilly/",
+        previousRoutes: [],
+      }),
+    ]);
+  }
+);
+
+expectThrow(
+  "manifest serialization rejects historical route collision",
+  () => {
+    serializeManifest([
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [
+          "/shared-history/",
+        ],
+      }),
+      makeEntry({
+        sourceId:
+          "location-lucknow",
+        route:
+          "/lucknow/",
+        canonical:
+          "/lucknow/",
+        previousRoutes: [
+          "/shared-history/",
+        ],
+      }),
+    ]);
+  }
+);
+
+test(
+  "manifest serialization is deterministic regardless of input order",
+  () => {
+    const manifestA = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+      }),
+      makeEntry({
+        sourceId:
+          "location-lucknow",
+        route:
+          "/lucknow/",
+        canonical:
+          "/lucknow/",
+      }),
+    ];
+
+    const manifestB = [
+      makeEntry({
+        sourceId:
+          "location-lucknow",
+        route:
+          "/lucknow/",
+        canonical:
+          "/lucknow/",
+      }),
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+      }),
+    ];
+
+    assert.strictEqual(
+      serializeManifest(
+        manifestA
+      ),
+      serializeManifest(
+        manifestB
+      )
+    );
+  }
+);
+
+test(
+  "manifest serialization ends with exactly one newline",
+  () => {
+    const serialized =
+      serializeManifest([
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+        }),
+      ]);
+
+    assert.ok(
+      serialized.endsWith(
+        "\n"
+      )
+    );
+
+    assert.ok(
+      !serialized.endsWith(
+        "\n\n"
+      )
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
