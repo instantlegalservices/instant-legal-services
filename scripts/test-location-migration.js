@@ -4703,6 +4703,441 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 49. Sequential migration integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "sequential migration preserves complete route history",
+  () => {
+    const first = migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    const second = migrateLocations(
+      first.migratedManifest,
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly-district/",
+        },
+      ]
+    );
+
+    const entry =
+      second.migratedManifest.find(
+        (item) =>
+          item.sourceId ===
+          "location-bareilly"
+      );
+
+    assert.ok(entry);
+
+    assert.strictEqual(
+      entry.route,
+      "/uttar-pradesh/bareilly-district/"
+    );
+
+    assert.deepStrictEqual(
+      entry.previousRoutes,
+      [
+        "/bareilly/",
+        "/uttar-pradesh/bareilly/",
+      ]
+    );
+  }
+);
+
+test(
+  "sequential migration keeps every historical route non-current",
+  () => {
+    const first = migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    const second = migrateLocations(
+      first.migratedManifest,
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly-district/",
+        },
+      ]
+    );
+
+    const currentRoutes =
+      second.migratedManifest.map(
+        (item) => item.route
+      );
+
+    const historicalRoutes =
+      second.migratedManifest.flatMap(
+        (item) =>
+          item.previousRoutes
+      );
+
+    assert.ok(
+      historicalRoutes.includes(
+        "/bareilly/"
+      )
+    );
+
+    assert.ok(
+      historicalRoutes.includes(
+        "/uttar-pradesh/bareilly/"
+      )
+    );
+
+    assert.ok(
+      !historicalRoutes.includes(
+        "/uttar-pradesh/bareilly-district/"
+      )
+    );
+
+    for (
+      const historicalRoute
+      of historicalRoutes
+    ) {
+      assert.ok(
+        !currentRoutes.includes(
+          historicalRoute
+        )
+      );
+    }
+  }
+);
+
+test(
+  "sequential migration creates redirect only from immediate previous route",
+  () => {
+    const first = migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    const second = migrateLocations(
+      first.migratedManifest,
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly-district/",
+        },
+      ]
+    );
+
+    assert.strictEqual(
+      first.redirects.length,
+      1
+    );
+
+    assert.strictEqual(
+      second.redirects.length,
+      1
+    );
+
+    assert.strictEqual(
+      second.redirects[0].from,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      second.redirects[0].to,
+      "/uttar-pradesh/bareilly-district/"
+    );
+
+    assert.strictEqual(
+      second.redirects[0].sourceId,
+      "location-bareilly"
+    );
+
+    assert.ok(
+      !second.redirects.some(
+        (redirect) =>
+          redirect.from ===
+          "/bareilly/"
+      )
+    );
+  }
+);
+
+test(
+  "sequential migration exposes only latest route to sitemap",
+  () => {
+    const first = migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+
+    const second = migrateLocations(
+      first.migratedManifest,
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly-district/",
+        },
+      ]
+    );
+
+    assert.deepStrictEqual(
+      second.sitemapRoutes,
+      [
+        "/uttar-pradesh/bareilly-district/",
+      ]
+    );
+
+    assert.ok(
+      !second.sitemapRoutes.includes(
+        "/bareilly/"
+      )
+    );
+
+    assert.ok(
+      !second.sitemapRoutes.includes(
+        "/uttar-pradesh/bareilly/"
+      )
+    );
+  }
+);
+
+test(
+  "content hash changes on every legitimate sequential migration",
+  () => {
+    const initial =
+      normalizeManifestEntry(
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    const first =
+      migrateLocations(
+        [initial],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const second =
+      migrateLocations(
+        first.migratedManifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly-district/",
+          },
+        ]
+      );
+
+    const firstEntry =
+      first.migratedManifest.find(
+        (item) =>
+          item.sourceId ===
+          "location-bareilly"
+      );
+
+    const secondEntry =
+      second.migratedManifest.find(
+        (item) =>
+          item.sourceId ===
+          "location-bareilly"
+      );
+
+    assert.ok(firstEntry);
+    assert.ok(secondEntry);
+
+    assert.notStrictEqual(
+      initial.contentHash,
+      firstEntry.contentHash
+    );
+
+    assert.notStrictEqual(
+      firstEntry.contentHash,
+      secondEntry.contentHash
+    );
+
+    assert.strictEqual(
+      secondEntry.contentHash,
+      calculateContentHash(
+        secondEntry
+      )
+    );
+  }
+);
+
+test(
+  "rollback snapshot remains valid after migrated output mutation",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const rollbackSnapshot =
+      JSON.parse(
+        JSON.stringify(
+          result.rollback
+        )
+      );
+
+    const rollbackHash =
+      result.rollback.sha256;
+
+    result.migratedManifest[0]
+      .previousRoutes.push(
+        "/tampered-history/"
+      );
+
+    result.migratedManifest[0]
+      .route =
+      "/tampered-current/";
+
+    const rollback =
+      rollbackMigration(
+        rollbackSnapshot
+      );
+
+    assert.strictEqual(
+      rollback.status,
+      "ROLLBACK-PASS"
+    );
+
+    assert.strictEqual(
+      rollback.sha256,
+      rollbackHash
+    );
+
+    assert.strictEqual(
+      rollback.manifest[0].route,
+      "/bareilly/"
+    );
+
+    assert.deepStrictEqual(
+      rollback.manifest[0].previousRoutes,
+      []
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
