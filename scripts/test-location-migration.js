@@ -7614,6 +7614,410 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 58. Migration result contract integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migration result exposes the complete required output contract",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(
+        result,
+        "status"
+      )
+    );
+
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(
+        result,
+        "migratedManifest"
+      )
+    );
+
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(
+        result,
+        "redirects"
+      )
+    );
+
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(
+        result,
+        "sitemapRoutes"
+      )
+    );
+
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(
+        result,
+        "rollback"
+      )
+    );
+
+    assert.strictEqual(
+      result.status,
+      "PASS"
+    );
+
+    assert.ok(
+      Array.isArray(
+        result.migratedManifest
+      )
+    );
+
+    assert.ok(
+      Array.isArray(
+        result.redirects
+      )
+    );
+
+    assert.ok(
+      Array.isArray(
+        result.sitemapRoutes
+      )
+    );
+
+    assert.ok(
+      result.rollback &&
+      typeof result.rollback ===
+        "object"
+    );
+  }
+);
+
+test(
+  "successful migration returns exactly one redirect for one route change",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.redirects.length,
+      1
+    );
+
+    assert.strictEqual(
+      result.redirects[0].from,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      result.redirects[0].to,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      result.redirects[0].status,
+      REDIRECT_STATUS
+    );
+  }
+);
+
+test(
+  "sitemapRoutes contains only current migrated routes",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.deepStrictEqual(
+      result.sitemapRoutes,
+      [
+        "/uttar-pradesh/bareilly/",
+      ]
+    );
+
+    assert.ok(
+      !result.sitemapRoutes.includes(
+        "/bareilly/"
+      )
+    );
+  }
+);
+
+test(
+  "rollback output contains the pre-migration route",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.rollback.manifest[0]
+        .route,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      result.rollback.manifest[0]
+        .canonical,
+      "/bareilly/"
+    );
+
+    assert.ok(
+      !result.rollback.manifest[0]
+        .previousRoutes.includes(
+          "/uttar-pradesh/bareilly/"
+        )
+    );
+  }
+);
+
+test(
+  "no-op migration keeps result contract valid",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.status,
+      "PASS"
+    );
+
+    assert.deepStrictEqual(
+      result.redirects,
+      []
+    );
+
+    assert.deepStrictEqual(
+      result.sitemapRoutes,
+      [
+        "/bareilly/",
+      ]
+    );
+
+    assert.ok(
+      Array.isArray(
+        result.migratedManifest
+      )
+    );
+
+    assert.ok(
+      result.rollback &&
+      typeof result.rollback ===
+        "object"
+    );
+  }
+);
+
+test(
+  "multiple migrations return aligned manifest, redirects and sitemap output",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+          {
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/pilibhit/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.migratedManifest.length,
+      2
+    );
+
+    assert.strictEqual(
+      result.redirects.length,
+      2
+    );
+
+    assert.strictEqual(
+      result.sitemapRoutes.length,
+      2
+    );
+
+    assert.deepStrictEqual(
+      result.sitemapRoutes,
+      [
+        "/uttar-pradesh/bareilly/",
+        "/uttar-pradesh/pilibhit/",
+      ]
+    );
+
+    assert.deepStrictEqual(
+      result.redirects.map(
+        (item) => item.from
+      ),
+      [
+        "/bareilly/",
+        "/pilibhit/",
+      ]
+    );
+
+    assert.deepStrictEqual(
+      result.redirects.map(
+        (item) => item.to
+      ),
+      [
+        "/uttar-pradesh/bareilly/",
+        "/uttar-pradesh/pilibhit/",
+      ]
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
