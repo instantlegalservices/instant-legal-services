@@ -1981,9 +1981,9 @@ test(
 test(
   "migration rejects target that is another location's historical route",
   () => {
-   expectThrow(
-  "migration rejects target that is another location's current route",
-  () =>
+    expectThrow(
+      "migration rejects target that is another location's historical route",
+      () =>
         migrateLocations(
           [
             makeEntry({
@@ -2011,7 +2011,7 @@ test(
                 "/uttar-pradesh/bareilly/",
             },
           ]
-       )
+        )
     );
   }
 );
@@ -2020,8 +2020,8 @@ test(
   "migration rejects target that is another location's current route",
   () => {
     expectThrow(
-  "migration rejects target that is another location's current route",
-  () =>
+      "migration rejects target that is another location's current route",
+      () =>
         migrateLocations(
           [
             makeEntry({
@@ -2034,7 +2034,8 @@ test(
             makeEntry({
               sourceId: "location-lucknow",
               locationType: "DISTRICT",
-              route: "/uttar-pradesh/bareilly/",
+              route:
+                "/uttar-pradesh/bareilly/",
               canonical:
                 "/uttar-pradesh/bareilly/",
               previousRoutes: [],
@@ -2106,6 +2107,7 @@ test(
     );
   }
 );
+
 /*
  * --------------------------------------------------------------------------
  * 37. Rollback snapshot tampering protection
@@ -2139,7 +2141,7 @@ test(
 
     const tamperedSnapshot = {
       ...result.rollback,
-      manifest: result.rollbackSnapshot.manifest.map(
+      manifest: result.rollback.manifest.map(
         (entry) => ({
           ...entry,
           route: "/tampered/",
