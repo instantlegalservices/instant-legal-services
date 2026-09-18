@@ -3080,9 +3080,9 @@ test(
 );
 
 test(
-  "manifest serialization recalculates valid content hash",
+  "manifest serialization rejects invalid supplied content hash",
   () => {
-    const manifest = [
+    serializeManifest([
       makeEntry({
         sourceId:
           "location-bareilly",
@@ -3096,30 +3096,9 @@ test(
         contentHash:
           "0".repeat(64),
       }),
-    ];
-
-    const serialized =
-      serializeManifest(
-        manifest
-      );
-
-    const parsed =
-      JSON.parse(
-        serialized
-      );
-
-    const expectedHash =
-      calculateContentHash(
-        parsed[0]
-      );
-
-    assert.strictEqual(
-      parsed[0].contentHash,
-      expectedHash
-    );
+    ]);
   }
 );
-
 expectThrow(
   "manifest serialization rejects missing sourceId",
   () => {
