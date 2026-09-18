@@ -2715,6 +2715,131 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 41. Route cycle / swap protection
+ * --------------------------------------------------------------------------
+ */
+
+expectThrow(
+  "migration rejects two-location route swap",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-one",
+          locationType: "DISTRICT",
+          route: "/one/",
+          canonical: "/one/",
+          previousRoutes: [],
+        }),
+        makeEntry({
+          sourceId: "location-two",
+          locationType: "DISTRICT",
+          route: "/two/",
+          canonical: "/two/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-one",
+          locationType: "DISTRICT",
+          newRoute: "/two/",
+        },
+        {
+          sourceId: "location-two",
+          locationType: "DISTRICT",
+          newRoute: "/one/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "migration rejects three-location route cycle",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-one",
+          locationType: "DISTRICT",
+          route: "/one/",
+          canonical: "/one/",
+          previousRoutes: [],
+        }),
+        makeEntry({
+          sourceId: "location-two",
+          locationType: "DISTRICT",
+          route: "/two/",
+          canonical: "/two/",
+          previousRoutes: [],
+        }),
+        makeEntry({
+          sourceId: "location-three",
+          locationType: "DISTRICT",
+          route: "/three/",
+          canonical: "/three/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-one",
+          locationType: "DISTRICT",
+          newRoute: "/two/",
+        },
+        {
+          sourceId: "location-two",
+          locationType: "DISTRICT",
+          newRoute: "/three/",
+        },
+        {
+          sourceId: "location-three",
+          locationType: "DISTRICT",
+          newRoute: "/one/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "migration rejects target reserved by another migration",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId: "location-one",
+          locationType: "DISTRICT",
+          route: "/one/",
+          canonical: "/one/",
+          previousRoutes: [],
+        }),
+        makeEntry({
+          sourceId: "location-two",
+          locationType: "DISTRICT",
+          route: "/two/",
+          canonical: "/two/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId: "location-one",
+          locationType: "DISTRICT",
+          newRoute: "/shared/",
+        },
+        {
+          sourceId: "location-two",
+          locationType: "DISTRICT",
+          newRoute: "/shared/",
+        },
+      ]
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
