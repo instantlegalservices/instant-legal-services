@@ -2532,6 +2532,189 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 40. Deterministic migration output
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migration output is deterministic regardless of input order",
+  () => {
+    const manifestA = [
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [],
+      }),
+      makeEntry({
+        sourceId: "location-lucknow",
+        locationType: "DISTRICT",
+        route: "/lucknow/",
+        canonical: "/lucknow/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const manifestB = [
+      makeEntry({
+        sourceId: "location-lucknow",
+        locationType: "DISTRICT",
+        route: "/lucknow/",
+        canonical: "/lucknow/",
+        previousRoutes: [],
+      }),
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const migrationsA = [
+      {
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        newRoute:
+          "/uttar-pradesh/bareilly/",
+      },
+      {
+        sourceId: "location-lucknow",
+        locationType: "DISTRICT",
+        newRoute:
+          "/uttar-pradesh/lucknow/",
+      },
+    ];
+
+    const migrationsB = [
+      {
+        sourceId: "location-lucknow",
+        locationType: "DISTRICT",
+        newRoute:
+          "/uttar-pradesh/lucknow/",
+      },
+      {
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        newRoute:
+          "/uttar-pradesh/bareilly/",
+      },
+    ];
+
+    const resultA =
+      migrateLocations(
+        manifestA,
+        migrationsA
+      );
+
+    const resultB =
+      migrateLocations(
+        manifestB,
+        migrationsB
+      );
+
+    assert.deepStrictEqual(
+      resultA.migratedManifest,
+      resultB.migratedManifest
+    );
+
+    assert.deepStrictEqual(
+      resultA.redirects,
+      resultB.redirects
+    );
+
+    assert.deepStrictEqual(
+      resultA.sitemapRoutes,
+      resultB.sitemapRoutes
+    );
+
+    assert.deepStrictEqual(
+      resultA.rollback,
+      resultB.rollback
+    );
+
+    assert.deepStrictEqual(
+      resultA.summary,
+      resultB.summary
+    );
+  }
+);
+
+test(
+  "migration serialization remains deterministic after repeated execution",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [],
+      }),
+      makeEntry({
+        sourceId: "location-lucknow",
+        locationType: "DISTRICT",
+        route: "/lucknow/",
+        canonical: "/lucknow/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const migrations = [
+      {
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        newRoute:
+          "/uttar-pradesh/bareilly/",
+      },
+      {
+        sourceId: "location-lucknow",
+        locationType: "DISTRICT",
+        newRoute:
+          "/uttar-pradesh/lucknow/",
+      },
+    ];
+
+    const first =
+      migrateLocations(
+        manifest,
+        migrations
+      );
+
+    const second =
+      migrateLocations(
+        manifest,
+        migrations
+      );
+
+    assert.strictEqual(
+      sha256Json(
+        first.migratedManifest
+      ),
+      sha256Json(
+        second.migratedManifest
+      )
+    );
+
+    assert.strictEqual(
+      sha256Json(
+        first.redirects
+      ),
+      sha256Json(
+        second.redirects
+      )
+    );
+
+    assert.strictEqual(
+      first.rollback.sha256,
+      second.rollback.sha256
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
