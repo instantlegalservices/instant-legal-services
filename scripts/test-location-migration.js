@@ -6202,7 +6202,420 @@ test(
       )
     );
   }
-);/*
+);
+/*
+ * --------------------------------------------------------------------------
+ * 53. Failure atomicity / no partial mutation
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "failed migration does not partially mutate original manifest",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+      makeEntry({
+        sourceId:
+          "location-pilibhit",
+        locationType:
+          "DISTRICT",
+        route:
+          "/pilibhit/",
+        canonical:
+          "/pilibhit/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const before =
+      JSON.stringify(manifest);
+
+    assert.throws(
+      () => {
+        migrateLocations(
+          manifest,
+          [
+            {
+              sourceId:
+                "location-bareilly",
+              locationType:
+                "DISTRICT",
+              newRoute:
+                "/uttar-pradesh/bareilly/",
+            },
+            {
+              sourceId:
+                "location-pilibhit",
+              locationType:
+                "DISTRICT",
+              newRoute:
+                "/uttar-pradesh/bareilly/",
+            },
+          ]
+        );
+      }
+    );
+
+    assert.strictEqual(
+      JSON.stringify(manifest),
+      before
+    );
+
+    assert.strictEqual(
+      manifest[0].route,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      manifest[1].route,
+      "/pilibhit/"
+    );
+  }
+);
+
+test(
+  "failed migration does not mutate original previousRoutes",
+  () => {
+    const previousRoutes = [
+      "/old-bareilly/",
+    ];
+
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes,
+      }),
+      makeEntry({
+        sourceId:
+          "location-pilibhit",
+        locationType:
+          "DISTRICT",
+        route:
+          "/pilibhit/",
+        canonical:
+          "/pilibhit/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const beforeManifest =
+      JSON.stringify(manifest);
+
+    const beforeHistory =
+      JSON.stringify(
+        previousRoutes
+      );
+
+    assert.throws(
+      () => {
+        migrateLocations(
+          manifest,
+          [
+            {
+              sourceId:
+                "location-bareilly",
+              locationType:
+                "DISTRICT",
+              newRoute:
+                "/uttar-pradesh/bareilly/",
+            },
+            {
+              sourceId:
+                "location-pilibhit",
+              locationType:
+                "DISTRICT",
+              newRoute:
+                "/old-bareilly/",
+            },
+          ]
+        );
+      }
+    );
+
+    assert.strictEqual(
+      JSON.stringify(manifest),
+      beforeManifest
+    );
+
+    assert.strictEqual(
+      JSON.stringify(previousRoutes),
+      beforeHistory
+    );
+  }
+);
+
+test(
+  "failed migration does not mutate migration items",
+  () => {
+    const migrationItems = [
+      {
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        newRoute:
+          "/uttar-pradesh/bareilly/",
+      },
+      {
+        sourceId:
+          "location-pilibhit",
+        locationType:
+          "DISTRICT",
+        newRoute:
+          "/uttar-pradesh/bareilly/",
+      },
+    ];
+
+    const before =
+      JSON.stringify(
+        migrationItems
+      );
+
+    assert.throws(
+      () => {
+        migrateLocations(
+          [
+            makeEntry({
+              sourceId:
+                "location-bareilly",
+              locationType:
+                "DISTRICT",
+              route:
+                "/bareilly/",
+              canonical:
+                "/bareilly/",
+              previousRoutes: [],
+            }),
+            makeEntry({
+              sourceId:
+                "location-pilibhit",
+              locationType:
+                "DISTRICT",
+              route:
+                "/pilibhit/",
+              canonical:
+                "/pilibhit/",
+              previousRoutes: [],
+            }),
+          ],
+          migrationItems
+        );
+      }
+    );
+
+    assert.strictEqual(
+      JSON.stringify(
+        migrationItems
+      ),
+      before
+    );
+  }
+);
+
+test(
+  "failed migration caused by unknown sourceId leaves manifest unchanged",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const before =
+      JSON.stringify(manifest);
+
+    assert.throws(
+      () => {
+        migrateLocations(
+          manifest,
+          [
+            {
+              sourceId:
+                "location-bareilly",
+              locationType:
+                "DISTRICT",
+              newRoute:
+                "/uttar-pradesh/bareilly/",
+            },
+            {
+              sourceId:
+                "location-unknown",
+              locationType:
+                "DISTRICT",
+              newRoute:
+                "/unknown/",
+            },
+          ]
+        );
+      }
+    );
+
+    assert.strictEqual(
+      JSON.stringify(manifest),
+      before
+    );
+  }
+);
+
+test(
+  "failed migration caused by locationType mismatch leaves manifest unchanged",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const before =
+      JSON.stringify(manifest);
+
+    assert.throws(
+      () => {
+        migrateLocations(
+          manifest,
+          [
+            {
+              sourceId:
+                "location-bareilly",
+              locationType:
+                "STATE",
+              newRoute:
+                "/uttar-pradesh/bareilly/",
+            },
+          ]
+        );
+      }
+    );
+
+    assert.strictEqual(
+      JSON.stringify(manifest),
+      before
+    );
+
+    assert.strictEqual(
+      manifest[0].route,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      manifest[0].canonical,
+      "/bareilly/"
+    );
+
+    assert.deepStrictEqual(
+      manifest[0].previousRoutes,
+      []
+    );
+  }
+);
+
+test(
+  "failed migration does not leave partially created redirects",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+      makeEntry({
+        sourceId:
+          "location-pilibhit",
+        locationType:
+          "DISTRICT",
+        route:
+          "/pilibhit/",
+        canonical:
+          "/pilibhit/",
+        previousRoutes: [],
+      }),
+    ];
+
+    let result;
+
+    assert.throws(
+      () => {
+        result =
+          migrateLocations(
+            manifest,
+            [
+              {
+                sourceId:
+                  "location-bareilly",
+                locationType:
+                  "DISTRICT",
+                newRoute:
+                  "/uttar-pradesh/bareilly/",
+              },
+              {
+                sourceId:
+                  "location-pilibhit",
+                locationType:
+                  "DISTRICT",
+                newRoute:
+                  "/uttar-pradesh/bareilly/",
+              },
+            ]
+          );
+      }
+    );
+
+    assert.strictEqual(
+      result,
+      undefined
+    );
+
+    assert.strictEqual(
+      manifest[0].route,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      manifest[1].route,
+      "/pilibhit/"
+    );
+  }
+);
+/*
  * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
