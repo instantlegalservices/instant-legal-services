@@ -7651,13 +7651,6 @@ test(
     assert.ok(
       Object.prototype.hasOwnProperty.call(
         result,
-        "status"
-      )
-    );
-
-    assert.ok(
-      Object.prototype.hasOwnProperty.call(
-        result,
         "migratedManifest"
       )
     );
@@ -7683,8 +7676,21 @@ test(
       )
     );
 
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(
+        result,
+        "summary"
+      )
+    );
+
+    assert.ok(
+      result.summary &&
+      typeof result.summary ===
+        "object"
+    );
+
     assert.strictEqual(
-      result.status,
+      result.summary.status,
       "PASS"
     );
 
@@ -7893,7 +7899,7 @@ test(
       );
 
     assert.strictEqual(
-      result.status,
+      result.summary.status,
       "PASS"
     );
 
