@@ -6617,6 +6617,337 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 54. Deterministic ordering & duplicate protection
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migrated manifest is sorted deterministically by sourceId",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [],
+          }),
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/pilibhit/",
+          },
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.deepStrictEqual(
+      result.migratedManifest.map(
+        (entry) =>
+          entry.sourceId
+      ),
+      [
+        "location-bareilly",
+        "location-pilibhit",
+      ]
+    );
+  }
+);
+
+test(
+  "migration output is deterministic regardless of migration input order",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+      makeEntry({
+        sourceId:
+          "location-pilibhit",
+        locationType:
+          "DISTRICT",
+        route:
+          "/pilibhit/",
+        canonical:
+          "/pilibhit/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const resultA =
+      migrateLocations(
+        manifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+          {
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/pilibhit/",
+          },
+        ]
+      );
+
+    const resultB =
+      migrateLocations(
+        manifest,
+        [
+          {
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/pilibhit/",
+          },
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.deepStrictEqual(
+      resultA.migratedManifest,
+      resultB.migratedManifest
+    );
+
+    assert.deepStrictEqual(
+      resultA.redirects,
+      resultB.redirects
+    );
+
+    assert.deepStrictEqual(
+      resultA.sitemapRoutes,
+      resultB.sitemapRoutes
+    );
+
+    assert.deepStrictEqual(
+      resultA.rollback,
+      resultB.rollback
+    );
+  }
+);
+
+test(
+  "redirect records are sorted deterministically by source route",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [],
+          }),
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/pilibhit/",
+          },
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.deepStrictEqual(
+      result.redirects.map(
+        (redirect) =>
+          redirect.from
+      ),
+      [
+        "/bareilly/",
+        "/pilibhit/",
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "duplicate sourceId in manifest is rejected",
+  () => {
+    buildManifestIndex(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          route:
+            "/bareilly-2/",
+          canonical:
+            "/bareilly-2/",
+          previousRoutes: [],
+        }),
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "duplicate migration target route is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+        makeEntry({
+          sourceId:
+            "location-pilibhit",
+          route:
+            "/pilibhit/",
+          canonical:
+            "/pilibhit/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/same-route/",
+        },
+        {
+          sourceId:
+            "location-pilibhit",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/same-route/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "duplicate historical route ownership is rejected",
+  () => {
+    buildManifestIndex(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [
+            "/old-location/",
+          ],
+        }),
+        makeEntry({
+          sourceId:
+            "location-pilibhit",
+          route:
+            "/pilibhit/",
+          canonical:
+            "/pilibhit/",
+          previousRoutes: [
+            "/old-location/",
+          ],
+        }),
+      ]
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
