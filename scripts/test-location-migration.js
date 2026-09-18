@@ -2309,6 +2309,229 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 39. Multi-location migration integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "multiple locations migrate independently in one batch",
+  () => {
+    const currentManifest = [
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [],
+      }),
+      makeEntry({
+        sourceId: "location-lucknow",
+        locationType: "DISTRICT",
+        route: "/lucknow/",
+        canonical: "/lucknow/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const result = migrateLocations(
+      currentManifest,
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+        {
+          sourceId: "location-lucknow",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/lucknow/",
+        },
+      ]
+    );
+
+    assert.strictEqual(
+      result.migratedManifest.length,
+      2
+    );
+
+    assert.strictEqual(
+      result.redirects.length,
+      2
+    );
+
+    assert.deepStrictEqual(
+      result.sitemapRoutes,
+      [
+        "/uttar-pradesh/bareilly/",
+        "/uttar-pradesh/lucknow/",
+      ]
+    );
+
+    const bareilly =
+      result.migratedManifest.find(
+        (entry) =>
+          entry.sourceId ===
+          "location-bareilly"
+      );
+
+    const lucknow =
+      result.migratedManifest.find(
+        (entry) =>
+          entry.sourceId ===
+          "location-lucknow"
+      );
+
+    assert.ok(bareilly);
+    assert.ok(lucknow);
+
+    assert.strictEqual(
+      bareilly.route,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      lucknow.route,
+      "/uttar-pradesh/lucknow/"
+    );
+
+    assert.ok(
+      bareilly.previousRoutes.includes(
+        "/bareilly/"
+      )
+    );
+
+    assert.ok(
+      lucknow.previousRoutes.includes(
+        "/lucknow/"
+      )
+    );
+
+    assert.strictEqual(
+      bareilly.canonical,
+      bareilly.route
+    );
+
+    assert.strictEqual(
+      lucknow.canonical,
+      lucknow.route
+    );
+
+    const bareillyRedirect =
+      result.redirects.find(
+        (redirect) =>
+          redirect.sourceId ===
+          "location-bareilly"
+      );
+
+    const lucknowRedirect =
+      result.redirects.find(
+        (redirect) =>
+          redirect.sourceId ===
+          "location-lucknow"
+      );
+
+    assert.strictEqual(
+      bareillyRedirect.from,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      bareillyRedirect.to,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      lucknowRedirect.from,
+      "/lucknow/"
+    );
+
+    assert.strictEqual(
+      lucknowRedirect.to,
+      "/uttar-pradesh/lucknow/"
+    );
+  }
+);
+
+test(
+  "multi-location rollback snapshot restores all original routes",
+  () => {
+    const currentManifest = [
+      makeEntry({
+        sourceId: "location-bareilly",
+        locationType: "DISTRICT",
+        route: "/bareilly/",
+        canonical: "/bareilly/",
+        previousRoutes: [],
+      }),
+      makeEntry({
+        sourceId: "location-lucknow",
+        locationType: "DISTRICT",
+        route: "/lucknow/",
+        canonical: "/lucknow/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const result = migrateLocations(
+      currentManifest,
+      [
+        {
+          sourceId: "location-bareilly",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+        {
+          sourceId: "location-lucknow",
+          locationType: "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/lucknow/",
+        },
+      ]
+    );
+
+    const restored =
+      rollbackMigration(
+        result.rollback
+      );
+
+    assert.deepStrictEqual(
+      restored.manifest,
+      [
+        normalizeManifestEntry(
+          currentManifest[0]
+        ),
+        normalizeManifestEntry(
+          currentManifest[1]
+        ),
+      ].sort(
+        (a, b) =>
+          a.sourceId.localeCompare(
+            b.sourceId
+          )
+      )
+    );
+
+    assert.strictEqual(
+      restored.manifest.length,
+      2
+    );
+
+    assert.strictEqual(
+      restored.status,
+      "ROLLBACK-PASS"
+    );
+
+    assert.strictEqual(
+      restored.sha256,
+      result.rollback.sha256
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
