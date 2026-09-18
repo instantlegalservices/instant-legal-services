@@ -7366,6 +7366,254 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 57. Options / generator-version integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migration uses default generator version when no option is supplied",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.migratedManifest[0]
+        .generatorVersion,
+      "location-migration-v1"
+    );
+  }
+);
+
+test(
+  "explicit generator version propagates to migrated entry",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ],
+        {
+          generatorVersion:
+            "location-migration-v2"
+        }
+      );
+
+    assert.strictEqual(
+      result.migratedManifest[0]
+        .generatorVersion,
+      "location-migration-v2"
+    );
+  }
+);
+
+expectThrow(
+  "empty generator version option is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [],
+      {
+        generatorVersion:
+          ""
+      }
+    );
+  }
+);
+
+expectThrow(
+  "non-string generator version option is rejected",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [],
+      {
+        generatorVersion:
+          123
+      }
+    );
+  }
+);
+
+test(
+  "explicit generator version is applied consistently to multiple migrations",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+          {
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/pilibhit/",
+          },
+        ],
+        {
+          generatorVersion:
+            "location-migration-v3"
+        }
+      );
+
+    for (
+      const entry
+      of result.migratedManifest
+    ) {
+      assert.strictEqual(
+        entry.generatorVersion,
+        "location-migration-v3"
+      );
+    }
+  }
+);
+
+test(
+  "generator version change does not alter rollback snapshot",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const result =
+      migrateLocations(
+        manifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ],
+        {
+          generatorVersion:
+            "location-migration-v99"
+        }
+      );
+
+    const rollback =
+      rollbackMigration(
+        result.rollback
+      );
+
+    assert.strictEqual(
+      rollback.status,
+      "ROLLBACK-PASS"
+    );
+
+    assert.strictEqual(
+      rollback.manifest[0]
+        .generatorVersion,
+      manifest[0]
+        .generatorVersion
+    );
+
+    assert.strictEqual(
+      rollback.sha256,
+      sha256Json(
+        rollback.manifest
+      )
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
