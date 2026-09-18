@@ -8906,6 +8906,295 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 61. Location type ↔ route namespace integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "DISTRICT migration accepts hierarchical district route",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.migratedManifest[0]
+        .route,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0]
+        .canonical,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      result.summary.status,
+      "PASS"
+    );
+  }
+);
+
+expectThrow(
+  "DISTRICT migration rejects typed tehsil namespace",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/tehsil/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "DISTRICT migration rejects typed local-body namespace",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/local-body/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "DISTRICT migration rejects typed authority namespace",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/authority/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "TEHSIL migration rejects district-style route",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly-tehsil",
+          locationType:
+            "TEHSIL",
+          route:
+            "/tehsil/bareilly/",
+          canonical:
+            "/tehsil/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly-tehsil",
+          locationType:
+            "TEHSIL",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "LOCAL_BODY migration rejects district-style route",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly-local-body",
+          locationType:
+            "LOCAL_BODY",
+          route:
+            "/local-body/bareilly/",
+          canonical:
+            "/local-body/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly-local-body",
+          locationType:
+            "LOCAL_BODY",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+expectThrow(
+  "AUTHORITY migration rejects district-style route",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly-authority",
+          locationType:
+            "AUTHORITY",
+          route:
+            "/authority/bareilly/",
+          canonical:
+            "/authority/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly-authority",
+          locationType:
+            "AUTHORITY",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+        },
+      ]
+    );
+  }
+);
+
+test(
+  "COURT migration accepts hierarchical court route",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "court-bareilly-district",
+            locationType:
+              "COURT",
+            route:
+              "/bareilly/court/",
+            canonical:
+              "/bareilly/court/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "court-bareilly-district",
+            locationType:
+              "COURT",
+            newRoute:
+              "/uttar-pradesh/bareilly/district-court/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.migratedManifest[0]
+        .route,
+      "/uttar-pradesh/bareilly/district-court/"
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0]
+        .canonical,
+      "/uttar-pradesh/bareilly/district-court/"
+    );
+
+    assert.strictEqual(
+      result.summary.status,
+      "PASS"
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
