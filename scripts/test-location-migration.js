@@ -3079,7 +3079,7 @@ test(
   }
 );
 
-test(
+expectThrow(
   "manifest serialization rejects invalid supplied content hash",
   () => {
     serializeManifest([
