@@ -5591,6 +5591,358 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 51. Route / canonical consistency
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "migrated entry canonical exactly matches current route",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const entry =
+      result.migratedManifest.find(
+        (item) =>
+          item.sourceId ===
+          "location-bareilly"
+      );
+
+    assert.ok(entry);
+
+    assert.strictEqual(
+      entry.route,
+      "/uttar-pradesh/bareilly/"
+    );
+
+    assert.strictEqual(
+      entry.canonical,
+      entry.route
+    );
+  }
+);
+
+test(
+  "sequential migration keeps canonical equal to latest route",
+  () => {
+    const first =
+      migrateLocations(
+        [
+          makeEntry({
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const second =
+      migrateLocations(
+        first.migratedManifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly-district/",
+          },
+        ]
+      );
+
+    const entry =
+      second.migratedManifest.find(
+        (item) =>
+          item.sourceId ===
+          "location-bareilly"
+      );
+
+    assert.ok(entry);
+
+    assert.strictEqual(
+      entry.route,
+      "/uttar-pradesh/bareilly-district/"
+    );
+
+    assert.strictEqual(
+      entry.canonical,
+      "/uttar-pradesh/bareilly-district/"
+    );
+
+    assert.strictEqual(
+      entry.canonical,
+      entry.route
+    );
+  }
+);
+
+test(
+  "historical routes never become canonical",
+  () => {
+    const first =
+      migrateLocations(
+        [
+          makeEntry({
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const second =
+      migrateLocations(
+        first.migratedManifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly-district/",
+          },
+        ]
+      );
+
+    const entry =
+      second.migratedManifest.find(
+        (item) =>
+          item.sourceId ===
+          "location-bareilly"
+      );
+
+    assert.ok(entry);
+
+    assert.strictEqual(
+      entry.canonical,
+      entry.route
+    );
+
+    for (
+      const historicalRoute
+      of entry.previousRoutes
+    ) {
+      assert.notStrictEqual(
+        historicalRoute,
+        entry.canonical
+      );
+    }
+  }
+);
+
+test(
+  "multiple migrated locations each retain independent canonical routes",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+          makeEntry({
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            route:
+              "/pilibhit/",
+            canonical:
+              "/pilibhit/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+          {
+            sourceId:
+              "location-pilibhit",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/pilibhit/",
+          },
+        ]
+      );
+
+    for (
+      const entry
+      of result.migratedManifest
+    ) {
+      assert.strictEqual(
+        entry.canonical,
+        entry.route
+      );
+
+      assert.ok(
+        !entry.previousRoutes.includes(
+          entry.canonical
+        )
+      );
+    }
+  }
+);
+
+expectThrow(
+  "migration rejects mismatched supplied canonical",
+  () => {
+    migrateLocations(
+      [
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        }),
+      ],
+      [
+        {
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          newRoute:
+            "/uttar-pradesh/bareilly/",
+          canonical:
+            "/wrong-canonical/",
+        },
+      ]
+    );
+  }
+);
+
+test(
+  "rollback restores route and canonical consistency",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/uttar-pradesh/bareilly/",
+          },
+        ]
+      );
+
+    const rollback =
+      rollbackMigration(
+        result.rollback
+      );
+
+    assert.strictEqual(
+      rollback.status,
+      "ROLLBACK-PASS"
+    );
+
+    const entry =
+      rollback.manifest.find(
+        (item) =>
+          item.sourceId ===
+          "location-bareilly"
+      );
+
+    assert.ok(entry);
+
+    assert.strictEqual(
+      entry.route,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      entry.canonical,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      entry.canonical,
+      entry.route
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
