@@ -5943,6 +5943,258 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 52. Content-hash integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "same normalized entry produces the same content hash",
+  () => {
+    const entryA =
+      normalizeManifestEntry(
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    const entryB =
+      normalizeManifestEntry(
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    assert.strictEqual(
+      entryA.contentHash,
+      entryB.contentHash
+    );
+
+    assert.strictEqual(
+      entryA.contentHash,
+      calculateContentHash(entryA)
+    );
+  }
+);
+
+test(
+  "route change changes content hash",
+  () => {
+    const original =
+      normalizeManifestEntry(
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    const changed =
+      normalizeManifestEntry(
+        makeEntry({
+          route:
+            "/uttar-pradesh/bareilly/",
+          canonical:
+            "/uttar-pradesh/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    assert.notStrictEqual(
+      original.contentHash,
+      changed.contentHash
+    );
+  }
+);
+
+test(
+  "previousRoutes change changes content hash",
+  () => {
+    const original =
+      normalizeManifestEntry(
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    const changed =
+      normalizeManifestEntry(
+        makeEntry({
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [
+            "/old-bareilly/",
+          ],
+        })
+      );
+
+    assert.notStrictEqual(
+      original.contentHash,
+      changed.contentHash
+    );
+  }
+);
+
+test(
+  "sourceId change changes content hash",
+  () => {
+    const original =
+      normalizeManifestEntry(
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    const changed =
+      normalizeManifestEntry(
+        makeEntry({
+          sourceId:
+            "location-pilibhit",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    assert.notStrictEqual(
+      original.contentHash,
+      changed.contentHash
+    );
+  }
+);
+
+test(
+  "locationType change changes content hash",
+  () => {
+    const original =
+      normalizeManifestEntry(
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    const changed =
+      normalizeManifestEntry(
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "STATE",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+        })
+      );
+
+    assert.notStrictEqual(
+      original.contentHash,
+      changed.contentHash
+    );
+  }
+);
+
+test(
+  "status and generatorVersion do not alter content hash payload",
+  () => {
+    const base =
+      normalizeManifestEntry(
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+          status:
+            ACTIVE_STATUS,
+          generatorVersion:
+            "location-migration-v1",
+        })
+      );
+
+    const changedMetadata =
+      normalizeManifestEntry(
+        makeEntry({
+          sourceId:
+            "location-bareilly",
+          locationType:
+            "DISTRICT",
+          route:
+            "/bareilly/",
+          canonical:
+            "/bareilly/",
+          previousRoutes: [],
+          status:
+            CURRENT_STATUS,
+          generatorVersion:
+            "location-migration-test-v2",
+        })
+      );
+
+    assert.strictEqual(
+      base.contentHash,
+      changedMetadata.contentHash
+    );
+
+    assert.strictEqual(
+      base.contentHash,
+      calculateContentHash(base)
+    );
+
+    assert.strictEqual(
+      changedMetadata.contentHash,
+      calculateContentHash(
+        changedMetadata
+      )
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
