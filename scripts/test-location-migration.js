@@ -3779,6 +3779,348 @@ test(
 );
 /*
  * --------------------------------------------------------------------------
+ * 46. Empty / no-op migration integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "empty migration batch preserves manifest exactly",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const before =
+      JSON.stringify(
+        manifest
+      );
+
+    const result =
+      migrateLocations(
+        manifest,
+        []
+      );
+
+    assert.strictEqual(
+      JSON.stringify(manifest),
+      before
+    );
+
+    assert.deepStrictEqual(
+      result.redirects,
+      []
+    );
+
+    assert.deepStrictEqual(
+      result.sitemapRoutes,
+      [
+        "/bareilly/",
+      ]
+    );
+
+    assert.strictEqual(
+      result.summary.migrated,
+      0
+    );
+
+    assert.strictEqual(
+      result.summary.redirectsRequired,
+      0
+    );
+
+    assert.strictEqual(
+      result.summary.currentRoutes,
+      1
+    );
+
+    assert.strictEqual(
+      result.summary.historicalRoutes,
+      0
+    );
+
+    assert.strictEqual(
+      result.summary.rollbackReady,
+      true
+    );
+
+    assert.strictEqual(
+      result.summary.status,
+      "PASS"
+    );
+  }
+);
+
+test(
+  "no-op migration creates no redirect",
+  () => {
+    const result =
+      migrateLocations(
+        [
+          makeEntry({
+            sourceId:
+              "location-bareilly",
+            route:
+              "/bareilly/",
+            canonical:
+              "/bareilly/",
+            previousRoutes: [],
+          }),
+        ],
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/bareilly/",
+          },
+        ]
+      );
+
+    assert.deepStrictEqual(
+      result.redirects,
+      []
+    );
+
+    assert.deepStrictEqual(
+      result.sitemapRoutes,
+      [
+        "/bareilly/",
+      ]
+    );
+
+    assert.strictEqual(
+      result.summary.migrated,
+      0
+    );
+
+    assert.strictEqual(
+      result.summary.redirectsRequired,
+      0
+    );
+  }
+);
+
+test(
+  "no-op migration preserves previousRoutes",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [
+          "/old-bareilly/",
+          "/older-bareilly/",
+        ],
+      }),
+    ];
+
+    const result =
+      migrateLocations(
+        manifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/bareilly/",
+          },
+        ]
+      );
+
+    assert.deepStrictEqual(
+      result.migratedManifest[0]
+        .previousRoutes,
+      [
+        "/old-bareilly/",
+        "/older-bareilly/",
+      ]
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0]
+        .route,
+      "/bareilly/"
+    );
+  }
+);
+
+test(
+  "no-op migration preserves content hash",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const originalHash =
+      calculateContentHash(
+        manifest[0]
+      );
+
+    const result =
+      migrateLocations(
+        manifest,
+        [
+          {
+            sourceId:
+              "location-bareilly",
+            locationType:
+              "DISTRICT",
+            newRoute:
+              "/bareilly/",
+          },
+        ]
+      );
+
+    assert.strictEqual(
+      result.migratedManifest[0]
+        .contentHash,
+      originalHash
+    );
+
+    assert.strictEqual(
+      result.migratedManifest[0]
+        .contentHash,
+      calculateContentHash(
+        result.migratedManifest[0]
+      )
+    );
+  }
+);
+
+test(
+  "empty migration rollback snapshot is valid",
+  () => {
+    const manifest = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const result =
+      migrateLocations(
+        manifest,
+        []
+      );
+
+    const restored =
+      rollbackMigration(
+        result.rollback
+      );
+
+    assert.strictEqual(
+      restored.status,
+      "ROLLBACK-PASS"
+    );
+
+    assert.deepStrictEqual(
+      restored.manifest,
+      result.rollback.manifest
+    );
+
+    assert.strictEqual(
+      restored.sha256,
+      result.rollback.sha256
+    );
+  }
+);
+
+test(
+  "empty migration output is deterministic",
+  () => {
+    const manifestA = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const manifestB = [
+      makeEntry({
+        sourceId:
+          "location-bareilly",
+        route:
+          "/bareilly/",
+        canonical:
+          "/bareilly/",
+        previousRoutes: [],
+      }),
+    ];
+
+    const resultA =
+      migrateLocations(
+        manifestA,
+        []
+      );
+
+    const resultB =
+      migrateLocations(
+        manifestB,
+        []
+      );
+
+    assert.deepStrictEqual(
+      resultA.migratedManifest,
+      resultB.migratedManifest
+    );
+
+    assert.deepStrictEqual(
+      resultA.redirects,
+      resultB.redirects
+    );
+
+    assert.deepStrictEqual(
+      resultA.sitemapRoutes,
+      resultB.sitemapRoutes
+    );
+
+    assert.deepStrictEqual(
+      resultA.rollback,
+      resultB.rollback
+    );
+
+    assert.deepStrictEqual(
+      resultA.summary,
+      resultB.summary
+    );
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
