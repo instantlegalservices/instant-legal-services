@@ -2840,6 +2840,187 @@ expectThrow(
 );
 /*
  * --------------------------------------------------------------------------
+ * 42. Redirect serialization integrity
+ * --------------------------------------------------------------------------
+ */
+
+test(
+  "redirect serialization normalizes status to REDIRECT",
+  () => {
+    const redirects = [
+      {
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        from:
+          "/bareilly/",
+        to:
+          "/uttar-pradesh/bareilly/",
+        status:
+          "INVALID-STATUS",
+      },
+    ];
+
+    const serialized =
+      serializeRedirects(
+        redirects
+      );
+
+    const parsed =
+      JSON.parse(
+        serialized
+      );
+
+    assert.strictEqual(
+      parsed.length,
+      1
+    );
+
+    assert.strictEqual(
+      parsed[0].status,
+      REDIRECT_STATUS
+    );
+
+    assert.strictEqual(
+      parsed[0].from,
+      "/bareilly/"
+    );
+
+    assert.strictEqual(
+      parsed[0].to,
+      "/uttar-pradesh/bareilly/"
+    );
+  }
+);
+
+expectThrow(
+  "redirect serialization rejects missing sourceId",
+  () => {
+    serializeRedirects([
+      {
+        locationType:
+          "DISTRICT",
+        from:
+          "/bareilly/",
+        to:
+          "/uttar-pradesh/bareilly/",
+        status:
+          REDIRECT_STATUS,
+      },
+    ]);
+  }
+);
+
+expectThrow(
+  "redirect serialization rejects invalid locationType",
+  () => {
+    serializeRedirects([
+      {
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "INVALID-TYPE",
+        from:
+          "/bareilly/",
+        to:
+          "/uttar-pradesh/bareilly/",
+        status:
+          REDIRECT_STATUS,
+      },
+    ]);
+  }
+);
+
+expectThrow(
+  "redirect serialization rejects missing from route",
+  () => {
+    serializeRedirects([
+      {
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        to:
+          "/uttar-pradesh/bareilly/",
+        status:
+          REDIRECT_STATUS,
+      },
+    ]);
+  }
+);
+
+expectThrow(
+  "redirect serialization rejects missing to route",
+  () => {
+    serializeRedirects([
+      {
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        from:
+          "/bareilly/",
+        status:
+          REDIRECT_STATUS,
+      },
+    ]);
+  }
+);
+
+expectThrow(
+  "redirect serialization rejects duplicate from routes",
+  () => {
+    serializeRedirects([
+      {
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        from:
+          "/bareilly/",
+        to:
+          "/uttar-pradesh/bareilly/",
+        status:
+          REDIRECT_STATUS,
+      },
+      {
+        sourceId:
+          "location-bareilly-duplicate",
+        locationType:
+          "DISTRICT",
+        from:
+          "/bareilly/",
+        to:
+          "/another/",
+        status:
+          REDIRECT_STATUS,
+      },
+    ]);
+  }
+);
+
+expectThrow(
+  "redirect serialization rejects self redirect",
+  () => {
+    serializeRedirects([
+      {
+        sourceId:
+          "location-bareilly",
+        locationType:
+          "DISTRICT",
+        from:
+          "/bareilly/",
+        to:
+          "/bareilly/",
+        status:
+          REDIRECT_STATUS,
+      },
+    ]);
+  }
+);
+/*
+ * --------------------------------------------------------------------------
  * Final report
  * --------------------------------------------------------------------------
  */
