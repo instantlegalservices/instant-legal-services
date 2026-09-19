@@ -96,15 +96,19 @@ function buildHierarchyIndex(rows) {
         ];
 
       if (
-        expectedParentType === null ||
-        expectedParentType === undefined
-      ) {
-        fail(
-          `Invalid parent configuration for ` +
-          `${row.locationType}:${row.sourceCode}`
-        );
-      }
+  expectedParentType === undefined
+) {
+  fail(
+    `Invalid parent configuration for ` +
+    `${row.locationType}:${row.sourceCode}`
+  );
+}
 
+if (
+  expectedParentType === null
+) {
+  return null;
+}
       const parentIdentity =
         buildIdentity(
           expectedParentType,
