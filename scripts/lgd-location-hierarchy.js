@@ -39,30 +39,6 @@ function assertRows(rows) {
   return rows;
 }
 
-/**
- * Expected parent types in the normalized ILS hierarchy.
- *
- * STATE:
- *   root
- *
- * DISTRICT:
- *   STATE
- *
- * TEHSIL:
- *   DISTRICT
- *
- * LOCAL_BODY:
- *   DISTRICT
- *
- * AUTHORITY:
- *   DISTRICT
- *
- * NOTE:
- * This is an ILS normalization contract.
- * It does NOT claim that these are the exact raw LGD
- * column relationships until the official source mapping
- * is explicitly verified.
- */
 const EXPECTED_PARENT_TYPES =
   Object.freeze({
     STATE: null,
@@ -72,16 +48,6 @@ const EXPECTED_PARENT_TYPES =
     AUTHORITY: "DISTRICT"
   });
 
-/**
- * Build a typed source identity.
- *
- * Source identity is intentionally:
- *
- *   LOCATION_TYPE + SOURCE_CODE
- *
- * This prevents collisions when two entity types happen
- * to expose the same opaque source code.
- */
 function buildIdentity(
   locationType,
   sourceCode
@@ -89,12 +55,6 @@ function buildIdentity(
   return `${locationType}:${sourceCode}`;
 }
 
-/**
- * Build stable hierarchy indexes.
- *
- * The normalized sourceCode remains opaque.
- * We never reinterpret or transform it.
- */
 function buildHierarchyIndex(rows) {
   const normalized =
     validateNormalizedLgdRows(
@@ -176,14 +136,17 @@ function buildHierarchyIndex(rows) {
 }
 
 /**
- * Resolve a row's parent using:
+ * Supports both:
  *
- *   expected parent type
- *   +
- *   opaque parent source code
+ * 1. Full hierarchy index:
+ *    { normalized, byIdentity, ... }
  *
- * We deliberately do NOT search every entity type for the
- * same sourceCode.
+ * 2. Lightweight unit-test index:
+ *    { normalized }
+ *
+ * Parent resolution always remains typed:
+ *
+ *    EXPECTED_PARENT_TYPE + sourceCode
  */
 function findParent(
   row,
@@ -216,8 +179,54 @@ function findParent(
       row.parentSourceCode
     );
 
+  let byIdentity =
+    index &&
+    index.byIdentity;
+
+  if (
+    !(byIdentity instanceof Map)
+  ) {
+    if (
+      !index ||
+      !Array.isArray(
+        index.normalized
+      )
+    ) {
+      fail(
+        "LGD hierarchy index is invalid"
+      );
+    }
+
+    byIdentity =
+      new Map();
+
+    for (
+      const candidate
+      of index.normalized
+    ) {
+      const identity =
+        buildIdentity(
+          candidate.locationType,
+          candidate.sourceCode
+        );
+
+      if (
+        byIdentity.has(identity)
+      ) {
+        fail(
+          `Duplicate normalized identity: ${identity}`
+        );
+      }
+
+      byIdentity.set(
+        identity,
+        candidate
+      );
+    }
+  }
+
   const parent =
-    index.byIdentity.get(
+    byIdentity.get(
       parentIdentity
     );
 
@@ -232,9 +241,6 @@ function findParent(
   return parent;
 }
 
-/**
- * Validate parent type.
- */
 function assertParentType(
   row,
   parent
@@ -253,9 +259,6 @@ function assertParentType(
     );
   }
 
-  /**
-   * STATE is the root entity.
-   */
   if (
     expected === null
   ) {
@@ -281,9 +284,6 @@ function assertParentType(
     return true;
   }
 
-  /**
-   * Every non-root type requires a parent.
-   */
   if (!parent) {
     fail(
       `Missing parent for ` +
@@ -316,9 +316,6 @@ function assertParentType(
   return true;
 }
 
-/**
- * Verify that every normalized row has a valid hierarchy.
- */
 function validateHierarchy(rows) {
   const index =
     buildHierarchyIndex(
@@ -346,20 +343,6 @@ function validateHierarchy(rows) {
   );
 }
 
-/**
- * Validate that a DISTRICT route uses the same
- * state identity represented by its parent.
- *
- * Example:
- *
- * parent:
- *   canonicalSlug = uttar-pradesh
- *
- * district:
- *   /uttar-pradesh/bareilly/
- *
- * must pass.
- */
 function validateDistrictRouteHierarchy(
   row,
   parent
@@ -410,9 +393,6 @@ function validateDistrictRouteHierarchy(
   return true;
 }
 
-/**
- * Validate every route against its resolved parent.
- */
 function validateRouteHierarchy(
   rows
 ) {
@@ -447,9 +427,6 @@ function validateRouteHierarchy(
   );
 }
 
-/**
- * Deterministic hierarchy report.
- */
 function buildHierarchyReport(
   rows
 ) {
