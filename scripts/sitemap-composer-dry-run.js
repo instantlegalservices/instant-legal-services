@@ -43,24 +43,16 @@ const DEFAULT_SITEMAP_PATH =
     "sitemap.xml"
   );
 
-function sha256(
-  value
-) {
+function sha256(value) {
   return crypto
     .createHash("sha256")
-    .update(
-      value,
-      "utf8"
-    )
+    .update(value, "utf8")
     .digest("hex");
 }
 
-function assertSitemapPath(
-  sitemapPath
-) {
+function assertSitemapPath(sitemapPath) {
   if (
-    typeof sitemapPath !==
-      "string" ||
+    typeof sitemapPath !== "string" ||
     !sitemapPath.trim()
   ) {
     throw new Error(
@@ -69,14 +61,11 @@ function assertSitemapPath(
   }
 
   const resolved =
-    path.resolve(
-      sitemapPath
-    );
+    path.resolve(sitemapPath);
 
   if (
-    path.basename(
-      resolved
-    ) !== "sitemap.xml"
+    path.basename(resolved) !==
+    "sitemap.xml"
   ) {
     throw new Error(
       `sitemapPath must target sitemap.xml: ${resolved}`
@@ -86,26 +75,20 @@ function assertSitemapPath(
   return resolved;
 }
 
-async function assertNotSymlink(
-  filePath
-) {
+async function assertNotSymlink(filePath) {
   const stat =
     await fs.promises.lstat(
       filePath
     );
 
-  if (
-    stat.isSymbolicLink()
-  ) {
+  if (stat.isSymbolicLink()) {
     throw new Error(
       `sitemap.xml must not be a symbolic link: ${filePath}`
     );
   }
 }
 
-async function readSitemap(
-  sitemapPath
-) {
+async function readSitemap(sitemapPath) {
   await assertNotSymlink(
     sitemapPath
   );
@@ -116,9 +99,7 @@ async function readSitemap(
       "utf8"
     );
 
-  if (
-    !xml.trim()
-  ) {
+  if (!xml.trim()) {
     throw new Error(
       "sitemap.xml is empty"
     );
@@ -127,13 +108,10 @@ async function readSitemap(
   return xml;
 }
 
-function buildUrlSet(
-  entries
-) {
+function buildUrlSet(entries) {
   return new Set(
     entries.map(
-      entry =>
-        entry.loc
+      entry => entry.loc
     )
   );
 }
@@ -146,50 +124,32 @@ function calculateInventory(
   redirectRows
 ) {
   const existingEntries =
-    parseSitemap(
-      existingXml
-    );
+    parseSitemap(existingXml);
 
   const composedEntries =
-    parseSitemap(
-      composedXml
-    );
+    parseSitemap(composedXml);
 
   const existingUrls =
-    buildUrlSet(
-      existingEntries
-    );
+    buildUrlSet(existingEntries);
 
   const composedUrls =
-    buildUrlSet(
-      composedEntries
-    );
+    buildUrlSet(composedEntries);
 
   const addedUrls =
-    Array.from(
-      composedUrls
-    )
+    Array.from(composedUrls)
       .filter(
         url =>
-          !existingUrls.has(
-            url
-          )
+          !existingUrls.has(url)
       )
-    )
-    .sort();
+      .sort();
 
   const removedUrls =
-    Array.from(
-      existingUrls
-    )
+    Array.from(existingUrls)
       .filter(
         url =>
-          !composedUrls.has(
-            url
-          )
+          !composedUrls.has(url)
       )
-    )
-    .sort();
+      .sort();
 
   const historicalUrls =
     new Set(
@@ -200,15 +160,12 @@ function calculateInventory(
     );
 
   const historicalStillPresent =
-    Array.from(
-      historicalUrls
-    ).filter(
-      url =>
-        composedUrls.has(
-          url
-        )
-    )
-    .sort();
+    Array.from(historicalUrls)
+      .filter(
+        url =>
+          composedUrls.has(url)
+      )
+      .sort();
 
   const currentUrls =
     new Set(
@@ -219,16 +176,12 @@ function calculateInventory(
     );
 
   const currentMissing =
-    Array.from(
-      currentUrls
-    )
+    Array.from(currentUrls)
       .filter(
         url =>
-          !composedUrls.has(
-            url
-          )
+          !composedUrls.has(url)
       )
-    .sort();
+      .sort();
 
   return {
     existingCount:
@@ -278,7 +231,7 @@ async function auditComposedSitemap(
   const sitemapPath =
     assertSitemapPath(
       options.sitemapPath ||
-        DEFAULT_SITEMAP_PATH
+      DEFAULT_SITEMAP_PATH
     );
 
   const loadFeedsFn =
@@ -303,9 +256,7 @@ async function auditComposedSitemap(
     );
 
   const originalSha256 =
-    sha256(
-      existingXml
-    );
+    sha256(existingXml);
 
   const originalBytes =
     getUtf8ByteLength(
@@ -315,7 +266,8 @@ async function auditComposedSitemap(
   /*
    * Load Registry data.
    *
-   * Registry loader itself performs validation.
+   * Registry loader itself performs
+   * feed validation.
    */
   const feeds =
     await loadFeedsFn();
@@ -362,8 +314,7 @@ async function auditComposedSitemap(
 
   if (
     !result ||
-    typeof result !==
-      "object"
+    typeof result !== "object"
   ) {
     throw new Error(
       "Composer returned an invalid result"
@@ -391,9 +342,7 @@ async function auditComposedSitemap(
   );
 
   const composedSha256 =
-    sha256(
-      composedXml
-    );
+    sha256(composedXml);
 
   const composedBytes =
     getUtf8ByteLength(
@@ -412,10 +361,9 @@ async function auditComposedSitemap(
   /*
    * CRITICAL SAFETY CHECK:
    *
-   * Re-read sitemap.xml AFTER the entire audit.
-   *
-   * The dry-run must leave it byte-for-byte
-   * unchanged.
+   * Re-read sitemap.xml AFTER the complete
+   * audit. The dry-run must leave it
+   * byte-for-byte unchanged.
    */
   const afterXml =
     await readSitemap(
@@ -423,9 +371,7 @@ async function auditComposedSitemap(
     );
 
   const afterSha256 =
-    sha256(
-      afterXml
-    );
+    sha256(afterXml);
 
   if (
     afterXml !==
@@ -446,7 +392,8 @@ async function auditComposedSitemap(
   }
 
   /*
-   * Historical routes must NEVER survive.
+   * Historical routes must NEVER survive
+   * in the prospective sitemap.
    */
   if (
     inventory.historicalStillPresent
@@ -458,7 +405,8 @@ async function auditComposedSitemap(
   }
 
   /*
-   * Every current Registry route must exist.
+   * Every current Registry route must exist
+   * in the prospective sitemap.
    */
   if (
     inventory.currentMissing
