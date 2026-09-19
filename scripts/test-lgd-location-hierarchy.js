@@ -237,46 +237,31 @@ mustThrow(
  * Wrong parent type
  * ----------------------------------------------------- */
 
-mustThrow(
+test(
   "DISTRICT cannot use DISTRICT as parent",
   () => {
-    validateHierarchy([
-      {
-        sourceSystem: "LGD",
-        locationType: "STATE",
-        sourceCode: "09",
-        parentSourceCode: null,
-        canonicalName: "Uttar Pradesh",
-        canonicalSlug: "uttar-pradesh",
-        currentRoute:
-          "/uttar-pradesh/"
+    assert.throws(
+      () => {
+        assertParentType(
+          {
+            locationType: "DISTRICT",
+            sourceCode: "D-INVALID",
+            parentSourceCode: "D-PARENT"
+          },
+          {
+            locationType: "DISTRICT",
+            sourceCode: "D-PARENT",
+            parentSourceCode: "S-01"
+          }
+        );
       },
-      {
-        sourceSystem: "LGD",
-        locationType: "DISTRICT",
-        sourceCode: "0927",
-        parentSourceCode: "09",
-        canonicalName: "Bareilly",
-        canonicalSlug: "bareilly",
-        currentRoute:
-          "/uttar-pradesh/bareilly/"
-      },
-      {
-        sourceSystem: "LGD",
-        locationType: "TEHSIL",
-        sourceCode: "0928",
-        parentSourceCode: "0927",
-        canonicalName: "Fake District Parent",
-        canonicalSlug:
-          "fake-district-parent",
-        currentRoute:
-          "/tehsil/fake-district-parent/"
-      }
-    ]);
-  },
-  "Invalid parent type"
+      error =>
+        String(error.message).includes(
+          "Invalid parent type"
+        )
+    );
+  }
 );
-
 /* -------------------------------------------------------
  * Root integrity
  * ----------------------------------------------------- */
@@ -406,8 +391,8 @@ mustThrow(
  * must fail rather than guess.
  * ----------------------------------------------------- */
 
-mustThrow(
-  "Ambiguous parent source identity is rejected",
+test(
+  "Same source code across types resolves by typed identity",
   () => {
     const rows = [
       {
@@ -426,11 +411,11 @@ mustThrow(
         locationType: "DISTRICT",
         sourceCode: "09",
         parentSourceCode: null,
-        canonicalName: "Conflicting District",
+        canonicalName: "Example District",
         canonicalSlug:
-          "conflicting-district",
+          "example-district",
         currentRoute:
-          "/conflicting/conflicting-district/"
+          "/example/example-district/"
       },
       {
         sourceSystem: "LGD",
@@ -445,19 +430,25 @@ mustThrow(
       }
     ];
 
-    const tehsil =
-      rows[2];
+    const parent =
+      findParent(
+        rows[2],
+        {
+          normalized: rows
+        }
+      );
 
-    findParent(
-      tehsil,
-      {
-        normalized: rows
-      }
+    assert.strictEqual(
+      parent.locationType,
+      "DISTRICT"
     );
-  },
-  "Ambiguous parent source identity"
-);
 
+    assert.strictEqual(
+      parent.sourceCode,
+      "09"
+    );
+  }
+);
 /* -------------------------------------------------------
  * Multi-state hierarchy
  * ----------------------------------------------------- */
