@@ -10,10 +10,6 @@ const {
   auditComposedSitemap
 } = require("./sitemap-composer-dry-run");
 
-const {
-  validateComposedSitemap
-} = require("./sitemap-composer");
-
 let pass = 0;
 let fail = 0;
 
@@ -42,9 +38,15 @@ async function asyncTest(name, fn) {
 }
 
 async function expectAsyncThrow(name, fn) {
-  await asyncTest(name, async () => {
+  try {
     await assert.rejects(fn);
-  });
+    pass++;
+    console.log(`PASS: ${name}`);
+  } catch (error) {
+    fail++;
+    console.error(`FAIL: ${name}`);
+    console.error(`      ${error.message}`);
+  }
 }
 
 function makeTempDirectory() {
@@ -128,10 +130,14 @@ function existingSitemap() {
 }
 
 async function main() {
+  /*
+   * 1. SHA-256 determinism
+   */
   test(
     "SHA-256 is deterministic",
     () => {
-      const value = "ILS sitemap dry run";
+      const value =
+        "ILS sitemap dry run";
 
       assert.strictEqual(
         sha256(value),
@@ -145,6 +151,13 @@ async function main() {
     }
   );
 
+  /*
+   * 2. Valid dry-run
+   *
+   * Most important safety test:
+   * source sitemap must remain byte-for-byte
+   * unchanged.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -249,6 +262,9 @@ async function main() {
     }
   }
 
+  /*
+   * 3. Registry outage must fail closed.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -308,6 +324,9 @@ async function main() {
     }
   }
 
+  /*
+   * 4. Malformed existing sitemap must fail closed.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -368,6 +387,9 @@ BROKEN
     }
   }
 
+  /*
+   * 5. Invalid Registry feed must fail closed.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -427,6 +449,9 @@ BROKEN
     }
   }
 
+  /*
+   * 6. Historical/current collision must fail.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -484,6 +509,10 @@ BROKEN
     }
   }
 
+  /*
+   * 7. Current Registry routes must actually
+   * appear in the prospective sitemap.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -501,50 +530,51 @@ BROKEN
         "utf8"
       );
 
-      await expectAsyncThrow(
-        "Missing current route is detected",
+      await asyncTest(
+        "Current Registry routes are present",
         async () => {
-          await auditComposedSitemap({
-            sitemapPath,
+          const result =
+            await auditComposedSitemap({
+              sitemapPath,
 
-            loadFeedsFn:
-              async () => ({
-                currentRows: [
-                  {
-                    id: ID_1,
-                    location_type:
-                      "DISTRICT",
-                    canonical_name:
-                      "Bareilly",
-                    canonical_slug:
-                      "bareilly",
-                    current_route:
-                      "/bareilly/"
-                  }
-                ],
-                redirectRows: []
-              })
-          });
+              loadFeedsFn:
+                async () => ({
+                  currentRows: [
+                    {
+                      id: ID_1,
+                      location_type:
+                        "DISTRICT",
+                      canonical_name:
+                        "Bareilly",
+                      canonical_slug:
+                        "bareilly",
+                      current_route:
+                        "/bareilly/"
+                    }
+                  ],
+                  redirectRows: []
+                })
+            });
+
+          assert.strictEqual(
+            result.inventory.currentMissing.length,
+            0
+          );
+
+          assert.strictEqual(
+            result.inventory.currentRoutesConfigured,
+            1
+          );
         }
       );
-
-      /*
-       * The above data actually contains the
-       * current route, therefore the auditor should
-       * pass rather than falsely report it missing.
-       *
-       * This assertion ensures the test does not
-       * accidentally encode a false expectation.
-       */
-    } catch {
-      /*
-       * Cleanup remains mandatory.
-       */
     } finally {
       cleanup(directory);
     }
   }
 
+  /*
+   * 8. Prospective sitemap independently validates.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -585,6 +615,9 @@ BROKEN
     }
   }
 
+  /*
+   * 9. Repeated dry-run must be deterministic.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -629,11 +662,19 @@ BROKEN
         first.inventory,
         second.inventory
       );
+
+      assert.strictEqual(
+        first.originalSha256,
+        second.originalSha256
+      );
     } finally {
       cleanup(directory);
     }
   }
 
+  /*
+   * 10. Dry-run must not create temp files.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -669,7 +710,9 @@ BROKEN
 
           assert.deepStrictEqual(
             files,
-            ["sitemap.xml"]
+            [
+              "sitemap.xml"
+            ]
           );
         }
       );
@@ -678,6 +721,10 @@ BROKEN
     }
   }
 
+  /*
+   * 11. Dry-run must not import or invoke
+   * the production writer.
+   */
   {
     const source =
       fs.readFileSync(
@@ -706,6 +753,9 @@ BROKEN
     );
   }
 
+  /*
+   * 12. File metadata/content must remain unchanged.
+   */
   {
     const directory =
       makeTempDirectory();
@@ -768,6 +818,294 @@ BROKEN
     }
   }
 
+  /*
+   * 13. Missing sitemap must fail.
+   */
+  {
+    const directory =
+      makeTempDirectory();
+
+    try {
+      const sitemapPath =
+        path.join(
+          directory,
+          "sitemap.xml"
+        );
+
+      await expectAsyncThrow(
+        "Missing sitemap fails safely",
+        async () => {
+          await auditComposedSitemap({
+            sitemapPath,
+
+            loadFeedsFn:
+              async () =>
+                feeds()
+          });
+        }
+      );
+
+      assert.strictEqual(
+        fs.existsSync(
+          sitemapPath
+        ),
+        false
+      );
+    } finally {
+      cleanup(directory);
+    }
+  }
+
+  /*
+   * 14. Wrong sitemap filename must fail.
+   */
+  {
+    const directory =
+      makeTempDirectory();
+
+    try {
+      const wrongPath =
+        path.join(
+          directory,
+          "wrong.xml"
+        );
+
+      await expectAsyncThrow(
+        "Wrong sitemap path is rejected",
+        async () => {
+          await auditComposedSitemap({
+            sitemapPath:
+              wrongPath,
+
+            loadFeedsFn:
+              async () =>
+                feeds()
+          });
+        }
+      );
+    } finally {
+      cleanup(directory);
+    }
+  }
+
+  /*
+   * 15. Symlink sitemap must be rejected.
+   */
+  {
+    const directory =
+      makeTempDirectory();
+
+    try {
+      const realPath =
+        path.join(
+          directory,
+          "real-sitemap.xml"
+        );
+
+      const sitemapPath =
+        path.join(
+          directory,
+          "sitemap.xml"
+        );
+
+      fs.writeFileSync(
+        realPath,
+        existingSitemap(),
+        "utf8"
+      );
+
+      fs.symlinkSync(
+        realPath,
+        sitemapPath
+      );
+
+      await expectAsyncThrow(
+        "Symlink sitemap is rejected",
+        async () => {
+          await auditComposedSitemap({
+            sitemapPath,
+
+            loadFeedsFn:
+              async () =>
+                feeds()
+          });
+        }
+      );
+    } finally {
+      cleanup(directory);
+    }
+  }
+
+  /*
+   * 16. Feed object shape must be enforced.
+   */
+  {
+    const directory =
+      makeTempDirectory();
+
+    try {
+      const sitemapPath =
+        path.join(
+          directory,
+          "sitemap.xml"
+        );
+
+      fs.writeFileSync(
+        sitemapPath,
+        existingSitemap(),
+        "utf8"
+      );
+
+      await expectAsyncThrow(
+        "Invalid Registry loader result fails",
+        async () => {
+          await auditComposedSitemap({
+            sitemapPath,
+
+            loadFeedsFn:
+              async () => ({
+                currentRows:
+                  []
+              })
+          });
+        }
+      );
+
+      assert.strictEqual(
+        fs.readFileSync(
+          sitemapPath,
+          "utf8"
+        ),
+        existingSitemap()
+      );
+    } finally {
+      cleanup(directory);
+    }
+  }
+
+  /*
+   * 17. Empty valid Registry feed is allowed.
+   */
+  {
+    const directory =
+      makeTempDirectory();
+
+    try {
+      const sitemapPath =
+        path.join(
+          directory,
+          "sitemap.xml"
+        );
+
+      const original =
+        existingSitemap();
+
+      fs.writeFileSync(
+        sitemapPath,
+        original,
+        "utf8"
+      );
+
+      await asyncTest(
+        "Empty Registry feed is handled safely",
+        async () => {
+          const result =
+            await auditComposedSitemap({
+              sitemapPath,
+
+              loadFeedsFn:
+                async () => ({
+                  currentRows: [],
+                  redirectRows: []
+                })
+            });
+
+          assert.strictEqual(
+            result.status,
+            "PASS"
+          );
+
+          assert.strictEqual(
+            result.inventory.currentRoutesConfigured,
+            0
+          );
+
+          assert.strictEqual(
+            result.inventory.historicalRoutesConfigured,
+            0
+          );
+
+          assert.strictEqual(
+            result.sourceUnchanged,
+            true
+          );
+        }
+      );
+    } finally {
+      cleanup(directory);
+    }
+  }
+
+  /*
+   * 18. Source sitemap must remain unchanged
+   * even when composition result differs.
+   */
+  {
+    const directory =
+      makeTempDirectory();
+
+    try {
+      const sitemapPath =
+        path.join(
+          directory,
+          "sitemap.xml"
+        );
+
+      const original =
+        existingSitemap();
+
+      fs.writeFileSync(
+        sitemapPath,
+        original,
+        "utf8"
+      );
+
+      const before =
+        fs.readFileSync(
+          sitemapPath
+        );
+
+      const result =
+        await auditComposedSitemap({
+          sitemapPath,
+
+          loadFeedsFn:
+            async () =>
+              feeds()
+        });
+
+      const after =
+        fs.readFileSync(
+          sitemapPath
+        );
+
+      assert.notStrictEqual(
+        result.originalSha256,
+        result.composedSha256
+      );
+
+      assert.deepStrictEqual(
+        after,
+        before
+      );
+    } finally {
+      cleanup(directory);
+    }
+  }
+
+  /*
+   * Final summary
+   */
   console.log("");
   console.log(
     "========================================"
