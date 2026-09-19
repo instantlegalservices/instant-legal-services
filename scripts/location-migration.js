@@ -394,105 +394,161 @@ function assertRouteMatchesLocationType(
       field
     );
 
-  const typedNamespaces = [
-    TYPED_PREFIXES.TEHSIL,
-    TYPED_PREFIXES.LOCAL_BODY,
-    TYPED_PREFIXES.AUTHORITY
-  ];
+  const segments =
+    safeRoute
+      .split("/")
+      .filter(
+        segment => segment.length > 0
+      );
 
   /*
-   * TEHSIL must use the tehsil namespace.
+   * Every route segment must be a canonical
+   * lowercase slug.
    */
-  if (
-    type === "TEHSIL" &&
-    !safeRoute.startsWith(
-      TYPED_PREFIXES.TEHSIL
-    )
+  for (
+    const segment
+    of segments
   ) {
-    fail(
-      `${field} is incompatible with TEHSIL locationType: ${safeRoute}`
+    assertLowercaseSlug(
+      segment,
+      `${field} segment`
     );
   }
 
   /*
-   * LOCAL_BODY must use the local-body namespace.
+   * TEHSIL:
+   * /tehsil/{tehsil}/
    */
   if (
-    type === "LOCAL_BODY" &&
-    !safeRoute.startsWith(
-      TYPED_PREFIXES.LOCAL_BODY
-    )
+    type === "TEHSIL"
   ) {
-    fail(
-      `${field} is incompatible with LOCAL_BODY locationType: ${safeRoute}`
-    );
+    if (
+      segments.length !== 2 ||
+      segments[0] !== "tehsil"
+    ) {
+      fail(
+        `${field} has invalid TEHSIL route structure: ${safeRoute}`
+      );
+    }
+
+    return safeRoute;
   }
 
   /*
-   * AUTHORITY must use the authority namespace.
+   * LOCAL_BODY:
+   * /local-body/{local-body}/
    */
   if (
-    type === "AUTHORITY" &&
-    !safeRoute.startsWith(
-      TYPED_PREFIXES.AUTHORITY
-    )
+    type === "LOCAL_BODY"
   ) {
-    fail(
-      `${field} is incompatible with AUTHORITY locationType: ${safeRoute}`
-    );
+    if (
+      segments.length !== 2 ||
+      segments[0] !== "local-body"
+    ) {
+      fail(
+        `${field} has invalid LOCAL_BODY route structure: ${safeRoute}`
+      );
+    }
+
+    return safeRoute;
   }
 
   /*
-   * DISTRICT must not use a typed namespace reserved
-   * for another location type.
-   *
-   * Valid district routes remain hierarchical, e.g.
-   * /uttar-pradesh/bareilly/
+   * AUTHORITY:
+   * /authority/{authority}/
+   */
+  if (
+    type === "AUTHORITY"
+  ) {
+    if (
+      segments.length !== 2 ||
+      segments[0] !== "authority"
+    ) {
+      fail(
+        `${field} has invalid AUTHORITY route structure: ${safeRoute}`
+      );
+    }
+
+    return safeRoute;
+  }
+
+  /*
+   * DISTRICT:
+   * /{state}/{district}/
    */
   if (
     type === "DISTRICT"
   ) {
-    for (
-      const namespace
-      of typedNamespaces
+    if (
+      segments.length !== 2
     ) {
-      if (
-        safeRoute.startsWith(
-          namespace
-        )
-      ) {
-        fail(
-          `${field} is incompatible with DISTRICT locationType: ${safeRoute}`
-        );
-      }
+      fail(
+        `${field} has invalid DISTRICT route structure: ${safeRoute}`
+      );
     }
+
+    if (
+      segments[0] === "tehsil" ||
+      segments[0] === "local-body" ||
+      segments[0] === "authority"
+    ) {
+      fail(
+        `${field} uses a reserved typed namespace for DISTRICT: ${safeRoute}`
+      );
+    }
+
+    return safeRoute;
   }
 
   /*
-   * COURT routes are hierarchical and must not use
-   * namespaces reserved for TEHSIL / LOCAL_BODY /
-   * AUTHORITY.
+   * COURT:
+   * /{state}/{district}/{court}/
    */
   if (
     type === "COURT"
   ) {
-    for (
-      const namespace
-      of typedNamespaces
+    if (
+      segments.length !== 3
     ) {
-      if (
-        safeRoute.startsWith(
-          namespace
-        )
-      ) {
-        fail(
-          `${field} is incompatible with COURT locationType: ${safeRoute}`
-        );
-      }
+      fail(
+        `${field} has invalid COURT route structure: ${safeRoute}`
+      );
     }
+
+    if (
+      segments[0] === "tehsil" ||
+      segments[0] === "local-body" ||
+      segments[0] === "authority"
+    ) {
+      fail(
+        `${field} uses a reserved typed namespace for COURT: ${safeRoute}`
+      );
+    }
+
+    return safeRoute;
   }
 
-  return safeRoute;
+  /*
+   * STATE:
+   * /{state}/
+   */
+  if (
+    type === "STATE"
+  ) {
+    if (
+      segments.length !== 1
+    ) {
+      fail(
+        `${field} has invalid STATE route structure: ${safeRoute}`
+      );
+    }
+
+    return safeRoute;
+  }
+
+  fail(
+    `Unsupported locationType route structure: ${type}`
+  );
 }
 /**
  * ---------- CANONICAL VALIDATION ----------
