@@ -22,8 +22,6 @@
 
 const {
   ALLOWED_TYPES,
-  assertSourceCode,
-  assertSlug,
   validateNormalizedLgdRows
 } = require("./lgd-location-ingestion");
 
@@ -39,133 +37,6 @@ function assertRows(rows) {
   }
 
   return rows;
-}
-
-/**
- * Build stable identity indexes.
- *
- * Identity:
- *   locationType + sourceCode
- *
- * Parent identity:
- *   parentSourceCode
- *
- * The parent source code is intentionally opaque.
- * We only resolve it against the normalized snapshot.
- */
-function buildHierarchyIndex(rows) {
-  const normalized =
-    validateNormalizedLgdRows(
-      assertRows(rows)
-    );
-
-  const byIdentity =
-    new Map();
-
-  const childrenByParent =
-    new Map();
-
-  for (const row of normalized) {
-    const identity =
-      `${row.locationType}:${row.sourceCode}`;
-
-    if (
-      byIdentity.has(identity)
-    ) {
-      fail(
-        `Duplicate normalized identity: ${identity}`
-      );
-    }
-
-    byIdentity.set(
-      identity,
-      row
-    );
-
-    if (
-      row.parentSourceCode !== null
-    ) {
-      const key =
-        row.parentSourceCode;
-
-      if (
-        !childrenByParent.has(key)
-      ) {
-        childrenByParent.set(
-          key,
-          []
-        );
-      }
-
-      childrenByParent
-        .get(key)
-        .push(row);
-    }
-  }
-
-  return {
-    normalized,
-    byIdentity,
-    childrenByParent
-  };
-}
-
-/**
- * Find a source-code parent.
- *
- * LGD source codes are intentionally treated as opaque,
- * therefore the relationship is resolved only within
- * the supplied snapshot.
- *
- * Parent type is validated separately.
- */
-function findParent(
-  row,
-  index
-) {
-  if (
-    row.parentSourceCode === null
-  ) {
-    return null;
-  }
-
-  const candidates = [];
-
-  for (
-    const candidate
-    of index.normalized
-  ) {
-    if (
-      candidate.sourceCode ===
-      row.parentSourceCode
-    ) {
-      candidates.push(
-        candidate
-      );
-    }
-  }
-
-  if (
-    candidates.length === 0
-  ) {
-    fail(
-      `Missing parent source identity for ` +
-      `${row.locationType}:${row.sourceCode}: ` +
-      `${row.parentSourceCode}`
-    );
-  }
-
-  if (
-    candidates.length > 1
-  ) {
-    fail(
-      `Ambiguous parent source identity for ` +
-      `${row.locationType}:${row.sourceCode}: ` +
-      `${row.parentSourceCode}`
-    );
-  }
-
-  return candidates[0];
 }
 
 /**
@@ -201,6 +72,169 @@ const EXPECTED_PARENT_TYPES =
     AUTHORITY: "DISTRICT"
   });
 
+/**
+ * Build a typed source identity.
+ *
+ * Source identity is intentionally:
+ *
+ *   LOCATION_TYPE + SOURCE_CODE
+ *
+ * This prevents collisions when two entity types happen
+ * to expose the same opaque source code.
+ */
+function buildIdentity(
+  locationType,
+  sourceCode
+) {
+  return `${locationType}:${sourceCode}`;
+}
+
+/**
+ * Build stable hierarchy indexes.
+ *
+ * The normalized sourceCode remains opaque.
+ * We never reinterpret or transform it.
+ */
+function buildHierarchyIndex(rows) {
+  const normalized =
+    validateNormalizedLgdRows(
+      assertRows(rows)
+    );
+
+  const byIdentity =
+    new Map();
+
+  const childrenByParent =
+    new Map();
+
+  for (const row of normalized) {
+    const identity =
+      buildIdentity(
+        row.locationType,
+        row.sourceCode
+      );
+
+    if (
+      byIdentity.has(identity)
+    ) {
+      fail(
+        `Duplicate normalized identity: ${identity}`
+      );
+    }
+
+    byIdentity.set(
+      identity,
+      row
+    );
+
+    if (
+      row.parentSourceCode !== null
+    ) {
+      const expectedParentType =
+        EXPECTED_PARENT_TYPES[
+          row.locationType
+        ];
+
+      if (
+        expectedParentType === null ||
+        expectedParentType === undefined
+      ) {
+        fail(
+          `Invalid parent configuration for ` +
+          `${row.locationType}:${row.sourceCode}`
+        );
+      }
+
+      const parentIdentity =
+        buildIdentity(
+          expectedParentType,
+          row.parentSourceCode
+        );
+
+      if (
+        !childrenByParent.has(
+          parentIdentity
+        )
+      ) {
+        childrenByParent.set(
+          parentIdentity,
+          []
+        );
+      }
+
+      childrenByParent
+        .get(parentIdentity)
+        .push(row);
+    }
+  }
+
+  return {
+    normalized,
+    byIdentity,
+    childrenByParent
+  };
+}
+
+/**
+ * Resolve a row's parent using:
+ *
+ *   expected parent type
+ *   +
+ *   opaque parent source code
+ *
+ * We deliberately do NOT search every entity type for the
+ * same sourceCode.
+ */
+function findParent(
+  row,
+  index
+) {
+  if (
+    row.parentSourceCode === null
+  ) {
+    return null;
+  }
+
+  const expectedParentType =
+    EXPECTED_PARENT_TYPES[
+      row.locationType
+    ];
+
+  if (
+    expectedParentType === null ||
+    expectedParentType === undefined
+  ) {
+    fail(
+      `Invalid parent configuration for ` +
+      `${row.locationType}:${row.sourceCode}`
+    );
+  }
+
+  const parentIdentity =
+    buildIdentity(
+      expectedParentType,
+      row.parentSourceCode
+    );
+
+  const parent =
+    index.byIdentity.get(
+      parentIdentity
+    );
+
+  if (!parent) {
+    fail(
+      `Missing parent source identity for ` +
+      `${row.locationType}:${row.sourceCode}: ` +
+      `${parentIdentity}`
+    );
+  }
+
+  return parent;
+}
+
+/**
+ * Validate parent type.
+ */
 function assertParentType(
   row,
   parent
@@ -210,6 +244,18 @@ function assertParentType(
       row.locationType
     ];
 
+  if (
+    expected === undefined
+  ) {
+    fail(
+      `Unsupported hierarchy location type: ` +
+      `${row.locationType}`
+    );
+  }
+
+  /**
+   * STATE is the root entity.
+   */
   if (
     expected === null
   ) {
@@ -222,12 +268,26 @@ function assertParentType(
       );
     }
 
+    if (
+      parent !== null &&
+      parent !== undefined
+    ) {
+      fail(
+        `STATE cannot have a parent entity: ` +
+        `${row.sourceCode}`
+      );
+    }
+
     return true;
   }
 
+  /**
+   * Every non-root type requires a parent.
+   */
   if (!parent) {
     fail(
-      `Missing parent for ${row.locationType}:${row.sourceCode}`
+      `Missing parent for ` +
+      `${row.locationType}:${row.sourceCode}`
     );
   }
 
@@ -239,6 +299,17 @@ function assertParentType(
       `Invalid parent type for ` +
       `${row.locationType}:${row.sourceCode}: ` +
       `expected ${expected}, got ${parent.locationType}`
+    );
+  }
+
+  if (
+    parent.sourceCode !==
+    row.parentSourceCode
+  ) {
+    fail(
+      `Parent source identity mismatch for ` +
+      `${row.locationType}:${row.sourceCode}: ` +
+      `expected ${row.parentSourceCode}, got ${parent.sourceCode}`
     );
   }
 
@@ -306,7 +377,20 @@ function validateDistrictRouteHierarchy(
     "STATE"
   ) {
     fail(
-      `DISTRICT requires STATE parent: ${row.sourceCode}`
+      `DISTRICT requires STATE parent: ` +
+      `${row.sourceCode}`
+    );
+  }
+
+  if (
+    parent.canonicalSlug ===
+    undefined ||
+    row.canonicalSlug ===
+    undefined
+  ) {
+    fail(
+      `DISTRICT route validation requires canonical slugs: ` +
+      `${row.sourceCode}`
     );
   }
 
@@ -409,6 +493,7 @@ function buildHierarchyReport(
 
 module.exports = {
   EXPECTED_PARENT_TYPES,
+  buildIdentity,
   buildHierarchyIndex,
   findParent,
   assertParentType,
