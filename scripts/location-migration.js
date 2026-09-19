@@ -979,7 +979,8 @@ function buildManifestIndex(
  */
 
 function normalizeMigrationItem(
-  raw
+  raw,
+  options = {}
 ) {
   assertObject(
     raw,
@@ -997,8 +998,7 @@ function normalizeMigrationItem(
     );
 
  const newRoute =
-  assertRouteMatchesLocationType(
-    locationType,
+  assertRoute(
     raw.newRoute,
     "newRoute"
   );
