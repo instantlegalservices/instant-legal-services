@@ -225,7 +225,7 @@ function assertRoute(value, field = "route") {
       value,
       field
     );
-  
+
   if (
     !route.startsWith("/")
   ) {
@@ -371,11 +371,11 @@ function assertRoute(value, field = "route") {
 /**
  * ---------- LOCATION TYPE ↔ ROUTE VALIDATION ----------
  *
- * Validates the namespace of a NEW migration route
- * against the declared locationType.
+ * Validates the namespace and structure of a NEW
+ * migration route against the declared locationType.
  *
  * Legacy/current routes are not reinterpreted here.
- * This validation applies to migration target routes.
+ * Explicit no-op migrations are handled separately.
  */
 
 function assertRouteMatchesLocationType(
@@ -402,8 +402,8 @@ function assertRouteMatchesLocationType(
       );
 
   /*
-   * Every route segment must be a canonical
-   * lowercase slug.
+   * Every new migration route segment must be
+   * a canonical lowercase slug.
    */
   for (
     const segment
@@ -417,6 +417,7 @@ function assertRouteMatchesLocationType(
 
   /*
    * TEHSIL:
+   *
    * /tehsil/{tehsil}/
    */
   if (
@@ -436,6 +437,7 @@ function assertRouteMatchesLocationType(
 
   /*
    * LOCAL_BODY:
+   *
    * /local-body/{local-body}/
    */
   if (
@@ -455,6 +457,7 @@ function assertRouteMatchesLocationType(
 
   /*
    * AUTHORITY:
+   *
    * /authority/{authority}/
    */
   if (
@@ -474,6 +477,7 @@ function assertRouteMatchesLocationType(
 
   /*
    * DISTRICT:
+   *
    * /{state}/{district}/
    */
   if (
@@ -502,6 +506,7 @@ function assertRouteMatchesLocationType(
 
   /*
    * COURT:
+   *
    * /{state}/{district}/{court}/
    */
   if (
@@ -530,6 +535,7 @@ function assertRouteMatchesLocationType(
 
   /*
    * STATE:
+   *
    * /{state}/
    */
   if (
@@ -550,6 +556,7 @@ function assertRouteMatchesLocationType(
     `Unsupported locationType route structure: ${type}`
   );
 }
+
 /**
  * ---------- CANONICAL VALIDATION ----------
  */
@@ -642,14 +649,6 @@ function normalizePreviousRoutes(
 
 /**
  * ---------- CONTENT HASH ----------
- *
- * The hash intentionally excludes:
- * - generatedAt
- * - migration timestamp
- * - runtime environment
- *
- * Therefore the same logical page produces
- * the same hash.
  */
 
 function calculateContentHash(
@@ -743,20 +742,20 @@ function normalizeManifestEntry(
     );
 
   const status =
-  raw.status === undefined
-    ? ACTIVE_STATUS
-    : assertNonEmptyString(
-        raw.status,
-        "status"
-      );
+    raw.status === undefined
+      ? ACTIVE_STATUS
+      : assertNonEmptyString(
+          raw.status,
+          "status"
+        );
 
-if (
-  status !== ACTIVE_STATUS
-) {
-  fail(
-    `Unsupported manifest status: ${status}`
-  );
-}
+  if (
+    status !== ACTIVE_STATUS
+  ) {
+    fail(
+      `Unsupported manifest status: ${status}`
+    );
+  }
 
   const generatorVersion =
     raw.generatorVersion === undefined
@@ -766,14 +765,8 @@ if (
           "generatorVersion"
         );
 
-    /*
+  /*
    * Content-hash integrity is strict.
-   *
-   * We ALWAYS calculate the expected hash from the
-   * canonical manifest payload.
-   *
-   * If a contentHash was supplied by the caller,
-   * it MUST exactly match the calculated value.
    */
   const calculatedContentHash =
     calculateContentHash({
@@ -814,6 +807,7 @@ if (
 
   const contentHash =
     calculatedContentHash;
+
   return {
     sourceId,
     locationType,
@@ -963,19 +957,6 @@ function buildManifestIndex(
 
 /**
  * ---------- MIGRATION INPUT ----------
- *
- * Each migration item MUST identify the stable sourceId.
- *
- * Example:
- *
- * {
- *   sourceId: "location-uuid",
- *   locationType: "DISTRICT",
- *   newRoute: "/uttar-pradesh/bareilly/",
- *   canonical: "/uttar-pradesh/bareilly/"
- * }
- *
- * No route is inferred automatically.
  */
 
 function normalizeMigrationItem(
@@ -997,11 +978,25 @@ function normalizeMigrationItem(
       raw.locationType
     );
 
- const newRoute =
-  assertRoute(
-    raw.newRoute,
-    "newRoute"
-  );
+  /*
+   * Explicit no-op migrations may preserve a legacy
+   * current route. Genuine route changes MUST pass
+   * the strict location-type route validator.
+   */
+  const allowLegacyCurrentRoute =
+    options.allowLegacyCurrentRoute === true;
+
+  const newRoute =
+    allowLegacyCurrentRoute
+      ? assertRoute(
+          raw.newRoute,
+          "newRoute"
+        )
+      : assertRouteMatchesLocationType(
+          locationType,
+          raw.newRoute,
+          "newRoute"
+        );
 
   const canonical =
     raw.canonical === undefined
@@ -1069,23 +1064,24 @@ function migrateLocations(
   options = {}
 ) {
   assertObject(
-  options,
-  "options"
-);
-
-const hasGeneratorVersion =
-  Object.prototype.hasOwnProperty.call(
     options,
-    "generatorVersion"
+    "options"
   );
 
-const generatorVersion =
-  hasGeneratorVersion
-    ? assertNonEmptyString(
-        options.generatorVersion,
-        "options.generatorVersion"
-      )
-    : "location-migration-v1";
+  const hasGeneratorVersion =
+    Object.prototype.hasOwnProperty.call(
+      options,
+      "generatorVersion"
+    );
+
+  const generatorVersion =
+    hasGeneratorVersion
+      ? assertNonEmptyString(
+          options.generatorVersion,
+          "options.generatorVersion"
+        )
+      : "location-migration-v1";
+
   const currentEntries =
     assertArray(
       currentManifest,
@@ -1112,10 +1108,43 @@ const generatorVersion =
   /*
    * Normalize every migration item before
    * modifying any state.
+   *
+   * Important compatibility rule:
+   * an explicit no-op against an existing legacy
+   * current route is allowed to pass ordinary route
+   * validation. A genuine route change is always
+   * subjected to strict location-type validation.
    */
   const migrations =
     requestedMigrations.map(
-      normalizeMigrationItem
+      rawMigration => {
+        let allowLegacyCurrentRoute = false;
+
+        if (
+          rawMigration &&
+          typeof rawMigration === "object" &&
+          !Array.isArray(rawMigration)
+        ) {
+          const existing =
+            currentIndex.bySourceId.get(
+              rawMigration.sourceId
+            );
+
+          allowLegacyCurrentRoute =
+            Boolean(
+              existing &&
+              rawMigration.newRoute ===
+                existing.route
+            );
+        }
+
+        return normalizeMigrationItem(
+          rawMigration,
+          {
+            allowLegacyCurrentRoute
+          }
+        );
+      }
     );
 
   /*
@@ -1416,9 +1445,6 @@ const generatorVersion =
 
   /*
    * Validate the COMPLETE resulting manifest.
-   *
-   * This catches collisions introduced by
-   * the migration itself.
    */
   const finalIndex =
     buildManifestIndex(
@@ -1500,8 +1526,6 @@ const generatorVersion =
   /*
    * Sitemap candidates:
    * ONLY current routes.
-   *
-   * previousRoutes are deliberately excluded.
    */
   const sitemapRoutes =
     finalEntries
@@ -1560,9 +1584,6 @@ const generatorVersion =
 
   /*
    * Approximate generated XML size.
-   *
-   * We don't generate sitemap.xml here.
-   * We only provide a safety check for route volume.
    */
   const estimatedSitemapXml =
     [
@@ -1592,9 +1613,6 @@ const generatorVersion =
 
   /*
    * Exact rollback snapshot.
-   *
-   * JSON serialization is deterministic because
-   * finalEntries are already sorted and normalized.
    */
   const rollbackManifest =
     JSON.parse(
@@ -1705,9 +1723,6 @@ function rollbackMigration(
     );
   }
 
-  /*
-   * Validate the rollback state before returning it.
-   */
   buildManifestIndex(
     normalized,
     "rollbackManifest"
@@ -1771,9 +1786,6 @@ function serializeManifest(
           )
       );
 
-  /*
-   * Validate before serialization.
-   */
   buildManifestIndex(
     normalized,
     "serializedManifest"
@@ -1788,11 +1800,6 @@ function serializeManifest(
 
 /**
  * ---------- REDIRECT SERIALIZATION ----------
- *
- * This is NOT server configuration.
- * It produces a deterministic migration artifact
- * that can later be consumed by the actual redirect
- * implementation.
  */
 
 function serializeRedirects(
@@ -1918,12 +1925,6 @@ module.exports = {
 
 /**
  * ---------- STANDALONE EXECUTION ----------
- *
- * Intentionally does NOT read or write project files.
- *
- * This protects V9 from accidental mutation.
- *
- * Integration tests should import the module.
  */
 
 if (
