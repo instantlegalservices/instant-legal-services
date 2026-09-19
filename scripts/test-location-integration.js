@@ -21,7 +21,8 @@ const assert =
 
 const {
   validateCurrentFeed,
-  validateRedirectFeed
+  validateRedirectFeed,
+  validateFeedConsistency
 } =
   require("./location-registry-feed");
 
@@ -539,24 +540,29 @@ expectFail(
         buildCurrentFeed()
       );
 
-    validateRedirectFeed(
-      [
-        {
-          location_id:
-            UUID_3,
+    const redirects =
+      validateRedirectFeed(
+        [
+          {
+            location_id:
+              UUID_3,
 
-          route:
-            "/district/bareilly/",
+            route:
+              "/district/bareilly/",
 
-          redirect_to:
-            "/tehsil/bareilly/"
-        }
-      ],
-      current
+            redirect_to:
+              "/tehsil/bareilly/"
+          }
+        ],
+        current
+      );
+
+    validateFeedConsistency(
+      current,
+      redirects
     );
   }
 );
-
 /*
  * --------------------------------------------------------------------------
  * 11. Redirect target ownership
