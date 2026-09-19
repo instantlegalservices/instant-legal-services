@@ -1,0 +1,32 @@
+name: Test Location Registry Sitemap Integration
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/location-registry-feed.js"
+      - "scripts/location-sitemap.js"
+      - "scripts/test-location-integration.js"
+      - ".github/workflows/test-location-integration.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-location-integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run Registry to Sitemap integration tests
+        run: node scripts/test-location-integration.js
