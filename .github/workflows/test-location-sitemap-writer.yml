@@ -1,0 +1,36 @@
+name: Test Location Sitemap Writer
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/location-sitemap-writer.js"
+      - "scripts/test-location-sitemap-writer.js"
+      - "scripts/location-sitemap.js"
+      - "scripts/location-registry-feed.js"
+      - ".github/workflows/test-location-sitemap-writer.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-location-sitemap-writer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js version
+        run: node --version
+
+      - name: Run adversarial sitemap writer tests
+        run: node scripts/test-location-sitemap-writer.js
