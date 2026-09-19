@@ -1,0 +1,40 @@
+name: Test LGD Location Adapter
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/lgd-location-adapter.js"
+      - "scripts/test-lgd-location-adapter.js"
+      - "scripts/lgd-location-ingestion.js"
+      - ".github/workflows/test-lgd-location-adapter.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-lgd-location-adapter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js version
+        run: node --version
+
+      - name: Verify adapter exists
+        run: test -f scripts/lgd-location-adapter.js
+
+      - name: Verify adapter tests exist
+        run: test -f scripts/test-lgd-location-adapter.js
+
+      - name: Run LGD adapter adversarial tests
+        run: node scripts/test-lgd-location-adapter.js
