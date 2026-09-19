@@ -1,0 +1,61 @@
+name: Test Location SEO Gate
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/location-migration.js"
+      - "scripts/test-location-migration.js"
+      - "scripts/location-registry-feed.js"
+      - "scripts/location-sitemap.js"
+      - "scripts/test-location-sitemap.js"
+      - "scripts/test-location-integration.js"
+      - "scripts/location-sitemap-writer.js"
+      - "scripts/test-location-sitemap-writer.js"
+      - ".github/workflows/test-location-seo-gate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  location-seo-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js version
+        run: node --version
+
+      - name: Run location migration tests
+        run: node scripts/test-location-migration.js
+
+      - name: Run location sitemap tests
+        run: node scripts/test-location-sitemap.js
+
+      - name: Run Registry to Sitemap integration tests
+        run: node scripts/test-location-integration.js
+
+      - name: Run atomic sitemap writer tests
+        run: node scripts/test-location-sitemap-writer.js
+
+      - name: Report unified gate
+        run: |
+          echo "=============================================="
+          echo "LOCATION SEO GATE"
+          echo "=============================================="
+          echo "Migration: PASS"
+          echo "Sitemap: PASS"
+          echo "Registry -> Sitemap: PASS"
+          echo "Atomic Writer: PASS"
+          echo "=============================================="
+          echo "LOCATION_SEO_GATE=PASS"
