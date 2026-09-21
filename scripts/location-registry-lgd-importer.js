@@ -7,8 +7,7 @@
  * Purpose:
  * - Normalize and validate LGD records against the verified
  *   Location Registry identity contract.
- * - Validate parent identity references when a complete batch
- *   is supplied.
+ * - Validate typed parent identity references when supplied.
  * - Produce a deterministic persistence plan.
  * - Keep database persistence behind an explicit adapter.
  *
@@ -327,6 +326,21 @@ function normalizeLGDBatch(
       ...seen
     ]);
 
+  /*
+   * Parent validation is intentionally based on
+   * TYPED identity, not raw source_code equality.
+   *
+   * Therefore:
+   *
+   *   LGD:STATE:09
+   *
+   * and
+   *
+   *   LGD:DISTRICT:09
+   *
+   * are different identities.
+   */
+
   for (
     const record
     of normalized
@@ -337,24 +351,14 @@ function normalizeLGDBatch(
       continue;
     }
 
-    if (
-      record.parent_source_code ===
-      record.source_code
-    ) {
-      fail(
-        `LGD record cannot be its own parent: ${identityKey(
-          record
-        )}`
-      );
-    }
-
     /*
-     * Parent code is preserved as authoritative source
-     * identity data. No parent type is guessed here.
+     * A raw parent source code equal to the child's
+     * source code is NOT automatically a self-parent.
      *
-     * If the integration layer supplies an explicit
-     * parentIdentityBySourceCode map, it is checked.
+     * The parent location_type is required to establish
+     * a typed parent identity.
      */
+
     if (
       options.parentIdentityBySourceCode
     ) {
@@ -366,6 +370,23 @@ function normalizeLGDBatch(
       if (!parentKey) {
         fail(
           `Unresolved LGD parent_source_code: ${record.parent_source_code}`
+        );
+      }
+
+      /*
+       * Now, and only now, compare typed identities.
+       */
+
+      const currentKey =
+        identityKey(
+          record
+        );
+
+      if (
+        parentKey === currentKey
+      ) {
+        fail(
+          `LGD record cannot be its own typed parent: ${currentKey}`
         );
       }
 
@@ -497,9 +518,10 @@ async function executeImportPlan(
   }
 
   /*
-   * Give the adapter a JSON-safe snapshot so that the
-   * adapter cannot mutate the original plan object.
+   * Give the adapter a JSON-safe snapshot so that
+   * the adapter cannot mutate the original plan.
    */
+
   const snapshot =
     JSON.parse(
       JSON.stringify(
@@ -567,9 +589,6 @@ module.exports = {
  * --------------------------------------------------------------------------
  * DIRECT EXECUTION SAFETY CHECK
  * --------------------------------------------------------------------------
- *
- * Running this file directly only proves that the importer module
- * can load. It does NOT import anything into a database.
  */
 
 if (
