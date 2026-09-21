@@ -497,18 +497,40 @@ expectThrow(
  * --------------------------------------------------------------------------
  */
 
+/*
+ * --------------------------------------------------------------------------
+ * 18. TYPED SELF-PARENT PROTECTION
+ * --------------------------------------------------------------------------
+ *
+ * Raw source_code equality is NOT sufficient to identify a self-parent.
+ *
+ * Parent identity must be fully typed:
+ *
+ *   source_system + location_type + source_code
+ */
+
 expectThrow(
-  "self-parent relationship is rejected",
+  "same typed identity is rejected as parent",
   () => {
-    importer.normalizeLGDBatch([
+    importer.normalizeLGDBatch(
+      [
+        {
+          ...districtRecord(),
+          parent_lgd_code: "0927"
+        }
+      ],
       {
-        ...districtRecord(),
-        parent_lgd_code: "0927"
+        parentIdentityBySourceCode:
+          new Map([
+            [
+              "0927",
+              "LGD:DISTRICT:0927"
+            ]
+          ])
       }
-    ]);
+    );
   }
 );
-
 /*
  * --------------------------------------------------------------------------
  * 19. DETERMINISTIC NORMALIZATION
