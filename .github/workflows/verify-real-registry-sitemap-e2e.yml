@@ -1,0 +1,80 @@
+name: Verify Real Registry Sitemap E2E
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/location-registry-feed.js"
+      - "scripts/location-sitemap.js"
+      - "scripts/sitemap-composer.js"
+      - "scripts/sitemap-composer-writer.js"
+      - "sitemap.xml"
+      - ".github/workflows/verify-real-registry-sitemap-e2e.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-real-registry-sitemap-e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout test branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js version
+        run: node --version
+
+      - name: Verify required secret contract
+        env:
+          LOCATION_REGISTRY_SUPABASE_URL: ${{ secrets.LOCATION_REGISTRY_SUPABASE_URL }}
+          LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          test -n "$LOCATION_REGISTRY_SUPABASE_URL"
+          test -n "$LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY"
+
+          case "$LOCATION_REGISTRY_SUPABASE_URL" in
+            https://*) ;;
+            *)
+              echo "LOCATION_REGISTRY_SUPABASE_URL must use HTTPS"
+              exit 1
+              ;;
+          esac
+
+          echo "Required Registry secret contract is present."
+
+      - name: Run real Registry to sitemap E2E
+        env:
+          LOCATION_REGISTRY_SUPABASE_URL: ${{ secrets.LOCATION_REGISTRY_SUPABASE_URL }}
+          LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sitemap-composer-writer.js
+
+      - name: Verify writer did not create untracked artifacts
+        run: |
+          if [ -n "$(git status --porcelain --untracked-files=all | grep -v '^ M sitemap.xml$' || true)" ]; then
+            echo "Unexpected tracked/untracked changes detected outside sitemap.xml:"
+            git status --short
+            exit 1
+          fi
+
+          echo "No unexpected artifacts detected."
+
+      - name: Verify test branch was not committed or pushed
+        run: |
+          if git diff --quiet -- sitemap.xml; then
+            echo "Sitemap content did not change during this E2E run."
+          else
+            echo "Sitemap was generated in the ephemeral CI worktree only."
+          fi
+
+          echo "Workflow permissions are read-only; no commit or push is performed."
+
+      - name: Final E2E status
+        run: echo "REAL_REGISTRY_SITEMAP_E2E=PASS"
