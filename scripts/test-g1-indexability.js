@@ -141,7 +141,9 @@ const privatePages = [
   ["admin.html", "https://instantlegalservices.in/admin.html"],
   ["admin/index.html", "https://instantlegalservices.in/admin/"],
   ["ils-test-operator-bootstrap.html", "https://instantlegalservices.in/ils-test-operator-bootstrap.html"],
-  ["ils-test-synthetic-provision.html", "https://instantlegalservices.in/ils-test-synthetic-provision.html"]
+  ["ils-test-synthetic-provision.html", "https://instantlegalservices.in/ils-test-synthetic-provision.html"],
+  ["ils-test-customer-action-e2e.html", "https://instantlegalservices.in/ils-test-customer-action-e2e.html"],
+  ["ils-test-customer-action-e2e-proof-run.html", "https://instantlegalservices.in/ils-test-customer-action-e2e-proof-run.html"]
 ];
 
 for (const [file, expectedCanon] of privatePages) {
