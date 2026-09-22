@@ -1,4 +1,4 @@
-# TEST project only. Never point this file at production (odqebkdzkjfxzyzbrndt).
+# TEST project only. Do not retarget this file to the production project.
 project_id = "bgsbuepolooybdqrzmoa"
 
 [functions.ils-test-customer-action-e2e-ui-bridge]
