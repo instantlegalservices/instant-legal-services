@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<link rel="canonical" href="https://instantlegalservices.in/ils-test-customer-action-e2e.html">
+<title>ILS — TEST Customer Action E2E Fixture</title>
+
+<style>
+body{
+  margin:0;
+  background:#08101f;
+  color:#eef3ff;
+  font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  box-sizing:border-box
+}
+.card{
+  width:min(520px,100%);
+  background:#121b31;
+  border:1px solid #263452;
+  border-radius:22px;
+  padding:28px;
+  box-sizing:border-box;
+  box-shadow:0 20px 60px #0006
+}
+h1{
+  font-size:28px;
+  margin:0 0 8px
+}
+.sub{
+  color:#aeb9d1;
+  margin-bottom:24px;
+  line-height:1.45
+}
+.warn{
+  font-size:13px;
+  color:#ffd98a;
+  background:#302611;
+  border:1px solid #6b5424;
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:18px
+}
+label{
+  display:block;
+  margin:12px 0 6px;
+  color:#cdd7ea
+}
+input{
+  width:100%;
+  box-sizing:border-box;
+  padding:14px 15px;
+  border-radius:12px;
+  border:1px solid #3b4968;
+  background:#0b1325;
+  color:#fff;
+  font-size:16px
+}
+button{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:12px;
+  background:#2f6df6;
+  color:white;
+  font-size:16px;
+  font-weight:700;
+  margin-top:16px
+}
+button:disabled{
+  opacity:.55
+}
+#status{
+  margin-top:16px;
+  padding:14px;
+  border-radius:12px;
+  background:#070c17;
+  white-space:pre-wrap;
+  line-height:1.45;
+  min-height:20px;
+  overflow:auto
+}
+.ok{
+  border:1px solid #2d8a57
+}
+.err{
+  border:1px solid #9b3d45
+}
+</style>
+</head>
+
+<body>
+
+<main class="card">
+
+<h1>ILS — TEST Customer Action E2E Fixture</h1>
+
+<div class="sub">
+TEST ONLY · prepare controlled fixture · no production
+</div>
+
+<div class="warn">
+Use only the legitimate TEST Auth operator account.
+This page does not run 1084 or 1085.
+The service-role key is never requested or exposed.
+</div>
+
+<form id="f">
+
+<label for="email">TEST Auth email</label>
+
+<input
+  id="email"
+  type="email"
+  autocomplete="username"
+  required
+>
+
+<label for="password">TEST Auth password</label>
+
+<input
+  id="password"
+  type="password"
+  autocomplete="current-password"
+  required
+>
+
+<button id="go" type="submit" disabled>
+Sign in + Prepare E2E Fixture
+</button>
+
+</form>
+
+<div id="status">
+Loading TEST configuration…
+</div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const TEST_PROJECT_REF = "bgsbuepolooybdqrzmoa";
+
+const CONFIG_URL =
+"https://bgsbuepolooybdqrzmoa.supabase.co/functions/v1/ils-test-operator-bootstrap-public-config";
+
+const BRIDGE_URL =
+"https://bgsbuepolooybdqrzmoa.supabase.co/functions/v1/ils-test-customer-action-e2e-ui-bridge";
+
+let sb = null;
+let publishableKey = "";
+
+const f = document.getElementById("f");
+const go = document.getElementById("go");
+const status = document.getElementById("status");
+
+function setStatus(text, ok = false){
+
+  status.textContent = text;
+
+  status.className = ok ? "ok" : "err";
+
+}
+
+
+async function loadConfig(){
+
+  try{
+
+    const response = await fetch(
+      CONFIG_URL,
+      {
+        method:"GET",
+        cache:"no-store",
+        headers:{
+          "Accept":"application/json"
+        }
+      }
+    );
+
+    const text = await response.text();
+
+    let config;
+
+    try{
+      config = JSON.parse(text);
+    }
+    catch{
+      throw new Error("PUBLIC_CONFIG_INVALID_RESPONSE");
+    }
+
+    if(!response.ok || !config.ok){
+
+      throw new Error(
+        config.error || "PUBLIC_CONFIG_UNAVAILABLE"
+      );
+
+    }
+
+    if(
+      !config.supabaseUrl ||
+      !config.publishableKey
+    ){
+
+      throw new Error("PUBLIC_CONFIG_INCOMPLETE");
+
+    }
+
+    if(String(config.supabaseUrl).indexOf(TEST_PROJECT_REF) < 0){
+
+      throw new Error("TEST_PROJECT_REQUIRED");
+
+    }
+
+    publishableKey = config.publishableKey;
+
+    sb = supabase.createClient(
+      config.supabaseUrl,
+      publishableKey,
+      {
+        auth:{
+          persistSession:false,
+          autoRefreshToken:true,
+          detectSessionInUrl:false
+        }
+      }
+    );
+
+    go.disabled = false;
+
+    setStatus("Ready.");
+
+  }
+  catch(error){
+
+    go.disabled = true;
+
+    setStatus(
+      "CONFIG ERROR\n" +
+      String(error?.message || error)
+    );
+
+  }
+
+}
+
+
+f.addEventListener("submit", async function(event){
+
+  event.preventDefault();
+
+  if(!sb || !publishableKey){
+
+    setStatus("CONFIG_NOT_READY");
+
+    return;
+
+  }
+
+  go.disabled = true;
+
+  setStatus(
+    "Authenticating TEST Auth operator…"
+  );
+
+  try{
+
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    const authResult =
+      await sb.auth.signInWithPassword({
+        email:email,
+        password:password
+      });
+
+    const session =
+      authResult?.data?.session;
+
+    const authError =
+      authResult?.error;
+
+    if(
+      authError ||
+      !session ||
+      !session.access_token
+    ){
+
+      throw new Error(
+        authError?.message ||
+        "TEST_AUTH_SESSION_NOT_CREATED"
+      );
+
+    }
+
+    setStatus(
+      "Authenticated.\n" +
+      "Calling TEST customer-action E2E fixture bridge…"
+    );
+
+    const token =
+      session.access_token;
+
+    const response =
+      await fetch(
+        BRIDGE_URL,
+        {
+          method:"POST",
+          cache:"no-store",
+
+          headers:{
+            "Content-Type":"application/json",
+            "Accept":"application/json",
+            "Authorization":"Bearer " + token,
+            "apikey":publishableKey
+          },
+
+          body:JSON.stringify({
+            action:"PREPARE_CUSTOMER_ACTION_FIXTURE"
+          })
+        }
+      );
+
+
+    const responseText =
+      await response.text();
+
+    let result;
+
+    try{
+
+      result =
+        JSON.parse(responseText);
+
+    }
+    catch{
+
+      result = {
+        raw_response:responseText
+      };
+
+    }
+
+    setStatus(
+      "HTTP " +
+      response.status +
+      "\n\n" +
+      JSON.stringify(
+        result,
+        null,
+        2
+      ),
+      !!(response.ok && result && result.ok)
+    );
+
+    if(response.ok && result && result.ok){
+
+      go.textContent =
+        "Fixture prepare complete";
+
+    }
+
+  }
+  catch(error){
+
+    setStatus(
+      "CLIENT ERROR\n\n" +
+      String(
+        error?.message ||
+        error
+      )
+    );
+
+  }
+  finally{
+
+    try{
+
+      if(sb){
+
+        await sb.auth.signOut();
+
+      }
+
+    }
+    catch(_){}
+
+
+    if(
+      go.textContent !==
+      "Fixture prepare complete"
+    ){
+
+      go.disabled = false;
+
+    }
+
+  }
+
+});
+
+
+loadConfig();
+
+</script>
+
+</body>
+</html>
