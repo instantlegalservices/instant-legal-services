@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<link rel="canonical" href="https://instantlegalservices.in/ils-test-operator-bootstrap.html">
-<title>ILS — TEST Operator Bootstrap</title>
+<meta name="robots" content="noindex,nofollow,noarchive">
+<link rel="canonical" href="https://instantlegalservices.in/ils-test-customer-action-e2e.html">
+<title>ILS — TEST Customer Action E2E Fixture</title>
 
 <style>
 body{
@@ -98,15 +98,16 @@ button:disabled{
 
 <main class="card">
 
-<h1>ILS — TEST Operator Bootstrap</h1>
+<h1>ILS — TEST Customer Action E2E Fixture</h1>
 
 <div class="sub">
-TEST ONLY · one-time · non-production operator binding
+TEST ONLY · prepare controlled fixture · no production
 </div>
 
 <div class="warn">
-The bootstrap secret is never requested or exposed here.
-Use only the legitimate TEST Auth account.
+Use only the legitimate TEST Auth operator account.
+This page does not run 1084 or 1085.
+The service-role key is never requested or exposed.
 </div>
 
 <form id="f">
@@ -130,7 +131,7 @@ Use only the legitimate TEST Auth account.
 >
 
 <button id="go" type="submit" disabled>
-Sign in + Run 1084 Bootstrap
+Sign in + Prepare E2E Fixture
 </button>
 
 </form>
@@ -145,11 +146,13 @@ Loading TEST configuration…
 
 <script>
 
+const TEST_PROJECT_REF = "bgsbuepolooybdqrzmoa";
+
 const CONFIG_URL =
 "https://bgsbuepolooybdqrzmoa.supabase.co/functions/v1/ils-test-operator-bootstrap-public-config";
 
 const BRIDGE_URL =
-"https://bgsbuepolooybdqrzmoa.supabase.co/functions/v1/ils-test-operator-bootstrap-ui-bridge";
+"https://bgsbuepolooybdqrzmoa.supabase.co/functions/v1/ils-test-customer-action-e2e-ui-bridge";
 
 let sb = null;
 let publishableKey = "";
@@ -166,8 +169,6 @@ function setStatus(text, ok = false){
 
 }
 
-
-/* Load TEST public configuration */
 
 async function loadConfig(){
 
@@ -212,6 +213,12 @@ async function loadConfig(){
 
     }
 
+    if(String(config.supabaseUrl).indexOf(TEST_PROJECT_REF) < 0){
+
+      throw new Error("TEST_PROJECT_REQUIRED");
+
+    }
+
     publishableKey = config.publishableKey;
 
     sb = supabase.createClient(
@@ -245,8 +252,6 @@ async function loadConfig(){
 }
 
 
-/* Authenticate and execute 1084 */
-
 f.addEventListener("submit", async function(event){
 
   event.preventDefault();
@@ -262,7 +267,7 @@ f.addEventListener("submit", async function(event){
   go.disabled = true;
 
   setStatus(
-    "Authenticating TEST Auth user…"
+    "Authenticating TEST Auth operator…"
   );
 
   try{
@@ -300,18 +305,11 @@ f.addEventListener("submit", async function(event){
 
     setStatus(
       "Authenticated.\n" +
-      "Running one-time TEST operator bootstrap…"
+      "Calling TEST customer-action E2E fixture bridge…"
     );
 
     const token =
       session.access_token;
-
-
-    /*
-      Direct fetch is intentional.
-      This avoids supabase.functions.invoke()
-      hiding the upstream HTTP status.
-    */
 
     const response =
       await fetch(
@@ -328,7 +326,7 @@ f.addEventListener("submit", async function(event){
           },
 
           body:JSON.stringify({
-            action:"BOOTSTRAP_TEST_OPERATOR"
+            action:"PREPARE_CUSTOMER_ACTION_FIXTURE"
           })
         }
       );
@@ -353,44 +351,22 @@ f.addEventListener("submit", async function(event){
 
     }
 
-
-    /*
-      Always show the exact safe response.
-      No secret/password/JWT is displayed.
-    */
-
-    if(!response.ok){
-
-      setStatus(
-        "HTTP " +
-        response.status +
-        "\n\n" +
-        JSON.stringify(
-          result,
-          null,
-          2
-        )
-      );
-
-      return;
-
-    }
-
-
     setStatus(
+      "HTTP " +
+      response.status +
+      "\n\n" +
       JSON.stringify(
         result,
         null,
         2
       ),
-      !!result?.ok
+      !!(response.ok && result && result.ok)
     );
 
-
-    if(result?.ok){
+    if(response.ok && result && result.ok){
 
       go.textContent =
-        "Bootstrap complete";
+        "Fixture prepare complete";
 
     }
 
@@ -408,11 +384,6 @@ f.addEventListener("submit", async function(event){
   }
   finally{
 
-    /*
-      Sign out after the one-time operation.
-      Never keep the TEST session unnecessarily.
-    */
-
     try{
 
       if(sb){
@@ -427,7 +398,7 @@ f.addEventListener("submit", async function(event){
 
     if(
       go.textContent !==
-      "Bootstrap complete"
+      "Fixture prepare complete"
     ){
 
       go.disabled = false;

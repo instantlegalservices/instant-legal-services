@@ -1,0 +1,8 @@
+# TEST project only. Do not retarget this file to the production project.
+project_id = "bgsbuepolooybdqrzmoa"
+
+[functions.ils-test-customer-action-e2e-ui-bridge]
+verify_jwt = false
+
+[functions.ils-test-customer-action-e2e-proof-run-ui-bridge]
+verify_jwt = false
