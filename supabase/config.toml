@@ -1,0 +1,4 @@
+project_id = "bgsbuepolooybdqrzmoa"
+
+[functions.ils-test-customer-action-e2e-real-invoke-ui-bridge]
+verify_jwt = true
