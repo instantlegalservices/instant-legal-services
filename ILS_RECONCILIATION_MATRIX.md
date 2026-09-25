@@ -266,3 +266,73 @@ No E2E notification was executed. No Resend request was made. No Production data
 **PRODUCTION = HOLD**
 **MAIN = UNTOUCHED**
 **G6 = NOT MERGED**
+
+
+## PHASE 7C — NOTIFICATION ARCHITECTURE SOURCE RECOVERY (2026-09-25)
+
+### Recovery result
+Repository/GitHub searches for the exact notification function names, TEST Edge Function slug, notification table names, Resend secret reference, provider reference terms and notification commit messages returned no matching source objects or commits in the connected repository. Therefore exact Git provenance for the TEST notification implementation was **not recovered**.
+
+However, TEST migration history provides strong database-architecture provenance. The notification subsystem was introduced through a coherent sequence of TEST migrations:
+- `20260907160740 action_436_customer_notification_communication_engine`
+- `20260907160855 action_437_notification_priority_intelligence`
+- `20260907161007 action_438_notification_delivery_reliability`
+- `20260907161110 action_439_notification_preference_consent_engine`
+- `20260907161207 action_440_notification_personalization_language_engine`
+- `20260907161549 action_441_notification_multichannel_failover_engine`
+- `20260907161703 action_442_notification_security_abuse_guard`
+- `20260907161805 action_443_notification_observability_health_monitor`
+- `20260907161910 action_444_notification_analytics_kpi_engine`
+- `20260907162002 action_445_notification_automation_trigger_engine`
+- `20260907162059 action_446_event_notification_orchestrator`
+- `20260907165434 action_454_notification_security_bridge`
+- `20260907165553 action_455_notification_e2e_simulation`
+- `20260908103007 action_521_notification_e2e_safety_gate_preflight`
+- `20260908110233 action_522_notification_e2e_synthetic_hostile_tests`
+- `20260908114703 action_523_notification_e2e_release_gate`
+- `20260908114754 action_523_notification_e2e_release_gate`
+- `20260911161740 action_notification_central_ingress_v1`
+- `20260911161755 action_notification_central_ingress_v1_fix_professional_service_context`
+- `20260911162427 fix_notification_central_ingress_schema_contract_v2`
+
+The current TEST schema confirms the resulting architecture: trigger events/rules, orchestration runs/steps, rendered messages/templates, dispatch queue, delivery attempts, dead letters, failover, preferences/consent, priority, security, health/KPI and E2E gate structures. The central ingress function is present and SECURITY DEFINER. TEST also exposes notification-center/read functions and E2E gate functions.
+
+### Evidence-backed architecture reconstruction
+`authorized source/event` → `ils_notification_central_ingress_v1` → `ils_notification_trigger_events` → orchestration/template/consent/priority/security decisions → `ils_notification_dispatch_queue` → delivery attempt → provider reference/result → retry/dead-letter/failover → notification/audit/health evidence.
+
+The architecture is **EXISTING IN TEST**. The historical structural blueprint explicitly records that the notification infrastructure exists but also identifies a major gap: no verified producer/dispatcher linkage from business workflows and no notification-producing DB triggers were found. It also records that external SMS/WhatsApp/email/push delivery proof was not established. fileciteturn619file0
+
+The blueprint therefore supports the existence and intended structure of the notification subsystem, but it does **not** establish that every component is intended for Production. In particular, Production intent of the external provider adapter remains UNKNOWN. The earlier audit also identifies business-event wiring and external delivery proof as open gaps. fileciteturn619file5
+
+### TEST / Production reconciliation
+Production currently lacks the recovered notification schema/runtime. Specifically, no corresponding Production notification tables, provider processor Edge Function, notification DB triggers or notification cron were evidenced in Phase 7B. Existing Production portal chat functions are not equivalent to notification delivery.
+
+The following are therefore classified:
+- TEST notification schema/orchestration: **EXISTING IN TEST**
+- TEST central ingress: **EXISTING IN TEST**
+- TEST E2E simulation/release-gate layer: **EXISTING IN TEST**
+- TEST real-provider proof function: **TEST-ONLY**; exact Git source not recovered
+- Production notification runtime: **MISSING**
+- Production external provider adapter: **UNKNOWN / not evidenced**
+- Production business-event producers/dispatcher linkage: **UNKNOWN / not evidenced**
+- Production notification migration/provenance: **NOT FOUND**
+
+### Working-chain protection
+The recovered notification architecture does not by itself establish a need to modify the existing payment, customer-auth, document, judgment, or Production portal-messaging chains. The historical blueprint instead describes notification integration as a separate communication layer and explicitly identifies missing producer linkage as unfinished work. fileciteturn619file0
+
+No code, migration, function, policy, secret, payment chain, Production object, main branch, or G6 branch was modified in Phase 7C. No provider call was made.
+
+### Decision
+**B. SOURCE PARTIALLY RECOVERED — ADDITIONAL SOURCE EVIDENCE REQUIRED**
+
+Reason: the authoritative TEST database architecture and migration sequence are recovered with strong evidence, but exact Git source/commit provenance for the notification implementation and the authoritative Production-intended provider adapter are not recovered. A full A classification would overstate the evidence.
+
+### Final state
+**NOTIFICATION_E2E = BLOCKED**
+**PRODUCTION_NOTIFICATION_RUNTIME = MISSING**
+**GIT_PROVENANCE = PARTIALLY_MAPPED**
+**SOURCE_RECOVERY = B**
+**JUDGMENT_CONCURRENCY = OPEN / UNVERIFIED**
+**PRODUCTION = HOLD**
+**MAIN = UNTOUCHED**
+**G6 = NOT MERGED**
