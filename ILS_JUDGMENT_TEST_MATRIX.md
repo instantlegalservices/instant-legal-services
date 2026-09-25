@@ -144,3 +144,25 @@ Inspection of the live TEST reproduction functions shows:
 - No third invocation, repair, or manual job mutation was performed.
 
 PHASE 6C-8O = HARNESS LIMITATION.
+
+
+
+## PHASE 6C-8F — Final Concurrency Blocker Freeze
+
+### Frozen finding
+
+**JUDGMENT_CONCURRENCY = UNVERIFIED / EXECUTION-ENVIRONMENT BLOCKED**
+
+- 6C-6: normal single execution PASS.
+- 6C-7: repeated invocation after COMPLETED PASS / idempotent.
+- Genuine active-job concurrency: OPEN / UNVERIFIED.
+- Existing provider_delay_ms supplies a possible overlap window in processor semantics.
+- Two independent live TEST sessions were not established.
+- 6C-8O therefore remains HARNESS LIMITATION.
+- This is not evidence of safety, race, duplication, or failure.
+
+### Release blocker
+
+**JUDGMENT CONCURRENCY EVIDENCE = OPEN / UNVERIFIED**
+
+No additional concurrency experiment, fixture, remediation, processor change, Production change, main change, or G6 merge was performed.
