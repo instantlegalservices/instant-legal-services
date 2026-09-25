@@ -120,3 +120,17 @@ This report intentionally does not declare readiness from code existence, synthe
 
 ### Exact next phase
 **PHASE 6 — TEST PARITY + CONTROLLED JUDGMENT/SECURITY REPRODUCTION.** Recover the exact Production judgment Edge Function source/runtime and establish a faithful TEST equivalent; reproduce retry/concurrency/stale-state scenarios with a controlled synthetic fixture. In parallel, establish a faithful TEST copy of the existing advocate-directory/portal authorization surface from existing source/migrations only, then run anon/User-A/User-B/authorized/unauthorized hostile tests. Only proven defects receive minimal branch-only fixes. Production and main remain frozen.
+
+
+## PHASE 6C-6 RESULT — Fresh Deterministic Judgment Baseline
+- Phase 6C-6R TEST harness repair: PASS; Production/main/G6 untouched.
+- Historical failed baseline remains preserved and was not reused.
+- Fresh TEST run: `972efe78-5701-4cf4-abd9-95a8e11ea61a`.
+- Fixture: `ffb64934-7a26-41bf-9062-62896258f687`; judgment: `d13680a4-f896-415d-ad4c-87f610250791`; job: `91ee7e18-7475-43bb-8e73-b1d8cab69bd5`; invocation: `7b53dce0-b9c9-4b5f-ae9c-4d7d64c6e1c4`.
+- Pre-state matched the harness-derived expected initial state: PENDING, next_chunk=0, 3 chunks, 0 analyses, 0 provider calls, 0 invocations, retry_count=0, final_summary=NULL, next_retry_at=NULL.
+- Exactly one processor invocation returned COMPLETED with processed_chunks=3.
+- Persisted post-state: job COMPLETED, next_chunk=3, 3 analyses, 3 SUCCESS provider calls, 1 invocation, retry_count=0, next_retry_at=NULL, final synthesis present.
+- Actual evidence supports the state progression PENDING → PROCESSING → chunk 0 → chunk 1 → chunk 2 → final synthesis → COMPLETED.
+- No duplicate chunk analysis, retry/waiting/failure state, or cross-fixture contamination was observed.
+- **PHASE 6C-6 FRESH BASELINE = PASS.**
+- Advanced recovery/concurrency/idempotency/retry/timeout tests were not run in this step.
