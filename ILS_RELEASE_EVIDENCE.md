@@ -205,3 +205,90 @@ Formal freeze:
 Release blocker: **JUDGMENT CONCURRENCY EVIDENCE = OPEN / UNVERIFIED**.
 
 This finding is deliberately NOT classified as concurrency safe, concurrency unsafe, race condition, or duplication defect. No further concurrency experiment was run; no new fixture was created; no processor, Production, main, or G6 changes were made.
+
+
+## PHASE 7A — NOTIFICATION E2E AUTHORITATIVE SOURCE + EVIDENCE RECONCILIATION (2026-09-25)
+
+### 7A.1 Authoritative environment finding
+This phase was source/evidence reconciliation only. No notification was sent and no Production mutation/deployment was performed.
+
+**Production (`odqebkdzkjfxzyzbrndt`)**
+- No public tables matching the authoritative notification architecture were found.
+- No public functions matching the notification architecture were found.
+- No active Edge Function with a notification delivery implementation was present in the current Production Edge Function inventory.
+- No Production notification queue/dispatch/delivery-attempt/dead-letter/audit chain was evidenced.
+- No Production notification provider implementation could therefore be mapped or executed.
+- No Production notification migration entries were found.
+
+**TEST (`bgsbuepolooybdqrzmoa`)**
+- A substantial notification schema exists, including customer notifications, trigger events/rules, orchestration runs/steps, dispatch queue, delivery attempts, dead letters, failover, consent, preferences, rendered messages, security events/rules, health/KPI snapshots and E2E evidence/control tables.
+- `ils_notification_central_ingress_v1` exists as a SECURITY DEFINER service-role-only ingress boundary. It validates source/recipient binding, enabled trigger rules and idempotency, then records a trigger event; it does not itself perform external delivery.
+- `ils_notification_e2e_preflight_check()` is READY for the intentionally synthetic-only preflight, with external provider invocation and real recipient/message/customer data explicitly disallowed.
+- `ils_notification_e2e_release_gate_evaluate()` requires at least one canonical verified evidence item and zero hostile/destructive failures.
+- `ils_run_notification_e2e_synthetic_chain()` deliberately ends with REAL_NOTIFICATION_E2E = HOLD_UNTIL_GENUINE_PROOF; synthetic execution cannot close the gate.
+- TEST active notification-related Edge Functions are the TEST-only `ils-notification-e2e-real` v1 and its auth handoff/confirm helpers. The real-test function requires `RESEND_API_KEY`, authenticates the fixed TEST synthetic user, calls Resend's API, polls provider status, and writes an `ils_e2e_evidence` record.
+- Critically, the TEST `ils-notification-e2e-real` implementation hard-codes the persisted `evidence_class` to `UNVERIFIED` and returns `gate=HOLD` even when the provider reports `delivered`. Therefore its current return/evidence contract cannot legitimately establish `NOTIFICATION_E2E=VERIFIED`.
+- The TEST auth-confirm helper calls the TEST `ils-notification-e2e-real` function only; it is not a Production delivery path.
+
+### 7A.2 Canonical flow reconstruction
+The currently evidenced TEST-only flow is:
+
+`authorized TEST synthetic handoff` -> `ils-notification-e2e-real` -> `RESEND_API_KEY` lookup -> Resend `/emails` request -> provider response/email id -> provider status polling -> `ils_e2e_evidence` insert -> current evidence class remains `UNVERIFIED` -> release gate remains HOLD.
+
+The broader TEST notification architecture is:
+
+`authorized/service-role source event` -> `ils_notification_central_ingress_v1` -> `ils_notification_trigger_events` -> notification orchestration/queue model -> delivery-attempt/dead-letter/audit structures.
+
+A genuine production provider-processing boundary is not currently evidenced in Production, so that broader chain cannot be promoted to an authoritative Production delivery flow.
+
+### 7A.3 Provider prerequisite
+`RESEND_API_KEY` status: **UNKNOWN**. The TEST delivery function reads the secret server-side and returns `TEST_PROVIDER_NOT_CONFIGURED` if it is absent; the secret value was not requested, displayed or exposed. No provider invocation was attempted in this phase.
+
+Relevant function executability:
+- TEST `ils-notification-e2e-real`: executable only with valid authenticated TEST synthetic context and provider secret; however, its current evidence contract is insufficient for release verification.
+- Production: no current notification delivery function was evidenced, so genuine Production notification execution is not available from the identified current architecture.
+
+### 7A.4 Source/provenance reconciliation
+**TEST notification implementation = C. PARTIAL.**
+Reason: the TEST database contains the notification domain architecture and a TEST-only Resend proof function, but the external-delivery path is not the same as a complete production notification runtime, and its evidence contract deliberately remains UNVERIFIED.
+
+**Production notification implementation = D. MISSING (current runtime evidence).**
+No current Production notification tables/functions/Edge Function/migration provenance were found.
+
+**Git provenance = NOT MAPPED.**
+Repository search on the current connected GitHub repository returned no matching source for `notification_central_ingress`, `ils-notification-e2e-real`, or `RESEND_API_KEY`. No source was copied between environments and no merge was attempted.
+
+### 7A.5 Minimum genuine evidence required for VERIFIED
+The release gate must demonstrate all of the following in one path-bound TEST evidence chain:
+1. Authorized source event/trigger record creation.
+2. Authenticated/authorized processing-function invocation with correlation id.
+3. Actual provider request and provider acceptance, including provider message/reference id.
+4. Provider delivery/status evidence sufficient for the declared delivery contract (not merely a local HTTP 2xx).
+5. Persisted final delivery state linked to the same notification/correlation/provider reference.
+6. Append-only/canonical audit evidence binding the above events and proving TEST-only isolation.
+7. Release-gate evaluation showing genuine verified evidence count >= 1, hostile failures = 0, destructive attempts = 0.
+
+A database row alone, a function 200, or synthetic simulation is insufficient.
+
+### 7A.6 Execution decision
+**No notification execution was performed.**
+Prerequisites are not all verified: the Production notification delivery runtime is currently missing from the observed Production architecture; `RESEND_API_KEY` presence is UNKNOWN; and the current TEST real-delivery function persists UNVERIFIED evidence and explicitly returns HOLD.
+
+Fail-closed result: **NOTIFICATION_E2E = BLOCKED**.
+
+Exact blocker:
+**No authoritative Production notification delivery path is currently evidenced/mapped, and the TEST-only provider function cannot produce canonical VERIFIED evidence under its current evidence contract; provider secret presence is UNKNOWN.**
+
+No secrets were exposed. No RLS/auth weakening was performed. No Production notification was sent.
+
+### 7A.7 Judgment freeze preserved
+`JUDGMENT_CONCURRENCY = OPEN / UNVERIFIED` remains unchanged. Phase 7A did not reopen or modify any Judgment 6C evidence.
+
+### 7A.8 Safety state
+- PRODUCTION = HOLD
+- MAIN = UNTOUCHED
+- G6 = NOT MERGED
+- Existing payment chain = untouched
+- No blind merge
+- No notification send
+- No provider credential exposure
