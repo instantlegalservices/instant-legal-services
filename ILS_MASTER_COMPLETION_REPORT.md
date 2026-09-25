@@ -151,3 +151,18 @@ This report intentionally does not declare readiness from code existence, synthe
 - The existing `provider_delay_ms` control did not produce a genuine overlapping database invocation in this execution path. `interrupt_after_chunk` is not an equivalent solution because it returns the processor instead of leaving a live invocation executing.
 - **PHASE 6C-8 = HARNESS LIMITATION.** No concurrency protection was added and no remediation was attempted.
 - Production remains HOLD; main remains untouched; G6 remains unmerged.
+
+
+## PHASE 6C-8R — Overlap-Capability Investigation
+
+The isolated TEST processor was inspected without modification. Its existing provider_delay_ms control executes pg_sleep within the active processor transaction, so a live PROCESSING execution window exists when the function is invoked through an independent database session. interrupt_after_chunk is unsuitable for overlap because it returns the first invocation.
+
+The missing capability is therefore not a processor-state-machine extension. It is an execution/orchestration primitive capable of holding invocation A open in one TEST DB session while starting invocation B in another independent TEST DB session.
+
+Minimum semantics-neutral mechanism: a TEST-only two-session orchestration runner. It must only coordinate existing function calls and timing; it must not add claims, locks, leases, tokens, idempotency, stale recovery, or any other processor behavior.
+
+No new fixture, processor invocation, database function change, Production change, main change, or G6 merge was performed in 6C-8R.
+
+**PHASE 6C-8R OVERLAP CAPABILITY = EXISTING** (processor/harness semantics support the required window; current execution tooling lacks reliable concurrent-session orchestration).
+
+The previous **PHASE 6C-8 = HARNESS LIMITATION** remains the authoritative experiment result.
