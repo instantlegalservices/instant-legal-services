@@ -23,3 +23,11 @@
 - search-router-v1 = 2a13dcfcd253553896bbd8d9f55c4290233e5857; diverged, 1 ahead / 24 behind.
 
 No branch was merged in Phase 0–3.
+
+## Phase 4 update
+| Area | Main | V9 | TEST | Production | Release/Cursor | Status |
+|---|---|---|---|---|---|---|
+| Judgment | active source/pipeline | release branch adds summary processing | test pipeline artifacts | 170 rows; 23 failed + 38 pending summaries; 13 pending text; 6 stale running fetch logs | release/g6 ahead 2 | DEFECT / UNVERIFIED |
+| SEO | generator + robots/sitemap | materially divergent | location/SEO test artifacts | deployed runtime not yet independently swept | cursor/g1 ahead 5 | UNVERIFIED |
+| Location/LGD | source architecture | substantial V9 work | registry table exists but 0 rows | registry exists but 0 rows | multiple branches | HOLD |
+| Security | hardened RLS source | security/test artifacts | hostile infrastructure | 3 SECURITY DEFINER view errors + function/search_path warnings | none merged | HOLD |
