@@ -99,3 +99,24 @@ The existing harness can delay provider work, but the available execution orches
 | Processor semantics change required? | No |
 
 **6C-8R classification: EXISTING HARNESS CAN ESTABLISH GENUINE OVERLAP** in principle, using its existing provider-delay behavior and two independent DB sessions. The prior 6C-8 experiment remains classified **HARNESS LIMITATION** because that independent-session overlap was not actually established.
+
+
+
+## Phase 6C-8O — Two-Session Execution Result
+
+| Item | Result |
+|---|---|
+| Orchestrator artifact | Created on controlled branch |
+| Orchestrator design | Two separately initiated TEST HTTP requests to existing processor |
+| Fresh TEST fixture | Created once |
+| Run | 4dc48cbe-eb14-43a7-b2a3-c64ab10e0e4a |
+| Job | ca7cf286-3d95-48c6-b99b-57e2f456805d |
+| Provider delay | 8000 ms |
+| Pre-state | PENDING / 0 / 3 / 0 analyses / 0 provider calls / 0 invocations |
+| Invocation A | Not executed |
+| Invocation B | Not executed |
+| Genuine overlap | Not demonstrated |
+| Cause | External orchestration runtime could not resolve TEST Supabase hostname |
+| Classification | HARNESS LIMITATION |
+
+The experiment is fail-closed: no result about concurrency safety, duplication, or race behavior is claimed.
