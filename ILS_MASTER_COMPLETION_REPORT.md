@@ -143,3 +143,11 @@ This report intentionally does not declare readiness from code existence, synthe
 - After: analyses=3, provider calls=3, invocations=2, retry_count=0, next_chunk=3, status=COMPLETED, final synthesis unchanged.
 - Classification: **IDEMPOTENT / SAFE REPEAT** for the completed-job scenario.
 - No advanced testing was executed in Phase 6C-7.
+
+## PHASE 6C-8 RESULT — Concurrency Reproduction
+- A fresh TEST fixture was created and two processor requests were submitted concurrently through the available orchestration mechanism.
+- Invocation A completed all three chunks. Invocation B started only after A had completed and returned `ALREADY_COMPLETED`.
+- Persisted evidence shows no duplicate analyses/provider calls, but this cannot be treated as concurrency-safe evidence because the required PROCESSING overlap was not established.
+- The existing `provider_delay_ms` control did not produce a genuine overlapping database invocation in this execution path. `interrupt_after_chunk` is not an equivalent solution because it returns the processor instead of leaving a live invocation executing.
+- **PHASE 6C-8 = HARNESS LIMITATION.** No concurrency protection was added and no remediation was attempted.
+- Production remains HOLD; main remains untouched; G6 remains unmerged.
