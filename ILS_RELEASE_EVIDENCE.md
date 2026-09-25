@@ -135,3 +135,21 @@ The next work requiring external/authenticated execution is genuine Notification
 - Production read-only inspection confirms all three advocate-directory views are owned by postgres, non-RLS, and reported is_updatable=YES and is_insertable_into=YES; anon and authenticated have broad DML grants. Underlying advocate_registrations has RLS with an admin ALL policy and a public registration INSERT policy. This is a real configuration-gap candidate, but no Production write/exploit was attempted.
 - Production advisor scan at 2026-09-25T08:38Z: 3 SECURITY DEFINER view errors, 4 mutable-search_path warnings, 3 anon-executable SECURITY DEFINER functions, 13 authenticated-executable SECURITY DEFINER functions, and leaked-password protection disabled.
 - No security migration, grant change, function change, view change, policy change, or authentication configuration change was made.
+
+
+## PHASE 6C-6 — Fresh Deterministic Baseline Rerun (2026-09-25)
+- Phase 6C-6R repair previously completed in TEST only: migration `phase_6c_6r_repair_judgment_repro_process_alias`, version `20260925085741`; Production/main/G6 untouched.
+- Historical failed baseline preserved and not reused: run `153c7822-2e36-4f25-ad8e-c27ba11516af`.
+- Fresh TEST run: `972efe78-5701-4cf4-abd9-95a8e11ea61a`.
+- Fresh fixture: `ffb64934-7a26-41bf-9062-62896258f687`.
+- Synthetic judgment: `d13680a4-f896-415d-ad4c-87f610250791`.
+- Summary job: `91ee7e18-7475-43bb-8e73-b1d8cab69bd5`.
+- Single processor invocation: `7b53dce0-b9c9-4b5f-ae9c-4d7d64c6e1c4`.
+- Provider mode: SUCCESS; failures_before_success=0; exactly 3 deterministic chunks.
+- Pre-state: PENDING, next_chunk=0, analyses=0, provider calls=0, invocations=0, retry_count=0, final_summary=NULL, next_retry_at=NULL.
+- Post-state: COMPLETED, next_chunk=3, exactly 3 chunk analyses, exactly 3 SUCCESS provider calls, exactly 1 invocation, retry_count=0, next_retry_at=NULL, final_summary=`DETERMINISTIC_FINAL_SYNTHESIS`.
+- Actual observed execution evidence: invocation observed the initial PENDING/next_chunk=0; provider calls were recorded once each for chunks 0, 1 and 2; analyses were recorded once each for chunks 0, 1 and 2; judgment reached COMPLETED.
+- Data integrity: one fixture, one judgment, one job for the fresh run; no duplicate analyses/provider calls/invocations and no cross-fixture records observed.
+- State reconstruction from persisted evidence: PENDING (invocation observation) → PROCESSING (processor transition) → chunk 0 → chunk 1 → chunk 2 → final synthesis → COMPLETED.
+- **PHASE 6C-6 FRESH BASELINE = PASS.**
+- Advanced tests were not executed in this step.
