@@ -71,3 +71,54 @@ A gate is not considered production-ready merely because an implementation exist
 
 ## Current safe-work boundary
 The next work requiring external/authenticated execution is genuine Notification/Professional/Payment/GST E2E. No credentials, secrets, production approval, or synthetic substitution will be invented.
+
+## PHASE 4A — Judgment Deep Closure (2026-09-25)
+- Production judgment rows: 170.
+- `judgment_text_status`: completed 157, pending 13.
+- `summary_status`: completed 109, failed 23, pending 38.
+- `processing_error` is non-null on 59 rows.
+- `judgment_fetch_logs`: 6 records remain `running`, all created 2026-08-23; this is stale-run evidence, not a current healthy-running state.
+- A current 2026-09-25 verified judgment example has official `sci.gov.in` URLs, source hash, retrieved document text and `judgment_text_status=completed`, while summary is still pending.
+- Therefore the pipeline exists and official provenance is present, but the current dataset has material failed/pending/stale states.
+- No valid production judgment rows were changed.
+- No blind merge of `release/g6-judgment-source-reconcile-20260925`.
+- **Judgment classification: DEFECT/UNVERIFIED operational closure**, not a missing architecture. A safe fix must first be isolated to retry/stale-job handling or summary processing and tested in TEST.
+
+## PHASE 4B — SEO Deep Closure
+- Current main generator was inspected. It generates canonical tags and `index, follow` metadata for generated public pages and filters advocates to Approved + Public.
+- The generator also contains a manually verified government-route registry and explicit official-source boundary.
+- It is not sufficient evidence of complete route integrity: generator output does not by itself prove deployed sitemap/canonical/redirect/indexability consistency.
+- V9 and cursor SEO branches remain materially divergent; no blind merge or wholesale regeneration performed.
+- **SEO classification: UNVERIFIED**, with controlled route-manifest/deployed-runtime comparison still required.
+
+## PHASE 4C — Location/LGD Deep Closure
+- Production `location_registry` row count = 0.
+- TEST `location_registry` row count = 0.
+- Thus a populated stable-ID/LGD location registry is not currently evidenced by live database rows in either environment, despite historical/source architecture references.
+- No duplicate-ID or duplicate-route rows can be demonstrated because the registries are empty.
+- This is an evidence/integration gap, not grounds for replacing the architecture.
+- **Location classification: HOLD / UNVERIFIED**.
+
+## PHASE 4D — Production Security Deep Analysis
+- The three Production advocate-directory views are owned by `postgres`, are non-RLS views, and use SECURITY DEFINER semantics; `approved_advocates_public` explicitly has `security_invoker=false`.
+- The views expose only approved/public advocate profile columns, but database grants currently include broad DML privileges to `anon` and `authenticated` on the views. This is a **configuration-gap candidate** and requires TEST reproduction/updatability testing before any production change.
+- Production security advisor reports:
+  - 3 SECURITY DEFINER view errors.
+  - 4 mutable-search_path warnings: `set_client_work_progress_updated_at`, `update_judgments_updated_at`, `search_judgments`, `update_judgment_sources_updated_at`.
+  - 3 anon-executable SECURITY DEFINER functions: `get_client_assigned_advocate`, `get_client_portal`, `send_client_portal_message`.
+  - 13 authenticated-executable SECURITY DEFINER functions, several intentionally used as admin/advocate/customer RPC boundaries.
+  - leaked-password-protection disabled warning.
+- No security changes were made. No privilege or RLS weakening occurred.
+- **Security classification: HOLD / REQUIRES TEST**.
+
+## PHASE 4E — Cross-Gate Dependency Reassessment
+| Gate | Exact blocker | Type | Can progress without external credential? | Evidence required |
+|---|---|---|---|---|
+| Notification | genuine provider delivery evidence | external provider/configuration | No for final delivery closure | authenticated TEST send + provider delivery/status/retry evidence |
+| Professional | genuine authenticated professional assignment/work | execution/identity | Partly | real TEST professional identity + authorization + assignment/work audit |
+| Security | unresolved Production privilege/view/function warnings | security/configuration | Yes for analysis; final hostile E2E requires authenticated test contexts | TEST privilege/RLS hostile tests + exact remediation evidence |
+| Payment | genuine provider transaction + webhook/replay evidence | external provider | No for final payment closure | Razorpay test transaction, signed webhook, duplicate/replay/failure evidence |
+| GST/Gov | genuine GST DRC-01C E2E provenance | execution/integration | Partly; official submission remains external | authenticated TEST intake → evidence bind → promotion → downstream result/audit |
+| Judgment | 23 failed + 38 pending summaries, 13 pending text, 6 stale running fetch logs | operational defect | Yes | TEST retry/stale handling verification + fresh pipeline evidence |
+| SEO | deployed route/indexability consistency | verification | Yes | route sweep + sitemap/canonical/robots/redirect evidence |
+| Location | empty live location registry | integration/evidence | Yes | source-to-DB/route reconciliation and duplicate/collision tests |
