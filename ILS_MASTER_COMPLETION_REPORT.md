@@ -134,3 +134,12 @@ This report intentionally does not declare readiness from code existence, synthe
 - No duplicate chunk analysis, retry/waiting/failure state, or cross-fixture contamination was observed.
 - **PHASE 6C-6 FRESH BASELINE = PASS.**
 - Advanced recovery/concurrency/idempotency/retry/timeout tests were not run in this step.
+
+
+## PHASE 6C-7 RESULT — Completed Job Repeat
+- The same completed TEST job was submitted to the reproduction processor exactly once again.
+- The second invocation returned `COMPLETED / ALREADY_COMPLETED`.
+- Before: analyses=3, provider calls=3, invocations=1, retry_count=0, next_chunk=3, status=COMPLETED, final synthesis present.
+- After: analyses=3, provider calls=3, invocations=2, retry_count=0, next_chunk=3, status=COMPLETED, final synthesis unchanged.
+- Classification: **IDEMPOTENT / SAFE REPEAT** for the completed-job scenario.
+- No advanced testing was executed in Phase 6C-7.
