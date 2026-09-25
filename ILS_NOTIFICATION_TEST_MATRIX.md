@@ -152,3 +152,53 @@ Reason: the authoritative TEST database architecture and migration sequence are 
 **PRODUCTION = HOLD**
 **MAIN = UNTOUCHED**
 **G6 = NOT MERGED**
+
+
+## PHASE 7D — FINAL NOTIFICATION SOURCE/PROVENANCE RECOVERY (READ-ONLY)
+
+Final exhaustive read-only recovery completed across accessible GitHub search/history, named controlled branches, TEST migration history, repository Supabase paths, TEST function inventory, and historical project evidence. No Production implementation, TEST schema/function change, notification send, Resend call, secret inspection, merge, or payment/auth/document/judgment modification occurred.
+
+Exact searches for migration/action names 436–446, 454–455, 521–523 and central-ingress, exact notification object/function names, and related terms including notification, Resend, provider_reference, delivery status, notification audit and notification deduplication returned no exact notification implementation source in the accessible Git repository. Broader notification search returned only incidental public HTML occurrences unrelated to the subsystem. Commit searches also produced no matching notification implementation commits.
+
+Controlled branches explicitly confirmed accessible and inspected: cursor/ils-master-completion-20260925; v9-final-test; release/g6-judgment-source-reconcile-20260925; cursor/g1-seo-indexability-cb89; cursor/customer-action-e2e-invoke-cb89. Their inspected repository/Supabase paths did not expose the exact notification Edge Function or notification migration source files. The Supabase function directory listings did not contain the notification E2E provider implementation.
+
+TEST migration history directly confirms this sequence: 20260907160740 action_436_customer_notification_communication_engine; 20260907160855 action_437_notification_priority_intelligence; 20260907161007 action_438_notification_delivery_reliability; 20260907161110 action_439_notification_preference_consent_engine; 20260907161207 action_440_notification_personalization_language_engine; 20260907161549 action_441_notification_multichannel_failover_engine; 20260907161703 action_442_notification_security_abuse_guard; 20260907161805 action_443_notification_observability_health_monitor; 20260907161910 action_444_notification_analytics_kpi_engine; 20260907162002 action_445_notification_automation_trigger_engine; 20260907162059 action_446_event_notification_orchestrator; 20260907165434 action_454_notification_security_bridge; 20260907165553 action_455_notification_e2e_simulation; 20260908103007 action_521_notification_e2e_safety_gate_preflight; 20260908110233 action_522_notification_e2e_synthetic_hostile_tests; 20260908114703 and 20260908114754 action_523_notification_e2e_release_gate; 20260911161740 action_notification_central_ingress_v1; 20260911161755 action_notification_central_ingress_v1_fix_professional_service_context; 20260911162427 fix_notification_central_ingress_schema_contract_v2.
+
+These are confirmed database migration provenance, not Git commit provenance. No reliable migration-file-to-commit mapping, source path, or parent commit was established.
+
+TEST currently confirms the notification architecture: trigger events/rules, orchestration, dispatch queue, delivery attempts, dead letters, failover, templates/rendering, preferences/consent, priority, security, health/KPI and E2E gate structures, plus the central ingress and notification E2E/release-gate functions. Exact Git source remains unverified.
+
+Historical structural blueprint evidence independently states that notification infrastructure exists but is operationally disconnected from several authoritative business events, with no verified producer/dispatcher linkage and no notification-producing DB triggers. It also records notification wiring and external delivery proof as open gaps. This evidence supports TEST architecture existence but does not establish a complete Production implementation or exact Production provider design. fileciteturn699file0
+
+### Component classification
+- Trigger events/rules: TEST DATABASE CONFIRMED; GIT NOT FOUND; PRODUCTION NOT FOUND; PRODUCTION INTENT UNKNOWN.
+- Orchestration: TEST DATABASE CONFIRMED; GIT NOT FOUND; PRODUCTION NOT FOUND; PRODUCTION INTENT UNKNOWN.
+- Dispatch queue: TEST DATABASE CONFIRMED; GIT NOT FOUND; PRODUCTION NOT FOUND; PRODUCTION INTENT UNKNOWN.
+- Delivery attempts: TEST DATABASE CONFIRMED; GIT NOT FOUND; PRODUCTION NOT FOUND; PRODUCTION INTENT UNKNOWN.
+- Dead letters/failover: TEST DATABASE CONFIRMED; GIT NOT FOUND; PRODUCTION NOT FOUND; PRODUCTION INTENT UNKNOWN.
+- Central ingress: TEST DATABASE CONFIRMED; GIT NOT FOUND; PRODUCTION NOT FOUND; PRODUCTION INTENT UNKNOWN.
+- E2E simulation/release gate: TEST DATABASE CONFIRMED; GIT NOT FOUND; PRODUCTION NOT FOUND; TEST-ONLY / Production intent UNKNOWN.
+- ils-notification-e2e-real: TEST runtime CONFIRMED from prior recovery; GIT NOT FOUND; PRODUCTION NOT FOUND; TEST-ONLY.
+- External provider adapter: TEST DATABASE PARTIAL; GIT NOT FOUND; PRODUCTION NOT FOUND; PRODUCTION INTENT UNKNOWN.
+- Business-event producer linkage: TEST DATABASE PARTIAL; GIT NOT FOUND; PRODUCTION NOT FOUND; PRODUCTION INTENT UNKNOWN.
+
+### Final decision
+B. PARTIAL SOURCE RECOVERED — DESIGN/IMPLEMENTATION EVIDENCE STILL MISSING.
+
+The TEST database architecture and migration sequence are strongly confirmed, but exact Git source/commit provenance, migration-file-to-commit linkage, and authoritative Production provider/dispatcher design remain missing. A would overstate the evidence. C is not yet justified because an existing TEST architecture and substantial historical design evidence do exist; the remaining gap is authoritative source/provenance and Production-intent evidence.
+
+Remaining exact information gap: an accessible Git commit/tree containing the actual notification migration/source files and exact E2E provider source, or an authoritative repository manifest binding the TEST migration/runtime functions to source commits and defining the Production provider/dispatcher contract.
+
+Until such evidence exists, no promotion/copy into Production may be inferred.
+
+### FINAL STATUS
+NOTIFICATION_E2E = BLOCKED
+PRODUCTION_NOTIFICATION_RUNTIME = MISSING
+GIT_PROVENANCE = PARTIAL
+SOURCE_RECOVERY = B
+JUDGMENT_CONCURRENCY = OPEN / UNVERIFIED
+PRODUCTION = HOLD
+MAIN = UNTOUCHED
+G6 = NOT MERGED
+
+No implementation or E2E execution was performed. STOP after documentation.
