@@ -122,3 +122,16 @@ The next work requiring external/authenticated execution is genuine Notification
 | Judgment | 23 failed + 38 pending summaries, 13 pending text, 6 stale running fetch logs | operational defect | Yes | TEST retry/stale handling verification + fresh pipeline evidence |
 | SEO | deployed route/indexability consistency | verification | Yes | route sweep + sitemap/canonical/robots/redirect evidence |
 | Location | empty live location registry | integration/evidence | Yes | source-to-DB/route reconciliation and duplicate/collision tests |
+
+
+## Phase 5 — Judgment + Security execution
+- Judgment source recovery: release/g6-judgment-source-reconcile-20260925 contains supabase/functions/process-judgment-summary/index.ts; current main does not contain that file, so the active summary implementation is not source-reconciled to main.
+- The recovered summary function has retryable waiting behavior for model failures, but no database processing lease/lock and no stale-running recovery in the function itself. This is a design-level concurrency/idempotency gap in the unreleased branch, not proof that Production uses that exact code.
+- Production read-only snapshot: 170 judgments; 157 text completed, 13 pending; 109 summaries completed, 23 failed, 38 pending; 59 rows with processing_error. judgment_summary_jobs: 94 completed, 59 waiting. judgment_fetch_logs: 12 total, 6 running, oldest records dated 2026-08-23. Cron instant-legal-judgment-auto-pipeline is active every 5 minutes and calls daily-judgment-pipeline.
+- No Production judgment rows were changed. No TEST judgment fix was deployed because the authoritative TEST runtime does not expose the recovered Production judgment pipeline for genuine E2E reproduction, and no external AI credential was requested.
+
+## Phase 5 Security execution
+- TEST does not contain the Production advocate-directory views or Production portal SECURITY DEFINER functions, so the requested hostile invocations cannot be reproduced faithfully without inventing a parallel fixture. No such fixture was created.
+- Production read-only inspection confirms all three advocate-directory views are owned by postgres, non-RLS, and reported is_updatable=YES and is_insertable_into=YES; anon and authenticated have broad DML grants. Underlying advocate_registrations has RLS with an admin ALL policy and a public registration INSERT policy. This is a real configuration-gap candidate, but no Production write/exploit was attempted.
+- Production advisor scan at 2026-09-25T08:38Z: 3 SECURITY DEFINER view errors, 4 mutable-search_path warnings, 3 anon-executable SECURITY DEFINER functions, 13 authenticated-executable SECURITY DEFINER functions, and leaked-password protection disabled.
+- No security migration, grant change, function change, view change, policy change, or authentication configuration change was made.
