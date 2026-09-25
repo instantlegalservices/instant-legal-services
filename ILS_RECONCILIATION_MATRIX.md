@@ -66,3 +66,18 @@ No branch was merged in Phase 0–3.
 | Retry count | 0 | 0 | No retry mutation |
 | Final synthesis | DETERMINISTIC_FINAL_SYNTHESIS | unchanged | No duplicate synthesis |
 | Classification | — | IDEMPOTENT / SAFE REPEAT | PASS for this scenario |
+
+## Phase 6C-8 — Concurrency Reproduction
+| Field | Observation | Classification |
+|---|---|---|
+| Fresh TEST run | `d054d451-290a-41ef-9168-064c8e7aa5d9` | Created once |
+| Fixture | `a0d302f9-4e92-4da3-a531-3175ba8c48a9` | Created once |
+| Job | `de6a1c93-4f1d-4803-ad7b-754a94862a1c` | Fresh |
+| Invocation A | Completed all 3 chunks | No overlap proven |
+| Invocation B | `ALREADY_COMPLETED` | Started after A completion |
+| Analyses | 3 | No duplicate observed, but overlap not tested |
+| Provider calls | 3 | All from A |
+| Final status | COMPLETED | Normal completion |
+| Concurrency classification | Genuine overlap not established | **HARNESS LIMITATION** |
+
+The existing harness can delay provider work, but the available execution orchestration did not produce a transactionally overlapping invocation. Using `interrupt_after_chunk` would return the first invocation rather than keep it active, so it cannot by itself create the required overlap window. No function modification or locking/idempotency mechanism was added.
