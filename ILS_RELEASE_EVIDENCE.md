@@ -37,3 +37,37 @@ DOCUMENT_E2E independent evidence reconciliation completed read-only against TES
 
 ## Evidence limitations
 A gate is not considered production-ready merely because an implementation exists. Payment, government, notification, professional-assignment, security, judgment, SEO and final release closure still require their own genuine evidence.
+
+## Subsequent safe verification findings
+
+### NOTIFICATION_E2E
+- Existing TEST function: `ils-notification-e2e-real` v1, JWT required.
+- It depends on external `RESEND_API_KEY` and is hard-bound to a TEST synthetic authenticated user.
+- It sends to the provider's test recipient and records evidence as `UNVERIFIED`; therefore the current function cannot by itself close the release gate.
+- Latest gate remains HOLD with 0 genuine verified evidence.
+- No notification send was executed and no secret was requested/exposed.
+- Classification: EXTERNAL DEPENDENCY + IMPLEMENTATION/EVIDENCE CONTRACT GAP; do not rewrite blindly.
+
+### PROFESSIONAL_ASSIGNMENT_E2E
+- TEST preflight is READY but explicitly disallows real professional identity, real assignment, real work offer and payout invocation.
+- Latest gate remains HOLD with 0 genuine verified evidence.
+- Synthetic run passed 9/10 steps but held the real-assignment boundary.
+- Classification: genuine authenticated professional E2E dependency; no synthetic result may be promoted to VERIFIED.
+
+### PAYMENT_E2E
+- Production `razorpay-payments` v1 and `razorpay-webhook` v1 are active.
+- Existing chain is preserved and no payment code was changed.
+- Read-only inspection found no unique constraint on `payment_events`; webhook inserts an event before state updates and does not itself deduplicate event rows. This is a candidate replay/idempotency gap requiring TEST-only design/test before any production change.
+- Provider secrets are server-side only; genuine Razorpay transaction evidence remains unavailable in the current tool context.
+- Gate remains HOLD.
+
+### GST/GOV
+- TEST has native DRC-01C tables, migrations and authenticated intake bridge; current main has no corresponding GST source match and Production has no GST migrations.
+- TEST migration history contains the GST case/intake, private storage, binding, promotion, lifecycle, audit, retention and authenticated intake work.
+- TEST private bucket `ils-gst-drc01c-evidence` is non-public, 50 MiB limited, MIME restricted; authenticated case-scoped SELECT/INSERT policies are present.
+- Native functions enforce auth.uid ownership, SHA-256 validation, size/MIME boundaries, duplicate/replay blocking, case/path binding and promotion gates.
+- Latest GST harness run is synthetic-only BLOCKED at provenance; TEST case count is 0.
+- Classification remains HOLD / existing partial implementation; no TEST→Production promotion.
+
+## Current safe-work boundary
+The next work requiring external/authenticated execution is genuine Notification/Professional/Payment/GST E2E. No credentials, secrets, production approval, or synthetic substitution will be invented.
