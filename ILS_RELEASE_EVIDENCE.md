@@ -164,3 +164,13 @@ The next work requiring external/authenticated execution is genuine Notification
 - Counts before→after: analyses 3→3; provider calls 3→3; invocations 1→2; retry_count 0→0; next_chunk 3→3. Job status remained COMPLETED and final synthesis remained unchanged.
 - Classification: **IDEMPOTENT / SAFE REPEAT** for this completed-job repeat scenario. The processor records the second invocation but performs no chunk/provider/final-synthesis mutation.
 - No advanced concurrency/stale/recovery/retry/timeout tests were run.
+
+## PHASE 6C-8 — Overlapping Processor Concurrency Reproduction
+- Fresh TEST run: `d054d451-290a-41ef-9168-064c8e7aa5d9`; fixture: `a0d302f9-4e92-4da3-a531-3175ba8c48a9`; judgment: `df1c6e92-4335-4799-837f-4f0043a727ea`; job: `de6a1c93-4f1d-4803-ad7b-754a94862a1c`.
+- Pre-state: PENDING, next_chunk=0, 3 chunks, 0 analyses, 0 provider calls, 0 invocations, retry_count=0, final_summary=NULL, next_retry_at=NULL.
+- Provider delay was set to 3000ms solely using the existing fixture control; no processor semantics were changed.
+- Two invocation requests were issued concurrently at the tool orchestration layer, but genuine database-level overlap was NOT established. Invocation A ran from 09:04:59.639648Z to the same timestamp in its recorded invocation row and ultimately completed all 3 chunks; invocation B began at 09:05:10.554010Z and observed COMPLETED/next_chunk=3, returning ALREADY_COMPLETED.
+- Final job evidence: COMPLETED, next_chunk=3, 3 analyses, 3 provider calls, 2 invocation records, retry_count=0, final synthesis present. Provider calls all belong to invocation A, chunks 0/1/2 once each.
+- Because invocation B did not execute while A was in PROCESSING, this run cannot establish concurrency safety or concurrency duplication.
+- **Classification: HARNESS LIMITATION — genuine overlap could not be established without changing the reproduction semantics.** No remediation or additional concurrency mechanism was introduced.
+- No further Phase 6C advanced tests were executed.
