@@ -443,3 +443,50 @@ MAIN = UNTOUCHED
 G6 = NOT MERGED
 
 No implementation or E2E execution was performed. STOP after documentation.
+
+## Phase 7F — Notification Provider Decision + Configuration Readiness (2026-09-25)
+
+Phase 7F remained strictly read-only/reconciliation-only. No provider was configured, no secret was inspected or created, no provider API was called, no notification was delivered, and no Production/main/G6 implementation occurred.
+
+### Provider evidence
+The only externally evidenced notification provider in the existing TEST runtime is **Resend**, through TEST Edge Function `ils-notification-e2e-real` v1. The function uses a server-side `RESEND_API_KEY`, sends an email request, captures the provider email id, and polls the provider resource for `last_event`. TEST therefore establishes **Resend email capability**, but not Production authority.
+
+The TEST notification database additionally contains provider-neutral delivery-attempt fields for provider, provider reference, result, failure code/reason, attempt time and next retry, plus queue dedupe/status/attempt fields and dead-letter reason/attempt/resolution fields. These structures support the Phase 7E contract but do not establish a Production provider implementation.
+
+### Decision
+**B. PROVIDER CANDIDATE IDENTIFIED BUT PRODUCTION AUTHORITY NOT ESTABLISHED.**
+
+Resend is classified as **CANDIDATE ONLY**. No other provider was introduced because none was evidenced by the existing ILS notification runtime/repository. Production Resend authority is not proven.
+
+### Secret status
+`RESEND_API_KEY = UNKNOWN`. No value was inspected or exposed, and no non-secret metadata available in the inspected project surfaces established PRESENT or ABSENT.
+
+### Contract reconciliation
+Current TEST Resend evidence supports email, provider acceptance/reference, provider status polling, server-side credential use and an Idempotency-Key. It does not yet prove a Production-capable durable adapter contract for all required semantics: persistent provider-reference binding, durable final delivery-state reconciliation, retryable/permanent failure classification, timeout/unknown-outcome handling, and Production webhook/status reconciliation.
+
+### Exact pre-implementation decisions remaining
+- authorize the Production provider;
+- finalize provider-neutral adapter/error/idempotency/reconciliation semantics;
+- separately provision Production credentials;
+- explicitly authorize Production business-event producers;
+- establish source/deployment/migration/rollback provenance;
+- only then implement and run isolated TEST E2E/security/failure/audit verification before Production authorization.
+
+Provider decision, credentials, implementation, and delivery evidence remain separate release controls.
+
+### Working-chain protection
+Phase 7F authorizes no changes to payment, customer authentication, documents, judgments, portal messaging, or any existing working function.
+
+### FINAL STATUS — PHASE 7F
+NOTIFICATION_TARGET_CONTRACT = FROZEN
+PRODUCTION_PROVIDER = CANDIDATE_ONLY
+RESEND_API_KEY = UNKNOWN
+NOTIFICATION_E2E = BLOCKED
+PRODUCTION_NOTIFICATION_RUNTIME = MISSING
+PRODUCTION_BUSINESS_PRODUCERS = NOT AUTHORIZED
+JUDGMENT_CONCURRENCY = OPEN / UNVERIFIED
+PRODUCTION = HOLD
+MAIN = UNTOUCHED
+G6 = NOT MERGED
+
+No implementation or provider call was performed. STOP after evidence/decision reconciliation.
