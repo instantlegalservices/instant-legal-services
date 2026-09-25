@@ -101,3 +101,22 @@ This report intentionally does not declare readiness from code existence, synthe
 - Location: HOLD because live location registries are empty in TEST and Production; no architecture replacement.
 - Security: HOLD pending TEST reproduction/hostile verification of advisor findings; Production untouched.
 - Production remains HOLD.
+
+
+## 24. PHASE 5 RESULT
+### Judgment
+**HOLD / PARTIALLY VERIFIED.** Production evidence confirms unresolved operational backlog and stale-running fetch records. The recovered summary processor is on release/g6-judgment-source-reconcile-20260925, not main; it has retryable waiting behavior but lacks an explicit processing lease/lock and stale-state recovery. Because the Production runtime bundle could not be retrieved and TEST does not expose the same judgment runtime, no genuine TEST defect reproduction was completed and no fix was deployed.
+
+### Security
+**HOLD.** Production inspection confirms a configuration-gap candidate: the three public advocate-directory views are updatable/insertable and grant broad DML to anon/authenticated. The underlying advocate table has RLS, so exploitability was not assumed. TEST lacks equivalent views/portal functions, so the requested hostile role matrix could not be reproduced faithfully without inventing a parallel fixture. Production advisor findings remain open.
+
+### Phase 5 safety result
+- TEST-only execution boundary preserved.
+- No Production writes, migrations, function updates, policy updates, view/grant changes, data repair, or Auth configuration changes.
+- No main write.
+- No external provider credentials requested or used.
+- No judgment data repaired.
+- No security weakening performed.
+
+### Exact next phase
+**PHASE 6 — TEST PARITY + CONTROLLED JUDGMENT/SECURITY REPRODUCTION.** Recover the exact Production judgment Edge Function source/runtime and establish a faithful TEST equivalent; reproduce retry/concurrency/stale-state scenarios with a controlled synthetic fixture. In parallel, establish a faithful TEST copy of the existing advocate-directory/portal authorization surface from existing source/migrations only, then run anon/User-A/User-B/authorized/unauthorized hostile tests. Only proven defects receive minimal branch-only fixes. Production and main remain frozen.
