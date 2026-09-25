@@ -90,3 +90,28 @@ Processor result: `COMPLETED / ALREADY_COMPLETED`.
 **PHASE 6C-7 = PASS — IDEMPOTENT / SAFE REPEAT.**
 
 Only the completed-job repeat case was tested; concurrency, stale/recovery, retry, timeout and interruption scenarios remain untested.
+
+## Phase 6C-8 — Overlap Attempt
+
+| Item | Result |
+|---|---|
+| Fresh run | `d054d451-290a-41ef-9168-064c8e7aa5d9` |
+| Fresh fixture | `a0d302f9-4e92-4da3-a531-3175ba8c48a9` |
+| Job | `de6a1c93-4f1d-4803-ad7b-754a94862a1c` |
+| Provider delay | 3000 ms |
+| Invocation A | `b8b9e2d2-8c11-4c63-8b6e-7d7e3c9a1101` |
+| Invocation B | `b8b9e2d2-8c11-4c63-8b6e-7d7e3c9a1102` |
+| A observed status | PENDING |
+| A outcome | COMPLETED |
+| B observed status | COMPLETED |
+| B outcome | ALREADY_COMPLETED |
+| Final analyses | 3 |
+| Final provider calls | 3 |
+| Final invocations | 2 |
+| Duplicate processing | Not observed |
+| Genuine PROCESSING overlap | **Not established** |
+
+### Why this is a limitation
+The first invocation must remain actively executing while the second starts. The available TEST execution path serialized the two function calls sufficiently that B began after A's completion. The existing interrupt control cannot solve this because it ends A's invocation. Therefore the correct evidence-based classification is **HARNESS LIMITATION**, not concurrency-safe.
+
+No repair or concurrency protection was introduced.
