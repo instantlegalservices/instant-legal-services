@@ -174,3 +174,15 @@ The next work requiring external/authenticated execution is genuine Notification
 - Because invocation B did not execute while A was in PROCESSING, this run cannot establish concurrency safety or concurrency duplication.
 - **Classification: HARNESS LIMITATION — genuine overlap could not be established without changing the reproduction semantics.** No remediation or additional concurrency mechanism was introduced.
 - No further Phase 6C advanced tests were executed.
+
+
+## PHASE 6C-8O — Two-Session Genuine Overlap Execution
+
+- TEST-only orchestration artifact created: tests/phase-6c-8o-two-session.mjs.
+- Artifact is orchestration-only: it calls the existing processor through two separately initiated HTTP requests, with an explicit delay before B; it adds no processor protection or state-machine behavior.
+- Fresh TEST run/fixture was created for the intended execution: run 4dc48cbe-eb14-43a7-b2a3-c64ab10e0e4a; fixture ba913b3e-f282-40a7-a6cb-5d31007dad2c; judgment d0209932-8453-4544-816c-de39fae126a8; job ca7cf286-3d95-48c6-b99b-57e2f456805d; 3 chunks; deterministic SUCCESS; provider delay 8000ms.
+- Pre-execution state remained PENDING, next_chunk=0, analyses=0, provider calls=0, invocations=0, retry_count=0, final synthesis=NULL.
+- The available execution environment could not resolve the TEST Supabase hostname from the external orchestration runtime. Consequently neither processor invocation A nor B was executed through the two-session runner.
+- Genuine temporal overlap was NOT demonstrated. No concurrency result was inferred.
+- PHASE 6C-8O = HARNESS LIMITATION.
+- No processor semantics, concurrency protection, retry behavior, provider behavior, Production, main, or G6 were changed.
