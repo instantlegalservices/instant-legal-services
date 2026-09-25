@@ -42,3 +42,43 @@ Exact blocker: no authoritative Production notification delivery runtime is curr
 **PRODUCTION = HOLD**  
 **MAIN = UNTOUCHED**  
 **G6 = NOT MERGED**
+
+
+## PHASE 7B — NOTIFICATION PRODUCTION RUNTIME RECONSTRUCTION + GENUINE TEST PREREQUISITE CHECK (2026-09-25)
+
+### Production discovery
+Read-only inspection of Production found no complete notification delivery runtime. Public tables matching notification/email/resend/delivery/queue/dead-letter/message/template/provider/dispatch/mail were not found, except `client_chat_messages`, which is an existing portal messaging table and is not an external notification delivery system. Public functions matching those terms were limited to client-message functions (`admin_send_client_message`, `advocate_send_client_message`, `send_client_portal_message`); these persist portal chat messages and are not provider delivery functions. No notification-related Production database triggers were found. No notification-related scheduled cron job was found. The current Production Edge Function inventory contains no notification/email/Resend delivery function. Production migrations also contain no notification-specific migration entries.
+
+Production therefore has no directly evidenced trigger -> processor -> provider -> persisted delivery -> audit notification chain in the current runtime.
+
+### TEST contrast
+TEST contains the notification architecture: `ils_notification_trigger_events`, `ils_notification_orchestration_runs`, `ils_notification_orchestration_steps`, `ils_notification_dispatch_queue`, `ils_notification_delivery_attempts`, `ils_notification_dead_letters`, rendered messages, templates, consent/preferences, health/security/KPI structures and E2E gate structures. `ils_notification_central_ingress_v1` exists and is a service-role-only ingress boundary. Delivery attempts have provider/message-reference/result/retry fields, while the dispatch queue has dedupe/status/attempt fields and dead letters have attempts/resolution fields.
+
+The TEST `ils-notification-e2e-real` v1 is a TEST-only provider proof function. It requires authenticated TEST synthetic identity and `RESEND_API_KEY`, calls Resend and polls provider status, but its current evidence contract remains `UNVERIFIED/HOLD` even when provider delivery is observed.
+
+### Git provenance
+Repository searches on the connected GitHub repository found no exact source for `notification_central_ingress`, `ils-notification-e2e-real`, or `RESEND_API_KEY`. No exact Production notification source/version relationship was found. Supabase deployment hashes were not treated as Git provenance.
+
+**GIT_PROVENANCE = NOT_FOUND** for an exact Production notification runtime source.
+
+### Provider prerequisite
+`RESEND_API_KEY = UNKNOWN`. No secret value was inspected or exposed. No provider request was made and Resend was not called in Phase 7B.
+
+### Production architecture classification
+**C. PRODUCTION NOTIFICATION RUNTIME MISSING.**
+This classification is based on direct read-only inspection of Production Edge Functions, public schema, public functions, triggers, cron jobs and migration history. The existing `client_chat_messages`/portal-message functions do not constitute a notification provider runtime.
+
+### Minimum next closure action
+Do not implement or promote anything yet. The smallest next action is to recover the authoritative intended notification source/architecture from existing controlled artifacts/Git history (if it exists), then establish an isolated TEST genuine provider prerequisite and execution path whose evidence contract can legitimately produce VERIFIED. If no authoritative source exists, a separate design/implementation phase is required for the missing Production runtime; that phase must define provider adapter, queue/worker, persisted delivery state, retry/dead-letter handling, provider acceptance/reference capture, audit binding, authentication/RLS, and deployment provenance. No such implementation was performed in 7B.
+
+### Execution boundary
+No E2E notification was executed. No Resend request was made. No Production data/function/configuration was changed. No main change was made. G6 was not merged. Payment chain was untouched. Judgment 6C evidence was preserved unchanged.
+
+**NOTIFICATION_E2E = BLOCKED**
+**PRODUCTION_NOTIFICATION_RUNTIME = MISSING**
+**GIT_PROVENANCE = NOT_FOUND**
+**RESEND_API_KEY = UNKNOWN**
+**JUDGMENT_CONCURRENCY = OPEN / UNVERIFIED**
+**PRODUCTION = HOLD**
+**MAIN = UNTOUCHED**
+**G6 = NOT MERGED**
