@@ -490,3 +490,90 @@ MAIN = UNTOUCHED
 G6 = NOT MERGED
 
 No implementation or provider call was performed. STOP after evidence/decision reconciliation.
+
+
+## Phase 7G — Production Notification Provider Authorization Decision (2026-09-25)
+
+### Decision scope
+Formal provider-authorization decision record only. No Production implementation, migration, deployment, secret creation or inspection, provider API call, notification delivery, business-event trigger creation, or merge was performed.
+
+### Provider candidate
+**Candidate:** Resend / Email
+
+- TEST capability = CONFIRMED
+- Production authority = NOT PROVEN
+- Production credentials = UNKNOWN
+- Production implementation = NOT FOUND
+
+The TEST provider is not treated as Production-authoritative without explicit authorization and supporting evidence.
+
+### Phase 7E contract compatibility — current evidence
+| Requirement | Current classification |
+|---|---|
+| Provider acceptance/reference | PARTIAL |
+| Delivery-status semantics | PARTIAL |
+| Retry classification | PARTIAL |
+| Timeout/unknown outcome | PARTIAL |
+| Idempotency/reconciliation | PARTIAL |
+| Provider webhook/status reconciliation | UNKNOWN |
+| Durable provider reference | PARTIAL |
+| Failure classification | PARTIAL |
+
+These classifications are limited to currently evidenced TEST behavior. Missing Production semantics are not inferred.
+
+### Formal provider decision record
+**Decision: PRODUCTION PROVIDER NOT YET AUTHORIZED**
+
+**Candidate: Resend / Email**
+
+**Reason:** TEST capability exists, but Production authority and the complete provider contract required by the frozen Phase 7E target contract are not yet established.
+
+**Required next decision:** Explicit Production provider authorization.
+
+### Evidence required before Resend may become Production-authoritative
+1. Explicit provider authorization.
+2. Approved channel = Email.
+3. Provider contract finalized, including acceptance/reference, delivery status, retry/failure, timeout/unknown-outcome and reconciliation semantics.
+4. Security/privacy review completed.
+5. Credential provisioning plan approved.
+6. Server-side secret boundary defined and preserved.
+7. Implementation source/provenance decision recorded.
+8. Independent rollback plan approved.
+9. Isolated TEST implementation completed.
+10. Genuine TEST provider E2E completed.
+11. Failure/retry/timeout verification completed.
+12. Audit reconciliation completed.
+
+No item above was executed by Phase 7G.
+
+### Business producer authorization
+No Production notification producer is authorized by this decision. The following remain individually unauthorized pending an explicit business requirement and producer contract: customer notifications; service-request notifications; payment notifications; document notifications; professional-assignment notifications; government notifications; judgment notifications.
+
+### Working-chain protection
+Provider/notification work must not modify or replace the existing payment chain, customer authentication, document chain, judgment pipeline, portal messaging, or any other existing working function. Notification remains a separately controlled layer with independent rollback.
+
+### Implementation gates
+- N-03 Provider authorization = OPEN
+- N-04 Business producer authorization = OPEN
+- N-05 Data contract = OPEN
+- N-06 Security design = FROZEN at target-contract level; implementation pending
+- N-07 Migration plan = OPEN
+- N-08 Regression plan = OPEN
+- N-09 Rollback = OPEN
+- N-10 TEST E2E = OPEN
+- N-11 Production readiness = OPEN
+- N-12 Production authorization = OPEN
+
+### Phase 7G final status
+NOTIFICATION_TARGET_CONTRACT = FROZEN
+PRODUCTION_PROVIDER = CANDIDATE_ONLY / NOT AUTHORIZED
+RESEND_API_KEY = UNKNOWN
+PRODUCTION_NOTIFICATION_RUNTIME = MISSING
+PRODUCTION_BUSINESS_PRODUCERS = NOT AUTHORIZED
+NOTIFICATION_E2E = BLOCKED
+JUDGMENT_CONCURRENCY = OPEN / UNVERIFIED
+PRODUCTION = HOLD
+MAIN = UNTOUCHED
+G6 = NOT MERGED
+
+**STOP AFTER DECISION DOCUMENTATION.**
