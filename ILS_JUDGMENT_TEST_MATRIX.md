@@ -70,3 +70,23 @@ Advanced tests were intentionally not executed:
 - interruption/stale state
 - retry/backoff
 - timeout/failure recovery
+
+
+## Phase 6C-7 — Completed Job Repeat
+
+| Metric | Before | After | Change |
+|---|---:|---:|---:|
+| Chunk analyses | 3 | 3 | 0 |
+| Provider calls | 3 | 3 | 0 |
+| Invocation records | 1 | 2 | +1 |
+| Retry count | 0 | 0 | 0 |
+| next_chunk | 3 | 3 | 0 |
+| Job status | COMPLETED | COMPLETED | none |
+| Final synthesis | present | same | unchanged |
+
+Second invocation ID: `c8e40f12-0d4b-4a6a-9dd0-7b6c4c5f8e21`.
+Processor result: `COMPLETED / ALREADY_COMPLETED`.
+
+**PHASE 6C-7 = PASS — IDEMPOTENT / SAFE REPEAT.**
+
+Only the completed-job repeat case was tested; concurrency, stale/recovery, retry, timeout and interruption scenarios remain untested.
