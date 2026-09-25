@@ -1,0 +1,1 @@
+alter table public.ils_test_synthetic_professional_auth_handoffs add column if not exists handoff_code_hash text, add column if not exists provider_token_hash text;
