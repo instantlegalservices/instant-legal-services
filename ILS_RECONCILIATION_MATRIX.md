@@ -31,3 +31,15 @@ No branch was merged in Phase 0–3.
 | SEO | generator + robots/sitemap | materially divergent | location/SEO test artifacts | deployed runtime not yet independently swept | cursor/g1 ahead 5 | UNVERIFIED |
 | Location/LGD | source architecture | substantial V9 work | registry table exists but 0 rows | registry exists but 0 rows | multiple branches | HOLD |
 | Security | hardened RLS source | security/test artifacts | hostile infrastructure | 3 SECURITY DEFINER view errors + function/search_path warnings | none merged | HOLD |
+
+
+## Phase 5 — Judgment + Security
+| Area | Finding | Classification | Status |
+|---|---|---|---|
+| Judgment source | Summary processor exists on release/g6 branch, not main; Production runtime source could not be retrieved through current function-bundle interface | Source/runtime reconciliation gap | HOLD |
+| Judgment retry | Retryable waiting exists, but no lease/stale recovery or concurrency lock in recovered processor | Design-level gap; Production runtime defect not proven | HOLD |
+| Judgment production state | 170 rows; 13 pending text; 23 failed summaries; 38 pending summaries; 59 processing errors; 59 waiting jobs; 6 stale running fetch logs | Operationally unverified | HOLD |
+| Advocate-directory views | Updatable/insertable Production views with broad anon/authenticated DML grants; underlying table has RLS | Configuration-gap candidate; exploit not reproduced | HOLD |
+| SECURITY DEFINER functions | 3 anon-executable + 13 authenticated-executable Production functions; TEST lacks equivalent portal schema | TEST parity gap | HOLD |
+| search_path | 4 Production advisor warnings; no faithful TEST equivalents | Configuration warning; impact unproven | HOLD |
+| Leaked passwords | Production Auth protection disabled | Security configuration gap / human decision | HOLD |
