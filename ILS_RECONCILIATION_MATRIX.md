@@ -386,3 +386,50 @@ MAIN = UNTOUCHED
 G6 = NOT MERGED
 
 No implementation or E2E execution was performed. STOP after documentation.
+
+## Phase 7F — Provider Decision + Configuration Readiness
+
+| Control | Evidence | Status |
+|---|---|---|
+| TEST external provider | TEST `ils-notification-e2e-real` v1 directly calls Resend email API | CONFIRMED |
+| TEST channel | Email | CONFIRMED |
+| Other external providers | None evidenced in inspected TEST runtime/repository | NOT FOUND |
+| Provider acceptance/reference | Resend response id captured by TEST function | PARTIAL |
+| Provider delivery status | Resend `last_event` polling in TEST function | PARTIAL |
+| Durable delivery-state binding | TEST provider proof writes E2E evidence but does not establish canonical delivery-attempt state | PARTIAL |
+| Retry/failure classification | Send failure is surfaced; durable retryable/permanent taxonomy not evidenced in provider function | PARTIAL |
+| Timeout/unknown outcome | Polling can terminate without delivered; durable reconciliation contract not evidenced | PARTIAL |
+| Idempotency | Idempotency-Key sent by TEST provider function; canonical durable reconciliation not established there | PARTIAL |
+| Secure credential model | Server-side environment secret reference only | PARTIAL |
+| Resend Production authority | No Production notification provider runtime/config/provenance evidenced | NOT FOUND |
+| `RESEND_API_KEY` presence | No non-secret metadata establishing presence/absence; value not inspected | UNKNOWN |
+| Git provenance | Exact notification source/commit not recovered | PARTIAL |
+| Production business producers | Not authorized/evidenced | NOT FOUND |
+
+### Provider decision
+**B. PROVIDER CANDIDATE IDENTIFIED BUT PRODUCTION AUTHORITY NOT ESTABLISHED.**
+
+Resend is a TEST-evidenced candidate only. It is not a Production-authoritative provider merely because the TEST function can call it.
+
+### Release separation
+- Provider decision ≠ provider credentials.
+- Provider credentials ≠ provider implementation.
+- Provider implementation ≠ genuine Production delivery evidence.
+
+### Required before implementation
+Explicit Production provider authorization; finalized adapter/error/idempotency/reconciliation contract; credential provisioning plan; authorized business-event producers; migration/deployment/rollback plan; source provenance; isolated TEST implementation and genuine E2E/security/failure/audit proof.
+
+### Protection lock
+No changes to payment, customer authentication, documents, judgments, portal messaging, or existing working functions are authorized by Phase 7F.
+
+### Phase 7F final
+NOTIFICATION_TARGET_CONTRACT = FROZEN
+PRODUCTION_PROVIDER = CANDIDATE_ONLY
+RESEND_API_KEY = UNKNOWN
+NOTIFICATION_E2E = BLOCKED
+PRODUCTION_NOTIFICATION_RUNTIME = MISSING
+PRODUCTION_BUSINESS_PRODUCERS = NOT AUTHORIZED
+JUDGMENT_CONCURRENCY = OPEN / UNVERIFIED
+PRODUCTION = HOLD
+MAIN = UNTOUCHED
+G6 = NOT MERGED
