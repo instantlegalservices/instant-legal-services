@@ -81,3 +81,21 @@ No branch was merged in Phase 0–3.
 | Concurrency classification | Genuine overlap not established | **HARNESS LIMITATION** |
 
 The existing harness can delay provider work, but the available execution orchestration did not produce a transactionally overlapping invocation. Using `interrupt_after_chunk` would return the first invocation rather than keep it active, so it cannot by itself create the required overlap window. No function modification or locking/idempotency mechanism was added.
+
+
+## Phase 6C-8R — Overlap Capability
+
+| Capability | Finding |
+|---|---|
+| Provider delay | Existing provider_delay_ms calls pg_sleep inside the processor invocation/transaction |
+| Persistent PROCESSING | Yes; processor sets job PROCESSING before chunk loop |
+| Live invocation during delay | Yes, if the database call remains active in an independent session |
+| Interrupt control | Returns the invocation; cannot itself create overlap |
+| Background/asynchronous worker | None inside the harness |
+| Invocation lifecycle | Persisted start/observation/end fields |
+| Lock/lease/token | None by design |
+| Current execution orchestrator | Did not provide reliable independent-session concurrency |
+| Minimum safe mechanism | Two independent TEST DB sessions/connections, orchestration-only |
+| Processor semantics change required? | No |
+
+**6C-8R classification: EXISTING HARNESS CAN ESTABLISH GENUINE OVERLAP** in principle, using its existing provider-delay behavior and two independent DB sessions. The prior 6C-8 experiment remains classified **HARNESS LIMITATION** because that independent-session overlap was not actually established.
