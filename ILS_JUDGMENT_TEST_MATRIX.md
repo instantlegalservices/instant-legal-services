@@ -115,3 +115,19 @@ Only the completed-job repeat case was tested; concurrency, stale/recovery, retr
 The first invocation must remain actively executing while the second starts. The available TEST execution path serialized the two function calls sufficiently that B began after A's completion. The existing interrupt control cannot solve this because it ends A's invocation. Therefore the correct evidence-based classification is **HARNESS LIMITATION**, not concurrency-safe.
 
 No repair or concurrency protection was introduced.
+
+
+## PHASE 6C-8R — Overlap-Capability Investigation
+
+Inspection of the live TEST reproduction functions shows:
+- provider_delay_ms is an existing fixture control. The processor calls pg_sleep(delay) inside the same database function invocation/transaction after recording the provider call.
+- interrupt_after_chunk is an existing early-return control. It records the chunk analysis and returns PROCESSING, ending the invocation; it does not keep a live processor executing.
+- Invocation lifecycle is persisted in ils_test_judgment_repro_invocations: the processor inserts an invocation row at entry, records observed state, and sets ended_at/outcome before returning.
+- The processor has no asynchronous/background worker, detached task, autonomous transaction, or internal concurrency orchestrator.
+- Job state is persisted as PENDING/PROCESSING/WAITING/FAILED/COMPLETED, but PROCESSING is not an execution lease. There is no claim/lock/token mechanism in the reproduction semantics.
+- Therefore the existing processor semantics can technically expose an overlap window via provider_delay_ms, provided two genuinely independent database sessions execute the function concurrently.
+- The Phase 6C-8 orchestration path available here did not provide a reliable independent-session/concurrent execution primitive: the two calls were serialized and B started after A completed.
+- Smallest semantics-neutral mechanism: a TEST-only orchestration runner using two independent DB connections/sessions, start invocation A, wait only until A is inside its existing provider-delay window, then issue invocation B on the second independent connection. No SQL/function/state-machine change is required. This is orchestration infrastructure only.
+- Do not implement or run that mechanism in 6C-8R; this phase is investigation-only.
+
+**Classification: A. EXISTING HARNESS CAN ESTABLISH GENUINE OVERLAP** at the processor/harness semantics level, but the currently available execution orchestration cannot reliably establish it. The prior 6C-8 result remains **HARNESS LIMITATION** and is not overwritten.
