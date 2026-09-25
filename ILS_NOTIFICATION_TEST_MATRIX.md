@@ -202,3 +202,77 @@ MAIN = UNTOUCHED
 G6 = NOT MERGED
 
 No implementation or E2E execution was performed. STOP after documentation.
+
+## PHASE 7F — NOTIFICATION PROVIDER DECISION + CONFIGURATION READINESS (2026-09-25)
+
+### Scope
+Provider research/contract reconciliation only. No provider configuration, secret creation/inspection, provider API call, notification delivery, migration, implementation, merge, or Production change occurred.
+
+### STEP 1 — TEST provider inventory
+**Resend** is the only external provider directly evidenced in the inspected TEST notification runtime. TEST Edge Function `ils-notification-e2e-real` v1 is JWT-protected and TEST-only. It requires the server-side `RESEND_API_KEY`, calls the Resend email endpoint, captures the response `id`, and polls the email resource for `last_event`.
+
+**Channel:** email.
+
+**Provider request contract evidenced:** sender, recipient list, subject, HTML content, correlation header, and Idempotency-Key. The actual TEST function uses fixed TEST addresses/content; this is not Production configuration.
+
+**Acceptance/reference:** provider HTTP success plus returned email id; the id is persisted in TEST E2E evidence.
+
+**Delivery status:** provider `last_event` is polled; `delivered` is recognized by the TEST function.
+
+**Retry/failure:** provider send failure is surfaced as a failed provider call; bounded status polling occurs. A complete durable retryable/permanent classification for Production is not evidenced by the TEST provider function.
+
+**Timeout/unknown outcome:** the function stops after bounded polling if delivery is not observed; a durable Production reconciliation strategy is not evidenced.
+
+**Idempotency:** an Idempotency-Key is supplied. Canonical durable dedupe/reconciliation at the provider adapter level is not established by this TEST function alone.
+
+### STEP 2 — Provider options
+| Provider | TEST support | Production support evidence | Channel | Acceptance semantics | Delivery status | Reference ID | Retry semantics | Timeout/unknown | Secret | Source/provenance | Status |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Resend | CONFIRMED | NOT FOUND | email | PARTIAL | PARTIAL | email `id` | PARTIAL | PARTIAL | UNKNOWN | PARTIAL | CANDIDATE ONLY |
+
+No unrelated provider was introduced for comparison. No Production provider is selected.
+
+### STEP 3 — Resend
+- TEST Resend capability = **CONFIRMED**.
+- Production Resend authority = **NOT PROVEN**.
+- `RESEND_API_KEY` = **UNKNOWN**. Its value was not inspected, exposed, created, or inferred. No available non-secret metadata established PRESENT or ABSENT.
+
+### STEP 4 — Provider-neutral contract check
+The current Resend evidence can satisfy some Phase 7E requirements (provider acceptance/reference, provider status where available, server-side credentials and request idempotency), but the Production contract is not fully evidenced for durable provider-reference binding, durable delivery-state reconciliation, retryable/permanent failure classification, timeout/unknown-outcome handling and Production webhook/status reconciliation.
+
+Therefore Resend is **candidate-only**, not authoritative.
+
+### STEP 5 — Data/security contract
+Only the contract-level notification payload is in scope: **recipient, channel, content, correlation ID, idempotency reference**. No actual customer data or real recipient data was inspected or transmitted.
+
+Existing TEST security evidence includes service-role-only central ingress, source/recipient binding, idempotency validation/duplicate suppression, authenticated synthetic provider-proof invocation and sensitive-data filtering structures. No new Production policy was created.
+
+### STEP 6 — Decision status
+**B. PROVIDER CANDIDATE IDENTIFIED BUT PRODUCTION AUTHORITY NOT ESTABLISHED.**
+
+### STEP 7 — Remaining prerequisites
+1. Explicitly authorize the Production provider.
+2. Finalize the provider-neutral adapter contract and failure/unknown/idempotency/reconciliation semantics.
+3. Provision Production credentials separately and securely; credential presence is not a provider-selection proof.
+4. Explicitly authorize Production business-event producers.
+5. Establish implementation source provenance plus migration/deployment/rollback plan.
+6. Only after those decisions, implement in isolated TEST and prove genuine E2E/security/failure/audit behavior before any Production release authorization.
+
+### STEP 8 — Working-chain protection
+Future provider/notification work must not modify or replace the payment chain, customer authentication, document chain, judgment pipeline, portal messaging, or existing working functions.
+
+### STEP 9 — Evidence / final freeze
+The Phase 7A–7E evidence is preserved. Phase 7F adds provider decision/reconciliation only.
+
+NOTIFICATION_TARGET_CONTRACT = FROZEN
+PRODUCTION_PROVIDER = CANDIDATE_ONLY
+RESEND_API_KEY = UNKNOWN
+NOTIFICATION_E2E = BLOCKED
+PRODUCTION_NOTIFICATION_RUNTIME = MISSING
+PRODUCTION_BUSINESS_PRODUCERS = NOT AUTHORIZED
+JUDGMENT_CONCURRENCY = OPEN / UNVERIFIED
+PRODUCTION = HOLD
+MAIN = UNTOUCHED
+G6 = NOT MERGED
+
+**STOP after evidence/decision reconciliation.**
