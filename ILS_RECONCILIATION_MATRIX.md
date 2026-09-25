@@ -120,3 +120,22 @@ The existing harness can delay provider work, but the available execution orches
 | Classification | HARNESS LIMITATION |
 
 The experiment is fail-closed: no result about concurrency safety, duplication, or race behavior is claimed.
+
+
+
+## Phase 6C-8F — Final Concurrency Blocker Freeze
+
+| Evidence | Status |
+|---|---|
+| 6C-6 normal single execution | PASS |
+| 6C-7 completed-job repeat/idempotency | PASS |
+| Genuine active-job concurrency | **UNVERIFIED** |
+| Overlap capability in processor semantics | EXISTING / possible via provider_delay_ms |
+| Two independent live sessions | Not established |
+| 6C-8 | HARNESS LIMITATION |
+| 6C-8R | EXISTING |
+| 6C-8O | HARNESS LIMITATION |
+| Production concurrency remediation | Not authorized / not performed |
+| Release blocker | **JUDGMENT CONCURRENCY EVIDENCE = OPEN / UNVERIFIED** |
+
+The evidence must not be interpreted as proof of concurrency safety or concurrency failure.
