@@ -43,3 +43,13 @@ No branch was merged in Phase 0–3.
 | SECURITY DEFINER functions | 3 anon-executable + 13 authenticated-executable Production functions; TEST lacks equivalent portal schema | TEST parity gap | HOLD |
 | search_path | 4 Production advisor warnings; no faithful TEST equivalents | Configuration warning; impact unproven | HOLD |
 | Leaked passwords | Production Auth protection disabled | Security configuration gap / human decision | HOLD |
+
+
+## Phase 6C-6 — Fresh Judgment Baseline
+| Area | TEST execution | Evidence | Status |
+|---|---|---|---|
+| Judgment reproduction harness | Fresh deterministic SUCCESS baseline completed after isolated alias repair | run `972efe78-5701-4cf4-abd9-95a8e11ea61a`; fixture `ffb64934-7a26-41bf-9062-62896258f687`; job `91ee7e18-7475-43bb-8e73-b1d8cab69bd5`; invocation `7b53dce0-b9c9-4b5f-ae9c-4d7d64c6e1c4` | PASS |
+| Chunk processing | 3/3 chunks processed once | chunk IDs 0, 1, 2; 3 analyses; 3 SUCCESS provider calls | PASS |
+| Summary completion | Final synthesis persisted | `DETERMINISTIC_FINAL_SYNTHESIS`; job next_chunk=3; status COMPLETED | PASS |
+| Retry/failure path | Not exercised in 6C-6 | Reserved for subsequent controlled phase | NOT RUN |
+| Concurrency/stale/idempotency | Not exercised in 6C-6 | Reserved for subsequent controlled phase | NOT RUN |
