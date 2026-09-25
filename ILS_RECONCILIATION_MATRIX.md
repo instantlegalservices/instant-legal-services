@@ -53,3 +53,16 @@ No branch was merged in Phase 0–3.
 | Summary completion | Final synthesis persisted | `DETERMINISTIC_FINAL_SYNTHESIS`; job next_chunk=3; status COMPLETED | PASS |
 | Retry/failure path | Not exercised in 6C-6 | Reserved for subsequent controlled phase | NOT RUN |
 | Concurrency/stale/idempotency | Not exercised in 6C-6 | Reserved for subsequent controlled phase | NOT RUN |
+
+
+## Phase 6C-7 — Completed Job Repeat
+| Area | Before | After | Result |
+|---|---|---|---|
+| Job status | COMPLETED | COMPLETED | No mutation |
+| next_chunk | 3 | 3 | No mutation |
+| Chunk analyses | 3 | 3 | No duplicate processing |
+| Provider calls | 3 | 3 | No additional calls |
+| Invocation count | 1 | 2 | Second invocation recorded |
+| Retry count | 0 | 0 | No retry mutation |
+| Final synthesis | DETERMINISTIC_FINAL_SYNTHESIS | unchanged | No duplicate synthesis |
+| Classification | — | IDEMPOTENT / SAFE REPEAT | PASS for this scenario |
