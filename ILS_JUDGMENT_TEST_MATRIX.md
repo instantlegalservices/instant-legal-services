@@ -131,3 +131,16 @@ Inspection of the live TEST reproduction functions shows:
 - Do not implement or run that mechanism in 6C-8R; this phase is investigation-only.
 
 **Classification: A. EXISTING HARNESS CAN ESTABLISH GENUINE OVERLAP** at the processor/harness semantics level, but the currently available execution orchestration cannot reliably establish it. The prior 6C-8 result remains **HARNESS LIMITATION** and is not overwritten.
+
+
+
+## PHASE 6C-8O — Two-Session Genuine Overlap Attempt
+
+- Orchestrator: tests/phase-6c-8o-two-session.mjs.
+- Fresh fixture: ba913b3e-f282-40a7-a6cb-5d31007dad2c; job ca7cf286-3d95-48c6-b99b-57e2f456805d.
+- The orchestrator is designed to start A, wait 1 second, then start B using a separate HTTP request, with the existing processor and existing provider delay unchanged.
+- Actual external execution failed before either invocation reached the processor because the runtime could not resolve the TEST Supabase hostname.
+- Consequently there is no A_start/A_end/B_start evidence and no valid concurrency classification beyond harness limitation.
+- No third invocation, repair, or manual job mutation was performed.
+
+PHASE 6C-8O = HARNESS LIMITATION.
