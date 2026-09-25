@@ -153,3 +153,14 @@ The next work requiring external/authenticated execution is genuine Notification
 - State reconstruction from persisted evidence: PENDING (invocation observation) → PROCESSING (processor transition) → chunk 0 → chunk 1 → chunk 2 → final synthesis → COMPLETED.
 - **PHASE 6C-6 FRESH BASELINE = PASS.**
 - Advanced tests were not executed in this step.
+
+
+## PHASE 6C-7 — Repeated Invocation / Idempotency
+- Existing completed baseline job was reinvoked exactly once without changing the job/fixture first.
+- Run: `972efe78-5701-4cf4-abd9-95a8e11ea61a`; fixture: `ffb64934-7a26-41bf-9062-62896258f687`; judgment: `d13680a4-f896-415d-ad4c-87f610250791`; job: `91ee7e18-7475-43bb-8e73-b1d8cab69bd5`.
+- Pre-state: COMPLETED, next_chunk=3, retry_count=0, 3 analyses, 3 provider calls, 1 invocation, final summary present, next_retry_at=NULL.
+- Reinvocation: `c8e40f12-0d4b-4a6a-9dd0-7b6c4c5f8e21`; processor returned `COMPLETED / ALREADY_COMPLETED`.
+- Post-state: COMPLETED, next_chunk=3, retry_count=0, 3 analyses, 3 provider calls, 2 invocations, same final summary, next_retry_at=NULL.
+- Counts before→after: analyses 3→3; provider calls 3→3; invocations 1→2; retry_count 0→0; next_chunk 3→3. Job status remained COMPLETED and final synthesis remained unchanged.
+- Classification: **IDEMPOTENT / SAFE REPEAT** for this completed-job repeat scenario. The processor records the second invocation but performs no chunk/provider/final-synthesis mutation.
+- No advanced concurrency/stale/recovery/retry/timeout tests were run.
