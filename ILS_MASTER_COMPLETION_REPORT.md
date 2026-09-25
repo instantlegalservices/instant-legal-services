@@ -166,3 +166,17 @@ No new fixture, processor invocation, database function change, Production chang
 **PHASE 6C-8R OVERLAP CAPABILITY = EXISTING** (processor/harness semantics support the required window; current execution tooling lacks reliable concurrent-session orchestration).
 
 The previous **PHASE 6C-8 = HARNESS LIMITATION** remains the authoritative experiment result.
+
+
+
+## PHASE 6C-8O — Two-Session Genuine Overlap Execution
+
+The minimum orchestration artifact was implemented on the controlled branch. It is semantics-neutral and targets only the TEST project using two independently initiated HTTP requests to the existing processor.
+
+A single fresh TEST fixture was created. Before processor execution, its state remained PENDING with zero analyses/provider calls/invocations.
+
+Execution could not proceed because the available external runtime could not resolve the TEST Supabase hostname. No processor invocation was made and no overlap claim was made.
+
+PHASE 6C-8O = HARNESS LIMITATION.
+
+This does not invalidate the 6C-8R finding that the existing processor semantics contain a potential overlap window. It means the current execution environment still lacks a usable independent-session path to demonstrate that window. No concurrency protection or processor change was introduced.
