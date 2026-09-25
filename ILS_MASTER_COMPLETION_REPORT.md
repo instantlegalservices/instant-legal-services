@@ -180,3 +180,19 @@ Execution could not proceed because the available external runtime could not res
 PHASE 6C-8O = HARNESS LIMITATION.
 
 This does not invalidate the 6C-8R finding that the existing processor semantics contain a potential overlap window. It means the current execution environment still lacks a usable independent-session path to demonstrate that window. No concurrency protection or processor change was introduced.
+
+
+
+## PHASE 6C-8F — FINAL JUDGMENT CONCURRENCY BLOCKER FREEZE
+
+The judgment concurrency finding is formally frozen as:
+
+**JUDGMENT_CONCURRENCY = UNVERIFIED / EXECUTION-ENVIRONMENT BLOCKED**
+
+Phase 6C-6 verifies the normal single-processor state machine. Phase 6C-7 verifies safe repeated invocation after COMPLETED. Neither verifies two processors overlapping against the same active job.
+
+Phase 6C-8R established that the existing processor semantics contain a possible overlap window through provider_delay_ms and that genuine overlap requires independent live DB sessions. Phase 6C-8O created the TEST-only orchestration artifact but could not execute either invocation because the available external runtime could not resolve the TEST Supabase hostname. Therefore no A_start < B_start < A_end evidence exists.
+
+**Release blocker: JUDGMENT CONCURRENCY EVIDENCE = OPEN / UNVERIFIED.**
+
+No concurrency remediation, processor modification, Production change, main change, or G6 merge was performed. No additional concurrency experiment is authorized by this freeze phase.
