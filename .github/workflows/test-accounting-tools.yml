@@ -94,7 +94,7 @@ jobs:
             await page.waitForTimeout(200);
 
             const resultText = await page.locator('#toolWorkspace').innerText();
-            for (const expected of ['Gross Profit', 'Operating Profit', 'Net Profit/Loss', '₹60,000.00', '₹40,000.00', '₹42,000.00']) {
+            for (const expected of ['Gross Profit', 'Operating Profit', 'Net Profit / (Loss)', '₹60,000.00', '₹40,000.00', '₹42,000.00']) {
               if (!resultText.includes(expected)) {
                 throw new Error('Expected calculation output missing: ' + expected);
               }
