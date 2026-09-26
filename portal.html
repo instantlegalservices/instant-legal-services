@@ -3674,17 +3674,44 @@ async function completeCustomerOnboarding(summary){
 
   const row = data[0];
 
+  const { data: verifiedUser, error: verifiedUserError } =
+    await supabaseClient.auth.getUser();
+  if(verifiedUserError || !verifiedUser?.user?.id){
+    throw new Error("Authenticated Customer identity could not be verified.");
+  }
+  if(String(verifiedUser.user.id) !== String(row.customer_id)){
+    throw new Error("Customer ownership verification failed.");
+  }
+
+  const { data: serviceRequest, error: serviceRequestError } =
+    await supabaseClient
+      .from("service_requests")
+      .select("id,user_id,service_id,status,created_at")
+      .eq("user_id", row.customer_id)
+      .order("created_at", { ascending:false })
+      .limit(1)
+      .maybeSingle();
+
+  if(serviceRequestError) throw serviceRequestError;
+  if(!serviceRequest || String(serviceRequest.user_id) !== String(row.customer_id)){
+    throw new Error("Customer-owned service request could not be verified.");
+  }
+
   if(resultBox){
     resultBox.innerHTML =
       "Customer onboarding completed in TEST. " +
       "Customer ID: <code>" + escapeHtml(row.customer_id) +
       "</code><br>Customer matter passport: <code>" +
-      escapeHtml(row.passport_id) + "</code><br>" +
-      "Synthetic: FALSE · Fixture: FALSE · Production access: FALSE";
+      escapeHtml(row.passport_id) +
+      "</code><br>Service request: <code>" +
+      escapeHtml(serviceRequest.id) +
+      "</code><br>Authorization: authenticated user + owner-bound Customer passport" +
+      "<br>Ownership: verified against auth.uid()" +
+      "<br>Environment: TEST · Synthetic: FALSE · Fixture: FALSE · Production access: FALSE";
     resultBox.style.display = "block";
   }
 
-  return row;
+  return {...row, service_request_id: serviceRequest.id};
 }
 
 document.getElementById("customerSignupForm")?.addEventListener("submit", async function(event){
