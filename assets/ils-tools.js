@@ -1964,6 +1964,77 @@ Previous orders"></textarea>
     const rows=[];
     mcalAdd.onclick=async()=>{const d=mcalDate.value?new Date(mcalDate.value+'T00:00:00'):null,days=Number(mcalDays.value);if(!mcalItem.value||!d||Number.isNaN(d.getTime())||!Number.isFinite(days)||days<0){status('Enter item, date and applicable days.');return;}const due=new Date(d);due.setDate(due.getDate()+days);rows.push({item:mcalItem.value,event_date:mcalDate.value,days_allowed:days,due_date:due.toISOString().slice(0,10),notes:mcalNotes.value});mcalOut.style.display='block';mcalOut.innerHTML=rows.map((x,i)=>`<div><strong>${i+1}. ${x.item}</strong> — due ${x.due_date}<br><small>${x.notes||''}</small></div>`).join('')+`<br>${exportCTA('mca-compliance-calendar',rows,rows,'MCA Secretarial Compliance Calendar')}`;status('Compliance item added.',true);await logRun('mca-compliance-calendar',rows,rows);};
   }
+
+  async function pdfDocumentWorkflow(tool){
+    const slug=tool.slug, name=tool.name;
+    const cfg={
+      'pdf-merge-compress-split':['PDF Merge / Compress / Split','Combine PDFs, extract selected pages, or download a processed PDF in your browser.','merge'],
+      'pdf-to-image':['PDF to Image','Render selected PDF pages to PNG images in your browser.','toimage'],
+      'image-to-pdf':['Image to PDF','Convert JPG/PNG/WEBP images into a single PDF in your browser.','fromimage'],
+      'pdf-page-numbering':['PDF Page Numbering','Add page numbers to every page of a PDF.','number'],
+      'pdf-watermark':['PDF Watermark','Add a text watermark to each PDF page.','watermark'],
+      'document-comparison':['Document Comparison','Compare extracted text from two PDFs and highlight added/removed lines.','compare'],
+      'digital-signature-placement':['Digital Signature Placement','Place a signature image on a selected PDF page. This is visual placement, not a cryptographic e-signature.','signature'],
+      'document-redaction-tool':['Document Redaction Tool','Create a flattened image-based PDF with a user-defined redaction rectangle. This removes selectable text from the output page, but the source file is never changed.','redact']
+    }[slug]||[name,'Browser document utility.','generic'];
+    const escH=window.ILS?.esc||esc;
+    const acceptPdf='.pdf',acceptImg='image/jpeg,image/png,image/webp';
+    let fields='';
+    if(cfg[2]==='merge') fields='<label>PDF files</label><input id="pdfFiles" type="file" accept=".pdf,application/pdf" multiple><label>Mode</label><select id="pdfMode"><option value="merge">Merge all</option><option value="extract">Extract pages from first PDF</option></select><label>Pages (extract mode)</label><input id="pdfPages" placeholder="e.g. 1,3-5,8"><small>Pages are 1-based. Leave blank to merge.</small>';
+    if(cfg[2]==='toimage') fields='<label>PDF</label><input id="pdfFile" type="file" accept="'+acceptPdf+'"><label>Page number</label><input id="pdfPage" type="number" min="1" value="1"><label>Scale</label><input id="pdfScale" type="number" min="1" max="4" step=".5" value="2">';
+    if(cfg[2]==='fromimage') fields='<label>Images</label><input id="imgFiles" type="file" accept="'+acceptImg+'" multiple><label>Page orientation</label><select id="imgOrient"><option value="auto">Auto</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>';
+    if(cfg[2]==='number') fields='<label>PDF</label><input id="pdfFile" type="file" accept="'+acceptPdf+'"><label>Position</label><select id="pdfPos"><option value="bottom-center">Bottom center</option><option value="bottom-right">Bottom right</option><option value="bottom-left">Bottom left</option></select>';
+    if(cfg[2]==='watermark') fields='<label>PDF</label><input id="pdfFile" type="file" accept="'+acceptPdf+'"><label>Watermark text</label><input id="pdfText" maxlength="100"><label>Opacity (0.05–0.5)</label><input id="pdfOpacity" type="number" min=".05" max=".5" step=".05" value=".18">';
+    if(cfg[2]==='compare') fields='<label>Original PDF</label><input id="pdfA" type="file" accept="'+acceptPdf+'"><label>New PDF</label><input id="pdfB" type="file" accept="'+acceptPdf+'">';
+    if(cfg[2]==='signature') fields='<label>PDF</label><input id="pdfFile" type="file" accept="'+acceptPdf+'"><label>Signature image</label><input id="sigFile" type="file" accept="'+acceptImg+'"><label>Page number</label><input id="sigPage" type="number" min="1" value="1"><label>X / Y / Width / Height (PDF points)</label><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"><input id="sigX" type="number" value="60"><input id="sigY" type="number" value="60"><input id="sigW" type="number" value="180"><input id="sigH" type="number" value="70"></div>';
+    if(cfg[2]==='redact') fields='<label>PDF</label><input id="pdfFile" type="file" accept="'+acceptPdf+'"><label>Page number</label><input id="redPage" type="number" min="1" value="1"><label>Redaction rectangle — X / Y / Width / Height (PDF points)</label><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"><input id="redX" type="number" value="60"><input id="redY" type="number" value="60"><input id="redW" type="number" value="180"><input id="redH" type="number" value="70"></div><small>Output is flattened to an image-based PDF for the selected page. Verify the rectangle visually before sharing.</small>';
+    shell(cfg[0],cfg[1],'<div class="notice"><strong>Privacy:</strong> Files are processed in the browser. Do not upload confidential documents to a tool unless you are comfortable with the browser/network environment and your own device security.</div><div class="grid"><div>'+fields+'<div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="pdfRun">Process</button></div></div><div id="pdfResult" class="card" style="padding:18px"><strong>Ready</strong><p>Select the required file(s) and process.</p></div></div>');
+    const out=(blob,name)=>{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.textContent='Download '+name;a.className='btn btn-primary';a.style.display='inline-block';a.style.marginTop='10px';document.getElementById('pdfResult').innerHTML='<strong>Completed</strong><p>Your processed file is ready.</p>';document.getElementById('pdfResult').appendChild(a);};
+    const read=async file=>new Uint8Array(await file.arrayBuffer());
+    const getPdf=async file=>PDFLib.PDFDocument.load(await read(file),{ignoreEncryption:false});
+    async function renderPage(file,pageNo,scale=2){
+      const data=await read(file), pdf=await window.pdfjsLib?.getDocument({data}).promise;
+      if(!pdf)throw new Error('PDF renderer is not available. Please reload the page.');
+      const page=await pdf.getPage(pageNo), vp=page.getViewport({scale});
+      const canvas=document.createElement('canvas');canvas.width=vp.width;canvas.height=vp.height;
+      await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;return canvas;
+    }
+    document.getElementById('pdfRun').onclick=async()=>{
+      try{
+        status('Processing document…');
+        if(!window.PDFLib)throw new Error('PDF engine is still loading. Please wait a moment and try again.');
+        if(cfg[2]==='merge'){
+          const files=[...(document.getElementById('pdfFiles').files||[])];if(!files.length)throw new Error('Select at least one PDF.');
+          const mode=document.getElementById('pdfMode').value,target=await PDFLib.PDFDocument.create();
+          if(mode==='merge'){for(const file of files){const src=await getPdf(file);const pages=await target.copyPages(src,src.getPageIndices());pages.forEach(p=>target.addPage(p));}}
+          else{const src=await getPdf(files[0]),range=(document.getElementById('pdfPages').value||'').split(',').flatMap(part=>{const [a,b]=part.split('-').map(Number);if(!a)return[];return b?Array.from({length:b-a+1},(_,i)=>a+i):[a];}).filter(n=>n>0&&n<=src.getPageCount());if(!range.length)throw new Error('Enter valid page numbers.');const pages=await target.copyPages(src,range.map(n=>n-1));pages.forEach(p=>target.addPage(p));}
+          out(new Blob([await target.save()],{type:'application/pdf'}),'ils-processed.pdf');
+        } else if(cfg[2]==='fromimage'){
+          const files=[...(document.getElementById('imgFiles').files||[])];if(!files.length)throw new Error('Select at least one image.');
+          const pdf=await PDFLib.PDFDocument.create();
+          for(const file of files){const bytes=await read(file),img=file.type==='image/png'?await pdf.embedPng(bytes):await pdf.embedJpg(bytes),orient=document.getElementById('imgOrient').value;let w=img.width,h=img.height;if(orient==='portrait'&&w>h)[w,h]=[h,w];if(orient==='landscape'&&h>w)[w,h]=[h,w];const page=pdf.addPage([w,h]);page.drawImage(img,{x:0,y:0,width:w,height:h});}
+          out(new Blob([await pdf.save()],{type:'application/pdf'}),'ils-images.pdf');
+        } else if(cfg[2]==='toimage'){
+          const file=document.getElementById('pdfFile').files[0],page=Number(document.getElementById('pdfPage').value),scale=Number(document.getElementById('pdfScale').value)||2;if(!file)throw new Error('Select a PDF.');const canvas=await renderPage(file,page,scale);canvas.toBlob(blob=>out(blob,'ils-page-'+page+'.png'),'image/png');
+        } else if(cfg[2]==='number'||cfg[2]==='watermark'||cfg[2]==='signature'){
+          const file=document.getElementById('pdfFile').files[0];if(!file)throw new Error('Select a PDF.');const pdf=await getPdf(file),font=await pdf.embedFont(PDFLib.StandardFonts.Helvetica);
+          if(cfg[2]==='number'){const pos=document.getElementById('pdfPos').value;pdf.getPages().forEach((p,i)=>{const {width}=p.getSize();const txt=String(i+1),tw=font.widthOfTextAtSize(txt,10);const x=pos==='bottom-right'?width-tw-30:pos==='bottom-left'?30:(width-tw)/2;p.drawText(txt,{x,y:20,size:10,font});});}
+          if(cfg[2]==='watermark'){const txt=document.getElementById('pdfText').value.trim();if(!txt)throw new Error('Enter watermark text.');const op=Math.min(.5,Math.max(.05,Number(document.getElementById('pdfOpacity').value)||.18));pdf.getPages().forEach(p=>{const {width,height}=p.getSize();p.drawText(txt,{x:width*.2,y:height*.45,size:34,font,opacity:op,rotate:PDFLib.degrees(35)});});}
+          if(cfg[2]==='signature'){const sf=document.getElementById('sigFile').files[0],pg=Number(document.getElementById('sigPage').value);if(!sf)throw new Error('Select a signature image.');const img=sf.type==='image/png'?await pdf.embedPng(await read(sf)):await pdf.embedJpg(await read(sf));const p=pdf.getPages()[pg-1];if(!p)throw new Error('Invalid page number.');p.drawImage(img,{x:Number(sigX.value),y:Number(sigY.value),width:Number(sigW.value),height:Number(sigH.value)});}
+          out(new Blob([await pdf.save()],{type:'application/pdf'}),'ils-edited.pdf');
+        } else if(cfg[2]==='compare'){
+          const a=document.getElementById('pdfA').files[0],bb=document.getElementById('pdfB').files[0];if(!a||!bb)throw new Error('Select both PDFs.');
+          if(!window.pdfjsLib)throw new Error('PDF text engine is still loading. Please reload.');
+          const textOf=async file=>{const data=await read(file),pdf=await window.pdfjsLib.getDocument({data}).promise,arr=[];for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i),tc=await p.getTextContent();arr.push(tc.items.map(x=>x.str).join(' '));}return arr.join('\\n');};
+          const [ta,tb]=await Promise.all([textOf(a),textOf(bb)]),al=ta.split(/\\n+/),bl=tb.split(/\\n+/),as=new Set(al),bs=new Set(bl),added=bl.filter(x=>x.trim()&&!as.has(x)),removed=al.filter(x=>x.trim()&&!bs.has(x));document.getElementById('pdfResult').innerHTML='<strong>Text comparison completed</strong><p>Added lines: '+added.length+' • Removed lines: '+removed.length+'</p><h4>Added</h4><pre style="white-space:pre-wrap">'+escH(added.join('\\n')||'None')+'</pre><h4>Removed</h4><pre style="white-space:pre-wrap">'+escH(removed.join('\\n')||'None')+'</pre>';
+        } else if(cfg[2]==='redact'){
+          const file=document.getElementById('pdfFile').files[0],pg=Number(document.getElementById('redPage').value);if(!file)throw new Error('Select a PDF.');const canvas=await renderPage(file,pg,2),ctx=canvas.getContext('2d');const sx=canvas.width/(await getPdf(file)).getPages()[pg-1].getWidth(),sy=canvas.height/(await getPdf(file)).getPages()[pg-1].getHeight();ctx.fillStyle='#000';ctx.fillRect(Number(redX.value)*sx,canvas.height-(Number(redY.value)+Number(redH.value))*sy,Number(redW.value)*sx,Number(redH.value)*sy);const png=await new Promise(res=>canvas.toBlob(res,'image/png'));const pdf=await PDFLib.PDFDocument.create(),img=await pdf.embedPng(await png.arrayBuffer());pdf.addPage([canvas.width/2,canvas.height/2]).drawImage(img,{x:0,y:0,width:canvas.width/2,height:canvas.height/2});out(new Blob([await pdf.save()],{type:'application/pdf'}),'ils-redacted-page-'+pg+'.pdf');
+        }
+        status('Document operation completed.',true);
+      }catch(e){console.error(e);status(e?.message||'Document operation failed.');}
+    };
+  }
+
   function genericGuided(tool){
     const w=workspace(); if(!w)return;
     const price=Number(tool.price||0);
