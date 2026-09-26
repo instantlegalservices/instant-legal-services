@@ -52,7 +52,8 @@ window.ILS_TOOLS = (() => {
     'accounting-print-basic':'accounting-print-basic',
     'accounting-print-guided':'accounting-print-guided',
     'accounting-print-professional':'professional-report',
-    'gst-calculator':'professional-report-basic','tds-calculator':'professional-report-basic','gst-interest-calculator':'professional-report-basic','professional-fee-calculator':'professional-report-basic','invoice-total-calculator':'professional-report-basic','mca-compliance-checklist':'professional-report-basic','tax-payment-planner':'professional-report-basic','compliance-deadline-planner':'professional-report-basic'
+    'gst-calculator':'professional-report-basic','tds-calculator':'professional-report-basic','gst-interest-calculator':'professional-report-basic','professional-fee-calculator':'professional-report-basic','invoice-total-calculator':'professional-report-basic','mca-compliance-checklist':'professional-report-basic','tax-payment-planner':'professional-report-basic','compliance-deadline-planner':'professional-report-basic',
+    'tool-output-micro-9':'tool-output-micro-9','tool-output-micro-19':'tool-output-micro-19','tool-output-micro-29':'tool-output-micro-29','tool-output-micro-39':'tool-output-micro-39'
   };
 
   async function createOrder(slug, details, toolRunId=null, onPaid=null, options={}){
@@ -535,6 +536,10 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
 }
 
   const exportServices = {
+    micro9: { slug:'tool-output-micro-9', name:'Quick Output', price:9, desc:'Simple result sheet + print / PDF' },
+    micro19: { slug:'tool-output-micro-19', name:'Guided Output', price:19, desc:'Result + guided explanation + print / PDF' },
+    micro29: { slug:'tool-output-micro-29', name:'Detailed Output', price:29, desc:'Detailed result + assumptions + print / PDF' },
+    micro39: { slug:'tool-output-micro-39', name:'Professional Output', price:39, desc:'Professional result pack + print / PDF' },
     basic: { slug:'professional-report-basic', name:'Basic Report', price:45, desc:'Calculation summary + print / Save as PDF' },
     guided: { slug:'professional-report-guided', name:'Guided Report', price:85, desc:'Summary + step-by-step explanation + assumptions' },
     professional: { slug:'professional-report-professional', name:'Professional Report', price:125, desc:'Detailed inputs + formulas + guidance + print / PDF' }
@@ -1712,6 +1717,21 @@ Previous orders"></textarea>
     cdCalc.onclick=async()=>{const date=cdDate.value,days=Number(cdDays.value),buffer=Number(cdBuffer.value)||0;if(!date||!Number.isInteger(days)||days<0||!Number.isInteger(buffer)||buffer<0){status('Enter a valid date and whole-number days.');return;}const result=fmt(addDays(dateObj(date),days+buffer));cdResult.style.display='block';cdResult.innerHTML=`<strong>Planning date: ${esc(result)}</strong><br><small>This is a planning calculation only; it does not determine a statutory due date.</small>${exportCTA('compliance-deadline-planner',{date,days,buffer},{planned_date:result},'Compliance Deadline Report')}`;status('Planning date calculated.',true);await logRun('compliance-deadline-planner',{date,days,buffer},{planned_date:result});};
   }
 
+  function genericGuided(tool){
+    const w=workspace(); if(!w)return;
+    const price=Number(tool.price||0);
+    const paid=price>0;
+    w.innerHTML=`<div class="tool-head"><div><span class="eyebrow">${esc(tool.category.toUpperCase())} • TOOL ${tool.id}</span><h2>${esc(tool.name)}</h2><p>Free guidance first. This guided workflow helps you organise inputs and prepare a review-ready task brief; it does not independently determine legal, tax, accounting or regulatory outcomes.</p></div><div class="tool-badges"><span class="tool-badge">${paid?'₹'+price+' output':'FREE'}</span><span class="tool-mode">Guided workflow</span></div></div><div class="grid"><div><label>Context / matter</label><input id="gtContext" placeholder="What are you trying to do?"><label>Amount / value (optional)</label><input id="gtAmount" type="number" min="0" step="0.01" placeholder="Enter amount if relevant"><label>Date / deadline (optional)</label><input id="gtDate" type="date"><label>Key details / documents</label><textarea id="gtNotes" rows="5" placeholder="Enter facts, documents available, questions or assumptions…"></textarea><button type="button" class="btn btn-primary" id="gtRun">Prepare Free Guidance</button></div><div id="gtResult" class="card" style="padding:18px"><strong>Free guidance</strong><p>Enter the minimum details you have. ILS will organise them into a practical task brief.</p><ul><li>Check the applicable law / authority before relying on a legal or compliance result.</li><li>Keep supporting documents ready for professional review.</li><li>Use the paid output only if you need a printable / PDF-ready report.</li></ul></div></div>`;
+    const run=document.getElementById('gtRun');
+    run.onclick=()=>{
+      const input={context:document.getElementById('gtContext').value.trim(),amount:document.getElementById('gtAmount').value,date:document.getElementById('gtDate').value,notes:document.getElementById('gtNotes').value.trim()};
+      if(!input.context&&!input.notes&&!input.amount&&!input.date){status('Add at least one detail for the guided result.');return;}
+      const result={tool:tool.name,category:tool.category,task_brief:input.context||tool.name,amount:input.amount||'Not supplied',date:input.date||'Not supplied',details:input.notes||'Not supplied',guidance:'Verify the applicable law, authority, filing rule, jurisdiction, tax treatment or professional standard before relying on this output.'};
+      document.getElementById('gtResult').innerHTML=`<strong>Free guidance prepared</strong><table style="width:100%;margin-top:12px"><tr><td><strong>Task</strong></td><td>${esc(result.task_brief)}</td></tr><tr><td><strong>Amount</strong></td><td>${esc(result.amount)}</td></tr><tr><td><strong>Date</strong></td><td>${esc(result.date)}</td></tr><tr><td><strong>Details</strong></td><td>${esc(result.details)}</td></tr></table><div class="notice" style="margin-top:12px">${esc(result.guidance)}</div>${exportCTA(tool.slug,input,result,tool.name+' — Professional Output')}`;
+      status('Free guidance prepared.',true); logRun(tool.slug,input,result);
+    };
+  }
+
   function open(slug){
     const map={
       'legal-deadline-calculator':deadline,
@@ -1749,72 +1769,35 @@ Previous orders"></textarea>
 
     if(map[slug]){
       map[slug]();
-      const target=workspace();
-      if(target){
-        requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
-      }
+    }else if(window.ILS_TOOL_CATALOG){
+      const tool=window.ILS_TOOL_CATALOG.find(x=>x.slug===slug);
+      if(tool) genericGuided(tool);
+    }
+    const target=workspace();
+    if(target){
+      requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
     }
   }
 
+  function renderCatalog(){
+    const grid=document.getElementById('toolCatalogGrid');
+    if(!grid||!Array.isArray(window.ILS_TOOL_CATALOG))return;
+    const icons={advocate:'⚖️',ca:'📊',gst:'🧾',cs:'🏢',common:'👥',ai:'🤖',compliance:'📅',finance:'💰'};
+    const labels={advocate:'Advocate',ca:'CA',gst:'GST',cs:'CS / MCA',common:'Common',ai:'AI',compliance:'Compliance',finance:'Finance'};
+    grid.innerHTML=window.ILS_TOOL_CATALOG.map(t=>{const price=t.price?'<span class="tool-price">₹'+t.price+'</span>':'<span class="tool-badge">FREE</span>';const popular=t.popular?'<span class="tool-popular">MOST USED</span>':'';const desc=t.mode==='full'?'Working ILS tool with guided inputs and result flow.':'Guided starter: organise inputs, free guidance and optional printable output.';return '<article class="card tool-card" data-category="'+t.category+'" data-profession="'+t.category+'" data-popular="'+t.popular+'" data-price="'+t.price+'" data-mode="'+t.mode+'" data-tool-name="'+(t.name+' '+labels[t.category]+' '+desc).toLowerCase()+'"><div class="tool-card-top"><span class="tool-icon">'+icons[t.category]+'</span><div class="tool-badges">'+popular+price+'</div></div><h3>'+esc(t.name)+'</h3><p>'+esc(desc)+'</p><div class="tool-mode">'+labels[t.category]+' • '+(t.mode==='full'?'Fully wired':'Guided workflow')+'</div><button class="btn btn-primary tool-open" data-tool="'+t.slug+'">Open Tool</button></article>';}).join('');
+  }
+
   function initToolHub(){
+    renderCatalog();
     const search=document.getElementById('toolSearch');
-    const filters=[
-      ...document.querySelectorAll('.tool-filter')
-    ];
-    const cards=[
-      ...document.querySelectorAll('.tool-card')
-    ];
+    const cards=()=>[...document.querySelectorAll('.tool-card')];
     const count=document.getElementById('toolCount');
-    const empty=document.getElementById('toolNoResults');
-
-    if(!search||!cards.length)return;
-
-    let active='all';
-
-    const apply=()=>{
-      const q=search.value.trim().toLowerCase();
-      let visible=0;
-
-      cards.forEach(card=>{
-        const okCat=
-          active==='all'||
-          card.dataset.category===active;
-
-        const okQ=
-          !q||
-          card.dataset.toolName.includes(q);
-
-        const show=okCat&&okQ;
-
-        card.hidden=!show;
-
-        if(show)visible++;
-      });
-
-      if(count){
-        count.textContent=
-          `${visible} tool${visible===1?'':'s'}`;
-      }
-
-      if(empty){
-        empty.hidden=visible!==0;
-      }
-    };
-
-    search.addEventListener('input',apply);
-
-    filters.forEach(btn=>
-      btn.addEventListener('click',()=>{
-        active=btn.dataset.filter||'all';
-
-        filters.forEach(x=>
-          x.classList.toggle('active',x===btn)
-        );
-
-        apply();
-      })
-    );
-
+    let profession='all',sort='smart';
+    const apply=()=>{const q=(search?.value||'').trim().toLowerCase();let rows=cards().filter(c=>(profession==='all'||c.dataset.profession===profession)&&(!q||c.dataset.toolName.includes(q)));if(sort==='smart')rows.sort((a,b)=>Number(b.dataset.popular)-Number(a.dataset.popular)||Number(a.dataset.price)-Number(b.dataset.price));if(sort==='free')rows=rows.filter(c=>Number(c.dataset.price)===0);if(sort==='paid')rows=rows.filter(c=>Number(c.dataset.price)>0);const visible=new Set(rows);cards().forEach(c=>c.hidden=!visible.has(c));if(count)count.textContent=rows.length+' tools';};
+    search?.addEventListener('input',apply);
+    document.querySelectorAll('[data-profession]').forEach(b=>b.addEventListener('click',()=>{profession=b.dataset.profession||'all';document.querySelectorAll('[data-profession]').forEach(x=>x.classList.toggle('active',x===b));apply();}));
+    document.querySelectorAll('[data-sort]').forEach(b=>b.addEventListener('click',()=>{sort=b.dataset.sort||'smart';document.querySelectorAll('[data-sort]').forEach(x=>x.classList.toggle('active',x===b));apply();}));
+    document.querySelectorAll('.tool-open').forEach(b=>b.addEventListener('click',()=>open(b.dataset.tool)));
     apply();
   }
 
