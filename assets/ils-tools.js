@@ -552,6 +552,10 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
   }
 
   function exportCTA(toolSlug,input,result,title){
+    const catalogTool=window.ILS_TOOL_CATALOG?.find(x=>x.slug===toolSlug);
+    if(catalogTool?.category==='advocate'){
+      return '<div class="notice" style="margin-top:16px"><strong>Tool is FREE — professional help is paid.</strong><p style="margin:6px 0">Use the result first. If you need advocate review, bail / arrest consultation, or complete case preparation, continue below.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-primary tool-buy" data-service="legal-consultation">Legal Review / Consultation</button><button type="button" class="btn btn-primary tool-buy" data-service="legal-consultation">Bail / Arrest Consultation</button><button type="button" class="btn btn-primary tool-buy" data-service="case-preparation-tool">Case Preparation</button></div></div>';
+    }
     const jobId=`accounting-export-${++exportJobSeq}`;
     exportJobs.set(jobId,{toolSlug,input,result,title});
     const cards=Object.entries(exportServices).map(([key,p])=>`<div class="card" style="padding:14px;flex:1;min-width:190px"><strong>${esc(p.name)}</strong><div style="font-size:1.25rem;font-weight:800;margin:6px 0">₹${p.price}</div><small>${esc(p.desc)}</small><button type="button" class="btn btn-primary tool-export-buy" data-export-job="${jobId}" data-export-service="${esc(p.slug)}" style="width:100%;margin-top:10px">Pay ₹${p.price} &amp; Unlock</button></div>`).join("");
