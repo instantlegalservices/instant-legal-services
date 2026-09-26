@@ -1807,6 +1807,36 @@ Previous orders"></textarea>
     icCalc.onclick=async()=>{const i=Number(icIgst.value),c=Number(icCgst.value),s=Number(icSgst.value),rev=Number(icRev.value);if(![i,c,s,rev].every(Number.isFinite)||Math.min(i,c,s,rev)<0){status('Enter valid values.');return;}const r={igst:i,cgst:c,sgst:s,reversals:rev,net_itc:Math.max(0,i+c+s-rev)};icResult.style.display='block';icResult.innerHTML=`Net ITC: <strong>₹${r.net_itc.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong>${exportCTA('itc-calculator',r,r,'ITC Working Report')}`;status('ITC calculated.',true);await logRun('itc-calculator',r,r);};
   }
 
+
+  function gstCsvRows(text){
+    const lines=String(text||'').trim().split(/\\r?\\n/).filter(Boolean); if(!lines.length)return [];
+    const split=line=>{const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){cur+='"';i++;}else q=!q;}else if(ch===','&&!q){out.push(cur.trim());cur='';}else cur+=ch;}out.push(cur.trim());return out;};
+    const headers=split(lines[0]).map(x=>x.toLowerCase().replace(/[^a-z0-9]+/g,'_'));
+    return lines.slice(1).map(line=>{const v=split(line),o={};headers.forEach((h,i)=>o[h]=v[i]??'');return o;}).filter(o=>Object.values(o).some(Boolean));
+  }
+  function gstNum(o,keys){for(const k of keys){if(o[k]!==undefined&&o[k]!==''){const n=Number(String(o[k]).replace(/[,₹ ]/g,''));if(Number.isFinite(n))return n;}}return 0;}
+  function gstKey(o){return String(o.invoice_number||o.invoice_no||o.document_number||o.doc_no||o.invoice||o.bill_no||'').trim().toUpperCase();}
+  function gstReconcile(mode='itc'){
+    const titles={itc:'ITC Reconciliation Tool',gstr2b:'GSTR-2B Reconciliation',purchase2b:'Purchase vs GSTR-2B Difference Finder',sales1:'Sales vs GSTR-1 Reconciliation',turnover:'GST-to-Turnover Reconciliation'};
+    const descriptions={itc:'Compare two datasets document-by-document and identify missing, matched and amount-mismatched records.',gstr2b:'Reconcile your purchase register against downloaded GSTR-2B records.',purchase2b:'Find purchase invoices missing from GSTR-2B and tax/value mismatches.',sales1:'Compare your sales register with GSTR-1 data using invoice number and tax amounts.',turnover:'Compare books turnover against GST return turnover and quantify the difference.'};
+    const title=titles[mode],desc=descriptions[mode];
+    shell(title,desc+' Upload CSV files exported from your records/GST portal. This is a reconciliation aid, not a determination of ITC eligibility.',
+      `<label>Books / primary CSV</label><input id="grA" type="file" accept=".csv,text/csv"><label>GST / comparison CSV</label><input id="grB" type="file" accept=".csv,text/csv"><div class="notice"><small>Recommended columns: invoice_number, invoice_date, gstin, taxable_value, igst, cgst, sgst, cess. Invoice number is the primary match key.</small></div><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="grRun">Run reconciliation</button></div><div id="grResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    const read=file=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(gstCsvRows(r.result));r.onerror=rej;r.readAsText(file);});
+    grRun.onclick=async()=>{
+      if(!grA.files[0]||!grB.files[0]){status('Upload both CSV files.');return;}
+      try{
+        const [a,b]=await Promise.all([read(grA.files[0]),read(grB.files[0])]), bm=new Map(b.map(x=>[gstKey(x),x])), am=new Map(a.map(x=>[gstKey(x),x]));
+        let matched=0,missing=0,mismatch=0,unmatchedGST=0,taxDiff=0,valueDiff=0; const details=[];
+        for(const [k,x] of am){if(!k){details.push({status:'NO_INVOICE_KEY'});continue;}const y=bm.get(k);if(!y){missing++;details.push({invoice:k,status:'Missing in GST dataset'});continue;}matched++;const xv=gstNum(x,['taxable_value','taxable','taxable_amount']),yv=gstNum(y,['taxable_value','taxable','taxable_amount']);const xt=gstNum(x,['igst'])+gstNum(x,['cgst'])+gstNum(x,['sgst'])+gstNum(x,['cess']),yt=gstNum(y,['igst'])+gstNum(y,['cgst'])+gstNum(y,['sgst'])+gstNum(y,['cess']);const vd=xv-yv,td=xt-yt;valueDiff+=vd;taxDiff+=td;if(Math.abs(vd)>0.01||Math.abs(td)>0.01){mismatch++;details.push({invoice:k,status:'Mismatch',taxable_difference:vd,tax_difference:td});}}
+        for(const [k] of bm)if(k&&!am.has(k))unmatchedGST++;
+        const r={mode,books_rows:a.length,gst_rows:b.length,matched,missing_from_gst:missing,unmatched_gst:unmatchedGST,mismatches:mismatch,total_taxable_difference:valueDiff,total_tax_difference:taxDiff};
+        grResult.style.display='block';grResult.innerHTML=`Books rows: <strong>${a.length}</strong> • GST rows: <strong>${b.length}</strong><br>Matched: <strong>${matched}</strong> • Missing in GST: <strong>${missing}</strong> • GST-only: <strong>${unmatchedGST}</strong> • Mismatched: <strong>${mismatch}</strong><br>Taxable difference: <strong>₹${valueDiff.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br>Tax difference: <strong>₹${taxDiff.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br><small>Review invoice keys, amendments, credit/debit notes and eligibility separately before filing or claiming ITC.</small>${exportCTA(mode+'-reconciliation',r,details,title+' Report')}`;
+        status('Reconciliation completed.',true);await logRun(mode+'-reconciliation',r,details);
+      }catch(e){status('Could not read CSV files. Please use valid UTF-8 CSV exports.');}
+    };
+  }
+
   function genericGuided(tool){
     const w=workspace(); if(!w)return;
     const price=Number(tool.price||0);
@@ -1854,7 +1884,7 @@ Previous orders"></textarea>
       'accounting-computation':accountingComputation,
       'balance-sheet-tool':balanceSheetTool,
       'profit-loss-tool':profitLossTool,
-      'gst-calculator':gstCalculator,'tds-calculator':tdsCalculator,'gst-interest-calculator':gstInterestCalculator,'professional-fee-calculator':professionalFeeCalculator,'invoice-total-calculator':invoiceTotalCalculator,'mca-compliance-checklist':mcaComplianceChecklist,'tax-payment-planner':taxPaymentPlanner,'compliance-deadline-planner':complianceDeadlinePlanner,'income-tax-calculator':()=>incomeTax2026('new'),'old-new-tax-regime-comparison':()=>incomeTax2026('compare'),'advance-tax-calculator':advanceTaxCalculator,'self-assessment-tax-calculator':selfAssessmentTaxCalculator,'tds-interest-calculator':tdsInterest2026,'tds-late-filing-fee-calculator':tdsLateFee2026,'gst-inclusive-exclusive-calculator':()=>gstCoreCalculator('inclusive'),'cgst-sgst-igst-calculator':()=>gstCoreCalculator('split'),'gst-payment-interest-calculator':gstPaymentCalculator,'itc-calculator':itcCalculator
+      'gst-calculator':gstCalculator,'tds-calculator':tdsCalculator,'gst-interest-calculator':gstInterestCalculator,'professional-fee-calculator':professionalFeeCalculator,'invoice-total-calculator':invoiceTotalCalculator,'mca-compliance-checklist':mcaComplianceChecklist,'tax-payment-planner':taxPaymentPlanner,'compliance-deadline-planner':complianceDeadlinePlanner,'income-tax-calculator':()=>incomeTax2026('new'),'old-new-tax-regime-comparison':()=>incomeTax2026('compare'),'advance-tax-calculator':advanceTaxCalculator,'self-assessment-tax-calculator':selfAssessmentTaxCalculator,'tds-interest-calculator':tdsInterest2026,'tds-late-filing-fee-calculator':tdsLateFee2026,'gst-inclusive-exclusive-calculator':()=>gstCoreCalculator('inclusive'),'cgst-sgst-igst-calculator':()=>gstCoreCalculator('split'),'gst-payment-interest-calculator':gstPaymentCalculator,'itc-reconciliation-tool':()=>gstReconcile('itc'),'gstr-2b-reconciliation':()=>gstReconcile('gstr2b'),'purchase-vs-2b-difference-finder':()=>gstReconcile('purchase2b'),'sales-vs-gstr-1-reconciliation':()=>gstReconcile('sales1'),'gst-to-turnover-reconciliation':()=>gstReconcile('turnover'),'itc-calculator':itcCalculator
     };
 
     if(map[slug]){
