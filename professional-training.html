@@ -36,8 +36,14 @@
 <button type="button" class="btn btn-secondary roleBtn" data-role="Advocate">⚖️ Advocate</button>
 <button type="button" class="btn btn-secondary roleBtn" data-role="CA">📊 CA</button>
 <button type="button" class="btn btn-secondary roleBtn" data-role="CS">🏢 CS</button>
+<button type="button" class="btn btn-secondary roleBtn" data-role="HR">👥 HR</button>
 </div>
 <div id="roleStatus" class="tiny">Apni professional category select karein.</div>
+<div id="hrScope" class="pro-box" style="display:none;margin-top:14px">
+<strong>👥 HR-specific work scope</strong>
+<p style="margin-top:8px">HR participant ko HR-related assigned work hi diya jana chahiye — jaise permitted HR documentation, employee-data/process coordination, recruitment-process support ya other approved HR operational tasks. Legal advice, advocate work ya unauthorized professional representation assignment ka hissa nahi hoga.</p>
+<p style="margin-top:8px"><strong>Assignment rule:</strong> actual work allocation ko verified role + applicable eligibility + approved assignment scope ke basis par server-side process se enforce karna hoga.</p>
+</div>
 </div>
 
 <div class="pro-progress"><i id="bar"></i></div>
@@ -118,7 +124,10 @@
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
 const steps=[...document.querySelectorAll(".pro-step")],bar=document.getElementById("bar"),prev=document.getElementById("prev"),next=document.getElementById("next"),roleStatus=document.getElementById("roleStatus"),result=document.getElementById("result");let i=0;
-document.querySelectorAll(".roleBtn").forEach(b=>b.addEventListener("click",()=>{roleStatus.textContent="Selected professional category: "+b.dataset.role;}));
+document.querySelectorAll(".roleBtn").forEach(b=>b.addEventListener("click",()=>{
+roleStatus.textContent="Selected professional category: "+b.dataset.role;
+document.getElementById("hrScope").style.display=b.dataset.role==="HR"?"block":"none";
+}));
 function show(n){i=Math.max(0,Math.min(steps.length-1,n));steps.forEach((s,k)=>s.classList.toggle("active",k===i));bar.style.width=((i+1)/steps.length*100)+"%";prev.style.display=i===0?"none":"inline-block";next.style.display=i===steps.length-1?"none":"inline-block";window.scrollTo({top:0,behavior:"smooth"});}
 prev.addEventListener("click",()=>show(i-1));next.addEventListener("click",()=>show(i+1));
 document.querySelectorAll(".read-btn").forEach(b=>b.addEventListener("click",()=>{if(!("speechSynthesis"in window))return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(b.dataset.read);u.lang="hi-IN";u.rate=.85;window.speechSynthesis.speak(u);}));
