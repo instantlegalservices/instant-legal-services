@@ -1820,7 +1820,7 @@ Previous orders"></textarea>
       'accounting-computation':accountingComputation,
       'balance-sheet-tool':balanceSheetTool,
       'profit-loss-tool':profitLossTool,
-      'gst-calculator':gstCalculator,'tds-calculator':tdsCalculator,'gst-interest-calculator':gstInterestCalculator,'professional-fee-calculator':professionalFeeCalculator,'invoice-total-calculator':invoiceTotalCalculator,'mca-compliance-checklist':mcaComplianceChecklist,'tax-payment-planner':taxPaymentPlanner,'compliance-deadline-planner':complianceDeadlinePlanner
+      'gst-calculator':gstCalculator,'tds-calculator':tdsCalculator,'gst-interest-calculator':gstInterestCalculator,'professional-fee-calculator':professionalFeeCalculator,'invoice-total-calculator':invoiceTotalCalculator,'mca-compliance-checklist':mcaComplianceChecklist,'tax-payment-planner':taxPaymentPlanner,'compliance-deadline-planner':complianceDeadlinePlanner,'income-tax-calculator':()=>incomeTax2026('new'),'old-new-tax-regime-comparison':()=>incomeTax2026('compare'),'advance-tax-calculator':advanceTaxCalculator,'self-assessment-tax-calculator':selfAssessmentTaxCalculator,'tds-interest-calculator':tdsInterest2026,'tds-late-filing-fee-calculator':tdsLateFee2026
     };
 
     if(map[slug]){
