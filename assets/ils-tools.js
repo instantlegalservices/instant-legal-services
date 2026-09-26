@@ -1567,7 +1567,38 @@ Previous orders"></textarea>
       const eb=e.target.closest('.tool-export-buy');
       if(eb){
         const job=exportJobs.get(eb.dataset.exportJob);
-        if(job) createOrder(eb.dataset.exportService,{tool_slug:job.toolSlug,report_format:eb.dataset.exportService,inputs:job.input,results:job.result},null,()=>unlockExport(eb.dataset.exportJob));
+        if(!job)return;
+
+        const payment=window.ILSPayments;
+        if(!payment?.startPayment){
+          status('Secure payment system is unavailable. Please try again.');
+          return;
+        }
+
+        eb.disabled=true;
+        try{
+          status('Preparing secure payment…');
+          const paid=await payment.startPayment({
+            serviceSlug:eb.dataset.exportService,
+            details:{
+              tool_slug:job.toolSlug,
+              report_format:eb.dataset.exportService,
+              inputs:job.input,
+              results:job.result
+            },
+            description:job.title+' — '+eb.dataset.exportService
+          });
+
+          if(paid?.ok && paid.status==='paid'){
+            unlockExport(eb.dataset.exportJob);
+          }else{
+            status('Payment was not verified. The report remains locked.');
+          }
+        }catch(err){
+          status(err?.message||'Payment was not completed. The report remains locked.');
+        }finally{
+          eb.disabled=false;
+        }
         return;
       }
       const b=e.target.closest('.tool-buy');
