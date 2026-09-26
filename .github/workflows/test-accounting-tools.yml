@@ -120,50 +120,86 @@ jobs:
                 service_name: 'Basic Report'
               };
 
-              const fakeSupabase = {
-                auth: {
-                  getUser: async () => ({
-                    data: { user: { id: 'e2e-user' } }
-                  })
-                },
-                rpc: async (name, args) => {
-                  if (name !== 'ils_create_service_order') {
-                    throw new Error('Unexpected RPC: ' + name);
-                  }
+              let proofSubmitted = false;
+
+            const fakeSupabase = {
+              auth: {
+                getUser: async () => ({
+                  data: { user: { id: 'e2e-user' } }
+                })
+              },
+              rpc: async (name, args) => {
+                if (name === 'ils_create_service_order') {
                   if (args.p_service_slug !== 'accounting-print-basic') {
                     throw new Error('Wrong accounting service slug: ' + args.p_service_slug);
                   }
-                  return { data: { ok: true, ...paidOrder }, error: null };
-                },
-                functions: {
-                  invoke: async (name, args) => {
-                    if (name !== 'razorpay-payments' || args?.body?.action !== 'create') {
-                      throw new Error('Unexpected payment function call');
-                    }
-                    return {
-                      data: null,
-                      error: { message: 'Simulated Razorpay unavailable — use existing QR fallback' }
-                    };
-                  }
-                },
-                from: table => ({
-                  select: () => ({
-                    eq: () => ({
-                      maybeSingle: async () => ({
-                        data: {
-                          id: paidOrder.order_id,
-                          order_number: paidOrder.order_number,
-                          status: 'paid'
-                        },
-                        error: null
-                      })
-                    })
-                  })
-                })
-              };
+                  return {
+                    data: {
+                      ok: true,
+                      order_id: 'e2e-accounting-order',
+                      order_number: 'ILS-E2E-ACCOUNTING',
+                      amount: 45,
+                      service_name: 'Basic Report'
+                    },
+                    error: null
+                  };
+                }
 
-              window.ILS.ready = () => fakeSupabase;
-            });
+                if (name === 'ils_submit_upi_payment_proof') {
+                  if (args.p_order_id !== 'e2e-accounting-order') {
+                    throw new Error('Proof submitted for wrong order');
+                  }
+                  if (Number(args.p_amount) !== 45) {
+                    throw new Error('Proof amount did not match order');
+                  }
+                  if (args.p_upi_id !== '8445609837@axl') {
+                    throw new Error('Unexpected UPI ID');
+                  }
+                  proofSubmitted = true;
+                  return {
+                    data: {
+                      ok: true,
+                      proof_id: 'e2e-proof',
+                      status: 'pending',
+                      order_id: 'e2e-accounting-order',
+                      order_number: 'ILS-E2E-ACCOUNTING'
+                    },
+                    error: null
+                  };
+                }
+
+                if (name === 'ils_get_upi_proof_status') {
+                  return {
+                    data: {
+                      ok: true,
+                      order_id: 'e2e-accounting-order',
+                      order_number: 'ILS-E2E-ACCOUNTING',
+                      order_status: proofSubmitted ? 'paid' : 'pending',
+                      proof_status: proofSubmitted ? 'verified' : null
+                    },
+                    error: null
+                  };
+                }
+
+                throw new Error('Unexpected RPC: ' + name);
+              },
+              storage: {
+                from: bucket => ({
+                  upload: async (path, file) => ({
+                    data: { path },
+                    error: null
+                  }),
+                  remove: async () => ({ data: null, error: null })
+                })
+              },
+              functions: {
+                invoke: async (name) => {
+                  throw new Error('QR mode should not call Razorpay: ' + name);
+                }
+              }
+            };
+
+            window.ILS.ready = () => fakeSupabase;
 
             const exportButton = page.locator('.tool-export-buy[data-export-service="accounting-print-basic"]').first();
             await exportButton.click();
@@ -178,8 +214,25 @@ jobs:
               throw new Error('Existing UPI QR fallback was not shown');
             }
 
+            const proofPanel = page.locator('#upiProofPanel');
+            if (!await proofPanel.isVisible()) {
+              throw new Error('QR payment proof form was not shown');
+            }
+
+            await page.locator('#upiTransactionRef').fill('123456789012');
+            await page.locator('#upiPayeeName').fill('Instant Legal Services');
+            await page.locator('#upiPaymentScreenshot').setInputFiles({
+              name: 'payment-success.png',
+              mimeType: 'image/png',
+              buffer: Buffer.from('fake-e2e-payment-screenshot')
+            });
+
             await upiButton.click();
-            await page.waitForTimeout(200);
+            await page.waitForTimeout(500);
+
+            if (!proofSubmitted) {
+              throw new Error('Payment proof submission RPC was not called');
+            }
 
             const reportNotice = exportButton.locator('xpath=..').locator('xpath=..');
             if (!await reportNotice.getByText('Report unlocked.').count()) {
@@ -187,7 +240,7 @@ jobs:
             }
 
             if (!await reportNotice.getByText('Print / Save as PDF').count()) {
-              throw new Error('Paid verification did not unlock the PDF/print control'); 
+              throw new Error('Verified QR proof did not unlock the PDF/print control');
             }
 
             if (failures.length) {
