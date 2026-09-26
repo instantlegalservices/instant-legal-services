@@ -3,34 +3,35 @@
 <link rel="stylesheet" href="assets/ils.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js" defer></script><script src="assets/ils-tools-catalog.js?v=20260926-tools2" defer></script><script src="assets/ils-tools.js?v=20260926-tools2" defer></script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js" defer></script><style>
 .tool-controls{padding:18px;margin-bottom:26px}.tool-search label{display:block;font-weight:700;margin-bottom:8px}.tool-search input{width:100%;padding:12px 14px;border:1px solid rgba(127,140,160,.35);border-radius:12px;background:inherit;color:inherit}.tool-filter-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.tool-filter{border:1px solid rgba(127,140,160,.35);background:transparent;color:inherit;border-radius:999px;padding:8px 12px;cursor:pointer}.tool-filter.active,.tool-filter:hover{background:rgba(11,92,255,.12);border-color:rgba(11,92,255,.4)}.tool-category-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px 0}.tool-category-card{border:1px solid rgba(127,140,160,.25);background:rgba(255,255,255,.025);color:inherit;border-radius:13px;padding:10px;text-align:left;cursor:pointer;min-height:82px;transition:transform .15s,border-color .15s,background .15s}.tool-category-card span{display:block;font-size:1.25rem;margin-bottom:5px}.tool-category-card strong{display:block;font-size:.9rem;line-height:1.15}.tool-category-card small{display:block;margin-top:3px;opacity:.62;line-height:1.2;font-size:.7rem}.tool-category-card.active,.tool-category-card:hover{background:rgba(11,92,255,.10);border-color:rgba(11,92,255,.45);transform:translateY(-1px)}.tool-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.tool-card{min-height:0!important;padding:14px;border-radius:14px}.tool-card h3{font-size:1.05rem;line-height:1.2;margin:8px 0 6px}.tool-card p{font-size:.82rem;line-height:1.35;margin:0 0 5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tool-card .tool-open{min-height:40px;padding:9px 12px}.tool-icon{font-size:1.45rem}.tool-mode{font-size:.68rem;margin:0 0 8px}.tool-badges{gap:4px}.tool-badge,.tool-popular,.tool-price{font-size:.6rem;padding:3px 6px}@media(max-width:900px){.tool-category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.tool-category-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.tool-category-card{min-height:74px;padding:9px}.tool-category-card span{font-size:1.15rem;margin-bottom:4px}.tool-category-card strong{font-size:.78rem}.tool-category-card small{display:none}.tool-grid{grid-template-columns:1fr;gap:8px}.tool-card{padding:12px}.tool-card p{-webkit-line-clamp:1}.tool-section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:14px}.tool-section-head h2{margin:4px 0 0}.muted{opacity:.7}.tool-card{display:flex;flex-direction:column;min-height:245px}.tool-card[hidden]{display:none!important}.tool-card p{flex:1}.tool-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.tool-icon{font-size:1.8rem}.tool-badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.tool-badge,.tool-popular{font-size:.68rem;font-weight:800;letter-spacing:.06em;padding:4px 7px;border-radius:999px}.tool-badge{background:rgba(34,197,94,.12)}.tool-popular{background:rgba(245,158,11,.14)}.tool-price{background:rgba(59,130,246,.12);font-size:.68rem;font-weight:800;padding:4px 7px;border-radius:999px}.tool-mode{font-size:.72rem;opacity:.72;margin-top:4px}.tool-profession-wrap,.tool-sort-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.tool-sort-row{border-top:1px solid rgba(127,140,160,.18);padding-top:12px}.tool-card{min-height:255px}.tool-card[data-mode="guided"]{border-style:dashed}@media(max-width:700px){.tool-section-head{align-items:start}.tool-filter-wrap{overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px}.tool-filter{white-space:nowrap}.tool-card{min-height:0}}
 <style id="tools-compact-override">
-/* ILS compact tools dashboard - high specificity override */
+/* ILS mini-card tools dashboard */
 .tool-category-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin:10px 0!important}
-.tool-category-card{min-height:72px!important;height:72px!important;padding:8px!important;border-radius:12px!important}
+.tool-category-card{min-height:68px!important;height:68px!important;padding:8px!important;border-radius:12px!important}
 .tool-category-card span{font-size:1.05rem!important;margin:0 0 3px!important}
 .tool-category-card strong{font-size:.78rem!important;line-height:1.1!important}
 .tool-category-card small{display:none!important}
-.tool-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
-.tool-card{min-height:0!important;height:auto!important;padding:11px!important;border-radius:13px!important}
-.tool-card .tool-card-top{min-height:24px!important}
-.tool-card .tool-icon{font-size:1.25rem!important}
-.tool-card h3{font-size:.92rem!important;line-height:1.18!important;margin:5px 0 4px!important}
-.tool-card p{font-size:.72rem!important;line-height:1.25!important;margin:0 0 4px!important;display:-webkit-box!important;-webkit-line-clamp:1!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
-.tool-card .tool-mode{font-size:.62rem!important;margin:0 0 6px!important}
-.tool-card .tool-open{min-height:34px!important;height:34px!important;padding:5px 9px!important;font-size:.76rem!important}
-.tool-card .tool-badge,.tool-card .tool-popular,.tool-card .tool-price{font-size:.56rem!important;padding:2px 5px!important}
+.tool-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.tool-card{min-height:0!important;height:178px!important;padding:10px!important;border-radius:13px!important;display:flex!important;flex-direction:column!important}
+.tool-card .tool-card-top{display:flex!important;min-height:25px!important;justify-content:space-between!important;align-items:center!important}
+.tool-card .tool-icon{font-size:1.3rem!important}
+.tool-card .tool-badges{gap:3px!important}
+.tool-card .tool-badge,.tool-card .tool-popular,.tool-card .tool-price{font-size:.53rem!important;padding:2px 4px!important}
+.tool-card h3{font-size:.78rem!important;line-height:1.16!important;margin:6px 0 5px!important}
+.tool-card p{font-size:.64rem!important;line-height:1.25!important;margin:0 0 5px!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+.tool-card .tool-mode{font-size:.58rem!important;line-height:1.15!important;margin:0 0 6px!important;opacity:.68!important}
+.tool-card .tool-open{margin-top:auto!important;min-height:31px!important;height:31px!important;padding:4px 6px!important;font-size:.65rem!important;width:100%!important}
 .tool-sort-row{margin:8px 0!important;padding-top:8px!important}
+@media(max-width:900px){
+ .tool-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
 @media(max-width:700px){
- .tool-category-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
- .tool-category-card{height:68px!important;min-height:68px!important}
- .tool-grid{grid-template-columns:1fr!important;gap:6px!important}
- .tool-card{padding:8px 10px!important;min-height:0!important;height:92px!important;display:grid!important;grid-template-columns:42px 1fr auto!important;grid-template-rows:auto 1fr!important;column-gap:9px!important;align-items:center!important}
- .tool-card .tool-card-top{display:contents!important}
- .tool-card .tool-icon{grid-column:1;grid-row:1 / span 2;font-size:1.45rem!important;align-self:center!important}
- .tool-card .tool-badges{grid-column:3;grid-row:1;justify-content:flex-end!important;align-self:start!important}
- .tool-card h3{grid-column:2;grid-row:1;font-size:.9rem!important;line-height:1.15!important;margin:0!important;align-self:center!important}
- .tool-card p{grid-column:2;grid-row:2;font-size:.68rem!important;line-height:1.15!important;margin:2px 0 0!important;-webkit-line-clamp:1!important;align-self:start!important}
- .tool-card .tool-mode{display:none!important}
- .tool-card .tool-open{grid-column:3;grid-row:2;height:29px!important;min-height:29px!important;padding:4px 8px!important;font-size:.68rem!important;white-space:nowrap!important;align-self:end!important}
+ .tool-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+ .tool-card{height:190px!important;padding:9px!important}
+ .tool-card .tool-icon{font-size:1.18rem!important}
+ .tool-card h3{font-size:.72rem!important;line-height:1.15!important}
+ .tool-card p{font-size:.59rem!important;line-height:1.2!important;-webkit-line-clamp:2!important}
+ .tool-card .tool-mode{font-size:.54rem!important}
+ .tool-card .tool-open{height:29px!important;min-height:29px!important;font-size:.59rem!important}
+ .tool-card .tool-badge,.tool-card .tool-popular,.tool-card .tool-price{font-size:.48rem!important;padding:2px 3px!important}
 }
 </style></style></head>
 <body>
