@@ -84,17 +84,17 @@ jobs:
               throw new Error('Tool click did not auto-scroll workspace into view: top=' + workspaceTop + ', scrollY=' + scrollY);
             }
 
-            await page.locator('#toolWorkspace input[name="revenue"]').fill('100000');
-            await page.locator('#toolWorkspace input[name="directCost"]').fill('40000');
-            await page.locator('#toolWorkspace input[name="opex"]').fill('20000');
-            await page.locator('#toolWorkspace input[name="otherIncome"]').fill('5000');
-            await page.locator('#toolWorkspace input[name="otherExpense"]').fill('3000');
-            await page.locator('#toolWorkspace button[type="submit"]').click();
+            await page.locator('#toolWorkspace #acRevenue').fill('100000');
+            await page.locator('#toolWorkspace #acCost').fill('40000');
+            await page.locator('#toolWorkspace #acOperating').fill('20000');
+            await page.locator('#toolWorkspace #acOtherIncome').fill('5000');
+            await page.locator('#toolWorkspace #acOtherExpense').fill('3000');
+            await page.locator('#toolWorkspace #acMake').click();
 
             await page.waitForTimeout(200);
 
             const resultText = await page.locator('#toolWorkspace').innerText();
-            for (const expected of ['Gross Profit', 'Operating Profit', 'Net Profit/Loss', '₹60,000', '₹40,000', '₹42,000']) {
+            for (const expected of ['Gross Profit', 'Operating Profit', 'Net Profit/Loss', '₹60,000.00', '₹40,000.00', '₹42,000.00']) {
               if (!resultText.includes(expected)) {
                 throw new Error('Expected calculation output missing: ' + expected);
               }
