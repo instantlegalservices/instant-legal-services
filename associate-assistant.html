@@ -29,7 +29,7 @@
 <div class="form-row"><div><label for="aemail">Email</label><input id="aemail" type="email" required maxlength="160" autocomplete="email"></div><div><label for="acity">City / District</label><input id="acity" required maxlength="100"></div></div>
 <label for="aexperience">Relevant experience / skills</label><textarea id="aexperience" maxlength="2000" required placeholder="Example: computer work, form filling, documentation, customer coordination"></textarea>
 <label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input id="aconsent" type="checkbox" required style="width:18px;margin-top:2px"><span>I understand that submission is for review only and does not guarantee selection, assignments or earnings.</span></label>
-<button class="btn btn-primary" type="submit">Submit Associate Application</button>
+<button class="btn btn-primary" type="submit">Submit Associate Application</button><div id="trainingCta" class="notice" style="display:none;margin-top:12px"><strong>🎓 Next step: Training</strong><br>Application submit hone ke baad simple ILS training complete karein. Training ke end mein chhota test hoga.<br><a class="btn btn-secondary btn-small" style="margin-top:10px" href="associate-training.html">🎓 Start Training</a></div>
 <div id="associateStatus" class="status assoc-status"></div>
 </form>
 </div></div></section></main>
@@ -40,7 +40,7 @@ e.preventDefault();const s=associateStatus;s.className="status assoc-status";s.t
 const mobile=amobile.value.trim();if(!/^[0-9]{10}$/.test(mobile)){s.className="status err assoc-status";s.textContent="Please enter a valid 10-digit mobile number.";return}
 try{
 await ILS.submitRequirement({name:aname.value.trim(),mobile,state:"Associate Assistant",city:acity.value.trim(),matter:"Associate Assistant Joining",brief:"ILS Associate Assistant application. Email: "+aemail.value.trim().toLowerCase()+". Relevant experience/skills: "+aexperience.value.trim()});
-s.className="status assoc-status ok";s.innerHTML="<strong>Application submitted successfully.</strong><br>ILS team can review your details. This application is kept separate from the public advocate profile directory.";
+s.className="status assoc-status ok";s.innerHTML="<strong>Application submitted successfully.</strong><br>ILS team can review your details. This application is kept separate from the public advocate profile directory.";document.getElementById("trainingCta").style.display="block";
 associateForm.reset();
 }catch(err){s.className="status err assoc-status";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}));
 </script></body></html>
