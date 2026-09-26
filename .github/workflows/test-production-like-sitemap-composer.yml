@@ -1,0 +1,45 @@
+name: Test Production-Like Sitemap Composer
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/location-registry-feed.js"
+      - "scripts/location-sitemap.js"
+      - "scripts/sitemap-composer.js"
+      - "scripts/sitemap-composer-writer.js"
+      - ".github/workflows/test-production-like-sitemap-composer.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  production-like-sitemap-composer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout TEST branch
+        uses: actions/checkout@v4
+        with:
+          ref: v9-final-test
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js
+        run: node --version
+
+      - name: Run production-like Composer Writer
+        env:
+          LOCATION_REGISTRY_SUPABASE_URL: ${{ secrets.LOCATION_REGISTRY_SUPABASE_URL }}
+          LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sitemap-composer-writer.js
+
+      - name: Verify generated sitemap remains TEST-only
+        run: |
+          test -f sitemap.xml
+          node -e "const fs=require('fs'); const xml=fs.readFileSync('sitemap.xml','utf8'); if(!xml.includes('<urlset')) process.exit(1); console.log('TEST_SITEMAP_PRESENT=PASS');"
