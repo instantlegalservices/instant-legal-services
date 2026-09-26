@@ -33,11 +33,21 @@ pre{white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px}
 <div class="card">
 <h2>3. Canonical Customer Onboarding</h2>
 <button id="onboard">Run ils_customer_onboarding_v1</button>
+<button id="e2e">Run direct CUSTOMER_ACTION_E2E</button>
 </div>
 
 <pre id="out">Ready.</pre>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">document.getElementById("e2e").onclick=async()=>{
+  show("Running direct authenticated CUSTOMER_ACTION_E2E...");
+  const {data:{session},error:sessionError}=await sb.auth.getSession();
+  if(sessionError||!session?.access_token){show({stage:"E2E_SESSION_ERROR",message:sessionError?.message||"AUTH_SESSION_REQUIRED"});return;}
+  const correlation=crypto.randomUUID();
+  const response=await fetch(SUPABASE_URL+"/functions/v1/ils-customer-action-e2e-real",{method:"POST",headers:{Authorization:"Bearer "+session.access_token,"Content-Type":"application/json"},body:JSON.stringify({action:"CAPTURE_REAL_CUSTOMER_ACTION_EVIDENCE",correlation_id:correlation})});
+  let body=null;try{body=await response.json();}catch{}
+  show({stage:"CUSTOMER_ACTION_E2E_RESULT",http_status:response.status,body});
+};
+</script>
 <script>
 const SUPABASE_URL="https://bgsbuepolooybdqrzmoa.supabase.co";
 const SUPABASE_KEY="sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2";
