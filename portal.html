@@ -3636,6 +3636,124 @@ document
 
 
 /* =========================================
+   AUTHENTICATED CUSTOMER ONBOARDING
+========================================= */
+
+function customerOnboardingToken(){
+  const id = (crypto.randomUUID ? crypto.randomUUID() : (
+    Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+  )).replaceAll("-", "");
+  return "ILS-CUST-" + id;
+}
+
+async function completeCustomerOnboarding(summary){
+  const resultBox = document.getElementById("customerOnboardingResult");
+  if(resultBox) {
+    resultBox.style.display = "none";
+    resultBox.innerHTML = "";
+  }
+
+  const complaintToken = customerOnboardingToken();
+
+  const { data, error } = await supabaseClient.rpc(
+    "ils_customer_onboarding_v1",
+    {
+      p_complaint_token: complaintToken,
+      p_complaint_summary: String(summary || "").trim(),
+      p_service_code: "LEGAL_ASSISTANCE",
+      p_language_code: "en-IN",
+      p_urgency: "NORMAL",
+      p_required_documents: []
+    }
+  );
+
+  if(error) throw error;
+  if(!data || !data.length || !data[0].customer_id || !data[0].passport_id){
+    throw new Error("Customer onboarding did not return a valid Customer context.");
+  }
+
+  const row = data[0];
+
+  if(resultBox){
+    resultBox.innerHTML =
+      "Customer onboarding completed in TEST. " +
+      "Customer ID: <code>" + escapeHtml(row.customer_id) +
+      "</code><br>Customer matter passport: <code>" +
+      escapeHtml(row.passport_id) + "</code><br>" +
+      "Synthetic: FALSE · Fixture: FALSE · Production access: FALSE";
+    resultBox.style.display = "block";
+  }
+
+  return row;
+}
+
+document.getElementById("customerSignupForm")?.addEventListener("submit", async function(event){
+  event.preventDefault();
+
+  const status = document.getElementById("customerSignupStatus");
+  const email = document.getElementById("customer_signup_email").value.trim();
+  const password = document.getElementById("customer_signup_password").value;
+  const summary = document.getElementById("customer_signup_summary").value.trim();
+
+  status.style.color = "";
+  status.textContent = "Creating your authenticated Customer account…";
+
+  try {
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password
+    });
+
+    if(error) throw error;
+
+    if(data?.session){
+      await completeCustomerOnboarding(summary);
+      status.textContent = "Authenticated Customer account created and onboarded.";
+      return;
+    }
+
+    status.textContent =
+      "Signup created. Please confirm the signup email, then use " +
+      "“Sign In & Complete Customer Onboarding” below.";
+  } catch(error){
+    console.error("Customer signup error:", error);
+    status.textContent = error?.message || "Customer signup failed.";
+  }
+});
+
+document.getElementById("customerSigninForm")?.addEventListener("submit", async function(event){
+  event.preventDefault();
+
+  const status = document.getElementById("customerSigninStatus");
+  const email = document.getElementById("customer_signin_email").value.trim();
+  const password = document.getElementById("customer_signin_password").value;
+  const summary = document.getElementById("customer_signup_summary")?.value.trim() ||
+                  "Customer legal assistance request";
+
+  status.style.color = "";
+  status.textContent = "Signing in…";
+
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if(error) throw error;
+    if(!data?.session || !data?.user?.id){
+      throw new Error("Authenticated session was not established.");
+    }
+
+    await completeCustomerOnboarding(summary);
+    status.textContent = "Signed in and Customer onboarding completed.";
+  } catch(error){
+    console.error("Customer sign-in/onboarding error:", error);
+    status.textContent = error?.message || "Customer sign-in failed.";
+  }
+});
+
+
+/* =========================================
    PHOTO SELECTION - CAMERA
 ========================================= */
 
