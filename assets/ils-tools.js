@@ -1717,6 +1717,62 @@ Previous orders"></textarea>
     cdCalc.onclick=async()=>{const date=cdDate.value,days=Number(cdDays.value),buffer=Number(cdBuffer.value)||0;if(!date||!Number.isInteger(days)||days<0||!Number.isInteger(buffer)||buffer<0){status('Enter a valid date and whole-number days.');return;}const result=fmt(addDays(dateObj(date),days+buffer));cdResult.style.display='block';cdResult.innerHTML=`<strong>Planning date: ${esc(result)}</strong><br><small>This is a planning calculation only; it does not determine a statutory due date.</small>${exportCTA('compliance-deadline-planner',{date,days,buffer},{planned_date:result},'Compliance Deadline Report')}`;status('Planning date calculated.',true);await logRun('compliance-deadline-planner',{date,days,buffer},{planned_date:result});};
   }
 
+
+  function incomeTax2026(mode='new'){
+    const title=mode==='compare'?'Old vs New Tax Regime Comparison':'Income Tax Calculator';
+    shell(title,'AY 2026-27 individual slab-tax estimate using official published slab rates. Enter taxable income after applicable deductions/exemptions. Special-rate income, MAT and certain marginal-relief cases need separate verification.',
+      `<label>Taxable income (₹)</label><input id="itIncome" type="number" min="0" step="1" placeholder="e.g. 1200000">
+      <label>Age category</label><select id="itAge"><option value="normal">Below 60</option><option value="senior">60–79</option><option value="super">80+</option></select>
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="itCalc">Calculate</button></div>
+      <div id="itResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    const calc=(income,age,regime)=>{
+      const slabs=regime==='new'?
+        [[400000,0],[800000,.05],[1200000,.10],[1600000,.15],[2000000,.20],[2400000,.25],[Infinity,.30]]:
+        (age==='normal'?[[250000,0],[500000,.05],[1000000,.20],[Infinity,.30]]:age==='senior'?[[300000,0],[500000,.05],[1000000,.20],[Infinity,.30]]:[[500000,0],[1000000,.20],[Infinity,.30]]);
+      let tax=0,prev=0;
+      for(const [limit,rate] of slabs){const part=Math.max(0,Math.min(income,limit)-prev);tax+=part*rate;if(income<=limit)break;prev=limit;}
+      const rebateLimit=regime==='new'?1200000:500000, rebateMax=regime==='new'?60000:12500;
+      const rebate=income<=rebateLimit?Math.min(tax,rebateMax):0;
+      const afterRebate=Math.max(0,tax-rebate);
+      const cess=afterRebate*.04;
+      return {regime,base_tax:tax,rebate,cess,total_tax:afterRebate+cess};
+    };
+    itCalc.onclick=async()=>{
+      const income=Number(itIncome.value),age=itAge.value;
+      if(!Number.isFinite(income)||income<0){status('Enter valid taxable income.');return;}
+      const n=calc(income,age,'new'),o=calc(income,age,'old');
+      const rows=mode==='compare'?[n,o]:[mode==='new'?n:o];
+      itResult.style.display='block';
+      itResult.innerHTML=rows.map(x=>`<strong>${x.regime==='new'?'New':'Old'} regime</strong><br>Base tax: ₹${x.base_tax.toLocaleString('en-IN',{maximumFractionDigits:0})}<br>87A rebate: ₹${x.rebate.toLocaleString('en-IN',{maximumFractionDigits:0})}<br>4% cess: ₹${x.cess.toLocaleString('en-IN',{maximumFractionDigits:0})}<br><strong>Estimated tax: ₹${x.total_tax.toLocaleString('en-IN',{maximumFractionDigits:0})}</strong>`).join('<hr>')+`<small>For AY 2026-27. Verify surcharge/marginal relief and special-rate income separately where applicable.</small>${exportCTA(mode==='compare'?'old-new-tax-regime-comparison':'income-tax-calculator',{income,age},{old:o,new:n},title)}`;
+      status('Income-tax calculation completed.',true); await logRun(mode==='compare'?'old-new-tax-regime-comparison':'income-tax-calculator',{income,age},{old:o,new:n});
+    };
+  }
+
+  function advanceTaxCalculator(){
+    shell('Advance Tax Calculator','Estimate annual tax payable and the four instalment targets from the calculated tax liability. This is a planning aid.',
+      `<label>Estimated annual tax liability after TDS/credits (₹)</label><input id="atTax" type="number" min="0" step="1">
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="atCalc">Calculate instalments</button></div><div id="atResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    atCalc.onclick=async()=>{const tax=Number(atTax.value);if(!Number.isFinite(tax)||tax<0){status('Enter a valid amount.');return;}const r={annual:tax,june:tax*.15,sept:tax*.45,dec:tax*.75,march:tax};atResult.style.display='block';atResult.innerHTML=`15% by June • cumulative 45% by September • cumulative 75% by December • 100% by March.<br><strong>Targets:</strong> ₹${r.june.toLocaleString('en-IN')} / ₹${r.sept.toLocaleString('en-IN')} / ₹${r.dec.toLocaleString('en-IN')} / ₹${r.march.toLocaleString('en-IN')}${exportCTA('advance-tax-calculator',{},r,'Advance Tax Planning Report')}`;status('Advance-tax targets calculated.',true);await logRun('advance-tax-calculator',{},r);};
+  }
+
+  function selfAssessmentTaxCalculator(){
+    shell('Self-Assessment Tax Calculator','Calculate the remaining balance after subtracting tax already paid/credited from estimated total liability.',
+      `<label>Total estimated tax liability (₹)</label><input id="saLiab" type="number" min="0" step="1"><label>Advance tax paid (₹)</label><input id="saAdv" type="number" min="0" step="1"><label>TDS/TCS credit (₹)</label><input id="saTds" type="number" min="0" step="1"><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="saCalc">Calculate balance</button></div><div id="saResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    saCalc.onclick=async()=>{const liability=Number(saLiab.value),advance=Number(saAdv.value)||0,tds=Number(saTds.value)||0;if(![liability,advance,tds].every(Number.isFinite)||liability<0||advance<0||tds<0){status('Enter valid non-negative amounts.');return;}const balance=Math.max(0,liability-advance-tds),excess=Math.max(0,advance+tds-liability);const r={liability,advance,tds,balance,excess};saResult.style.display='block';saResult.innerHTML=`Balance payable: <strong>₹${balance.toLocaleString('en-IN')}</strong><br>Potential excess credit: ₹${excess.toLocaleString('en-IN')}${exportCTA('self-assessment-tax-calculator',r,r,'Self-Assessment Tax Report')}`;status('Self-assessment balance calculated.',true);await logRun('self-assessment-tax-calculator',r,r);};
+  }
+
+  function tdsInterest2026(){
+    shell('TDS Interest Calculator','Indicative interest under section 201(1A): 1% per month/fraction for delay in deduction and 1.5% per month/fraction after deduction where tax remains unpaid. Verify facts and statutory applicability.',
+      `<label>TDS amount (₹)</label><input id="tiTax" type="number" min="0" step="1"><label>Months/fractions delayed before deduction</label><input id="tiPre" type="number" min="0" step="1"><label>Months/fractions delayed after deduction</label><input id="tiPost" type="number" min="0" step="1"><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="tiCalc">Calculate interest</button></div><div id="tiResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    tiCalc.onclick=async()=>{const tax=Number(tiTax.value),pre=Number(tiPre.value)||0,post=Number(tiPost.value)||0;if(!Number.isFinite(tax)||tax<0||pre<0||post<0){status('Enter valid values.');return;}const r={tax,pre_months:pre,post_months:post,interest:tax*(pre*.01+post*.015)};tiResult.style.display='block';tiResult.innerHTML=`Estimated interest: <strong>₹${r.interest.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong>${exportCTA('tds-interest-calculator',r,r,'TDS Interest Report')}`;status('TDS interest calculated.',true);await logRun('tds-interest-calculator',r,r);};
+  }
+
+  function tdsLateFee2026(){
+    shell('TDS Late Filing Fee Calculator','Section 234E planning calculation: ₹200 per day, capped at the amount of TDS deductible/collectible. Verify the applicable statement and period.',
+      `<label>TDS amount (₹)</label><input id="tlTax" type="number" min="0" step="1"><label>Days of delay</label><input id="tlDays" type="number" min="0" step="1"><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="tlCalc">Calculate late fee</button></div><div id="tlResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    tlCalc.onclick=async()=>{const tax=Number(tlTax.value),days=Number(tlDays.value);if(!Number.isFinite(tax)||!Number.isFinite(days)||tax<0||days<0){status('Enter valid values.');return;}const fee=Math.min(tax,days*200);const r={tax,days,late_fee:fee};tlResult.style.display='block';tlResult.innerHTML=`Estimated late fee: <strong>₹${fee.toLocaleString('en-IN')}</strong>${exportCTA('tds-late-filing-fee-calculator',r,r,'TDS Late Fee Report')}`;status('TDS late fee calculated.',true);await logRun('tds-late-filing-fee-calculator',r,r);};
+  }
+
   function genericGuided(tool){
     const w=workspace(); if(!w)return;
     const price=Number(tool.price||0);
@@ -1764,7 +1820,7 @@ Previous orders"></textarea>
       'accounting-computation':accountingComputation,
       'balance-sheet-tool':balanceSheetTool,
       'profit-loss-tool':profitLossTool,
-      'gst-calculator':gstCalculator,'tds-calculator':tdsCalculator,'gst-interest-calculator':gstInterestCalculator,'professional-fee-calculator':professionalFeeCalculator,'invoice-total-calculator':invoiceTotalCalculator,'mca-compliance-checklist':mcaComplianceChecklist,'tax-payment-planner':taxPaymentPlanner,'compliance-deadline-planner':complianceDeadlinePlanner
+      'gst-calculator':gstCalculator,'tds-calculator':tdsCalculator,'gst-interest-calculator':gstInterestCalculator,'professional-fee-calculator':professionalFeeCalculator,'invoice-total-calculator':invoiceTotalCalculator,'mca-compliance-checklist':mcaComplianceChecklist,'tax-payment-planner':taxPaymentPlanner,'compliance-deadline-planner':complianceDeadlinePlanner,'income-tax-calculator':()=>incomeTax2026('new'),'old-new-tax-regime-comparison':()=>incomeTax2026('compare'),'advance-tax-calculator':advanceTaxCalculator,'self-assessment-tax-calculator':selfAssessmentTaxCalculator,'tds-interest-calculator':tdsInterest2026,'tds-late-filing-fee-calculator':tdsLateFee2026
     };
 
     if(map[slug]){
