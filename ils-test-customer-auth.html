@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ILS TEST Customer Auth</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:680px;margin:40px auto;padding:20px;line-height:1.5}
+input,button{width:100%;box-sizing:border-box;padding:12px;margin:6px 0;font-size:16px}
+button{cursor:pointer}.card{border:1px solid #ddd;border-radius:12px;padding:18px;margin:12px 0}
+pre{white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px}
+.warn{background:#fff4d6;padding:12px;border-radius:8px}
+</style>
+</head>
+<body>
+<h1>ILS TEST — Normal Customer Auth</h1>
+<div class="warn"><b>TEST ONLY.</b> This page targets the isolated TEST Supabase project. It is not a production customer login and must not be linked from the live site.</div>
+
+<div class="card">
+<h2>1. Normal Customer Signup</h2>
+<input id="email" type="email" autocomplete="email" placeholder="TEST email">
+<input id="password" type="password" autocomplete="new-password" placeholder="Password (minimum 6 characters)">
+<button id="signup">Create TEST Customer Account</button>
+</div>
+
+<div class="card">
+<h2>2. Normal Customer Sign-in</h2>
+<button id="signin">Sign in as TEST Customer</button>
+<button id="signout">Sign out</button>
+</div>
+
+<div class="card">
+<h2>3. Canonical Customer Onboarding</h2>
+<button id="onboard">Run ils_customer_onboarding_v1</button>
+</div>
+
+<pre id="out">Ready.</pre>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://bgsbuepolooybdqrzmoa.supabase.co";
+const SUPABASE_KEY="sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:true}});
+const out=document.getElementById("out");
+const email=()=>document.getElementById("email").value.trim();
+const password=()=>document.getElementById("password").value;
+const show=x=>out.textContent=typeof x==="string"?x:JSON.stringify(x,null,2);
+
+document.getElementById("signup").onclick=async()=>{
+  show("Signing up through normal Supabase Auth...");
+  const {data,error}=await sb.auth.signUp({email:email(),password:password(),options:{emailRedirectTo:location.href}});
+  show(error?{stage:"SIGNUP_ERROR",message:error.message}:{stage:"SIGNUP_RESULT",user_id:data.user?.id??null,session_present:!!data.session,email_confirmation_required:!data.session});
+};
+document.getElementById("signin").onclick=async()=>{
+  show("Signing in through normal Supabase Auth...");
+  const {data,error}=await sb.auth.signInWithPassword({email:email(),password:password()});
+  show(error?{stage:"SIGNIN_ERROR",message:error.message}:{stage:"SIGNIN_OK",user_id:data.user?.id??null,session_present:!!data.session});
+};
+document.getElementById("signout").onclick=async()=>{
+  const {error}=await sb.auth.signOut(); show(error?{stage:"SIGNOUT_ERROR",message:error.message}:{stage:"SIGNED_OUT"});
+};
+document.getElementById("onboard").onclick=async()=>{
+  show("Running canonical TEST customer onboarding...");
+  const {data,error}=await sb.rpc("ils_customer_onboarding_v1",{
+    p_complaint_token:"TEST-AUTH-"+Date.now(),
+    p_complaint_summary:"Controlled TEST customer onboarding evidence",
+    p_service_code:"legal_assistance",
+    p_language_code:"en",
+    p_urgency:"normal",
+    p_required_documents:[],
+    p_official_route_url:"https://instantlegalservices.in/",
+    p_assistance_tier:"free"
+  });
+  show(error?{stage:"ONBOARDING_ERROR",message:error.message}:{stage:"ONBOARDING_OK",data});
+};
+</script>
+</body>
+</html>
