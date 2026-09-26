@@ -259,6 +259,7 @@ jobs:
 
             console.log('PASS: Accounting filter, 3 cards, auto-scroll, calculation, and paid PDF tiers verified.');
             await browser.close();
+          })();
           NODE
 
       - name: Stop local site
