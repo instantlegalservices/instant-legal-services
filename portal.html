@@ -2350,6 +2350,46 @@ or highly sensitive information in this form.
 
 </p>
 
+<div class="ils-panel" id="customer-account-onboarding" style="margin-top:18px;text-align:left;">
+  <h3 style="color:#e5a93d;margin-bottom:8px;">Customer Account</h3>
+  <p class="ils-small" style="margin-bottom:14px;">
+    Create or sign in to your ILS Customer account. After authentication,
+    your Customer matter passport is created through the controlled
+    authenticated Customer boundary.
+  </p>
+
+  <form id="customerSignupForm">
+    <label>Email</label>
+    <input type="email" id="customer_signup_email" required autocomplete="email" placeholder="Email address">
+
+    <label>Password</label>
+    <input type="password" id="customer_signup_password" required minlength="8" autocomplete="new-password" placeholder="Minimum 8 characters">
+
+    <label>Initial Matter / Requirement</label>
+    <textarea id="customer_signup_summary" required maxlength="3000" placeholder="Briefly describe the matter for your Customer account"></textarea>
+
+    <button class="btn primary full" type="submit">Create Customer Account</button>
+    <div id="customerSignupStatus" class="note" style="text-align:left;"></div>
+  </form>
+
+  <div style="border-top:1px solid rgba(255,255,255,.08);margin:18px 0;padding-top:18px;">
+    <strong style="color:#e5a93d;">Already have an account?</strong>
+  </div>
+
+  <form id="customerSigninForm">
+    <label>Email</label>
+    <input type="email" id="customer_signin_email" required autocomplete="email" placeholder="Registered email">
+
+    <label>Password</label>
+    <input type="password" id="customer_signin_password" required autocomplete="current-password" placeholder="Password">
+
+    <button class="btn secondary full" type="submit">Sign In & Complete Customer Onboarding</button>
+    <div id="customerSigninStatus" class="note" style="text-align:left;"></div>
+  </form>
+
+  <div id="customerOnboardingResult" class="success" style="display:none;text-align:left;"></div>
+</div>
+
 </div>
 
 </section>
