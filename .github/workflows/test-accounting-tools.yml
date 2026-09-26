@@ -1,0 +1,128 @@
+name: Accounting Tools UI E2E
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "tools.html"
+      - "assets/ils-tools.js"
+      - "assets/ils.css"
+      - ".github/workflows/test-accounting-tools.yml"
+
+jobs:
+  accounting-tools-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http.log 2>&1 &
+          echo $! > /tmp/ils-http.pid
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:4173/tools.html > /dev/null
+
+      - name: Run accounting UI regression
+        env:
+          BASE_URL: http://127.0.0.1:4173/tools.html
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+
+            const failures = [];
+            page.on('pageerror', e => failures.push('pageerror: ' + e.message));
+            page.on('console', m => {
+              if (m.type() === 'error') failures.push('console: ' + m.text());
+            });
+
+            await page.goto(process.env.BASE_URL, { waitUntil: 'networkidle' });
+
+            const accountingFilter = page.locator('[data-filter="accounting"]');
+            await accountingFilter.click();
+
+            const cards = page.locator('.tool-card[data-category~="accounting"]');
+            if (await cards.count() !== 3) {
+              throw new Error('Expected exactly 3 accounting tool cards');
+            }
+
+            const expectedSlugs = [
+              'accounting-computation',
+              'balance-sheet',
+              'profit-loss'
+            ];
+
+            for (const slug of expectedSlugs) {
+              if (await page.locator('.tool-card[data-tool="' + slug + '"]').count() !== 1) {
+                throw new Error('Missing accounting tool card: ' + slug);
+              }
+            }
+
+            await page.locator('.tool-card[data-tool="accounting-computation"] .tool-open').click();
+            await page.waitForTimeout(500);
+
+            const workspaceVisible = await page.locator('#toolWorkspace').isVisible();
+            if (!workspaceVisible) throw new Error('Accounting workspace is not visible');
+
+            const scrollY = await page.evaluate(() => window.scrollY);
+            const workspaceTop = await page.locator('#toolWorkspace').evaluate(el => el.getBoundingClientRect().top);
+            if (Math.abs(workspaceTop) > 180) {
+              throw new Error('Tool click did not auto-scroll workspace into view: top=' + workspaceTop + ', scrollY=' + scrollY);
+            }
+
+            await page.locator('#toolWorkspace input[name="revenue"]').fill('100000');
+            await page.locator('#toolWorkspace input[name="directCost"]').fill('40000');
+            await page.locator('#toolWorkspace input[name="opex"]').fill('20000');
+            await page.locator('#toolWorkspace input[name="otherIncome"]').fill('5000');
+            await page.locator('#toolWorkspace input[name="otherExpense"]').fill('3000');
+            await page.locator('#toolWorkspace button[type="submit"]').click();
+
+            await page.waitForTimeout(200);
+
+            const resultText = await page.locator('#toolWorkspace').innerText();
+            for (const expected of ['Gross Profit', 'Operating Profit', 'Net Profit/Loss', '₹60,000', '₹40,000', '₹42,000']) {
+              if (!resultText.includes(expected)) {
+                throw new Error('Expected calculation output missing: ' + expected);
+              }
+            }
+
+            for (const price of ['₹45', '₹85', '₹125']) {
+              if (!resultText.includes(price)) {
+                throw new Error('Expected paid export tier missing: ' + price);
+              }
+            }
+
+            if (!resultText.includes('Print / Save as PDF')) {
+              throw new Error('Paid PDF/print export option missing');
+            }
+
+            if (failures.length) {
+              throw new Error(failures.join('\n'));
+            }
+
+            console.log('PASS: Accounting filter, 3 cards, auto-scroll, calculation, and paid PDF tiers verified.');
+            await browser.close();
+          })().catch(async err => {
+            console.error(err);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Stop local site
+        if: always()
+        run: |
+          if [ -f /tmp/ils-http.pid ]; then kill "$(cat /tmp/ils-http.pid)" || true; fi
