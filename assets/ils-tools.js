@@ -52,7 +52,7 @@ window.ILS_TOOLS = (() => {
     'accounting-print-basic':'accounting-print-basic',
     'accounting-print-guided':'accounting-print-guided',
     'accounting-print-professional':'professional-report',
-    'gst-calculator':'professional-report','tds-calculator':'professional-report','gst-interest-calculator':'professional-report','professional-fee-calculator':'professional-report','invoice-total-calculator':'professional-report','mca-compliance-checklist':'professional-report','tax-payment-planner':'professional-report','compliance-deadline-planner':'professional-report'
+    'gst-calculator':'professional-report-basic','tds-calculator':'professional-report-basic','gst-interest-calculator':'professional-report-basic','professional-fee-calculator':'professional-report-basic','invoice-total-calculator':'professional-report-basic','mca-compliance-checklist':'professional-report-basic','tax-payment-planner':'professional-report-basic','compliance-deadline-planner':'professional-report-basic'
   };
 
   async function createOrder(slug, details, toolRunId=null, onPaid=null, options={}){
