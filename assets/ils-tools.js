@@ -211,14 +211,73 @@ async function startRazorpay(data){
   const paidNote = document.getElementById('upiPaidNote');
 
   if (paidBtn && paidNote) {
-    paidBtn.onclick = () => {
-      paidNote.style.display = 'block';
+    let checking = false;
+    let timer = null;
+    let attempts = 0;
+    const maxAttempts = 30; // ~5 minutes at 10-second intervals
 
+    const stopWatch = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const checkVerified = async () => {
+      if (checking || !data?.order_id) return;
+      checking = true;
+      attempts++;
+
+      try {
+        const current = window.ILS?.ready?.();
+        if (!current) return;
+
+        const { data: order, error } = await current
+          .from('orders')
+          .select('id,status,order_number')
+          .eq('id', data.order_id)
+          .maybeSingle();
+
+        if (error) {
+          console.debug('UPI order-status check failed.', error);
+          return;
+        }
+
+        if (order?.status === 'paid') {
+          stopWatch();
+          paidNote.innerHTML =
+            'Payment has been verified. Order <strong>' +
+            esc(order.order_number || data.order_number || '') +
+            '</strong> is paid. Your report is now unlocked.';
+          if (typeof onPaid === 'function') onPaid();
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          stopWatch();
+          paidNote.innerHTML =
+            'Payment is still pending verification for order <strong>' +
+            esc(order?.order_number || data.order_number || '') +
+            '</strong>. Please check again later from your signed-in account.';
+        }
+      } finally {
+        checking = false;
+      }
+    };
+
+    paidBtn.onclick = () => {
+      if (timer) return;
+
+      paidBtn.disabled = true;
+      paidNote.style.display = 'block';
       paidNote.innerHTML =
         'Payment submitted for verification. ' +
         'Order <strong>' +
         esc(data.order_number || '') +
-        '</strong> remains pending until payment is verified.';
+        '</strong> remains locked until an authorized payment verification changes the order status to <strong>paid</strong>.';
+
+      checkVerified();
+      timer = setInterval(checkVerified, 10000);
     };
   }
 
@@ -1569,33 +1628,19 @@ Previous orders"></textarea>
         const job=exportJobs.get(eb.dataset.exportJob);
         if(!job)return;
 
-        const payment=window.ILSPayments;
-        if(!payment?.startPayment){
-          status('Secure payment system is unavailable. Please try again.');
-          return;
-        }
-
         eb.disabled=true;
         try{
-          status('Preparing secure payment…');
-          const paid=await payment.startPayment({
-            serviceSlug:eb.dataset.exportService,
-            details:{
+          await createOrder(
+            eb.dataset.exportService,
+            {
               tool_slug:job.toolSlug,
               report_format:eb.dataset.exportService,
               inputs:job.input,
               results:job.result
             },
-            description:job.title+' — '+eb.dataset.exportService
-          });
-
-          if(paid?.ok && paid.status==='paid'){
-            unlockExport(eb.dataset.exportJob);
-          }else{
-            status('Payment was not verified. The report remains locked.');
-          }
-        }catch(err){
-          status(err?.message||'Payment was not completed. The report remains locked.');
+            null,
+            ()=>unlockExport(eb.dataset.exportJob)
+          );
         }finally{
           eb.disabled=false;
         }
