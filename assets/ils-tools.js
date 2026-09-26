@@ -14,7 +14,10 @@ window.ILS_TOOLS = (() => {
     'maintenance-estimator': ['Maintenance Estimator','A financial-planning aid based on user inputs. It does not predict or recommend a court-ordered maintenance amount.'],
     'legal-problem-diagnostic': ['Legal Problem Diagnostic','Structured intake to identify possible legal routes for professional review; it is not a legal opinion.'],
     'case-preparation-tool': ['Case Preparation Tool','Organise facts, chronology, documents and questions for professional review.'],
-    'property-document-checklist': ['Property Document Checklist','Organise common property documents before professional due diligence. Requirements vary by property, transaction and jurisdiction.']
+    'property-document-checklist': ['Property Document Checklist','Organise common property documents before professional due diligence. Requirements vary by property, transaction and jurisdiction.'],
+    'accounting-computation': ['Accounting Computation','Basic accounting computation from user-supplied figures. This is a calculation aid, not an audit, tax opinion or statutory accounts preparation.'],
+    'balance-sheet-tool': ['Balance Sheet Tool','Prepare a basic balance sheet from user-supplied assets, liabilities and equity figures. The tool checks the accounting equation but does not certify accounts.'],
+    'profit-loss-tool': ['Profit & Loss (P&L) Tool','Calculate revenue, cost of sales, gross profit, operating profit and net profit from user-supplied figures.']
   };
 
   const sources = {
@@ -1227,6 +1230,76 @@ Previous orders"></textarea>
     };
   }
 
+
+  function accountingComputation(){
+    const [t,d]=toolCopy['accounting-computation'];
+    shell(t,d,`
+      <label for="acRevenue">Revenue / Sales (₹)</label><input id="acRevenue" type="number" min="0" step="0.01" value="0">
+      <label for="acCost">Cost of goods / direct cost (₹)</label><input id="acCost" type="number" min="0" step="0.01" value="0">
+      <label for="acOperating">Operating expenses (₹)</label><input id="acOperating" type="number" min="0" step="0.01" value="0">
+      <label for="acOtherIncome">Other income (₹)</label><input id="acOtherIncome" type="number" min="0" step="0.01" value="0">
+      <label for="acOtherExpense">Other expenses / finance cost (₹)</label><input id="acOtherExpense" type="number" min="0" step="0.01" value="0">
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="acMake">Compute</button></div>
+      <div id="acResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    acMake.onclick=async()=>{
+      const revenue=Number(acRevenue.value)||0,cost=Number(acCost.value)||0,operating=Number(acOperating.value)||0,otherIncome=Number(acOtherIncome.value)||0,otherExpense=Number(acOtherExpense.value)||0;
+      const gross=revenue-cost, operatingProfit=gross-operating, net=operatingProfit+otherIncome-otherExpense;
+      const money=x=>`₹${x.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+      acResult.style.display='block';
+      acResult.innerHTML=`<strong>Accounting Computation</strong><p>Revenue: ${money(revenue)}<br>Gross Profit: ${money(gross)}<br>Operating Profit: ${money(operatingProfit)}<br><strong>Net Profit / (Loss): ${money(net)}</strong></p><small>Calculation aid only. Verify accounting treatment, GST, depreciation, tax and applicable accounting standards with a qualified professional.</small>`;
+      status('Accounting computation completed.',true);
+      await logRun('accounting-computation',{revenue,cost,operating,otherIncome,otherExpense},{gross,operatingProfit,net});
+    };
+  }
+
+  function balanceSheetTool(){
+    const [t,d]=toolCopy['balance-sheet-tool'];
+    shell(t,d,`
+      <h4>Assets</h4>
+      <label for="bsCash">Cash &amp; bank (₹)</label><input id="bsCash" type="number" min="0" step="0.01" value="0">
+      <label for="bsReceivables">Receivables (₹)</label><input id="bsReceivables" type="number" min="0" step="0.01" value="0">
+      <label for="bsInventory">Inventory (₹)</label><input id="bsInventory" type="number" min="0" step="0.01" value="0">
+      <label for="bsFixed">Fixed / other assets (₹)</label><input id="bsFixed" type="number" min="0" step="0.01" value="0">
+      <h4>Liabilities &amp; Equity</h4>
+      <label for="bsPayables">Payables / current liabilities (₹)</label><input id="bsPayables" type="number" min="0" step="0.01" value="0">
+      <label for="bsDebt">Loans / borrowings (₹)</label><input id="bsDebt" type="number" min="0" step="0.01" value="0">
+      <label for="bsEquity">Capital / equity (₹)</label><input id="bsEquity" type="number" min="0" step="0.01" value="0">
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="bsMake">Prepare Balance Sheet</button></div>
+      <div id="bsResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    bsMake.onclick=async()=>{
+      const vals=[bsCash,bsReceivables,bsInventory,bsFixed,bsPayables,bsDebt,bsEquity].map(x=>Number(x.value)||0);
+      const [cash,receivables,inventory,fixedAssets,payables,debt,equity]=vals;
+      const assets=cash+receivables+inventory+fixedAssets, liabEquity=payables+debt+equity, difference=assets-liabEquity;
+      const money=x=>`₹${x.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+      bsResult.style.display='block';
+      bsResult.innerHTML=`<strong>Balance Sheet Check</strong><p>Total Assets: ${money(assets)}<br>Total Liabilities + Equity: ${money(liabEquity)}<br>Difference: ${money(difference)}</p><strong>${Math.abs(difference)<0.01?'✓ Accounting equation balances':'⚠️ Difference remains — review the entered figures.'}</strong><br><small>This tool does not certify or prepare statutory financial statements.</small>`;
+      status('Balance sheet calculation completed.',true);
+      await logRun('balance-sheet-tool',{cash,receivables,inventory,fixedAssets,payables,debt,equity},{assets,liabEquity,difference});
+    };
+  }
+
+  function profitLossTool(){
+    const [t,d]=toolCopy['profit-loss-tool'];
+    shell(t,d,`
+      <label for="plRevenue">Revenue / Sales (₹)</label><input id="plRevenue" type="number" min="0" step="0.01" value="0">
+      <label for="plCOGS">Cost of sales / direct expenses (₹)</label><input id="plCOGS" type="number" min="0" step="0.01" value="0">
+      <label for="plOperating">Operating expenses (₹)</label><input id="plOperating" type="number" min="0" step="0.01" value="0">
+      <label for="plFinance">Finance cost / interest (₹)</label><input id="plFinance" type="number" min="0" step="0.01" value="0">
+      <label for="plOtherIncome">Other income (₹)</label><input id="plOtherIncome" type="number" min="0" step="0.01" value="0">
+      <label for="plTax">Income tax provision (₹)</label><input id="plTax" type="number" min="0" step="0.01" value="0">
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="plMake">Calculate P&amp;L</button></div>
+      <div id="plResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    plMake.onclick=async()=>{
+      const revenue=Number(plRevenue.value)||0,cogs=Number(plCOGS.value)||0,operating=Number(plOperating.value)||0,finance=Number(plFinance.value)||0,otherIncome=Number(plOtherIncome.value)||0,tax=Number(plTax.value)||0;
+      const gross=revenue-cogs, operatingProfit=gross-operating, profitBeforeTax=operatingProfit+otherIncome-finance, netProfit=profitBeforeTax-tax;
+      const money=x=>`₹${x.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+      plResult.style.display='block';
+      plResult.innerHTML=`<strong>Profit &amp; Loss Statement</strong><p>Revenue: ${money(revenue)}<br>Gross Profit: ${money(gross)}<br>Operating Profit: ${money(operatingProfit)}<br>Profit Before Tax: ${money(profitBeforeTax)}<br><strong>Profit After Tax / (Loss): ${money(netProfit)}</strong></p><small>Tax and accounting treatment are illustrative only; verify applicable tax rules, accounting standards and adjustments before filing or reporting.</small>`;
+      status('P&amp;L calculation completed.',true);
+      await logRun('profit-loss-tool',{revenue,cogs,operating,finance,otherIncome,tax},{gross,operatingProfit,profitBeforeTax,netProfit});
+    };
+  }
+
   function propertyChecklist(){
     const [t,d]=toolCopy['property-document-checklist'];
 
@@ -1354,7 +1427,10 @@ Previous orders"></textarea>
       'maintenance-estimator':maintenance,
       'legal-problem-diagnostic':diagnostic,
       'case-preparation-tool':casePrep,
-      'property-document-checklist':propertyChecklist
+      'property-document-checklist':propertyChecklist,
+      'accounting-computation':accountingComputation,
+      'balance-sheet-tool':balanceSheetTool,
+      'profit-loss-tool':profitLossTool
     };
 
     if(map[slug])map[slug]();
