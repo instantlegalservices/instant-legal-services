@@ -7,7 +7,7 @@ Deno.serve(async(req)=>{
     const question=String(body?.question||"Explain the difference between a legal fact and a legal inference in an Indian-law case. Use authoritative sources.");
     const base=Deno.env.get("SUPABASE_URL")||"";
     if(!base)return json({ok:false,stage:"configuration",message:"TEST Supabase URL is unavailable."},503);
-    const target=base.replace(/\\/$/,"")+"/functions/v1/ils-ai-assistant";
+    const target=(base.endsWith("/")?base.slice(0,-1):base)+"/functions/v1/ils-ai-assistant";
     const r=await fetch(target,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question,context:"TEST SYNTHETIC E2E ONLY. Do not use or retain personal data."})});
     const raw=await r.text();
     let parsed:any=null;try{parsed=JSON.parse(raw)}catch{}
