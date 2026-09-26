@@ -148,7 +148,7 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
 
       <h3>Secure Payment</h3>
 
-      <p>Razorpay is temporarily unavailable.</p>
+      <p>${forceQr ? 'Pay using the existing Instant Legal Services UPI QR.' : 'Razorpay is temporarily unavailable. The existing ILS UPI QR payment option is available.'}</p>
 
       <p style="font-size:24px;font-weight:700">
         ₹${amount.toLocaleString('en-IN')}
