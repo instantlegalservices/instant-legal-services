@@ -110,6 +110,31 @@ jobs:
               throw new Error('Paid PDF/print export option missing');
             }
 
+            // Verify accounting exports are tied to the existing payment engine.
+            await page.evaluate(() => {
+              window.__ilsPaymentCall = null;
+              window.ILSPayments = {
+                startPayment: async (options) => {
+                  window.__ilsPaymentCall = options;
+                  return { ok: true, status: 'paid', order_id: 'e2e-paid-order' };
+                }
+              };
+            });
+
+            const exportButton = page.locator('.tool-export-buy[data-export-service="accounting-print-basic"]').first();
+            await exportButton.click();
+            await page.waitForTimeout(100);
+
+            const paymentCall = await page.evaluate(() => window.__ilsPaymentCall);
+            if (!paymentCall || paymentCall.serviceSlug !== 'accounting-print-basic') {
+              throw new Error('Accounting export is not routed through the existing ILSPayments engine');
+            }
+
+            const reportNotice = exportButton.locator('xpath=..').locator('xpath=..');
+            if (!await reportNotice.getByText('Print / Save as PDF').count()) {
+              throw new Error('Paid verification did not unlock the PDF/print control in the E2E payment mock');
+            }
+
             if (failures.length) {
               throw new Error(failures.join('\n'));
             }
