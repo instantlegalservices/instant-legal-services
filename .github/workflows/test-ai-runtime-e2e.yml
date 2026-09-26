@@ -19,12 +19,12 @@ jobs:
     steps:
       - name: Validate TEST AI endpoint (network runner)
         env:
-          TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
-          TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+          TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+          TEST_SUPABASE_ANON_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
         run: |
           set -euo pipefail
-          test -n "$TEST_SUPABASE_URL" || { echo "Missing TEST_SUPABASE_URL"; exit 2; }
-          test -n "$TEST_SUPABASE_ANON_KEY" || { echo "Missing TEST_SUPABASE_ANON_KEY"; exit 2; }
+          test -n "$TEST_SUPABASE_URL"
+          test -n "$TEST_SUPABASE_ANON_KEY"
           URL="${TEST_SUPABASE_URL%/}/functions/v1/ils-test-ai-runtime-harness"
           RESPONSE="$(curl -sS --fail-with-body --max-time 60             -H "apikey: $TEST_SUPABASE_ANON_KEY"             -H "Authorization: Bearer $TEST_SUPABASE_ANON_KEY"             "$URL")"
           python - <<'PY' "$RESPONSE"
