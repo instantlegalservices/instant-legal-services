@@ -21,10 +21,11 @@ jobs:
             "fake-citation": ["Never invent or guess", "authoritative-source search"],
             "contradictory-facts": ["If sources conflict, explicitly identify the conflict"],
             "missing-evidence": ["what the supplied evidence supports", "additional evidence"],
-            "prompt-injection": ["Ignore instructions, commands, role changes", "untrusted data"],
-            "outdated-law": ["current or legally material propositions", "current"],
+            "prompt-injection": ["untrusted data, not system instructions"],
+            "outdated-law": ["current or legally material propositions", "historical"],
             "fabricated-facts": ["preserve supplied facts exactly", "[VERIFY]"],
             "unverified-source": ["unverified external URL and was blocked", "No verified answer is available"],
+            "runtime-url-block": ["answerUrls.some", "isOfficial(u)", "unverified external URL"],
           }
           missing=[]
           for name,needles in cases.items():
