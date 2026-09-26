@@ -1773,6 +1773,40 @@ Previous orders"></textarea>
     tlCalc.onclick=async()=>{const tax=Number(tlTax.value),days=Number(tlDays.value);if(!Number.isFinite(tax)||!Number.isFinite(days)||tax<0||days<0){status('Enter valid values.');return;}const fee=Math.min(tax,days*200);const r={tax,days,late_fee:fee};tlResult.style.display='block';tlResult.innerHTML=`Estimated late fee: <strong>₹${fee.toLocaleString('en-IN')}</strong>${exportCTA('tds-late-filing-fee-calculator',r,r,'TDS Late Fee Report')}`;status('TDS late fee calculated.',true);await logRun('tds-late-filing-fee-calculator',r,r);};
   }
 
+
+  function gstCoreCalculator(mode='gst'){
+    const title=mode==='split'?'CGST / SGST / IGST Calculator':mode==='inclusive'?'GST Inclusive / Exclusive Calculator':'GST Calculator';
+    shell(title,'Calculate GST from taxable value, rate and supply type. This is a calculation aid; verify the applicable GST rate and place-of-supply treatment.',
+      `<label>Amount (₹)</label><input id="gcAmount" type="number" min="0" step="0.01" placeholder="10000"><label>GST rate (%)</label><input id="gcRate" type="number" min="0" step="0.01" placeholder="18"><label>Mode</label><select id="gcMode"><option value="exclusive">GST extra (exclusive)</option><option value="inclusive">GST included (inclusive)</option></select><label>Supply</label><select id="gcSupply"><option value="intra">Intra-state — CGST + SGST/UTGST</option><option value="inter">Inter-state — IGST</option></select><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="gcCalc">Calculate</button></div><div id="gcResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    gcCalc.onclick=async()=>{
+      const amount=Number(gcAmount.value),rate=Number(gcRate.value),calcMode=gcMode.value,supply=gcSupply.value;
+      if(!Number.isFinite(amount)||!Number.isFinite(rate)||amount<0||rate<0){status('Enter valid non-negative values.');return;}
+      const taxable=calcMode==='inclusive'?amount/(1+rate/100):amount;
+      const gst=calcMode==='inclusive'?amount-taxable:taxable*rate/100;
+      const total=taxable+gst, half=gst/2;
+      const r={amount,rate,mode:calcMode,supply,taxable,gst,total,cgst:supply==='intra'?half:0,sgst:supply==='intra'?half:0,igst:supply==='inter'?gst:0};
+      gcResult.style.display='block';gcResult.innerHTML=`Taxable value: <strong>₹${taxable.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br>GST: <strong>₹${gst.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br>Total: <strong>₹${total.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br>${supply==='intra'?`CGST: ₹${half.toLocaleString('en-IN',{maximumFractionDigits:2})} • SGST/UTGST: ₹${half.toLocaleString('en-IN',{maximumFractionDigits:2})}`:`IGST: ₹${gst.toLocaleString('en-IN',{maximumFractionDigits:2})}`}${exportCTA(mode==='split'?'cgst-sgst-igst-calculator':'gst-calculator',r,r,title)}`;status('GST calculation completed.',true);await logRun('gst-calculator',r,r);
+    };
+  }
+
+  function gstInterest2026(){
+    shell('GST Interest Calculator','Planning calculation for delayed GST tax payment. From January 2026, GSTR-3B system computation incorporates minimum Electronic Cash Ledger balance under the Rule 88B(1) proviso; use the inputs below for an indicative estimate and verify portal-computed interest.',
+      `<label>Net tax liability paid in cash (₹)</label><input id="giTax" type="number" min="0" step="0.01"><label>Minimum cash balance available during delay (₹)</label><input id="giCash" type="number" min="0" step="0.01" value="0"><label>Days delayed</label><input id="giDays" type="number" min="0" step="1"><label>Annual interest rate (%)</label><input id="giRate" type="number" min="0" step="0.01" value="18"><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="giCalc">Calculate</button></div><div id="giResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    giCalc.onclick=async()=>{const tax=Number(giTax.value),cash=Number(giCash.value)||0,days=Number(giDays.value),rate=Number(giRate.value);if(![tax,cash,days,rate].every(Number.isFinite)||tax<0||cash<0||days<0||rate<0){status('Enter valid values.');return;}const base=Math.max(0,tax-cash),interest=base*rate/100*days/365,r={tax,cash,days,rate,interest};giResult.style.display='block';giResult.innerHTML=`Indicative interest: <strong>₹${interest.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br><small>GSTN portal may compute differently based on return period, liability breakup and applicable law.</small>${exportCTA('gst-interest-calculator',r,r,'GST Interest Report')}`;status('GST interest estimate calculated.',true);await logRun('gst-interest-calculator',r,r);};
+  }
+
+  function gstPaymentCalculator(){
+    shell('GST Payment / Interest Calculator','Plan net GST cash payment after considering eligible ITC and estimate interest on delayed cash liability.',
+      `<label>Output tax liability (₹)</label><input id="gpOut" type="number" min="0" step="0.01"><label>Eligible ITC to use (₹)</label><input id="gpItc" type="number" min="0" step="0.01"><label>Days delayed</label><input id="gpDays" type="number" min="0" step="1" value="0"><label>Interest rate (%)</label><input id="gpRate" type="number" min="0" step="0.01" value="18"><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="gpCalc">Calculate payment</button></div><div id="gpResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    gpCalc.onclick=async()=>{const out=Number(gpOut.value),itc=Number(gpItc.value)||0,days=Number(gpDays.value)||0,rate=Number(gpRate.value)||0;if(![out,itc,days,rate].every(Number.isFinite)||out<0||itc<0||days<0||rate<0){status('Enter valid values.');return;}const cash=Math.max(0,out-itc),interest=cash*rate/100*days/365,r={out,itc,cash,days,rate,interest,total_cash_with_interest:cash+interest};gpResult.style.display='block';gpResult.innerHTML=`Net cash tax: <strong>₹${cash.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br>Indicative interest: ₹${interest.toLocaleString('en-IN',{maximumFractionDigits:2})}<br>Total planning amount: ₹${(cash+interest).toLocaleString('en-IN',{maximumFractionDigits:2})}${exportCTA('gst-payment-interest-calculator',r,r,'GST Payment Report')}`;status('GST payment plan calculated.',true);await logRun('gst-payment-interest-calculator',r,r);};
+  }
+
+  function itcCalculator(){
+    shell('ITC Calculator','Calculate eligible ITC from tax components. Eligibility itself depends on the CGST Act/rules and facts; this tool only performs the supplied arithmetic.',
+      `<label>IGST ITC (₹)</label><input id="icIgst" type="number" min="0" step="0.01" value="0"><label>CGST ITC (₹)</label><input id="icCgst" type="number" min="0" step="0.01" value="0"><label>SGST/UTGST ITC (₹)</label><input id="icSgst" type="number" min="0" step="0.01" value="0"><label>Less: reversals (₹)</label><input id="icRev" type="number" min="0" step="0.01" value="0"><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="icCalc">Calculate ITC</button></div><div id="icResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    icCalc.onclick=async()=>{const i=Number(icIgst.value),c=Number(icCgst.value),s=Number(icSgst.value),rev=Number(icRev.value);if(![i,c,s,rev].every(Number.isFinite)||Math.min(i,c,s,rev)<0){status('Enter valid values.');return;}const r={igst:i,cgst:c,sgst:s,reversals:rev,net_itc:Math.max(0,i+c+s-rev)};icResult.style.display='block';icResult.innerHTML=`Net ITC: <strong>₹${r.net_itc.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong>${exportCTA('itc-calculator',r,r,'ITC Working Report')}`;status('ITC calculated.',true);await logRun('itc-calculator',r,r);};
+  }
+
   function genericGuided(tool){
     const w=workspace(); if(!w)return;
     const price=Number(tool.price||0);
