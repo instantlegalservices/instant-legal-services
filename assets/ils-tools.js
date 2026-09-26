@@ -43,7 +43,7 @@ window.ILS_TOOLS = (() => {
     'property-document-checklist':'property-due-diligence'
   };
 
-  async function createOrder(slug, details, toolRunId=null){
+  async function createOrder(slug, details, toolRunId=null, onPaid=null){
     const sb=window.ILS?.ready?.();
     if(!sb){ status('Service connection unavailable.'); return; }
 
@@ -286,6 +286,8 @@ async function startRazorpay(data){
               verified.order_number || data.order_number
             )}</strong> is now paid.`;
         }
+
+        if(typeof onPaid === 'function') onPaid();
       },
 
       modal: {
@@ -322,6 +324,43 @@ async function startRazorpay(data){
     );
   }
 }
+
+  const exportServices = {
+    basic: { slug:'accounting-print-basic', name:'Basic Report', price:45, desc:'Calculation summary + print / Save as PDF' },
+    guided: { slug:'accounting-print-guided', name:'Guided Report', price:85, desc:'Summary + step-by-step explanation + assumptions' },
+    professional: { slug:'accounting-print-professional', name:'Professional Report', price:125, desc:'Detailed inputs + formulas + guidance + print / PDF' }
+  };
+  const exportJobs = new Map();
+  let exportJobSeq = 0;
+
+  function exportRows(obj){
+    return Object.entries(obj||{}).map(([k,v])=>`<tr><td>${esc(String(k).replace(/([A-Z])/g," $1"))}</td><td>${esc(String(v))}</td></tr>`).join("");
+  }
+
+  function exportCTA(toolSlug,input,result,title){
+    const jobId=`accounting-export-${++exportJobSeq}`;
+    exportJobs.set(jobId,{toolSlug,input,result,title});
+    const cards=Object.entries(exportServices).map(([key,p])=>`<div class="card" style="padding:14px;flex:1;min-width:190px"><strong>${esc(p.name)}</strong><div style="font-size:1.25rem;font-weight:800;margin:6px 0">₹${p.price}</div><small>${esc(p.desc)}</small><button type="button" class="btn btn-primary tool-export-buy" data-export-job="${jobId}" data-export-service="${esc(p.slug)}" style="width:100%;margin-top:10px">Pay ₹${p.price} &amp; Unlock</button></div>`).join("");
+    return `<div class="notice" style="margin-top:16px"><strong>Print / Save as PDF — Paid</strong><p style="margin:6px 0">Your calculation is free. Choose a report format only if you want a clean printable/PDF-ready copy.</p><div style="display:flex;gap:10px;flex-wrap:wrap">${cards}</div><small style="display:block;margin-top:10px">Payment is verified before the print/PDF option is unlocked. The report is an information/calculation aid and is not a statutory account or audit certificate.</small><div id="${jobId}-ready" style="margin-top:10px"></div></div>`;
+  }
+
+  function unlockExport(jobId){
+    const job=exportJobs.get(jobId);
+    const box=document.getElementById(`${jobId}-ready`);
+    if(!job||!box)return;
+    box.innerHTML=`<div class="status ok"><strong>Report unlocked.</strong><br><button type="button" class="btn btn-primary" id="${jobId}-print">Print / Save as PDF</button></div>`;
+    document.getElementById(`${jobId}-print`).onclick=()=>printExport(job);
+  }
+
+  function printExport(job){
+    const w=window.open("","_blank","width=900,height=700");
+    if(!w){ status("Please allow pop-ups to print or save the PDF."); return; }
+    const inputRows=exportRows(job.input);
+    const resultRows=exportRows(job.result);
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(job.title)} — ILS Report</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#111;line-height:1.5}h1{margin-bottom:4px}h2{margin-top:24px}table{width:100%;border-collapse:collapse;margin:10px 0 18px}td{border:1px solid #ccc;padding:8px}td:first-child{font-weight:700;width:45%}.note{background:#f4f4f4;padding:12px;border-radius:8px}small{color:#555}@media print{body{padding:18px}}</style></head><body><h1>${esc(job.title)}</h1><small>Instant Legal Services • Accounting Tool Report • ${esc(new Date().toLocaleString("en-IN"))}</small><h2>Inputs</h2><table>${inputRows}</table><h2>Results</h2><table>${resultRows}</table><div class="note"><strong>Guidance:</strong> This report reproduces the figures entered and the calculations performed by the ILS tool. Verify accounting treatment, GST, depreciation, tax, adjustments and applicable accounting standards before filing or reporting. This is not an audit, statutory financial statement or professional certification.</div><p><small>Generated from Instant Legal Services accounting tools.</small></p></body></html>`);
+    w.document.close();
+    setTimeout(()=>w.print(),250);
+  }
 
   function paidCTA(slug, details={}){
     const service=serviceMap[slug];
@@ -1234,7 +1273,7 @@ Previous orders"></textarea>
   function accountingComputation(){
     const [t,d]=toolCopy['accounting-computation'];
     shell(t,d,`
-      <label for="acRevenue">Revenue / Sales (₹)</label><input id="acRevenue" type="number" min="0" step="0.01" value="0">
+      <div class="notice" style="margin-bottom:14px"><strong>Easy guide:</strong> 1) Revenue = total sales. 2) Direct cost = cost directly linked to goods/services. 3) Operating expenses = rent, salary, electricity etc. 4) Other income/expense = items outside normal operations.<br><strong>Example:</strong> Sales ₹1,00,000 − direct cost ₹60,000 = Gross Profit ₹40,000; − expenses ₹20,000 = Operating Profit ₹20,000.</div><label for="acRevenue">Revenue / Sales (₹)</label><input id="acRevenue" type="number" min="0" step="0.01" value="0">
       <label for="acCost">Cost of goods / direct cost (₹)</label><input id="acCost" type="number" min="0" step="0.01" value="0">
       <label for="acOperating">Operating expenses (₹)</label><input id="acOperating" type="number" min="0" step="0.01" value="0">
       <label for="acOtherIncome">Other income (₹)</label><input id="acOtherIncome" type="number" min="0" step="0.01" value="0">
@@ -1246,7 +1285,7 @@ Previous orders"></textarea>
       const gross=revenue-cost, operatingProfit=gross-operating, net=operatingProfit+otherIncome-otherExpense;
       const money=x=>`₹${x.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
       acResult.style.display='block';
-      acResult.innerHTML=`<strong>Accounting Computation</strong><p>Revenue: ${money(revenue)}<br>Gross Profit: ${money(gross)}<br>Operating Profit: ${money(operatingProfit)}<br><strong>Net Profit / (Loss): ${money(net)}</strong></p><small>Calculation aid only. Verify accounting treatment, GST, depreciation, tax and applicable accounting standards with a qualified professional.</small>`;
+      acResult.innerHTML=`<strong>Accounting Computation</strong><p>Revenue: ${money(revenue)}<br>Gross Profit: ${money(gross)}<br>Operating Profit: ${money(operatingProfit)}<br><strong>Net Profit / (Loss): ${money(net)}</strong></p><small>Calculation aid only. Verify accounting treatment, GST, depreciation, tax and applicable accounting standards with a qualified professional.</small>${exportCTA('accounting-computation',{revenue,cost,operating,otherIncome,otherExpense},{gross,operatingProfit,net},'Accounting Computation')}`;
       status('Accounting computation completed.',true);
       await logRun('accounting-computation',{revenue,cost,operating,otherIncome,otherExpense},{gross,operatingProfit,net});
     };
@@ -1256,7 +1295,7 @@ Previous orders"></textarea>
     const [t,d]=toolCopy['balance-sheet-tool'];
     shell(t,d,`
       <h4>Assets</h4>
-      <label for="bsCash">Cash &amp; bank (₹)</label><input id="bsCash" type="number" min="0" step="0.01" value="0">
+      <div class="notice" style="margin-bottom:14px"><strong>Easy guide:</strong> Assets are what the business owns/controls. Liabilities are what it owes. Equity is the owner's capital/interest.<br><strong>Rule:</strong> Assets must equal Liabilities + Equity.<br><strong>Example:</strong> Assets ₹1,00,000 and liabilities ₹60,000 means equity should be ₹40,000.</div><label for="bsCash">Cash &amp; bank (₹)</label><input id="bsCash" type="number" min="0" step="0.01" value="0">
       <label for="bsReceivables">Receivables (₹)</label><input id="bsReceivables" type="number" min="0" step="0.01" value="0">
       <label for="bsInventory">Inventory (₹)</label><input id="bsInventory" type="number" min="0" step="0.01" value="0">
       <label for="bsFixed">Fixed / other assets (₹)</label><input id="bsFixed" type="number" min="0" step="0.01" value="0">
@@ -1272,7 +1311,7 @@ Previous orders"></textarea>
       const assets=cash+receivables+inventory+fixedAssets, liabEquity=payables+debt+equity, difference=assets-liabEquity;
       const money=x=>`₹${x.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
       bsResult.style.display='block';
-      bsResult.innerHTML=`<strong>Balance Sheet Check</strong><p>Total Assets: ${money(assets)}<br>Total Liabilities + Equity: ${money(liabEquity)}<br>Difference: ${money(difference)}</p><strong>${Math.abs(difference)<0.01?'✓ Accounting equation balances':'⚠️ Difference remains — review the entered figures.'}</strong><br><small>This tool does not certify or prepare statutory financial statements.</small>`;
+      bsResult.innerHTML=`<strong>Balance Sheet Check</strong><p>Total Assets: ${money(assets)}<br>Total Liabilities + Equity: ${money(liabEquity)}<br>Difference: ${money(difference)}</p><strong>${Math.abs(difference)<0.01?'✓ Accounting equation balances':'⚠️ Difference remains — review the entered figures.'}</strong><br><small>This tool does not certify or prepare statutory financial statements.</small>${exportCTA('balance-sheet-tool',{cash,receivables,inventory,fixedAssets,payables,debt,equity},{assets,liabEquity,difference},'Balance Sheet Report')}`;
       status('Balance sheet calculation completed.',true);
       await logRun('balance-sheet-tool',{cash,receivables,inventory,fixedAssets,payables,debt,equity},{assets,liabEquity,difference});
     };
@@ -1281,7 +1320,7 @@ Previous orders"></textarea>
   function profitLossTool(){
     const [t,d]=toolCopy['profit-loss-tool'];
     shell(t,d,`
-      <label for="plRevenue">Revenue / Sales (₹)</label><input id="plRevenue" type="number" min="0" step="0.01" value="0">
+      <div class="notice" style="margin-bottom:14px"><strong>Easy guide:</strong> Revenue − Cost of Sales = Gross Profit; Gross Profit − Operating Expenses = Operating Profit; then add other income, subtract finance cost and tax as shown.<br><strong>Example:</strong> Sales ₹1,00,000 − cost ₹60,000 − expenses ₹20,000 = Operating Profit ₹20,000.</div><label for="plRevenue">Revenue / Sales (₹)</label><input id="plRevenue" type="number" min="0" step="0.01" value="0">
       <label for="plCOGS">Cost of sales / direct expenses (₹)</label><input id="plCOGS" type="number" min="0" step="0.01" value="0">
       <label for="plOperating">Operating expenses (₹)</label><input id="plOperating" type="number" min="0" step="0.01" value="0">
       <label for="plFinance">Finance cost / interest (₹)</label><input id="plFinance" type="number" min="0" step="0.01" value="0">
@@ -1294,7 +1333,7 @@ Previous orders"></textarea>
       const gross=revenue-cogs, operatingProfit=gross-operating, profitBeforeTax=operatingProfit+otherIncome-finance, netProfit=profitBeforeTax-tax;
       const money=x=>`₹${x.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
       plResult.style.display='block';
-      plResult.innerHTML=`<strong>Profit &amp; Loss Statement</strong><p>Revenue: ${money(revenue)}<br>Gross Profit: ${money(gross)}<br>Operating Profit: ${money(operatingProfit)}<br>Profit Before Tax: ${money(profitBeforeTax)}<br><strong>Profit After Tax / (Loss): ${money(netProfit)}</strong></p><small>Tax and accounting treatment are illustrative only; verify applicable tax rules, accounting standards and adjustments before filing or reporting.</small>`;
+      plResult.innerHTML=`<strong>Profit &amp; Loss Statement</strong><p>Revenue: ${money(revenue)}<br>Gross Profit: ${money(gross)}<br>Operating Profit: ${money(operatingProfit)}<br>Profit Before Tax: ${money(profitBeforeTax)}<br><strong>Profit After Tax / (Loss): ${money(netProfit)}</strong></p><small>Tax and accounting treatment are illustrative only; verify applicable tax rules, accounting standards and adjustments before filing or reporting.</small>${exportCTA('profit-loss-tool',{revenue,cogs,operating,finance,otherIncome,tax},{gross,operatingProfit,profitBeforeTax,netProfit},'Profit & Loss Report')}`;
       status('P&amp;L calculation completed.',true);
       await logRun('profit-loss-tool',{revenue,cogs,operating,finance,otherIncome,tax},{gross,operatingProfit,profitBeforeTax,netProfit});
     };
@@ -1522,6 +1561,12 @@ Previous orders"></textarea>
   document.addEventListener(
     'click',
     e=>{
+      const eb=e.target.closest('.tool-export-buy');
+      if(eb){
+        const job=exportJobs.get(eb.dataset.exportJob);
+        if(job) createOrder(eb.dataset.exportService,{tool_slug:job.toolSlug,report_format:eb.dataset.exportService,inputs:job.input,results:job.result},null,()=>unlockExport(eb.dataset.exportJob));
+        return;
+      }
       const b=e.target.closest('.tool-buy');
       if(!b)return;
       createOrder(b.dataset.service,{});
