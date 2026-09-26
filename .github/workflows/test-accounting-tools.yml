@@ -62,8 +62,8 @@ jobs:
 
             const expectedSlugs = [
               'accounting-computation',
-              'balance-sheet',
-              'profit-loss'
+              'balance-sheet-tool',
+              'profit-loss-tool'
             ];
 
             for (const slug of expectedSlugs) {
@@ -110,29 +110,84 @@ jobs:
               throw new Error('Paid PDF/print export option missing');
             }
 
-            // Verify accounting exports are tied to the existing payment engine.
+            // Verify accounting exports use the exact existing main-branch
+            // order + Razorpay/QR fallback path. No real payment is made.
             await page.evaluate(() => {
-              window.__ilsPaymentCall = null;
-              window.ILSPayments = {
-                startPayment: async (options) => {
-                  window.__ilsPaymentCall = options;
-                  return { ok: true, status: 'paid', order_id: 'e2e-paid-order' };
-                }
+              const paidOrder = {
+                order_id: 'e2e-accounting-order',
+                order_number: 'ILS-E2E-ACCOUNTING',
+                amount: 45,
+                service_name: 'Basic Report'
               };
+
+              const fakeSupabase = {
+                auth: {
+                  getUser: async () => ({
+                    data: { user: { id: 'e2e-user' } }
+                  })
+                },
+                rpc: async (name, args) => {
+                  if (name !== 'ils_create_service_order') {
+                    throw new Error('Unexpected RPC: ' + name);
+                  }
+                  if (args.p_service_slug !== 'accounting-print-basic') {
+                    throw new Error('Wrong accounting service slug: ' + args.p_service_slug);
+                  }
+                  return { data: { ok: true, ...paidOrder }, error: null };
+                },
+                functions: {
+                  invoke: async (name, args) => {
+                    if (name !== 'razorpay-payments' || args?.body?.action !== 'create') {
+                      throw new Error('Unexpected payment function call');
+                    }
+                    return {
+                      data: null,
+                      error: { message: 'Simulated Razorpay unavailable — use existing QR fallback' }
+                    };
+                  }
+                },
+                from: table => ({
+                  select: () => ({
+                    eq: () => ({
+                      maybeSingle: async () => ({
+                        data: {
+                          id: paidOrder.order_id,
+                          order_number: paidOrder.order_number,
+                          status: 'paid'
+                        },
+                        error: null
+                      })
+                    })
+                  })
+                })
+              };
+
+              window.ILS.ready = () => fakeSupabase;
             });
 
             const exportButton = page.locator('.tool-export-buy[data-export-service="accounting-print-basic"]').first();
             await exportButton.click();
-            await page.waitForTimeout(100);
 
-            const paymentCall = await page.evaluate(() => window.__ilsPaymentCall);
-            if (!paymentCall || paymentCall.serviceSlug !== 'accounting-print-basic') {
-              throw new Error('Accounting export is not routed through the existing ILSPayments engine');
+            const payNow = page.locator('#payNowBtn');
+            await payNow.waitFor({ state: 'visible', timeout: 2000 });
+            await payNow.click();
+
+            const upiButton = page.locator('#upiPaidBtn');
+            await upiButton.waitFor({ state: 'visible', timeout: 2000 });
+            if (!await page.locator('img[alt="Instant Legal Services UPI QR"]').isVisible()) {
+              throw new Error('Existing UPI QR fallback was not shown');
             }
 
+            await upiButton.click();
+            await page.waitForTimeout(200);
+
             const reportNotice = exportButton.locator('xpath=..').locator('xpath=..');
+            if (!await reportNotice.getByText('Report unlocked.').count()) {
+              throw new Error('Verified QR order did not unlock the accounting report');
+            }
+
             if (!await reportNotice.getByText('Print / Save as PDF').count()) {
-              throw new Error('Paid verification did not unlock the PDF/print control in the E2E payment mock');
+              throw new Error('Paid verification did not unlock the PDF/print control'); 
             }
 
             if (failures.length) {
