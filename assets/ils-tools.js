@@ -3,6 +3,14 @@ window.ILS_TOOLS = (() => {
   const workspace = () => document.getElementById('toolWorkspace');
 
   const toolCopy = {
+    'gst-calculator': ['GST Calculator','Calculate GST from a user-supplied rate and choose inclusive or exclusive pricing.'],
+    'tds-calculator': ['TDS Calculator','Estimate TDS from a payment amount and a user-supplied applicable rate.'],
+    'gst-interest-calculator': ['GST Interest Calculator','Calculate indicative simple interest from tax amount, annual rate and delay days.'],
+    'professional-fee-calculator': ['Professional Fee Calculator','Create a transparent planning estimate from base fee, complexity, urgency and document load.'],
+    'invoice-total-calculator': ['Invoice Total Calculator','Calculate discount, taxable value, GST and final invoice amount.'],
+    'mca-compliance-checklist': ['MCA / CS Compliance Checklist','Organise common company-secretarial tasks for professional review.'],
+    'tax-payment-planner': ['Tax Payment Planner','Plan remaining tax payment from estimated liability and amounts already paid.'],
+    'compliance-deadline-planner': ['Compliance Deadline Planner','Create a planning date from an event date, period and optional buffer.'],
     'legal-deadline-calculator': ['Legal Deadline Calculator','Add or subtract calendar days from an event date. This is a date-planning aid, not a statutory limitation determination.'],
     'interest-calculator': ['Interest Calculator','Simple-interest calculation using principal, annual rate and time.'],
     'case-timeline': ['Case Timeline','Add dated events and generate a chronological case timeline.'],
@@ -43,7 +51,8 @@ window.ILS_TOOLS = (() => {
     'property-document-checklist':'property-due-diligence',
     'accounting-print-basic':'accounting-print-basic',
     'accounting-print-guided':'accounting-print-guided',
-    'accounting-print-professional':'accounting-print-professional'
+    'accounting-print-professional':'professional-report',
+    'gst-calculator':'professional-report-basic','tds-calculator':'professional-report-basic','gst-interest-calculator':'professional-report-basic','professional-fee-calculator':'professional-report-basic','invoice-total-calculator':'professional-report-basic','mca-compliance-checklist':'professional-report-basic','tax-payment-planner':'professional-report-basic','compliance-deadline-planner':'professional-report-basic'
   };
 
   async function createOrder(slug, details, toolRunId=null, onPaid=null, options={}){
@@ -526,9 +535,9 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
 }
 
   const exportServices = {
-    basic: { slug:'accounting-print-basic', name:'Basic Report', price:45, desc:'Calculation summary + print / Save as PDF' },
-    guided: { slug:'accounting-print-guided', name:'Guided Report', price:85, desc:'Summary + step-by-step explanation + assumptions' },
-    professional: { slug:'accounting-print-professional', name:'Professional Report', price:125, desc:'Detailed inputs + formulas + guidance + print / PDF' }
+    basic: { slug:'professional-report-basic', name:'Basic Report', price:45, desc:'Calculation summary + print / Save as PDF' },
+    guided: { slug:'professional-report-guided', name:'Guided Report', price:85, desc:'Summary + step-by-step explanation + assumptions' },
+    professional: { slug:'professional-report-professional', name:'Professional Report', price:125, desc:'Detailed inputs + formulas + guidance + print / PDF' }
   };
   const exportJobs = new Map();
   let exportJobSeq = 0;
@@ -1638,6 +1647,71 @@ Previous orders"></textarea>
     };
   }
 
+
+  function professionalResult(title,description,body,sourceKey){
+    shell(title,description,body,sourceKey);
+  }
+
+  function gstCalculator(){
+    const [t,d]=toolCopy['gst-calculator'];
+    shell(t,d,`<div class="notice"><strong>Guide:</strong> Select whether your entered amount includes GST. Enter the applicable GST rate. Verify the rate/HSN-SAC and place-of-supply treatment before invoicing.</div>
+      <label>Price mode</label><select id="gstMode"><option value="exclusive">Amount before GST</option><option value="inclusive">Amount including GST</option></select>
+      <div class="form-row"><div><label>Amount (₹)</label><input id="gstAmount" type="number" min="0" step="0.01"></div><div><label>GST rate (%)</label><input id="gstRate" type="number" min="0" step="0.01" placeholder="e.g. 18"></div></div>
+      <label>Tax type</label><select id="gstType"><option value="cgstsgst">CGST + SGST</option><option value="igst">IGST</option></select>
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="gstCalc">Calculate GST</button></div><div id="gstResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    gstCalc.onclick=async()=>{const a=Number(gstAmount.value),r=Number(gstRate.value);if(!Number.isFinite(a)||!Number.isFinite(r)||a<0||r<0){status('Enter valid non-negative values.');return;}const inclusive=gstMode.value==='inclusive';const base=inclusive?a/(1+r/100):a;const tax=base*r/100;const total=inclusive?a:base+tax;const type=gstType.value;const half=tax/2;gstResult.style.display='block';gstResult.innerHTML=`<strong>Taxable value: ₹${base.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br>GST: ₹${tax.toLocaleString('en-IN',{maximumFractionDigits:2})}<br>${type==='igst'?'IGST':'CGST: ₹'+half.toLocaleString('en-IN',{maximumFractionDigits:2})+' · SGST: ₹'+half.toLocaleString('en-IN',{maximumFractionDigits:2})}<br><strong>Invoice total: ₹${total.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br><small>Rate and tax treatment are user inputs; verify current GST law, HSN/SAC and place of supply.</small>${exportCTA('gst-calculator',{mode:gstMode.value,amount:a,rate:r,type},{base,tax,total},'GST Calculator Report')}`;status('GST calculation completed.',true);await logRun('gst-calculator',{mode:gstMode.value,amount:a,rate:r,type},{base,tax,total});};
+  }
+
+  function tdsCalculator(){
+    const [t,d]=toolCopy['tds-calculator'];
+    shell(t,d,`<div class="notice"><strong>Guide:</strong> Enter the gross payment and the applicable TDS rate after checking the relevant section, threshold, PAN status and current rules.</div>
+      <div class="form-row"><div><label>Gross payment (₹)</label><input id="tdsAmount" type="number" min="0" step="0.01"></div><div><label>Applicable TDS rate (%)</label><input id="tdsRate" type="number" min="0" step="0.01"></div></div>
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="tdsCalc">Calculate TDS</button></div><div id="tdsResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    tdsCalc.onclick=async()=>{const a=Number(tdsAmount.value),r=Number(tdsRate.value);if(!Number.isFinite(a)||!Number.isFinite(r)||a<0||r<0){status('Enter valid non-negative values.');return;}const tax=a*r/100,net=a-tax;tdsResult.style.display='block';tdsResult.innerHTML=`<strong>TDS: ₹${tax.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br>Net amount: ₹${net.toLocaleString('en-IN',{maximumFractionDigits:2})}<br><small>This is a calculation aid, not a determination of the legally applicable TDS rate or threshold.</small>${exportCTA('tds-calculator',{amount:a,rate:r},{tds:tax,net},'TDS Calculator Report')}`;status('TDS calculation completed.',true);await logRun('tds-calculator',{amount:a,rate:r},{tds:tax,net});};
+  }
+
+  function gstInterestCalculator(){
+    const [t,d]=toolCopy['gst-interest-calculator'];
+    shell(t,d,`<div class="notice"><strong>Guide:</strong> Use the applicable annual interest rate and actual delay days. This tool does not determine whether interest is legally payable.</div>
+      <div class="form-row"><div><label>Tax amount (₹)</label><input id="giTax" type="number" min="0" step="0.01"></div><div><label>Annual rate (%)</label><input id="giRate" type="number" min="0" step="0.01"></div></div><label>Delay days</label><input id="giDays" type="number" min="0" step="1">
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="giCalc">Calculate Interest</button></div><div id="giResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    giCalc.onclick=async()=>{const tax=Number(giTax.value),rate=Number(giRate.value),days=Number(giDays.value);if(![tax,rate,days].every(Number.isFinite)||tax<0||rate<0||days<0){status('Enter valid non-negative values.');return;}const interest=tax*rate*days/36500;giResult.style.display='block';giResult.innerHTML=`<strong>Indicative interest: ₹${interest.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br><small>365-day simple-interest convention used for this calculation.</small>${exportCTA('gst-interest-calculator',{tax,rate,days},{interest},'GST Interest Report')}`;status('GST interest calculation completed.',true);await logRun('gst-interest-calculator',{tax,rate,days},{interest});};
+  }
+
+  function professionalFeeCalculator(){
+    const [t,d]=toolCopy['professional-fee-calculator'];
+    shell(t,d,`<div class="notice"><strong>Guide:</strong> Start with a base professional fee, then transparently adjust for complexity, urgency and document load. This is a planning estimate, not a mandated fee schedule.</div>
+      <div class="form-row"><div><label>Base fee (₹)</label><input id="pfBase" type="number" min="0" step="0.01"></div><div><label>Complexity (%)</label><input id="pfComplexity" type="number" min="0" step="0.01" value="0"></div></div>
+      <div class="form-row"><div><label>Urgency (%)</label><input id="pfUrgency" type="number" min="0" step="0.01" value="0"></div><div><label>Document / workload (%)</label><input id="pfDocs" type="number" min="0" step="0.01" value="0"></div></div>
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="pfCalc">Build Estimate</button></div><div id="pfResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    pfCalc.onclick=async()=>{const b=Number(pfBase.value),c=Number(pfComplexity.value)||0,u=Number(pfUrgency.value)||0,dg=Number(pfDocs.value)||0;if(![b,c,u,dg].every(Number.isFinite)||b<0||c<0||u<0||dg<0){status('Enter valid non-negative values.');return;}const total=b*(1+(c+u+dg)/100);pfResult.style.display='block';pfResult.innerHTML=`<strong>Estimated professional fee: ₹${total.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br><small>Formula: base fee + user-selected adjustment percentages. Taxes, court fees and third-party expenses are separate unless expressly included.</small>${exportCTA('professional-fee-calculator',{base:b,complexity:c,urgency:u,documents:dg},{estimated_fee:total},'Professional Fee Estimate')}`;status('Fee estimate completed.',true);await logRun('professional-fee-calculator',{base:b,complexity:c,urgency:u,documents:dg},{estimated_fee:total});};
+  }
+
+  function invoiceTotalCalculator(){
+    const [t,d]=toolCopy['invoice-total-calculator'];
+    shell(t,d,`<div class="form-row"><div><label>Subtotal (₹)</label><input id="invSub" type="number" min="0" step="0.01"></div><div><label>Discount (%)</label><input id="invDisc" type="number" min="0" max="100" step="0.01" value="0"></div></div><div class="form-row"><div><label>GST rate (%)</label><input id="invGst" type="number" min="0" step="0.01" value="0"></div><div><label>Other charges (₹)</label><input id="invOther" type="number" min="0" step="0.01" value="0"></div></div><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="invCalc">Calculate Invoice</button></div><div id="invResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    invCalc.onclick=async()=>{const s=Number(invSub.value),disc=Number(invDisc.value)||0,g=Number(invGst.value)||0,other=Number(invOther.value)||0;if(![s,disc,g,other].every(Number.isFinite)||s<0||disc<0||disc>100||g<0||other<0){status('Enter valid values.');return;}const discount=s*disc/100,taxable=s-discount,tax=taxable*g/100,total=taxable+tax+other;invResult.style.display='block';invResult.innerHTML=`Discount: ₹${discount.toLocaleString('en-IN',{maximumFractionDigits:2})}<br>Taxable value: ₹${taxable.toLocaleString('en-IN',{maximumFractionDigits:2})}<br>GST: ₹${tax.toLocaleString('en-IN',{maximumFractionDigits:2})}<br><strong>Final invoice amount: ₹${total.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong>${exportCTA('invoice-total-calculator',{subtotal:s,discount_rate:disc,gst_rate:g,other_charges:other},{discount,taxable,tax,total},'Invoice Calculation Report')}`;status('Invoice calculation completed.',true);await logRun('invoice-total-calculator',{subtotal:s,discount_rate:disc,gst_rate:g,other_charges:other},{discount,taxable,tax,total});};
+  }
+
+  function mcaComplianceChecklist(){
+    const [t,d]=toolCopy['mca-compliance-checklist'];
+    const items=['Board meeting / minutes review','AGM / annual compliance review','Financial statements filing review','Annual return filing review','Director KYC / related annual requirements','Registered office / statutory registers review','Charges / loans / security review','Beneficial ownership / significant ownership review','MSME / other applicable periodic filings','Event-based ROC filings review'];
+    shell(t,d,`<div class="notice"><strong>Guidance:</strong> Select the tasks completed. The remaining list can be used as a professional review checklist; applicability and due dates must be verified for the specific company and financial year.</div><div id="mcaItems">${items.map(x=>`<label style="display:block;margin:8px 0"><input type="checkbox" value="${esc(x)}"> ${esc(x)}</label>`).join('')}</div><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="mcaMake">Build Checklist</button></div><div id="mcaResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    mcaMake.onclick=async()=>{const done=[...mcaItems.querySelectorAll('input:checked')].map(x=>x.value),remaining=items.filter(x=>!done.includes(x));mcaResult.style.display='block';mcaResult.innerHTML=`<strong>Remaining review items: ${remaining.length}</strong><ul>${remaining.map(x=>`<li>${esc(x)}</li>`).join('')||'<li>All listed items marked complete.</li>'}</ul>${exportCTA('mca-compliance-checklist',{completed:done},{remaining},'MCA / CS Compliance Checklist')}`;status('Checklist prepared.',true);await logRun('mca-compliance-checklist',{completed:done},{remaining});};
+  }
+
+  function taxPaymentPlanner(){
+    const [t,d]=toolCopy['tax-payment-planner'];
+    shell(t,d,`<div class="form-row"><div><label>Estimated total tax liability (₹)</label><input id="tpLiability" type="number" min="0" step="0.01"></div><div><label>TDS / TCS already credited (₹)</label><input id="tpTds" type="number" min="0" step="0.01" value="0"></div></div><label>Other tax paid / credit (₹)</label><input id="tpOther" type="number" min="0" step="0.01" value="0"><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="tpCalc">Calculate Balance</button></div><div id="tpResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    tpCalc.onclick=async()=>{const l=Number(tpLiability.value),t=Number(tpTds.value)||0,o=Number(tpOther.value)||0;if(![l,t,o].every(Number.isFinite)||l<0||t<0||o<0){status('Enter valid non-negative values.');return;}const balance=Math.max(0,l-t-o),excess=Math.max(0,t+o-l);tpResult.style.display='block';tpResult.innerHTML=`Estimated balance payable: <strong>₹${balance.toLocaleString('en-IN',{maximumFractionDigits:2})}</strong><br>Potential excess credit: ₹${excess.toLocaleString('en-IN',{maximumFractionDigits:2})}${exportCTA('tax-payment-planner',{liability:l,tds:t,other:o},{balance,excess},'Tax Payment Planning Report')}`;status('Tax payment plan calculated.',true);await logRun('tax-payment-planner',{liability:l,tds:t,other:o},{balance,excess});};
+  }
+
+  function complianceDeadlinePlanner(){
+    const [t,d]=toolCopy['compliance-deadline-planner'];
+    shell(t,d,`<div class="form-row"><div><label>Reference date</label><input id="cdDate" type="date"></div><div><label>Period / days</label><input id="cdDays" type="number" min="0" step="1" placeholder="e.g. 30"></div></div><label>Extra buffer days</label><input id="cdBuffer" type="number" min="0" step="1" value="0"><div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="cdCalc">Plan Date</button></div><div id="cdResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    cdCalc.onclick=async()=>{const date=cdDate.value,days=Number(cdDays.value),buffer=Number(cdBuffer.value)||0;if(!date||!Number.isInteger(days)||days<0||!Number.isInteger(buffer)||buffer<0){status('Enter a valid date and whole-number days.');return;}const result=fmt(addDays(dateObj(date),days+buffer));cdResult.style.display='block';cdResult.innerHTML=`<strong>Planning date: ${esc(result)}</strong><br><small>This is a planning calculation only; it does not determine a statutory due date.</small>${exportCTA('compliance-deadline-planner',{date,days,buffer},{planned_date:result},'Compliance Deadline Report')}`;status('Planning date calculated.',true);await logRun('compliance-deadline-planner',{date,days,buffer},{planned_date:result});};
+  }
+
   function open(slug){
     const map={
       'legal-deadline-calculator':deadline,
@@ -1669,7 +1743,8 @@ Previous orders"></textarea>
       'property-document-checklist':propertyChecklist,
       'accounting-computation':accountingComputation,
       'balance-sheet-tool':balanceSheetTool,
-      'profit-loss-tool':profitLossTool
+      'profit-loss-tool':profitLossTool,
+      'gst-calculator':gstCalculator,'tds-calculator':tdsCalculator,'gst-interest-calculator':gstInterestCalculator,'professional-fee-calculator':professionalFeeCalculator,'invoice-total-calculator':invoiceTotalCalculator,'mca-compliance-checklist':mcaComplianceChecklist,'tax-payment-planner':taxPaymentPlanner,'compliance-deadline-planner':complianceDeadlinePlanner
     };
 
     if(map[slug]){
