@@ -80,11 +80,11 @@ window.ILS_TOOLS = (() => {
     if(box){
       box.className='status ok';
       box.innerHTML=`Order <strong>${esc(data.order_number)}</strong> created for <strong>₹${Number(data.amount).toLocaleString('en-IN')}</strong>. <button type="button" class="btn btn-primary btn-small" id="payNowBtn" style="margin-left:8px">Pay Securely</button>`;
-      document.getElementById('payNowBtn').onclick=()=>startRazorpay(data);
+      document.getElementById('payNowBtn').onclick=()=>startRazorpay(data,onPaid);
     }
   }
 
-async function startRazorpay(data){
+async function startRazorpay(data,onPaid=null){
   try {
     const sb = window.ILS?.ready?.();
 
@@ -175,33 +175,29 @@ async function startRazorpay(data){
         Pay via UPI App
       </a>
 
-      <button
-        type="button"
-        class="btn btn-ghost"
-        id="upiPaidBtn"
-        style="margin-top:10px"
-      >
-        I Have Paid
-      </button>
+      <div id="upiProofPanel" style="margin-top:14px;padding:14px;border:1px solid rgba(255,255,255,.12);border-radius:12px;text-align:left">
+        <strong>After payment: submit proof</strong>
+        <p style="margin:6px 0 10px;opacity:.82">
+          Upload the successful-payment screenshot showing <strong>Instant Legal Services</strong> as the payee and the exact payment amount.
+        </p>
+        <label for="upiTransactionRef">UPI Transaction ID / UTR</label>
+        <input id="upiTransactionRef" type="text" maxlength="40" autocomplete="off" placeholder="Enter transaction ID / UTR">
+        <label for="upiPayeeName" style="margin-top:10px">Payee name shown in screenshot</label>
+        <input id="upiPayeeName" type="text" maxlength="120" autocomplete="off" placeholder="e.g. Instant Legal Services">
+        <label for="upiPaymentScreenshot" style="margin-top:10px">Payment-success screenshot</label>
+        <input id="upiPaymentScreenshot" type="file" accept="image/jpeg,image/png,image/webp">
+        <small style="display:block;margin-top:7px;opacity:.75">
+          JPG/PNG/WEBP only, maximum 5 MB. Do not upload your UPI PIN, password, OTP or other unrelated banking credentials.
+        </small>
+        <button type="button" class="btn btn-primary" id="upiPaidBtn" style="margin-top:12px;width:100%">
+          Submit Payment Proof
+        </button>
+      </div>
 
-      <div
-        id="upiPaidNote"
-        style="
-          display:none;
-          margin-top:14px;
-          padding:12px;
-          border-radius:10px;
-        "
-      ></div>
+      <div id="upiPaidNote" style="display:none;margin-top:14px;padding:12px;border-radius:10px"></div>
 
-      <small style="
-        display:block;
-        margin-top:14px;
-        opacity:.75;
-        line-height:1.5
-      ">
-        Your order will remain pending until payment
-        is manually verified.
+      <small style="display:block;margin-top:14px;opacity:.75;line-height:1.5">
+        A screenshot is evidence, not an independent bank confirmation. Access is unlocked only after the proof is verified.
       </small>
 
     </div>
@@ -209,18 +205,25 @@ async function startRazorpay(data){
 
   const paidBtn = document.getElementById('upiPaidBtn');
   const paidNote = document.getElementById('upiPaidNote');
+  const proofPanel = document.getElementById('upiProofPanel');
 
-  if (paidBtn && paidNote) {
+  if (paidBtn && paidNote && proofPanel) {
     let checking = false;
     let timer = null;
     let attempts = 0;
-    const maxAttempts = 30; // ~5 minutes at 10-second intervals
+    const maxAttempts = 30;
 
     const stopWatch = () => {
       if (timer) {
         clearInterval(timer);
         timer = null;
       }
+    };
+
+    const showStatus = (message, kind='info') => {
+      paidNote.style.display = 'block';
+      paidNote.className = 'status ' + (kind === 'ok' ? 'ok' : '');
+      paidNote.innerHTML = message;
     };
 
     const checkVerified = async () => {
@@ -232,52 +235,180 @@ async function startRazorpay(data){
         const current = window.ILS?.ready?.();
         if (!current) return;
 
-        const { data: order, error } = await current
-          .from('orders')
-          .select('id,status,order_number')
-          .eq('id', data.order_id)
-          .maybeSingle();
+        const { data: result, error } = await current.rpc(
+          'ils_get_upi_proof_status',
+          { p_order_id: data.order_id }
+        );
 
         if (error) {
-          console.debug('UPI order-status check failed.', error);
+          console.debug('UPI proof status check failed.', error);
           return;
         }
 
-        if (order?.status === 'paid') {
+        if (result?.order_status === 'paid' || result?.proof_status === 'verified') {
           stopWatch();
-          paidNote.innerHTML =
-            'Payment has been verified. Order <strong>' +
-            esc(order.order_number || data.order_number || '') +
-            '</strong> is paid. Your report is now unlocked.';
+          showStatus(
+            'Payment proof verified. Order <strong>' +
+            esc(result.order_number || data.order_number || '') +
+            '</strong> is paid. Your requested access/report is now unlocked.',
+            'ok'
+          );
           if (typeof onPaid === 'function') onPaid();
           return;
         }
 
+        if (result?.proof_status === 'rejected') {
+          stopWatch();
+          paidBtn.disabled = false;
+          proofPanel.style.display = 'block';
+          showStatus(
+            'Payment proof was not verified. ' +
+            esc(result.message || 'Please check the screenshot and transaction reference, then submit a new proof.')
+          );
+          return;
+        }
+
+        if (result?.proof_status === 'pending') {
+          showStatus(
+            'Payment proof submitted for order <strong>' +
+            esc(result.order_number || data.order_number || '') +
+            '</strong>. Verification is still pending; access remains locked.'
+          );
+        }
+
         if (attempts >= maxAttempts) {
           stopWatch();
-          paidNote.innerHTML =
-            'Payment is still pending verification for order <strong>' +
-            esc(order?.order_number || data.order_number || '') +
-            '</strong>. Please check again later from your signed-in account.';
+          showStatus(
+            'Verification is still pending. You can leave this page and return later; the order remains locked until the proof is verified.'
+          );
         }
       } finally {
         checking = false;
       }
     };
 
-    paidBtn.onclick = () => {
+    paidBtn.onclick = async () => {
       if (timer) return;
 
-      paidBtn.disabled = true;
-      paidNote.style.display = 'block';
-      paidNote.innerHTML =
-        'Payment submitted for verification. ' +
-        'Order <strong>' +
-        esc(data.order_number || '') +
-        '</strong> remains locked until an authorized payment verification changes the order status to <strong>paid</strong>.';
+      const refInput = document.getElementById('upiTransactionRef');
+      const payeeInput = document.getElementById('upiPayeeName');
+      const fileInput = document.getElementById('upiPaymentScreenshot');
+      const file = fileInput?.files?.[0];
+      const transactionRef = (refInput?.value || '').trim().replace(/[^A-Za-z0-9]/g, '');
+      const payeeName = (payeeInput?.value || '').trim();
 
-      checkVerified();
-      timer = setInterval(checkVerified, 10000);
+      if (!file) {
+        showStatus('Please upload the payment-success screenshot first.');
+        return;
+      }
+
+      if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
+        showStatus('Only JPG, PNG or WEBP payment screenshots are accepted.');
+        return;
+      }
+
+      if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
+        showStatus('Payment screenshot must be smaller than 5 MB.');
+        return;
+      }
+
+      if (transactionRef.length < 8 || transactionRef.length > 40) {
+        showStatus('Enter the UPI Transaction ID / UTR shown in your payment history.');
+        return;
+      }
+
+      if (!payeeName) {
+        showStatus('Enter the payee name exactly as shown in the payment screenshot.');
+        return;
+      }
+
+      paidBtn.disabled = true;
+      paidBtn.textContent = 'Submitting proof…';
+
+      try {
+        const current = window.ILS?.ready?.();
+        if (!current) throw new Error('Service connection unavailable.');
+
+        const { data: authData, error: authError } = await current.auth.getUser();
+        if (authError || !authData?.user) {
+          throw new Error('Please sign in before submitting payment proof.');
+        }
+
+        const arrayBuffer = await file.arrayBuffer();
+        const digest = await crypto.subtle.digest('SHA-256', arrayBuffer);
+        const sha256 = Array.from(new Uint8Array(digest))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        const ext = file.type === 'image/png'
+          ? 'png'
+          : file.type === 'image/webp'
+            ? 'webp'
+            : 'jpg';
+
+        const uniquePart = (crypto.randomUUID
+          ? crypto.randomUUID()
+          : Date.now() + '-' + Math.random().toString(36).slice(2));
+
+        const path =
+          authData.user.id + '/' +
+          data.order_id + '/' +
+          Date.now() + '-' + uniquePart + '.' + ext;
+
+        const upload = await current.storage
+          .from('payment-proofs')
+          .upload(path, file, {
+            cacheControl: '3600',
+            contentType: file.type,
+            upsert: false
+          });
+
+        if (upload.error) {
+          throw new Error(upload.error.message || 'Payment screenshot upload failed.');
+        }
+
+        const { data: submitted, error: submitError } = await current.rpc(
+          'ils_submit_upi_payment_proof',
+          {
+            p_order_id: data.order_id,
+            p_amount: Number(data.amount || 0),
+            p_upi_id: '8445609837@axl',
+            p_transaction_ref: transactionRef,
+            p_payee_name_claimed: payeeName,
+            p_screenshot_path: path,
+            p_screenshot_sha256: sha256,
+            p_mime_type: file.type,
+            p_file_size_bytes: file.size
+          }
+        );
+
+        if (submitError || !submitted?.ok) {
+          await current.storage.from('payment-proofs').remove([path]);
+          throw new Error(
+            submitError?.message ||
+            submitted?.message ||
+            'Payment proof could not be submitted.'
+          );
+        }
+
+        proofPanel.style.display = 'none';
+        paidBtn.textContent = 'Proof Submitted';
+        showStatus(
+          'Payment proof submitted for order <strong>' +
+          esc(submitted.order_number || data.order_number || '') +
+          '</strong>. The system has checked the order, amount, UPI destination, file type/size and proof linkage. Final access remains locked until the payment proof is verified.',
+          'ok'
+        );
+
+        attempts = 0;
+        await checkVerified();
+        timer = setInterval(checkVerified, 10000);
+      } catch (err) {
+        console.error('UPI payment proof submission failed:', err);
+        paidBtn.disabled = false;
+        paidBtn.textContent = 'Submit Payment Proof';
+        showStatus(err?.message || 'Unable to submit payment proof. Please try again.');
+      }
     };
   }
 
