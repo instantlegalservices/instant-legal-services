@@ -1563,7 +1563,7 @@ Previous orders"></textarea>
 
   document.addEventListener(
     'click',
-    e=>{
+    async e=>{
       const eb=e.target.closest('.tool-export-buy');
       if(eb){
         const job=exportJobs.get(eb.dataset.exportJob);
