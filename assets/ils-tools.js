@@ -1433,7 +1433,13 @@ Previous orders"></textarea>
       'profit-loss-tool':profitLossTool
     };
 
-    if(map[slug])map[slug]();
+    if(map[slug]){
+      map[slug]();
+      const target=workspace();
+      if(target){
+        requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
+      }
+    }
   }
 
   function initToolHub(){
