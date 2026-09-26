@@ -50,7 +50,9 @@ Deno.serve(async(req)=>{
   const raw=await r.text();let resp:any;try{resp=JSON.parse(raw)}catch{return json({ok:false,message:"AI provider returned an invalid response."},502)}
   if(!r.ok)return json({ok:false,message:resp?.error?.message||"OpenRouter request failed."},502);
   const answer=String(resp?.choices?.[0]?.message?.content||"").trim();
-  const answerUrls=extractUrls({choices:[{message:{content:answer}}]});\n  if(answerUrls.some((u:string)=>!isOfficial(u)))return json({ok:false,message:"The AI response contained an unverified external URL and was blocked. No definitive answer was returned."},200);\n  const sources=extractSources(resp);
+  const answerUrls=extractUrls({choices:[{message:{content:answer}}]});
+  if(answerUrls.some((u:string)=>!isOfficial(u)))return json({ok:false,message:"The AI response contained an unverified external URL and was blocked. No definitive answer was returned."},200);
+  const sources=extractSources(resp);
   if(!answer)return json({ok:false,message:"No verified answer was returned."},502);
   if(sources.length===0)return json({ok:false,message:"No verified answer is available from the authoritative sources searched."},200);
   return json({ok:true,verified:true,mode,answer,sources,model});
