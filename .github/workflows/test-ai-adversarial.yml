@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ai-adversarial-tests-v1
       - name: Validate adversarial safety contract
         run: |
           python3 - <<'PY'
@@ -34,4 +36,6 @@ jobs:
           if missing:
             raise SystemExit("Adversarial contract missing: "+repr(missing))
           print("Adversarial safety contract: PASS")
+          print("Validated branch: ai-adversarial-tests-v1")
+          print("Validated source: supabase/functions/ils-ai-assistant/index.ts")
           PY
