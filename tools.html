@@ -22,11 +22,15 @@
 @media(max-width:700px){
  .tool-category-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
  .tool-category-card{height:68px!important;min-height:68px!important}
- .tool-grid{grid-template-columns:1fr!important;gap:7px!important}
- .tool-card{padding:10px!important}
- .tool-card h3{font-size:.95rem!important}
- .tool-card p{font-size:.7rem!important}
- .tool-card .tool-open{height:32px!important;min-height:32px!important;font-size:.74rem!important}
+ .tool-grid{grid-template-columns:1fr!important;gap:6px!important}
+ .tool-card{padding:8px 10px!important;min-height:0!important;height:92px!important;display:grid!important;grid-template-columns:42px 1fr auto!important;grid-template-rows:auto 1fr!important;column-gap:9px!important;align-items:center!important}
+ .tool-card .tool-card-top{display:contents!important}
+ .tool-card .tool-icon{grid-column:1;grid-row:1 / span 2;font-size:1.45rem!important;align-self:center!important}
+ .tool-card .tool-badges{grid-column:3;grid-row:1;justify-content:flex-end!important;align-self:start!important}
+ .tool-card h3{grid-column:2;grid-row:1;font-size:.9rem!important;line-height:1.15!important;margin:0!important;align-self:center!important}
+ .tool-card p{grid-column:2;grid-row:2;font-size:.68rem!important;line-height:1.15!important;margin:2px 0 0!important;-webkit-line-clamp:1!important;align-self:start!important}
+ .tool-card .tool-mode{display:none!important}
+ .tool-card .tool-open{grid-column:3;grid-row:2;height:29px!important;min-height:29px!important;padding:4px 8px!important;font-size:.68rem!important;white-space:nowrap!important;align-self:end!important}
 }
 </style></style></head>
 <body>
