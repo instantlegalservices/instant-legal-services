@@ -120,6 +120,37 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       <div class="table-wrap"><table><thead><tr><th>Order</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
     </section>
 
+    <section class="panel" id="upiProofPanel">
+      <h2>🔐 UPI Payment Proof Verification</h2>
+      <p style="color:#9ca7b6;margin-top:-6px">
+        QR payments remain pending until an administrator verifies the uploaded payment-success screenshot and transaction reference. The screenshot is kept in a private Storage bucket.
+      </p>
+      <div class="toolbar" style="margin-top:14px">
+        <select id="upiProofStatusFilter">
+          <option value="pending">Pending proofs</option>
+          <option value="">All proofs</option>
+          <option value="verified">Verified</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <button class="btnx secondary" id="refreshUpiProofsBtn" type="button">↻ Refresh Proofs</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Order</th><th>Service</th><th>Amount</th><th>UTR</th><th>Payee claimed</th><th>Status</th><th>Submitted</th><th>Screenshot</th><th>Action</th></tr>
+          </thead>
+          <tbody id="upiProofBody"><tr><td colspan="9" style="text-align:center">Loading payment proofs…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="upiProofInstructionsPanel">
+      <h3 style="margin-top:0">Verification rule</h3>
+      <p style="margin:0;color:#cbd5e1">
+        Verify the screenshot against the actual received UPI transaction/account statement before approving. A screenshot alone is not treated as bank confirmation.
+      </p>
+    </section>
+
     <section class="panel">
       <h2>Client Requirements / CRM</h2>
       <div class="toolbar">
@@ -960,6 +991,104 @@ async function loadAdminClientCommunication(clientId){
 }
 async function sendAdminClientMessage(){const id=$("manageLeadId")?.value,input=$("adminChatMessage"),message=(input?.value||"").trim();if(!id||!message)return;const {data,error}=await sb.rpc("admin_send_client_message",{p_client_id:Number(id),p_message:message});if(error||!data?.ok){alert(error?.message||data?.message||"Unable to send reply.");return;}input.value="";await loadAdminClientCommunication(id);}
 async function addAdminWorkProgress(){const id=$("manageLeadId")?.value,title=$("adminProgressTitle")?.value.trim();if(!id||!title){alert("Please enter a progress title.");return;}const {data,error}=await sb.rpc("admin_add_work_progress",{p_client_id:Number(id),p_status:$("adminProgressStatus").value,p_title:title,p_note:$("adminProgressNote").value.trim(),p_visible_to_client:$("adminProgressVisible").checked,p_previous_fixed_date:null,p_next_fixed_date:null,p_work_done_date:null});if(error||!data?.ok){alert(error?.message||data?.message||"Unable to add progress.");return;}$("adminProgressTitle").value="";$("adminProgressNote").value="";await loadAdminClientCommunication(id);}
+
+let upiProofRows=[];
+
+async function loadUpiProofs(){
+  const body=$("upiProofBody");
+  if(body)body.innerHTML='<tr><td colspan="9" style="text-align:center">Loading payment proofs…</td></tr>';
+  try{
+    const {data,error}=await sb.rpc("ils_admin_upi_payment_proofs",{p_limit:250});
+    if(error)throw error;
+    upiProofRows=Array.isArray(data)?data:[];
+    renderUpiProofs();
+  }catch(e){
+    console.error("UPI proof dashboard:",e);
+    if(body)body.innerHTML='<tr><td colspan="9" style="text-align:center">Payment proofs unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';
+  }
+}
+
+function renderUpiProofs(){
+  const body=$("upiProofBody");
+  if(!body)return;
+  const filter=($("upiProofStatusFilter")?.value||"").toLowerCase();
+  const rows=upiProofRows.filter(r=>!filter||String(r.status||"").toLowerCase()===filter);
+
+  body.innerHTML=rows.length?rows.map(r=>{
+    const pending=String(r.status||"").toLowerCase()==="pending";
+    return `<tr>
+      <td><strong>${esc(r.order_number||r.order_id||"—")}</strong></td>
+      <td>${esc(r.service_name||r.service_slug||"—")}</td>
+      <td>${esc(r.currency||"INR")} ₹${Number(r.amount||0).toLocaleString("en-IN")}</td>
+      <td><strong>${esc(r.transaction_ref||"—")}</strong></td>
+      <td>${esc(r.payee_name_claimed||"—")}</td>
+      <td class="revenue-status status-${esc(String(r.status||"").toLowerCase())}">${esc(r.status||"—")}</td>
+      <td>${esc(r.submitted_at?new Date(r.submitted_at).toLocaleString("en-IN"):"—")}</td>
+      <td><button class="btnx secondary upiProofView" type="button" data-proof-path="${esc(r.screenshot_path||"")}">View</button></td>
+      <td>${pending
+        ? `<button class="btnx primary upiProofVerify" type="button" data-proof-id="${esc(r.id)}" data-decision="verified">Verify</button>
+           <button class="btnx secondary upiProofVerify" type="button" data-proof-id="${esc(r.id)}" data-decision="rejected">Reject</button>`
+        : esc(r.verification_notes||"—")
+      }</td>
+    </tr>`;
+  }).join(""):'<tr><td colspan="9" style="text-align:center">No matching payment proofs.</td></tr>';
+
+  body.querySelectorAll(".upiProofView").forEach(btn=>{
+    btn.addEventListener("click",async()=>{
+      const path=btn.dataset.proofPath;
+      if(!path)return;
+      btn.disabled=true;btn.textContent="Opening…";
+      try{
+        const {data,error}=await sb.storage.from("payment-proofs").createSignedUrl(path,300);
+        if(error||!data?.signedUrl)throw new Error(error?.message||"Unable to open screenshot.");
+        window.open(data.signedUrl,"_blank","noopener,noreferrer");
+      }catch(e){
+        msg("appMsg","Screenshot access failed: "+(e?.message||"Unknown error"),"err");
+      }finally{btn.disabled=false;btn.textContent="View";}
+    });
+  });
+
+  body.querySelectorAll(".upiProofVerify").forEach(btn=>{
+    btn.addEventListener("click",async()=>{
+      const id=btn.dataset.proofId, decision=btn.dataset.decision;
+      if(!id)return;
+      const proof=upiProofRows.find(x=>String(x.id)===String(id));
+      if(!proof)return;
+
+      if(decision==="verified"){
+        const confirmed=confirm(
+          "Verify payment for "+(proof.order_number||"this order")+" for ₹"+Number(proof.amount||0).toLocaleString("en-IN")+"?\n\nConfirm that the actual UPI receipt/account transaction was checked."
+        );
+        if(!confirmed)return;
+      }
+
+      const notes=decision==="rejected"
+        ? (prompt("Reason for rejecting this payment proof:","Screenshot/transaction could not be verified.")||"")
+        : (prompt("Optional verification note:","Actual UPI transaction checked and amount/payee matched.")||"");
+
+      btn.disabled=true;btn.textContent="Saving…";
+      try{
+        const {data,error}=await sb.rpc("ils_admin_verify_upi_payment_proof",{
+          p_proof_id:id,
+          p_decision:decision,
+          p_notes:notes
+        });
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||"Unable to update payment proof.");
+        msg("appMsg",
+          decision==="verified"
+            ? "Payment proof verified. Order access has been unlocked."
+            : "Payment proof rejected. The order remains locked.",
+          "ok"
+        );
+        await Promise.all([loadUpiProofs(),loadRevenue()]);
+      }catch(e){
+        console.error(e);
+        msg("appMsg","Payment proof update failed: "+(e?.message||"Unknown error"),"err");
+      }finally{btn.disabled=false;btn.textContent=decision==="verified"?"Verify":"Reject";}
+    });
+  });
+}
+
 let revenueRows=[];
 async function loadRevenue(){
   const body=$("revenueBody");
@@ -1035,7 +1164,7 @@ async function openApp(){
   $("loginView").classList.add("hidden");
   $("appView").classList.remove("hidden");
   $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
-  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue()]);
+  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue(),loadUpiProofs()]);
 }
 
 $("loginForm").addEventListener("submit",async e=>{
@@ -1057,7 +1186,7 @@ $("logoutBtn").addEventListener("click",async()=>{
   await sb.auth.signOut();
   location.href="admin.html";
 });
-$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue()]);msg("appMsg","Dashboard refreshed.","ok")});
+$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue(),loadUpiProofs()]);msg("appMsg","Dashboard refreshed.","ok")});
 
 $("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
 $("adminAdvocateSearch").addEventListener("input",renderAdvocateRows);
@@ -1088,6 +1217,8 @@ $("sendAdminChatBtn").addEventListener("click",sendAdminClientMessage);
 $("refreshAdminChatBtn").addEventListener("click",()=>loadAdminClientCommunication($("manageLeadId").value));
 $("addAdminProgressBtn").addEventListener("click",addAdminWorkProgress);
 $("refreshRevenueBtn").addEventListener("click",loadRevenue);
+$("refreshUpiProofsBtn").addEventListener("click",loadUpiProofs);
+$("upiProofStatusFilter").addEventListener("change",renderUpiProofs);
 $("revenueSearch").addEventListener("input",renderRevenue);
 $("revenueStatusFilter").addEventListener("change",renderRevenue);
 $("revenueServiceStatusFilter").addEventListener("change",renderRevenue);
