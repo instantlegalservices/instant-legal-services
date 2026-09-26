@@ -1769,10 +1769,13 @@ Previous orders"></textarea>
 
     if(map[slug]){
       map[slug]();
-      const target=workspace();
-      if(target){
-        requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
-      }
+    }else if(window.ILS_TOOL_CATALOG){
+      const tool=window.ILS_TOOL_CATALOG.find(x=>x.slug===slug);
+      if(tool) genericGuided(tool);
+    }
+    const target=workspace();
+    if(target){
+      requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
     }
   }
 
