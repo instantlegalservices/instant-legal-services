@@ -1,0 +1,46 @@
+<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Join ILS as Associate Assistant | Instant Legal Services</title>
+<meta name="description" content="Apply to join Instant Legal Services as an Associate Assistant for supported legal-service tasks and earn according to applicable ILS assignments and terms.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/ils.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/ils-core.js?v=13" defer></script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js?v=15" defer></script>
+<style>
+.assoc-wrap{max-width:760px;margin:auto}.assoc-card{position:relative;overflow:hidden}
+.assoc-badge{display:inline-flex;padding:7px 11px;border-radius:999px;background:rgba(215,168,79,.09);border:1px solid rgba(215,168,79,.28);color:#f1c56a;font-size:11px;font-weight:800}
+.assoc-points{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
+.assoc-point{padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025)}
+.assoc-point b{display:block;font-size:12px}.assoc-point small{display:block;margin-top:4px;color:#8f9cab;font-size:10px;line-height:1.45}
+.assoc-status{margin-top:14px}.assoc-status.ok{padding:15px;border:1px solid rgba(53,201,138,.35);background:rgba(53,201,138,.08);border-radius:12px}
+@media(max-width:650px){.assoc-points{grid-template-columns:1fr}}
+</style></head><body>
+<header class="site-header"><div class="wrap navbar">
+<a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
+<nav class="navlinks"><a href="index.html">Home</a><a href="advocates.html">Find Advocate</a><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="ai-assistant.html">AI Assistant</a><a href="faq.html">FAQ</a><a class="btn btn-primary btn-small" href="assistance.html">Get Legal Help</a></nav>
+<button class="menu" data-menu aria-label="Open menu">☰</button><button class="btn btn-ghost btn-small" data-install-app hidden>Install App</button>
+</div></header>
+<main><section class="page-hero"><div class="wrap"><span class="eyebrow">Work With ILS</span><h1>Join ILS as an Associate Assistant</h1><p>Help with supported non-advocacy tasks. Submit your details for review and, where eligible, receive paid ILS assignments under applicable terms.</p></div></section>
+<section class="section alt"><div class="assoc-wrap">
+<div class="card assoc-card">
+<span class="assoc-badge">🤝 Associate Assistant</span>
+<h2 style="margin:14px 0 8px">Earn through supported ILS work</h2>
+<p class="network-text" style="text-align:left">This is a separate support role. It is <strong>not an advocate profile</strong> and will not be displayed in the public Featured / Verified Advocate directory.</p>
+<div class="assoc-points"><div class="assoc-point"><b>📝 Form &amp; data support</b><small>Assist with permitted information and process tasks.</small></div><div class="assoc-point"><b>📂 Coordination support</b><small>Support assigned operational tasks within ILS instructions.</small></div><div class="assoc-point"><b>💰 Paid assignments</b><small>Payment depends on approved work, assignment terms and eligibility.</small></div></div>
+<form id="associateForm" class="form-card">
+<div class="form-row"><div><label for="aname">Full Name</label><input id="aname" required maxlength="100" autocomplete="name"></div><div><label for="amobile">10-digit Mobile</label><input id="amobile" required maxlength="10" inputmode="numeric" autocomplete="tel"></div></div>
+<div class="form-row"><div><label for="aemail">Email</label><input id="aemail" type="email" required maxlength="160" autocomplete="email"></div><div><label for="acity">City / District</label><input id="acity" required maxlength="100"></div></div>
+<label for="aexperience">Relevant experience / skills</label><textarea id="aexperience" maxlength="2000" required placeholder="Example: computer work, form filling, documentation, customer coordination"></textarea>
+<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input id="aconsent" type="checkbox" required style="width:18px;margin-top:2px"><span>I understand that submission is for review only and does not guarantee selection, assignments or earnings.</span></label>
+<button class="btn btn-primary" type="submit">Submit Associate Application</button>
+<div id="associateStatus" class="status assoc-status"></div>
+</form>
+</div></div></section></main>
+<footer class="footer"><div class="wrap footer-grid"><div><strong>Instant Legal Services</strong><p>Legal information, research access and professional network coordination.</p></div><div><strong>Explore</strong><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="advocates.html">Advocates</a><a href="faq.html">FAQ</a></div><div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="ai-assistant.html">AI Assistant</a></div><div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="associate-assistant.html">Associate Assistant</a></div></div></footer>
+<script>
+document.addEventListener("DOMContentLoaded",()=>associateForm.addEventListener("submit",async e=>{
+e.preventDefault();const s=associateStatus;s.className="status assoc-status";s.textContent="Submitting…";s.style.display="block";
+const mobile=amobile.value.trim();if(!/^[0-9]{10}$/.test(mobile)){s.className="status err assoc-status";s.textContent="Please enter a valid 10-digit mobile number.";return}
+try{
+await ILS.submitRequirement({name:aname.value.trim(),mobile,state:"Associate Assistant",city:acity.value.trim(),matter:"Associate Assistant Joining",brief:"ILS Associate Assistant application. Email: "+aemail.value.trim().toLowerCase()+". Relevant experience/skills: "+aexperience.value.trim()});
+s.className="status assoc-status ok";s.innerHTML="<strong>Application submitted successfully.</strong><br>ILS team can review your details. This application is kept separate from the public advocate profile directory.";
+associateForm.reset();
+}catch(err){s.className="status err assoc-status";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}));
+</script></body></html>
