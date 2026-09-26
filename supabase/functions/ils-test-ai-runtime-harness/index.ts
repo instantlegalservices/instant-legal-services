@@ -3,7 +3,7 @@ const json=(body:any,status=200)=>new Response(JSON.stringify(body),{status,head
 Deno.serve(async(req)=>{
   if(req.method==="OPTIONS")return json({ok:true});
   try{
-    const body=await req.json().catch(()=>({}));
+    const body=req.method==="GET"?{}:await req.json().catch(()=>({}));
     const question=String(body?.question||"Explain the difference between a legal fact and a legal inference in an Indian-law case. Use authoritative sources.");
     const base=Deno.env.get("SUPABASE_URL")||"";
     if(!base)return json({ok:false,stage:"configuration",message:"TEST Supabase URL is unavailable."},503);
