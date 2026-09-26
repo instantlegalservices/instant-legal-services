@@ -40,7 +40,10 @@ window.ILS_TOOLS = (() => {
     'maintenance-estimator':'legal-consultation',
     'legal-problem-diagnostic':'legal-consultation',
     'case-preparation-tool':'case-preparation-pack',
-    'property-document-checklist':'property-due-diligence'
+    'property-document-checklist':'property-due-diligence',
+    'accounting-print-basic':'accounting-print-basic',
+    'accounting-print-guided':'accounting-print-guided',
+    'accounting-print-professional':'accounting-print-professional'
   };
 
   async function createOrder(slug, details, toolRunId=null, onPaid=null){
