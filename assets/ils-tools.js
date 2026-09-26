@@ -1975,6 +1975,13 @@ Previous orders"></textarea>
     document.getElementById('aiRun').onclick=async()=>{const question=q.value.trim(),context=ctx.value.trim();if(!question&&!context){status('Enter a question or supporting text.');return;}const finalQ=question||cfg[0];status('Researching with source-first AI…');const mode='public';const data=await ILS.ai(finalQ,'Tool: '+cfg[0]+'\nUser context:\n'+context,mode);if(!data?.ok){document.getElementById('aiResult').innerHTML='<strong>AI could not complete verification</strong><div class="notice">'+esc(data?.message||'AI service unavailable.')+'</div><p>Do not treat an unverified response as a legal conclusion.</p>';status(data?.message||'AI service unavailable.');return;}const sourceHtml=(data.sources||[]).map(s=>'<li><a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.title||s.url)+'</a></li>').join('');const result={tool:name,question:finalQ,answer:data.answer,sources:data.sources||[]};document.getElementById('aiResult').innerHTML='<strong>Verified-source AI response</strong><div style="white-space:pre-wrap;margin-top:12px">'+esc(data.answer)+'</div><div class="notice" style="margin-top:14px"><strong>Authoritative sources returned</strong><ul>'+sourceHtml+'</ul></div><div class="notice"><strong>Professional verification:</strong> Check the linked primary sources and facts before relying on this output.</div>'+exportCTA(slug,{question:finalQ,context},result,name+' — AI Research Output');status('AI response returned with authoritative sources.',true);await logRun(slug,{question:finalQ,context},result);};
   }
 
+  function officeConversionCTA(slug,input,result,title){
+    const caseTools=new Set(['client-matter-summary-generator','document-checklist-generator','document-missing-tracker','client-onboarding-form','kyc-checklist']);
+    const serviceSlug=caseTools.has(slug)?'case-preparation-tool':'legal-problem-diagnostic';
+    const label=caseTools.has(slug)?'Need Case Preparation / Document Review?':'Need Legal Review?';
+    return '<div class="notice" style="margin-top:16px"><strong>Tool is free.</strong><p style="margin:6px 0">Use the result first. If you need advocate-level review, case preparation or a matter-specific legal assessment, you can continue to the paid professional service.</p><button type="button" class="btn btn-primary tool-buy" data-service="'+esc(serviceSlug)+'">'+esc(label)+'</button></div>';
+  }
+
   function professionalClientWorkflow(tool){
     const slug=tool.slug, name=tool.name;
     const configs={
@@ -2050,7 +2057,7 @@ Previous orders"></textarea>
       }
       const pretty=Object.entries(result).filter(([k])=>k!=='fields'&&k!=='lines').map(([k,x])=>'<tr><td><strong>'+esc(k.replace(/_/g,' '))+'</strong></td><td>'+esc(typeof x==='object'?JSON.stringify(x):String(x))+'</td></tr>').join('');
       const lineHtml=result.lines?'<h4>Line items</h4><ul>'+result.lines.map(x=>'<li>'+esc(x.description)+' — '+esc(String(x.qty))+' × ₹'+esc(String(x.rate))+' = ₹'+esc(String(x.amount))+'</li>').join('')+'</ul>':'';
-      document.getElementById('pcfResult').innerHTML='<strong>Result ready</strong><table style="width:100%;margin-top:12px">'+pretty+'</table>'+lineHtml+'<div class="notice" style="margin-top:12px"><strong>Review before use:</strong> Verify names, dates, amounts, tax treatment, contractual terms and applicable law.</div>'+exportCTA(slug,v,result,cfg[0]+' — ILS Output');
+      document.getElementById('pcfResult').innerHTML='<strong>Free result ready</strong><table style="width:100%;margin-top:12px">'+pretty+'</table>'+lineHtml+'<div class="notice" style="margin-top:12px"><strong>Free-use note:</strong> This tool is available without a report fee. Verify names, dates, amounts, tax treatment, contractual terms and applicable law before use.</div>'+officeConversionCTA(slug,v,result,cfg[0]);
       status('Professional workflow completed.',true); await logRun(slug,{fields:v},result);
     };
   }
