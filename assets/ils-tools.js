@@ -2053,7 +2053,7 @@ Previous orders"></textarea>
     let profession='all',sort='smart';
     const apply=()=>{const q=(search?.value||'').trim().toLowerCase();let rows=cards().filter(c=>(profession==='all'||c.dataset.profession===profession)&&(!q||c.dataset.toolName.includes(q)));if(sort==='smart')rows.sort((a,b)=>Number(b.dataset.popular)-Number(a.dataset.popular)||Number(a.dataset.price)-Number(b.dataset.price));if(sort==='free')rows=rows.filter(c=>Number(c.dataset.price)===0);if(sort==='paid')rows=rows.filter(c=>Number(c.dataset.price)>0);const visible=new Set(rows);cards().forEach(c=>c.hidden=!visible.has(c));if(count)count.textContent=rows.length+' tools';};
     search?.addEventListener('input',apply);
-    document.querySelectorAll('[data-profession]').forEach(b=>b.addEventListener('click',()=>{profession=b.dataset.profession||'all';document.querySelectorAll('[data-profession]').forEach(x=>x.classList.toggle('active',x===b));apply();}));
+    document.querySelectorAll('[data-profession]').forEach(b=>b.addEventListener('click',()=>{profession=b.dataset.profession||'all';document.querySelectorAll('[data-profession]').forEach(x=>x.classList.toggle('active',x===b));apply();const grid=document.getElementById('toolCatalogGrid');if(grid&&b.classList.contains('tool-category-card'))requestAnimationFrame(()=>grid.scrollIntoView({behavior:'smooth',block:'start'}));}));
     document.querySelectorAll('[data-sort]').forEach(b=>b.addEventListener('click',()=>{sort=b.dataset.sort||'smart';document.querySelectorAll('[data-sort]').forEach(x=>x.classList.toggle('active',x===b));apply();}));
     document.querySelectorAll('.tool-open').forEach(b=>b.addEventListener('click',()=>open(b.dataset.tool)));
     apply();
