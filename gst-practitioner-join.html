@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Join ILS as GST Practitioner | Instant Legal Services</title>
+<meta name="description" content="Apply to join the ILS GST Practitioner network for approved GST and tax-process support assignments.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/ils.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/ils-core.js?v=13" defer></script>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c"><script src="assets/pwa.js?v=15" defer></script>
+<style>
+.gst-wrap{max-width:780px;margin:auto}.gst-card{position:relative;overflow:hidden}.gst-badge{display:inline-flex;padding:7px 11px;border-radius:999px;background:rgba(215,168,79,.09);border:1px solid rgba(215,168,79,.28);color:#f1c56a;font-size:11px;font-weight:800}.gst-points{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.gst-point{padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025)}.gst-point b{display:block;font-size:12px}.gst-point small{display:block;margin-top:4px;color:#8f9cab;font-size:10px;line-height:1.45}.gst-status{margin-top:14px}.gst-status.ok{padding:15px;border:1px solid rgba(53,201,138,.35);background:rgba(53,201,138,.08);border-radius:12px}@media(max-width:650px){.gst-points{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="site-header"><div class="wrap navbar">
+<a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
+<nav class="navlinks"><a href="index.html">Home</a><a href="advocates.html">Find Advocate</a><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="faq.html">FAQ</a></nav>
+<button class="menu" data-menu aria-label="Open menu">☰</button>
+</div></header>
+<main>
+<section class="page-hero"><div class="wrap"><span class="eyebrow">Professional Network</span><h1>🧾 Join ILS as a GST Practitioner</h1><p>Submit your details for review and, where eligible, receive approved GST/tax-process assignments under applicable terms.</p></div></section>
+<section class="section alt"><div class="gst-wrap"><div class="card gst-card">
+<span class="gst-badge">🧾 GST Practitioner</span>
+<h2 style="margin:14px 0 8px">GST-related work, clear scope</h2>
+<p style="text-align:left">This is a separate professional network route. GST Practitioners will <strong>not</strong> be displayed in the public Featured Advocate / CA / CS profile sections. Actual work depends on verification, applicable eligibility and approved assignment scope.</p>
+<div class="gst-points">
+<div class="gst-point"><b>🧾 GST support</b><small>Approved GST registration, return/compliance and related process support.</small></div>
+<div class="gst-point"><b>📊 Reconciliation</b><small>Approved GST/accounting-process coordination and documentation tasks.</small></div>
+<div class="gst-point"><b>💰 Paid assignments</b><small>Payment depends on approved work, assignment terms and eligibility.</small></div>
+</div>
+<form id="gstForm" class="form-card">
+<div class="form-row"><div><label for="gname">Full Name</label><input id="gname" required maxlength="120" autocomplete="name"></div><div><label for="gmobile">10-digit Mobile</label><input id="gmobile" required maxlength="10" inputmode="numeric" autocomplete="tel"></div></div>
+<div class="form-row"><div><label for="gemail">Email</label><input id="gemail" type="email" required maxlength="160" autocomplete="email"></div><div><label for="gcity">City / District</label><input id="gcity" required maxlength="100"></div></div>
+<label for="gexperience">GST / tax-process experience</label>
+<textarea id="gexperience" maxlength="2000" required placeholder="Example: GST registration, returns, reconciliation, compliance documentation"></textarea>
+<label for="gstatus">Relevant registration / eligibility details</label>
+<textarea id="gstatus" maxlength="1200" required placeholder="Enter only information you are comfortable submitting for ILS review."></textarea>
+<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input id="gconsent" type="checkbox" required style="width:18px;margin-top:2px"><span>I understand that this is an application for review and does not guarantee selection, assignments or earnings.</span></label>
+<button class="btn btn-primary" type="submit">Submit GST Practitioner Application</button>
+<div id="trainingCta" class="notice" style="display:none;margin-top:12px"><strong>🎓 Next step: GST Practitioner Training</strong><br>Application submit hone ke baad professional orientation complete karein.<br><a class="btn btn-secondary btn-small" style="margin-top:10px" href="professional-training.html">🎓 Start Professional Training</a></div>
+<div class="notice" style="margin-top:12px"><strong>🔐 Scope:</strong> Training ya application submission automatic joining/assignment approval nahi hai. ILS review, applicable eligibility aur approved assignment scope ke baad hi actual work diya jayega.</div>
+<div id="gstStatus" class="status gst-status"></div>
+</form>
+</div></div></section>
+</main>
+<footer class="footer"><div class="wrap footer-grid"><div><strong>Instant Legal Services</strong><p>Legal information, research access and professional network coordination.</p></div><div><strong>Explore</strong><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="advocates.html">Advocates</a><a href="faq.html">FAQ</a></div><div><strong>Professional Network</strong><a href="advocate-register.html">Join ILS Network</a><a href="professional-training.html">Professional Training</a></div></div></footer>
+<script>
+document.addEventListener("DOMContentLoaded",()=>gstForm.addEventListener("submit",async e=>{
+e.preventDefault();const s=gstStatus;s.className="status gst-status";s.textContent="Submitting…";s.style.display="block";
+const mobile=gmobile.value.trim();if(!/^[0-9]{10}$/.test(mobile)){s.className="status err gst-status";s.textContent="Please enter a valid 10-digit mobile number.";return}
+try{
+await ILS.submitRequirement({name:gname.value.trim(),mobile,state:"GST Practitioner",city:gcity.value.trim(),matter:"GST Practitioner Joining",brief:"ILS GST Practitioner application. Email: "+gemail.value.trim().toLowerCase()+". GST/tax-process experience: "+gexperience.value.trim()+". Eligibility/registration details: "+gstatus.value.trim()});
+s.className="status gst-status ok";s.innerHTML="<strong>Application submitted successfully.</strong><br>ILS team can review your details. This route is separate from public advocate/CA/CS profile listing.";document.getElementById("trainingCta").style.display="block";gstForm.reset();
+}catch(err){s.className="status err gst-status";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}));
+</script>
+</body></html>
