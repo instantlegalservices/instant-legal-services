@@ -67,12 +67,12 @@ jobs:
             ];
 
             for (const slug of expectedSlugs) {
-              if (await page.locator('.tool-card[data-tool="' + slug + '"]').count() !== 1) {
+              if (await page.locator('.tool-card .tool-open[data-tool="' + slug + '"]').count() !== 1) {
                 throw new Error('Missing accounting tool card: ' + slug);
               }
             }
 
-            await page.locator('.tool-card[data-tool="accounting-computation"] .tool-open').click();
+            await page.locator('.tool-card .tool-open[data-tool="accounting-computation"]').click();
             await page.waitForTimeout(500);
 
             const workspaceVisible = await page.locator('#toolWorkspace').isVisible();
