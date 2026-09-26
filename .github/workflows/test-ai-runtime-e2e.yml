@@ -1,0 +1,44 @@
+name: test-ai-runtime-e2e
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - ai-adversarial-tests-v1
+    paths:
+      - "supabase/functions/ils-ai-assistant/**"
+      - "supabase/functions/ils-test-ai-runtime-harness/**"
+      - ".github/workflows/test-ai-runtime-e2e.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate TEST AI endpoint
+        env:
+          TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$TEST_SUPABASE_URL" || { echo "Missing TEST_SUPABASE_URL"; exit 2; }
+          test -n "$TEST_SUPABASE_ANON_KEY" || { echo "Missing TEST_SUPABASE_ANON_KEY"; exit 2; }
+          URL="${TEST_SUPABASE_URL%/}/functions/v1/ils-test-ai-runtime-harness"
+          RESPONSE="$(curl -sS --fail-with-body --max-time 60             -H "apikey: $TEST_SUPABASE_ANON_KEY"             -H "Authorization: Bearer $TEST_SUPABASE_ANON_KEY"             "$URL")"
+          python - <<'PY' "$RESPONSE"
+          import json,sys
+          x=json.loads(sys.argv[1])
+          print(json.dumps({
+            "ok": x.get("ok"),
+            "stage": x.get("stage"),
+            "http_status": x.get("http_status"),
+            "ai_ok": x.get("ai_ok"),
+            "verified": x.get("verified"),
+            "has_sources": x.get("has_sources"),
+            "failure_message": x.get("failure_message")
+          }, indent=2))
+          if x.get("ok") is not True:
+              raise SystemExit(1)
+          PY
