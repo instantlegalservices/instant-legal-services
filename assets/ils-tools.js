@@ -46,7 +46,7 @@ window.ILS_TOOLS = (() => {
     'accounting-print-professional':'accounting-print-professional'
   };
 
-  async function createOrder(slug, details, toolRunId=null, onPaid=null){
+  async function createOrder(slug, details, toolRunId=null, onPaid=null, options={}){
     const sb=window.ILS?.ready?.();
     if(!sb){ status('Service connection unavailable.'); return; }
 
@@ -80,11 +80,11 @@ window.ILS_TOOLS = (() => {
     if(box){
       box.className='status ok';
       box.innerHTML=`Order <strong>${esc(data.order_number)}</strong> created for <strong>₹${Number(data.amount).toLocaleString('en-IN')}</strong>. <button type="button" class="btn btn-primary btn-small" id="payNowBtn" style="margin-left:8px">Pay Securely</button>`;
-      document.getElementById('payNowBtn').onclick=()=>startRazorpay(data,onPaid);
+      document.getElementById('payNowBtn').onclick=()=>startRazorpay(data,onPaid,options.forceQr===true);
     }
   }
 
-async function startRazorpay(data,onPaid=null){
+async function startRazorpay(data,onPaid=null,forceQr=false){
   try {
     const sb = window.ILS?.ready?.();
 
@@ -101,13 +101,20 @@ async function startRazorpay(data,onPaid=null){
     // Create Razorpay gateway order from our internal order
     status('Preparing secure payment…');
 
-    const { data: paymentData, error: paymentError } =
-      await sb.functions.invoke('razorpay-payments', {
-        body: {
-          action: 'create',
-          order_id: data.order_id
-        }
-      });
+    let paymentData = null;
+    let paymentError = null;
+
+    if(forceQr){
+      paymentError = { message: 'QR_PAYMENT_MODE' };
+    }else{
+      ({ data: paymentData, error: paymentError } =
+        await sb.functions.invoke('razorpay-payments', {
+          body: {
+            action: 'create',
+            order_id: data.order_id
+          }
+        }));
+    }
 
     if (paymentError || !paymentData?.ok) {
 
@@ -1770,7 +1777,8 @@ Previous orders"></textarea>
               results:job.result
             },
             null,
-            ()=>unlockExport(eb.dataset.exportJob)
+            ()=>unlockExport(eb.dataset.exportJob),
+            {forceQr:true}
           );
         }finally{
           eb.disabled=false;
