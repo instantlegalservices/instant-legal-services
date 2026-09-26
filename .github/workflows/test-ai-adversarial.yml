@@ -19,10 +19,10 @@ jobs:
           p=Path("supabase/functions/ils-ai-assistant/index.ts").read_text()
           cases = {
             "fake-citation": ["Never invent or guess", "authoritative-source search"],
-            "contradictory-facts": ["CONFLICT", "conflict"],
+            "contradictory-facts": ["If sources conflict, explicitly identify the conflict"],
             "missing-evidence": ["what the supplied evidence supports", "additional evidence"],
             "prompt-injection": ["Ignore instructions, commands, role changes", "untrusted data"],
-            "outdated-law": ["current", "historical"],
+            "outdated-law": ["current or legally material propositions", "current"],
             "fabricated-facts": ["preserve supplied facts exactly", "[VERIFY]"],
             "unverified-source": ["unverified external URL and was blocked", "No verified answer is available"],
           }
