@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const json=(body:any,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type"}});
-const OFFICIAL_DOMAINS=["sci.gov.in","supremecourt.gov.in","indiacode.nic.in","legislative.gov.in","doj.gov.in","ecourts.gov.in","allahabadhighcourt.in","hcservices.ecourts.gov.in","main.sci.gov.in","gazette.nic.in"];
+const OFFICIAL_DOMAINS=["sci.gov.in","supremecourt.gov.in","indiacode.nic.in","legislative.gov.in","doj.gov.in","ecourts.gov.in","allahabadhighcourt.in","hcservices.ecourts.gov.in","main.sci.gov.in","gazette.nic.in","cbic-gst.gov.in","gst.gov.in","incometax.gov.in","incometaxindia.gov.in","mca.gov.in","epfindia.gov.in","esic.gov.in"];
 function isOfficial(url:string){try{const h=new URL(url).hostname.toLowerCase();return OFFICIAL_DOMAINS.some(d=>h===d||h.endsWith("."+d));}catch{return false;}}
 function extractUrls(v:any){const out:string[]=[];const walk=(x:any)=>{if(!x)return;if(typeof x==="string"){for(const m of x.matchAll(/https?:\/\/[^\s)\]>"']+/g))out.push(m[0].replace(/[.,;]+$/,""));return;}if(Array.isArray(x))x.forEach(walk);else if(typeof x==="object")Object.values(x).forEach(walk)};walk(v);return [...new Set(out)];}
 function extractSources(resp:any){
