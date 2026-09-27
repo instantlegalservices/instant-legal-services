@@ -53,6 +53,7 @@ jobs:
             });
 
             await page.goto(process.env.BASE_URL, { waitUntil: 'networkidle' });
+            await page.reload({ waitUntil: 'networkidle' });
 
             // Accounting tools are catalog entries, not a dedicated UI filter category.
             // Identify them by their authoritative tool slugs so the regression test
