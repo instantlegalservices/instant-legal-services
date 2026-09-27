@@ -1544,8 +1544,9 @@ Previous orders"></textarea>
       <label for="plFinance">Finance cost / interest (₹)</label><input id="plFinance" type="number" min="0" step="0.01" value="0">
       <label for="plOtherIncome">Other income (₹)</label><input id="plOtherIncome" type="number" min="0" step="0.01" value="0">
       <label for="plTax">Income tax provision (₹)</label><input id="plTax" type="number" min="0" step="0.01" value="0">
-      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="plMake">Calculate P&amp;L</button></div>
+      <div class="actions" style="margin-top:14px"><button class="btn btn-primary" id="plMake">Calculate P&amp;L</button> <button class="btn btn-secondary" type="button" id="plAccountingMode">Simple Accounting Computation</button></div>
       <div id="plResult" class="notice" style="margin-top:14px;display:none"></div>`);
+    plAccountingMode.onclick=()=>accountingComputation();
     plMake.onclick=async()=>{
       const revenue=Number(plRevenue.value)||0,cogs=Number(plCOGS.value)||0,operating=Number(plOperating.value)||0,finance=Number(plFinance.value)||0,otherIncome=Number(plOtherIncome.value)||0,tax=Number(plTax.value)||0;
       const gross=revenue-cogs, operatingProfit=gross-operating, profitBeforeTax=operatingProfit+otherIncome-finance, netProfit=profitBeforeTax-tax;
