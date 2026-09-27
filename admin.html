@@ -1217,7 +1217,7 @@ async function verifyGovRoutes(){
  const btn=$("verifyGovRoutesBtn");if(btn)btn.disabled=true;
  msg("govRouteVerificationMsg","Running authenticated official-route verification…","");
  try{
-  const {data,error}=await sb.functions.invoke("ils-government-route-verifier",{body:{service_codes:[]},headers:{Authorization:"Bearer "+(await sb.auth.getSession()).data.session.access_token}});
+  const {data,error}=await sb.functions.invoke("ils-government-route-verifier",{body:{service_codes:[]},headers:{}});
   if(error)throw error;
   const passed=(data?.results||[]).filter(x=>x.result==="PASS").length;
   const held=(data?.results||[]).filter(x=>x.result!=="PASS").length;
