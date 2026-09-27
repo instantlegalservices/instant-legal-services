@@ -27,6 +27,13 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
+      - name: Start local site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http.log 2>&1 &
+          echo $! > /tmp/ils-http.pid
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:4173/ils-test-customer-auth.html > /dev/null
+
       - name: Run genuine TEST customer flow and reconcile gates
         env:
           TEST_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
