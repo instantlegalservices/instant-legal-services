@@ -60,8 +60,11 @@ jobs:
                 ? window.ILS_TOOL_CATALOG.find(x => x.slug === 'accounting-computation') || null
                 : null
             }));
-            if (!catalogProbe.hasCatalog || !catalogProbe.accounting) {
-              throw new Error('Accounting catalog did not load: ' + JSON.stringify(catalogProbe));
+            if (!catalogProbe.hasCatalog) {
+              throw new Error('Tool catalog did not load: ' + JSON.stringify(catalogProbe));
+            }
+            if (catalogProbe.accounting) {
+              throw new Error('Accounting Computation must remain a workflow capability, not a 209th catalog tool: ' + JSON.stringify(catalogProbe.accounting));
             }
 
             // Accounting tools are catalog entries, not a dedicated UI filter category.
