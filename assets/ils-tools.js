@@ -616,6 +616,48 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
     professional: { slug:'professional-report-professional', name:'Professional Report', price:125, desc:'Detailed inputs + formulas + guidance + print / PDF' }
   };
   const exportJobs = new Map();
+  let configuredExportPrices = {};
+  let exportPriceHydrationStarted = false;
+
+  function refreshVisibleExportPrices(){
+    document.querySelectorAll(".tool-export-buy[data-export-service]").forEach(btn=>{
+      const slug=btn.dataset.exportService;
+      const price=configuredExportPrices[slug];
+      if(!Number.isFinite(price))return;
+      btn.textContent="Pay ₹"+price.toLocaleString("en-IN",{maximumFractionDigits:2})+" & Unlock";
+      const card=btn.closest(".card");
+      const priceNode=card?.querySelector('div[style*="font-size:1.25rem"]');
+      if(priceNode)priceNode.textContent="₹"+price.toLocaleString("en-IN",{maximumFractionDigits:2});
+    });
+  }
+
+  async function hydrateConfiguredExportPrices(){
+    if(exportPriceHydrationStarted)return;
+    exportPriceHydrationStarted=true;
+    try{
+      const sb=window.ILS?.ready?.() || await window.ILS?.init?.();
+      if(!sb)return;
+      const slugs=[...new Set(Object.values(exportServices).map(x=>x.slug))];
+      const {data:services,error:serviceError}=await sb.from("services").select("id,slug").in("slug",slugs).eq("is_active",true);
+      if(serviceError)throw serviceError;
+      const ids=(services||[]).map(x=>x.id);
+      if(!ids.length)return;
+      const {data:prices,error:priceError}=await sb.from("service_prices").select("service_id,price,created_at").in("service_id",ids).eq("is_active",true).order("created_at",{ascending:false});
+      if(priceError)throw priceError;
+      const slugById=Object.fromEntries((services||[]).map(x=>[x.id,x.slug]));
+      (prices||[]).forEach(x=>{
+        const slug=slugById[x.service_id];
+        const n=Number(x.price);
+        if(slug && Number.isFinite(n) && n>=0 && configuredExportPrices[slug]===undefined)configuredExportPrices[slug]=n;
+      });
+      refreshVisibleExportPrices();
+    }catch(e){console.warn("Configured export prices unavailable; retaining safe display defaults.",e);}
+  }
+
+  const exportPriceObserver = new MutationObserver(()=>refreshVisibleExportPrices());
+  if(document.body)exportPriceObserver.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener("DOMContentLoaded",()=>{ hydrateConfiguredExportPrices(); });
+
   let exportJobSeq = 0;
 
   function exportRows(obj){
