@@ -202,12 +202,29 @@
     // authoritative 208-item catalog.
     const search=document.getElementById('toolSearch');
     if(search) search.dispatchEvent(new Event('input',{bubbles:true}));
-    document.addEventListener('click',e=>{
+    let advancedGateInFlight=false;
+    document.addEventListener('click',async e=>{
       const b=e.target.closest('.tool-open'); if(!b)return;
       const slug=b.dataset.tool;
-      if(!openAdvanced(slug))return;
+      if(!['bank-reconciliation','trial-balance','inventory-valuation','fixed-asset-register','payroll-compliance-estimator'].includes(slug))return;
       e.preventDefault();
       e.stopImmediatePropagation();
+      if(advancedGateInFlight)return;
+      advancedGateInFlight=true;
+      try{
+        const gate=await window.ILS_TOOLS?.consumeProfessionalToolUse?.(slug)||{ok:true};
+        if(!gate.ok){
+          const target=document.getElementById('toolWorkspace');
+          if(target){
+            target.innerHTML='<div class="notice err"><strong>50 free professional tool uses completed.</strong><p style="margin:8px 0 0">Your overall ILS professional-member free allowance has been used. The existing paid professional report / Print / Save as PDF options remain unchanged.</p><button type="button" class="btn btn-ghost" id="quotaBackToTools" style="margin-top:12px">Back to Tools</button></div>';
+            document.getElementById('quotaBackToTools')?.addEventListener('click',()=>{target.innerHTML='<div class="empty">Select a tool above to begin.</div>';});
+          }
+          return;
+        }
+        openAdvanced(slug);
+      }finally{
+        advancedGateInFlight=false;
+      }
     },true);
   }
 

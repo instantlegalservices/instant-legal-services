@@ -2,6 +2,71 @@ window.ILS_TOOLS = (() => {
   const esc = v => window.ILS?.esc ? ILS.esc(v) : String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const workspace = () => document.getElementById('toolWorkspace');
 
+  const PROFESSIONAL_FREE_LIMIT=50;
+  let professionalToolGateInFlight=false;
+
+  function updateProfessionalQuotaUI(data){
+    const el=document.getElementById('professionalToolQuota');
+    if(!el)return;
+    if(!data?.eligible){el.hidden=true;return;}
+    el.hidden=false;
+    const remaining=Number(data.remaining??0);
+    el.className='notice'+(remaining===0?' err':'');
+    el.innerHTML=remaining>0
+      ? '<strong>ILS Professional Member:</strong> '+remaining+' of '+Number(data.free_limit||PROFESSIONAL_FREE_LIMIT)+' free tool uses remaining overall.'
+      : '<strong>50 free professional tool uses completed.</strong> Your free member allowance is exhausted.';
+  }
+
+  async function refreshProfessionalQuota(){
+    try{
+      const sb=window.ILS?.ready?.();
+      if(!sb)return;
+      const {data:{user}}=await sb.auth.getUser();
+      if(!user)return;
+      const {data,error}=await sb.rpc('ils_get_professional_tool_usage');
+      if(error||!data?.ok)return;
+      updateProfessionalQuotaUI(data);
+    }catch(e){
+      console.debug('Professional tool quota status unavailable.',e);
+    }
+  }
+
+  async function consumeProfessionalToolUse(slug){
+    try{
+      const sb=window.ILS?.ready?.();
+      if(!sb)return {ok:true,eligible:false};
+      const {data:{user}}=await sb.auth.getUser();
+      if(!user)return {ok:true,eligible:false};
+      const {data,error}=await sb.rpc('ils_consume_professional_tool_use',{
+        p_tool_slug:String(slug||'').trim().slice(0,120)
+      });
+      if(error||!data?.ok){
+        console.warn('Professional tool quota check unavailable; preserving existing tool access.',error);
+        return {ok:true,eligible:false,degraded:true};
+      }
+      updateProfessionalQuotaUI(data);
+      return data;
+    }catch(e){
+      console.warn('Professional tool quota check unavailable; preserving existing tool access.',e);
+      return {ok:true,eligible:false,degraded:true};
+    }
+  }
+
+  function renderProfessionalQuotaLimit(){
+    const target=workspace();
+    if(!target)return;
+    target.innerHTML=`
+      <div class="notice err">
+        <strong>50 free professional tool uses completed.</strong>
+        <p style="margin:8px 0 0">Your overall ILS professional-member free allowance has been used. The existing paid professional report / Print / Save as PDF options remain unchanged.</p>
+        <button type="button" class="btn btn-ghost" id="quotaBackToTools" style="margin-top:12px">Back to Tools</button>
+      </div>`;
+    document.getElementById('quotaBackToTools')?.addEventListener('click',()=>{
+      target.innerHTML='<div class="empty">Select a tool above to begin.</div>';
+      window.scrollTo({top:document.querySelector('.section').offsetTop-20,behavior:'smooth'});
+    });
+  }
+
   const toolCopy = {
     'gst-calculator': ['GST Calculator','Calculate GST from a user-supplied rate and choose inclusive or exclusive pricing.'],
     'tds-calculator': ['TDS Calculator','Estimate TDS from a payment amount and a user-supplied applicable rate.'],
@@ -2156,8 +2221,13 @@ Previous orders"></textarea>
     };
   }
 
-  function open(slug){
-    const map={
+  async function open(slug){
+    if(professionalToolGateInFlight)return;
+    professionalToolGateInFlight=true;
+    try{
+      const gate=await consumeProfessionalToolUse(slug);
+      if(!gate.ok){renderProfessionalQuotaLimit();return;}
+      const map={
       'legal-deadline-calculator':deadline,
       'interest-calculator':interest,
       'case-timeline':timeline,
@@ -2201,6 +2271,9 @@ Previous orders"></textarea>
     if(target){
       requestAnimationFrame(()=>{const behavior=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth';const top=Math.max(0,window.scrollY+target.getBoundingClientRect().top-16);window.scrollTo({top,behavior});});
     }
+    }finally{
+      professionalToolGateInFlight=false;
+    }
   }
 
   function renderCatalog(){
@@ -2237,6 +2310,7 @@ Previous orders"></textarea>
         );
 
       initToolHub();
+      refreshProfessionalQuota();
     }
   );
 
@@ -2275,6 +2349,7 @@ Previous orders"></textarea>
 
   return {
     open,
-    createOrder
+    createOrder,
+    consumeProfessionalToolUse
   };
 })();
