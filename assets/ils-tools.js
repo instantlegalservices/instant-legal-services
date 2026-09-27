@@ -159,6 +159,10 @@ window.ILS_TOOLS = (() => {
     }
   }
 
+// Temporary production payment mode: use the existing ILS UPI QR/proof flow for all paid tool orders.
+// Keep the Razorpay implementation intact so it can be re-enabled later by changing this flag.
+const QR_ONLY_PAYMENT_MODE = true;
+
 async function startRazorpay(data,onPaid=null,forceQr=false){
   try {
     const sb = window.ILS?.ready?.();
@@ -179,7 +183,7 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
     let paymentData = null;
     let paymentError = null;
 
-    if(forceQr){
+    if(QR_ONLY_PAYMENT_MODE || forceQr){
       paymentError = { message: 'QR_PAYMENT_MODE' };
     }else{
       ({ data: paymentData, error: paymentError } =
