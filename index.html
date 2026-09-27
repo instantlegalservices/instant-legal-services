@@ -16,7 +16,7 @@
 <script src="assets/ils-core.js?v=13" defer></script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#07111f">
-<script src="assets/pwa.js?v=15" defer></script>
+<script src="assets/pwa.js?v=16" defer></script>
 <style>
 :root{
 --b:#07111f;--b2:#0b1a2b;--card:#102337;--line:rgba(255,255,255,.11);
@@ -92,6 +92,18 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
     letter-spacing:0;
   }
   .lead{max-width:100%;overflow-wrap:anywhere}
+}
+@media(max-width:480px){
+  .nav{min-height:60px;gap:5px}
+  .brand{flex:0 0 auto}
+  .brand>div{display:none}
+  .brand img{width:42px;height:42px}
+  .nav-quick{gap:4px;margin-left:0}
+  .nav-quick-btn{min-height:36px;padding:5px 7px;font-size:8px;border-radius:9px}
+  .nav-quick-btn.join{max-width:82px;white-space:nowrap}
+  .nav-quick-btn.login{max-width:46px}
+  .lang{min-width:88px!important;max-width:94px!important;padding:9px 7px;font-size:11px}
+  .menu{width:40px;height:40px;padding:0;font-size:18px;border-radius:11px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
