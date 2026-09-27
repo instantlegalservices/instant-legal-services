@@ -1461,10 +1461,6 @@ $("logoutBtn").addEventListener("click",async()=>{
 $("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
 
 $("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
-$("clientDeletionBody")?.addEventListener("click",e=>{
-  const b=e.target.closest("[data-delete-client]");
-  if(b)adminPermanentDelete("client",b.dataset.deleteClient);
-});
 document.addEventListener("click",e=>{
   const p=e.target.closest("[data-delete-profile]");
   if(p)adminPermanentDelete(p.dataset.deleteProfile,p.dataset.deleteId);
