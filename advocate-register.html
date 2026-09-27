@@ -230,7 +230,7 @@ Join ILS Network
 </h1>
 
 <p>
-Create your professional advocate profile. Your information will be reviewed before public listing.
+Create your ILS professional profile — Advocate, CA, CS, HR, GST Practitioner or Assistant / Associate. Your information will be reviewed before access or public listing.
 </p>
 
 </div>
@@ -247,7 +247,7 @@ Create your professional advocate profile. Your information will be reviewed bef
 <div id="ilsRoleChooser" style="margin:0 0 16px;padding:14px;border:1px solid rgba(244,195,91,.25);border-radius:16px;background:rgba(244,195,91,.06)">
 <strong>Professional type: <span id="ilsCurrentRole">Advocate</span></strong>
 <button type="button" class="btn btn-ghost btn-small" id="ilsChooseRole" style="margin-left:10px">Choose / change</button>
-<small style="display:block;opacity:.72;margin-top:6px">Existing Advocate registration remains unchanged. CA/CS require verification before public listing; HR, GST Practitioner and Assistant/Associate remain internal.</small>
+<small style="display:block;opacity:.72;margin-top:6px">Choose: Advocate · CA · CS · HR Professional · GST Practitioner · Assistant / Associate.</small>
 </div>
 <div id="ilsRoleModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:14px">
 <div style="width:min(680px,100%);max-height:90vh;overflow:auto;background:#0a1a2b;border:1px solid rgba(244,195,91,.28);border-radius:22px;padding:20px">
@@ -693,14 +693,14 @@ Submit for Review
     </button>
     <div class="ils-dropdown-menu">
       <div class="practice-grid">
-        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Typing / Data Entry"><label>Typing / Data Entry</label></div>
-        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Video Editing"><label>Video Editing</label></div>
-        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Graphic Design"><label>Graphic Design</label></div>
-        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Coding / Web Development"><label>Coding / Web Development</label></div>
-        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Riding / Field Work"><label>Riding / Field Work</label></div>
-        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="MS Office / Excel"><label>MS Office / Excel</label></div>
-        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="PDF / Document Formatting"><label>PDF / Document Formatting</label></div>
-        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Social Media / Content"><label>Social Media / Content</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" id="assistantSkill1" value="Typing / Data Entry"><label for="assistantSkill1">Typing / Data Entry</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" id="assistantSkill2" value="Video Editing"><label for="assistantSkill2">Video Editing</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" id="assistantSkill3" value="Graphic Design"><label for="assistantSkill3">Graphic Design</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" id="assistantSkill4" value="Coding / Web Development"><label for="assistantSkill4">Coding / Web Development</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" id="assistantSkill5" value="Riding / Field Work"><label for="assistantSkill5">Riding / Field Work</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" id="assistantSkill6" value="MS Office / Excel"><label for="assistantSkill6">MS Office / Excel</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" id="assistantSkill7" value="PDF / Document Formatting"><label for="assistantSkill7">PDF / Document Formatting</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" id="assistantSkill8" value="Social Media / Content"><label for="assistantSkill8">Social Media / Content</label></div>
       </div>
     </div>
   </div>
@@ -1825,7 +1825,7 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
     if(!$("ilsProfConsent").checked)throw new Error("Please accept the ILS undertaking.");
     const minServices=["ca","cs","hr","gst_practitioner"].includes(role)?3:0;
     if(minServices && selectedText(".profSpecOption").length<minServices)throw new Error("Please select at least 3 service / specialization options.");
-    if(role==="assistant_associate" && extraSkills && selectedText(".assistantSkillOption").length<1)throw new Error("Select a valid extra skill or leave extra skills blank.");
+    if(role==="assistant_associate" && selectedText(".assistantSkillOption").length>0 && !extraSkills)throw new Error("Please select valid assistant skills.");
     if(["ca","cs"].includes(role)&&!$("ilsProfMembership").value.trim())throw new Error("Membership number is required for CA/CS.");
     if(role==="gst_practitioner"&&!$("ilsProfMembership").value.trim())throw new Error("GST Practitioner enrolment/registration number is required.");
     if(role==="assistant_associate"&&!/^[0-9]{12}$/.test($("ilsProfAadhaar").value.replace(/\s|-/g,"")))throw new Error("Enter a valid 12 digit Aadhaar number.");
