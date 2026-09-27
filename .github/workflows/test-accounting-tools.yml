@@ -64,6 +64,46 @@ jobs:
             if (!catalogProbe.hasCatalog) {
               throw new Error('Tool catalog did not load: ' + JSON.stringify(catalogProbe));
             }
+
+            // Paid-tier mapping regression: verify the live frontend maps the
+            // ₹85/₹125 report buttons to the exact production service slugs.
+            // This is a no-payment contract test; it does not call Razorpay/UPI.
+            const paidTierChecks = [
+              { slug: 'professional-report-guided', amount: 85 },
+              { slug: 'professional-report-professional', amount: 125 }
+            ];
+            const originalReady = window.ILS.ready;
+            const tierResults = [];
+            window.ILS.ready = () => ({
+              auth: { getUser: async () => ({ data: { user: { id: 'e2e-paid-tier-user' } } }) },
+              rpc: async (name, args) => {
+                if (name !== 'ils_create_service_order') throw new Error('Unexpected paid-tier RPC: ' + name);
+                const expected = paidTierChecks.find(x => x.slug === args.p_service_slug);
+                if (!expected) throw new Error('Wrong paid-tier service slug: ' + args.p_service_slug);
+                tierResults.push({ slug: args.p_service_slug, amount: expected.amount });
+                return { data: { ok: true, order_id: 'e2e-' + expected.slug, order_number: 'ILS-E2E-' + expected.amount, amount: expected.amount, service_name: 'Paid Tier' }, error: null };
+              }
+            });
+            try {
+              for (const tier of paidTierChecks) {
+                const statusBox = page.locator('#toolStatus');
+                await page.evaluate(() => {
+                  const el = document.getElementById('toolStatus');
+                  if (el) { el.className = 'status'; el.textContent = ''; }
+                });
+                await page.evaluate(async ({ slug }) => {
+                  await window.ILS_TOOLS.createOrder(slug, { e2e: true }, null, null, { forceQr: true });
+                }, { slug: tier.slug });
+                if (!await statusBox.getByText('Pay Securely', { exact: false }).count()) {
+                  throw new Error('Paid-tier order UI did not open for ' + tier.slug);
+                }
+              }
+            } finally {
+              window.ILS.ready = originalReady;
+            }
+            if (JSON.stringify(tierResults) !== JSON.stringify(paidTierChecks)) {
+              throw new Error('Paid-tier mapping regression: ' + JSON.stringify(tierResults));
+            }
             if (catalogProbe.accounting) {
               throw new Error('Accounting Computation must remain a workflow capability, not a 209th catalog tool: ' + JSON.stringify(catalogProbe.accounting));
             }
