@@ -32,6 +32,17 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 .login button{width:100%;margin-top:18px}
 .hidden{display:none!important}
 .actions-cell{white-space:nowrap}
+.smart-action{position:relative;display:inline-block}
+.smart-action-btn{min-width:42px;padding:7px 10px}
+.smart-action-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:10020;min-width:190px;padding:6px;background:#0b1624;border:1px solid #34455d;border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.smart-action-menu.open{display:block}
+.smart-action-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;color:#fff;padding:10px 11px;border-radius:7px;cursor:pointer;font-weight:700}
+.smart-action-menu button:hover{background:#17263a}
+.smart-action-menu .danger{color:#ff9b9b}
+.admin-toast{position:fixed!important;right:18px;bottom:18px;z-index:12000;width:min(420px,calc(100vw - 36px));margin:0!important;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.deletion-summary{color:#9ca7b6;margin:-4px 0 12px}
+.deletion-safety{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid #7f1d1d;border-radius:9px;color:#fca5a5;background:rgba(127,29,29,.08);font-size:13px}
+.deletion-table .actions-cell{min-width:110px}
 @media(max-width:850px){.admin-grid{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr}.admin-top{align-items:flex-start;flex-direction:column}}
 @media(max-width:500px){.admin-grid{grid-template-columns:1fr}}
 .deletion-table-wrap{max-width:100%;overflow:auto}
@@ -127,18 +138,15 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 
 <section class="panel" id="adminDeletionPanel" style="border:1px solid #7f1d1d">
   <h2>⚠️ Permanent Data Deletion</h2>
-  <p style="color:#fca5a5">Admin-only destructive controls. Deletion is permanent and cannot be undone. Client deletion removes the client matter, related service requests/orders/entitlements and stored matter documents. Order deletion removes the order and payment-proof records. Profile deletion removes the selected professional/advocate profile and its stored profile photo; the login account is removed only when no other profile still references it.</p>
-  <div id="deletionMsg" class="msg"></div>
+  <p class="deletion-summary">Admin-only destructive tools. Use <strong>⋮ Actions</strong> on a record for Manage/Assign or permanent deletion. Existing CRM, assignment, payment and authentication chains remain unchanged.</p>
+  <div id="deletionMsg" class="msg" data-toast="1"></div>
   <div class="table-wrap deletion-table-wrap" style="margin-top:14px">
     <table class="adv-table deletion-table">
       <thead><tr><th>Client</th><th>Mobile</th><th>Location</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
       <tbody id="clientDeletionBody"><tr><td colspan="6" style="text-align:center">Loading clients…</td></tr></tbody>
     </table>
   </div>
-  <p style="color:#9ca7b6;margin:18px 0 8px">Orders can also be permanently deleted directly from the Revenue table below.</p>
-  <div style="padding:12px;border:1px solid #7f1d1d;border-radius:10px;background:rgba(127,29,29,.08)">
-    <strong>Safety confirmation:</strong> every deletion requires the exact phrase <code>DELETE PERMANENTLY</code> and a second confirmation.
-  </div>
+  <div class="deletion-safety">🔒 Exact phrase <code>DELETE PERMANENTLY</code> + second confirmation required.</div>
 </section>
 
 <section class="panel" id="pricingControlPanel">
@@ -387,7 +395,7 @@ const $=id=>document.getElementById(id);
 let currentAdminUserId=null;
 function msg(id,text,type){
   const el=$(id); if(!el)return;
-  el.className="msg "+(type||"");
+  el.className=(el.dataset.toast==="1"?"msg admin-toast":"msg")+" "+(type||"");
   el.textContent=text||"";
   el.style.display=text?"block":"none";
 }
@@ -1398,7 +1406,7 @@ function renderClientDeletionRows(){
     '<td>'+esc([r.district_city,r.state].filter(Boolean).join(", ")||"—")+'</td>'+
     '<td>'+esc(r.status||"New")+'</td>'+
     '<td>'+esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")+'</td>'+
-    '<td class="actions-cell"><button class="btnx secondary" type="button" data-client-manage="'+esc(r.id)+'">Manage / Assign</button> <button class="btnx" style="background:#7f1d1d;color:#fff" type="button" data-delete-client="'+esc(r.id)+'">Delete Complete Client Data</button></td>'+
+    '<td class="actions-cell"><div class="smart-action"><button class="btnx secondary smart-action-btn" type="button" data-smart-toggle aria-expanded="false">⋮ Actions</button><div class="smart-action-menu"><button type="button" data-client-manage="'+esc(r.id)+'">Manage / Assign</button><button class="danger" type="button" data-delete-client="'+esc(r.id)+'">Delete complete client data</button></div></div></td>'+
     '</tr>').join(""):'<tr><td colspan="6" style="text-align:center">No clients found.</td></tr>';
 }
 
@@ -1468,6 +1476,14 @@ $("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…",
 
 $("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
 document.addEventListener("click",e=>{
+  const toggle=e.target.closest("[data-smart-toggle]");
+  if(toggle){
+    document.querySelectorAll(".smart-action-menu.open").forEach(m=>{if(m!==toggle.nextElementSibling)m.classList.remove("open")});
+    const menu=toggle.nextElementSibling;
+    if(menu){const open=menu.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open));}
+    return;
+  }
+  if(!e.target.closest(".smart-action"))document.querySelectorAll(".smart-action-menu.open").forEach(m=>m.classList.remove("open"));
   const p=e.target.closest("[data-delete-profile]");
   if(p)adminPermanentDelete(p.dataset.deleteProfile,p.dataset.deleteId);
   const o=e.target.closest("[data-delete-order]");
