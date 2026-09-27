@@ -188,7 +188,7 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
 <section class="section alt" id="official">
 <div class="wrap"><div class="head"><div><h2 data-t="officialTitle">Official routes • source checked</h2><p data-t="officialSub">These are external government portals. ILS does not replace them.</p></div></div>
 <div class="official-grid">
-<a class="official" href="https://www.cybercrime.gov.in/Webform/Index.aspx" target="_blank" rel="noopener"><span class="ico">📱</span><div><b>National Cyber Crime Portal ↗</b><small>Online cyber crime / financial fraud reporting</small></div></a>
+<a class="official" href="https://cybercrime.gov.in/Webform/Accept.aspx" target="_blank" rel="noopener"><span class="ico">📱</span><div><b>National Cyber Crime Portal ↗</b><small>Online cyber crime / financial fraud reporting</small></div></a>
 <a class="official" href="https://consumerhelpline.gov.in/" target="_blank" rel="noopener"><span class="ico">🛒</span><div><b>National Consumer Helpline ↗</b><small>Consumer grievance registration and tracking</small></div></a>
 <a class="official" href="https://pgportal.gov.in/Home/LodgeGrievance" target="_blank" rel="noopener"><span class="ico">🏛️</span><div><b>CPGRAMS ↗</b><small>Central / State public grievance route</small></div></a>
 <a class="official" href="https://digitalpolice.gov.in/" target="_blank" rel="noopener"><span class="ico">🚔</span><div><b>Digital Police ↗</b><small>Crime-related citizen services and state police portals</small></div></a>
@@ -290,7 +290,7 @@ function enrichGovernmentRoute(route){
 function classify(q){
  const n=q.toLowerCase();
  const rules=[
-  {keys:["cyber","online fraud","upi","otp","hack","phishing","account se","फ्रॉड","साइबर","ऑनलाइन ठगी","ठगी","فراڈ"],title:"Cyber / Online Financial Fraud",desc:"Online/cyber complaint route",url:"https://www.cybercrime.gov.in/Webform/Index.aspx",official:"National Cyber Crime Reporting Portal",icon:"📱",emergency:"Financial cyber fraud: official portal also provides 1930 helpline.",local:"government/cyber-crime-reporting/"},
+  {keys:["cyber","online fraud","upi","otp","hack","phishing","account se","फ्रॉड","साइबर","ऑनलाइन ठगी","ठगी","فراڈ"],title:"Cyber / Online Financial Fraud",desc:"Online/cyber complaint route",url:"https://cybercrime.gov.in/Webform/Accept.aspx",official:"National Cyber Crime Reporting Portal",icon:"📱",emergency:"Financial cyber fraud: official portal also provides 1930 helpline.",local:"government/cyber-crime-reporting/"},
   {keys:["consumer","refund","defective","product","service complaint","कंज्यूमर","रिफंड","उत्पाद","उपभोक्ता"],title:"Consumer Grievance",desc:"Consumer complaint / grievance route",url:"https://consumerhelpline.gov.in/",official:"National Consumer Helpline",icon:"🛒",local:"government/consumer-helpline/"},
   {keys:["bank","rbi","loan","credit card","debit card","bank complaint","बैंक","आरबीआई","बैंक ने"],title:"Banking / RBI Complaint",desc:"Complaint route for RBI-regulated entities",url:"https://cms.rbi.org.in/",official:"RBI Complaint Management System",icon:"🏦",local:"government/rbi-complaint-management/"},
   {keys:["government","govt","department","pension","सरकारी","सरकार","विभाग","शिकायत"],title:"Government Department Grievance",desc:"Public grievance route",url:"https://pgportal.gov.in/Home/LodgeGrievance",official:"CPGRAMS",icon:"🏛️",local:"government/cpgrams-grievance/"},
