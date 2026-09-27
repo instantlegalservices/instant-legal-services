@@ -211,6 +211,9 @@
     },true);
   }
 
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind,{once:true});
-  else bind();
+  // This file is loaded with defer after the core tools script. Always let
+  // the core DOMContentLoaded renderer finish first; otherwise its renderCatalog()
+  // can replace the five additive cards after we append them.
+  if(document.readyState==='complete') bind();
+  else document.addEventListener('DOMContentLoaded',bind,{once:true});
 })();
