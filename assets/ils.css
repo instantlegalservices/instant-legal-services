@@ -65,3 +65,6 @@ textarea{min-height:120px;resize:vertical}
 .brand-text{white-space:nowrap}
 
 .ils-search-intent{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;color:var(--muted,#aab2bd);font-size:13px}.ils-search-intent span{border:1px solid rgba(215,168,79,.24);border-radius:999px;padding:7px 10px;background:rgba(215,168,79,.06)}.section-link{display:inline-flex;text-decoration:none}.judgment-detail-grid{display:grid;grid-template-columns:2fr 1fr;gap:18px}.judgment-detail-card{padding:22px}.judgment-detail-card h2{margin-top:0}.source-list{display:grid;gap:9px}.source-list a{word-break:break-word}@media(max-width:760px){.judgment-detail-grid{grid-template-columns:1fr}}
+
+/* Global multilingual interface */
+.ils-language-switcher{appearance:none;background:rgba(255,255,255,.06);color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:8px 30px 8px 10px;font:inherit;font-size:12px;cursor:pointer;backdrop-filter:blur(10px)}.ils-language-switcher option{background:#0b1420;color:#fff}.navlinks .ils-language-switcher{margin-left:6px}@media(max-width:850px){.navlinks.open .ils-language-switcher{width:100%;margin:8px 0}.ils-language-switcher{min-height:38px}}html[dir="rtl"] .navbar,html[dir="rtl"] .navlinks{text-align:right}html[dir="rtl"] .ils-language-switcher{padding:8px 10px 8px 30px}
