@@ -68,7 +68,7 @@ jobs:
             // Paid-tier mapping regression: verify the live frontend maps the
             // ₹85/₹125 report buttons to the exact production service slugs.
             // This is a no-payment contract test; it does not call Razorpay/UPI.
-            const paidTierChecks = [
+            // Establish the same tool workspace used by the real paid-tier UI before invoking the order helper.\n            // This is test-context only; production code is unchanged.\n            await page.locator('.tool-card .tool-open[data-tool="profit-loss-tool"]').click();\n            await page.locator('#toolStatus').waitFor({ state: 'attached' });\n\n            const paidTierChecks = [
               { slug: 'professional-report-guided', amount: 85 },
               { slug: 'professional-report-professional', amount: 125 }
             ];
