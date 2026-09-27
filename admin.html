@@ -120,6 +120,17 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       <div class="table-wrap"><table><thead><tr><th>Order</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
     </section>
 
+<section class="panel" id="govRouteVerificationPanel">
+<h2>🌐 Official Route Verification</h2>
+<p style="color:#9ca7b6;margin-top:-6px">Admin-only live verification of the 10 ILS official-route catalogue entries. Uses your current authenticated admin session; no customer signup or production payment flow is touched.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+<button id="verifyGovRoutesBtn" class="btnx primary" type="button">Verify All Official Routes</button>
+<button id="refreshGovRoutesBtn" class="btnx secondary" type="button">Refresh Results</button>
+</div>
+<div id="govRouteVerificationMsg" class="msg"></div>
+<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Code</th><th>Official route</th><th>Status</th><th>HTTP</th><th>Final URL</th><th>Redirects</th><th>Error</th></tr></thead><tbody id="govRouteVerificationBody"><tr><td colspan="7" style="text-align:center">Loading route verification state…</td></tr></tbody></table></div>
+</section>
+
     <section class="panel" id="actionAssistanceQueuePanel">
 <h2>🧑‍💻 Action Assistance Queue</h2>
 <p style="color:#9ca7b6;margin-top:-6px">Paid associate requests only. Assign, work, QA-check and complete without changing the existing payment chain.</p>
@@ -1193,6 +1204,28 @@ async function handleActionQueueAction(id,action){
  else return;
  try{const {error}=await sb.from("ils_action_assistance_queue").update(patch).eq("id",id);if(error)throw error;msg("actionQueueMsg",action==="complete"?"Associate request completed.":"Associate queue updated.","ok");await loadActionAssistanceQueue();}
  catch(e){console.error("Action queue update:",e);msg("actionQueueMsg","Queue update failed: "+(e?.message||"Unknown error"),"err");}}
+async function loadGovRouteVerification(){
+ const body=$("govRouteVerificationBody");if(!body)return;
+ body.innerHTML='<tr><td colspan="7" style="text-align:center">Loading…</td></tr>';
+ try{
+  const {data,error}=await sb.from("ils_government_route_catalog").select("service_code,title,official_url,verification_status,last_http_status,last_final_url,last_redirect_count,verification_error").eq("active",true).order("service_code");
+  if(error)throw error;
+  body.innerHTML=(data||[]).map(r=>'<tr><td>'+esc(r.service_code)+'</td><td><a href="'+esc(r.official_url||"")+'" target="_blank" rel="noopener">'+esc(r.title||"—")+'</a></td><td>'+esc(r.verification_status||"—")+'</td><td>'+esc(r.last_http_status??"—")+'</td><td style="max-width:360px;word-break:break-all">'+esc(r.last_final_url||"—")+'</td><td>'+esc(r.last_redirect_count??"—")+'</td><td>'+esc(r.verification_error||"—")+'</td></tr>').join("")||'<tr><td colspan="7" style="text-align:center">No active routes.</td></tr>';
+ }catch(e){body.innerHTML='<tr><td colspan="7" style="text-align:center">Unable to load route state: '+esc(e?.message||"Unknown error")+'</td></tr>';}
+}
+async function verifyGovRoutes(){
+ const btn=$("verifyGovRoutesBtn");if(btn)btn.disabled=true;
+ msg("govRouteVerificationMsg","Running authenticated official-route verification…","");
+ try{
+  const {data,error}=await sb.functions.invoke("ils-government-route-verifier",{body:{service_codes:[]},headers:{Authorization:"Bearer "+(await sb.auth.getSession()).data.session.access_token}});
+  if(error)throw error;
+  const passed=(data?.results||[]).filter(x=>x.result==="PASS").length;
+  const held=(data?.results||[]).filter(x=>x.result!=="PASS").length;
+  msg("govRouteVerificationMsg","Verification completed: "+passed+" PASS, "+held+" HOLD.","ok");
+  await loadGovRouteVerification();
+ }catch(e){console.error("Government route verification:",e);msg("govRouteVerificationMsg","Verification failed or was blocked: "+(e?.message||"Unknown error"),"err");}
+ finally{if(btn)btn.disabled=false;}
+}
 async function openApp(){
   const check=await isAdmin();
   if(!check.ok){
@@ -1206,7 +1239,7 @@ async function openApp(){
   $("appView").classList.remove("hidden");
   currentAdminUserId=check.session.user.id;
   $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
-  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue(),loadUpiProofs(),loadActionAssistanceQueue()]);
+  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);
 }
 
 $("loginForm").addEventListener("submit",async e=>{
@@ -1260,6 +1293,8 @@ $("refreshAdminChatBtn").addEventListener("click",()=>loadAdminClientCommunicati
 $("addAdminProgressBtn").addEventListener("click",addAdminWorkProgress);
 $("refreshRevenueBtn").addEventListener("click",loadRevenue);
 $("refreshActionQueueBtn").addEventListener("click",loadActionAssistanceQueue);
+$("verifyGovRoutesBtn").addEventListener("click",verifyGovRoutes);
+$("refreshGovRoutesBtn").addEventListener("click",loadGovRouteVerification);
 $("actionQueueSearch").addEventListener("input",renderActionAssistanceQueue);
 $("actionQueueStatusFilter").addEventListener("change",renderActionAssistanceQueue);
 $("refreshUpiProofsBtn").addEventListener("click",loadUpiProofs);
