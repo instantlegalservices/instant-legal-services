@@ -142,6 +142,10 @@ window.ILS = (() => {
           }
         }
       );
+
+      /* Share the canonical ILS client with modules that consume
+         the existing window.supabaseClient contract. */
+      window.supabaseClient = client;
     }
 
     document.querySelectorAll("[data-menu]").forEach((b) => {
