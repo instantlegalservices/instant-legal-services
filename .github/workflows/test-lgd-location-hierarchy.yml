@@ -1,0 +1,41 @@
+name: Test LGD Location Hierarchy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/lgd-location-hierarchy.js"
+      - "scripts/test-lgd-location-hierarchy.js"
+      - "scripts/lgd-location-adapter.js"
+      - "scripts/lgd-location-ingestion.js"
+      - ".github/workflows/test-lgd-location-hierarchy.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-lgd-location-hierarchy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js version
+        run: node --version
+
+      - name: Verify hierarchy module exists
+        run: test -f scripts/lgd-location-hierarchy.js
+
+      - name: Verify hierarchy tests exist
+        run: test -f scripts/test-lgd-location-hierarchy.js
+
+      - name: Run LGD hierarchy adversarial tests
+        run: node scripts/test-lgd-location-hierarchy.js

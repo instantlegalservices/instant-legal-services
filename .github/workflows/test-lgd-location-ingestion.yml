@@ -1,0 +1,33 @@
+name: Test LGD Location Ingestion
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/lgd-location-ingestion.js"
+      - "scripts/test-lgd-location-ingestion.js"
+      - ".github/workflows/test-lgd-location-ingestion.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-lgd-location-ingestion:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js version
+        run: node --version
+
+      - name: Run LGD ingestion adversarial tests
+        run: node scripts/test-lgd-location-ingestion.js

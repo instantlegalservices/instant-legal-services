@@ -1,0 +1,89 @@
+name: Test Location Registry LGD DB Integration
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/location-registry-lgd-importer.js"
+      - "scripts/test-location-registry-lgd-db-integration.js"
+      - "supabase/migrations/20260919090907_location_registry_seo_foundation.sql"
+      - "supabase/migrations/20260921100000_location_registry_lgd_identity.sql"
+      - ".github/workflows/test-location-registry-lgd-db-integration.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lgd-db-integration:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: ils_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d ils_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: test_password
+      PGDATABASE: ils_test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify required files
+        run: |
+          test -f scripts/location-registry-lgd-importer.js
+          test -f scripts/test-location-registry-lgd-db-integration.js
+          test -f supabase/migrations/20260919090907_location_registry_seo_foundation.sql
+          test -f supabase/migrations/20260921100000_location_registry_lgd_identity.sql
+
+      - name: Verify PostgreSQL
+        run: |
+          psql \
+            --host=127.0.0.1 \
+            --port=5432 \
+            --username=postgres \
+            --dbname=ils_test \
+            --command="SELECT current_database();"
+
+      - name: Apply base Registry schema
+        run: |
+          psql \
+            --host=127.0.0.1 \
+            --port=5432 \
+            --username=postgres \
+            --dbname=ils_test \
+            --file=supabase/migrations/20260919090907_location_registry_seo_foundation.sql
+
+      - name: Apply LGD identity migration
+        run: |
+          psql \
+            --host=127.0.0.1 \
+            --port=5432 \
+            --username=postgres \
+            --dbname=ils_test \
+            --file=supabase/migrations/20260921100000_location_registry_lgd_identity.sql
+
+      - name: Run LGD PostgreSQL integration verification
+        run: |
+          node scripts/test-location-registry-lgd-db-integration.js
