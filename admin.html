@@ -270,6 +270,28 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       </div>
     </section>
 
+    <section class="panel adv-panel">
+      <h2>Professional Network Review</h2>
+      <p style="opacity:.72">Review CA, CS, HR, GST Practitioner and Assistant / Associate registrations. Only CA/CS can ever be public; HR/GST/Assistant remain internal even when approved.</p>
+      <div class="adv-toolbar">
+        <input id="adminProfessionalSearch" type="search" placeholder="Search name, email, mobile, category or city…">
+        <select id="adminProfessionalStatus">
+          <option value="">All Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+        <button id="loadProfessionalsBtn" class="btnx primary" type="button">↻ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table class="adv-table">
+          <thead><tr><th>Category</th><th>Name</th><th>Contact</th><th>Location</th><th>Credential / Services</th><th>Status</th><th>Public</th><th>Action</th></tr></thead>
+          <tbody id="professionalTableBody"><tr><td colspan="8" style="text-align:center">Loading professional applications…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="professionalAdminMsg" class="msg" style="margin-top:10px"></div>
+    </section>
+
     <div class="modal" id="advocateModal" aria-hidden="true">
       <div class="modal-box">
         <button class="modal-close" id="closeAdvocateModal" type="button">×</button>
@@ -603,6 +625,68 @@ function renderAdvocateRows(){
   }).join("");
   tbody.querySelectorAll("[data-adv-view]").forEach(b=>b.addEventListener("click",()=>openAdvocate(b.dataset.advView)));
 }
+let allProfessionals=[];
+
+const professionalLabels={ca:"CA",cs:"CS",hr:"HR",gst_practitioner:"GST Practitioner",assistant_associate:"Assistant / Associate"};
+
+async function loadProfessionals(){
+  const body=$("professionalTableBody");
+  body.innerHTML='<tr><td colspan="8" style="text-align:center">Loading…</td></tr>';
+  let q=sb.from("professional_join_requests").select("*").order("created_at",{ascending:false}).limit(250);
+  const status=$("adminProfessionalStatus")?.value||"";
+  const term=$("adminProfessionalSearch")?.value.trim()||"";
+  if(status)q=q.eq("status",status);
+  if(term){
+    const s=term.replace(/[,%()]/g," ").trim();
+    if(s)q=q.or("full_name.ilike.%"+s+"%,email.ilike.%"+s+"%,mobile.ilike.%"+s+"%,professional_type.ilike.%"+s+"%,city.ilike.%"+s+"%");
+  }
+  const {data,error}=await q;
+  if(error){body.innerHTML='<tr><td colspan="8" style="text-align:center">Unable to load professional applications.</td></tr>';msg("professionalAdminMsg","Professional queue error: "+error.message,"err");return;}
+  allProfessionals=data||[];
+  if(!allProfessionals.length){body.innerHTML='<tr><td colspan="8" style="text-align:center">No matching professional applications.</td></tr>';return;}
+  body.innerHTML=allProfessionals.map(p=>{
+    const label=professionalLabels[p.professional_type]||p.professional_type;
+    const cred=p.membership_number||p.specialization||"—";
+    const loc=[p.city,p.state].filter(Boolean).join(", ")||"—";
+    const canPublic=p.professional_type==="ca"||p.professional_type==="cs";
+    const publicText=canPublic&&p.public_profile?"Enabled":"Private";
+    const action='<button class="btnx primary profApprove" data-id="'+esc(p.id)+'">Approve</button> '+
+      '<button class="btnx" style="background:#9b4b4b;color:#fff" data-id="'+esc(p.id)+'" data-action="reject">Reject</button> '+
+      (canPublic?'<button class="btnx secondary profPublic" data-id="'+esc(p.id)+'">'+(p.public_profile?"Hide":"Publish")+'</button>':"");
+    return '<tr><td><strong>'+esc(label)+'</strong></td>'+
+      '<td>'+esc(p.full_name||"—")+'</td>'+
+      '<td>'+esc(p.email||"—")+'<br>'+esc(p.mobile||"—")+'</td>'+
+      '<td>'+esc(loc)+'</td>'+
+      '<td>'+esc(cred)+'</td>'+
+      '<td>'+esc(p.status||"Pending")+' / '+esc(p.verification_status||"Pending")+'</td>'+
+      '<td>'+esc(publicText)+'</td>'+
+      '<td class="actions-cell">'+action+'</td></tr>';
+  }).join("");
+  document.querySelectorAll(".profApprove").forEach(b=>b.addEventListener("click",()=>updateProfessional(b.dataset.id,"Approved")));
+  document.querySelectorAll('[data-action="reject"]').forEach(b=>b.addEventListener("click",()=>updateProfessional(b.dataset.id,"Rejected")));
+  document.querySelectorAll(".profPublic").forEach(b=>b.addEventListener("click",()=>toggleProfessionalPublic(b.dataset.id)));
+}
+
+async function updateProfessional(id,status){
+  const p=allProfessionals.find(x=>String(x.id)===String(id));if(!p)return;
+  if(!confirm(status==="Approved"?"Approve this professional registration?":"Reject this professional registration?"))return;
+  const canPublic=p.professional_type==="ca"||p.professional_type==="cs";
+  const update={status,verification_status:status,public_profile:status==="Approved"&&canPublic};
+  const {error}=await sb.from("professional_join_requests").update(update).eq("id",id);
+  if(error){msg("professionalAdminMsg","Update failed: "+error.message,"err");return;}
+  msg("professionalAdminMsg",status==="Approved"?(canPublic?"Approved and public profile enabled for CA/CS.":"Approved; internal-only profile retained."):"Professional registration rejected.","ok");
+  await loadProfessionals();
+}
+
+async function toggleProfessionalPublic(id){
+  const p=allProfessionals.find(x=>String(x.id)===String(id));if(!p)return;
+  if(!["ca","cs"].includes(p.professional_type)){msg("professionalAdminMsg","Only CA/CS can be public.","err");return;}
+  if(String(p.status).toLowerCase()!=="approved"||String(p.verification_status).toLowerCase()!=="approved"){msg("professionalAdminMsg","Approve and verify the CA/CS profile before public listing.","err");return;}
+  const {error}=await sb.from("professional_join_requests").update({public_profile:!p.public_profile}).eq("id",id);
+  if(error){msg("professionalAdminMsg","Public visibility update failed: "+error.message,"err");return;}
+  await loadProfessionals();
+}
+
 async function loadAdvocates(){
 
   const tbody=$("advocateTableBody");
@@ -1254,6 +1338,7 @@ $("loginForm").addEventListener("submit",async e=>{
     return;
   }
   await openApp();
+loadProfessionals();
 loadRevenue();
 });
 
@@ -1274,6 +1359,9 @@ $("approveAdvocateBtn").addEventListener("click",()=>setAdvocateVerification("Ap
 $("rejectAdvocateBtn").addEventListener("click",()=>setAdvocateVerification("Rejected"));
 $("createAdvocateLoginBtn").addEventListener("click",createAdvocateLogin);
 
+$("loadProfessionalsBtn").addEventListener("click",loadProfessionals);
+$("adminProfessionalSearch").addEventListener("input",()=>loadProfessionals());
+$("adminProfessionalStatus").addEventListener("change",()=>loadProfessionals());
 $("loadLeadsBtn").addEventListener("click",loadLeads);
 $("leadSearch").addEventListener("input",()=>loadLeads());
 $("leadSearch").addEventListener("keydown",e=>{if(e.key==="Enter")loadLeads()});
