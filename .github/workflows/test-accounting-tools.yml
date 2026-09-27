@@ -291,7 +291,7 @@ jobs:
             await page.locator('#brDebits').fill('Charges | 500');
             await page.locator('#brRun').click();
             const brText = await page.locator('#toolWorkspace').innerText();
-            if (!brText.includes('₹100,500.00')) throw new Error('Bank reconciliation adjusted balance missing');
+            if (!brText.includes('₹1,00,500.00')) throw new Error('Bank reconciliation adjusted balance missing');
 
             if (failures.length) {
               throw new Error(failures.join('\n'));
