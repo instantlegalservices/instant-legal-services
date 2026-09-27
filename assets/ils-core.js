@@ -122,6 +122,13 @@ window.ILS = (() => {
 
   async function init() {
 
+    if (!document.querySelector("script[data-ils-i18n]")) {
+      const s = document.createElement("script");
+      s.src = "assets/ils-i18n.js";
+      s.dataset.ilsI18n = "1";
+      document.head.appendChild(s);
+    }
+
     if (window.supabase && !client) {
 
       client = window.supabase.createClient(
