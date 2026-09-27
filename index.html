@@ -29,6 +29,13 @@ a{color:inherit}.wrap{width:min(1180px,calc(100% - 28px));margin:auto}
 .header{position:sticky;top:0;z-index:1000;background:rgba(7,17,31,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
 .nav{min-height:72px;display:flex;align-items:center;gap:14px}.brand{display:flex;align-items:center;gap:10px;text-decoration:none}.brand img{width:45px;height:45px;border-radius:12px;border:1px solid var(--line);object-fit:cover}.brand b{font-size:14px;letter-spacing:.07em}.brand small{display:block;color:var(--gold2);font-size:9px;margin-top:3px}.navlinks{display:flex;gap:6px;margin-left:auto;align-items:center}.navlinks a{text-decoration:none;padding:9px 10px;border-radius:10px;font-size:11px;color:#c9d4df}.navlinks a:hover{background:rgba(255,255,255,.06);color:#fff}.menu{display:none;margin-left:auto;background:rgba(255,255,255,.05);border:1px solid var(--line);color:#fff;border-radius:12px;padding:10px 13px;font-size:19px}
 .lang{background:#102337;border:1px solid rgba(242,189,85,.35);color:#fff;border-radius:10px;padding:9px 10px;font-weight:800;font-size:11px}
+.nav-quick{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+.nav-quick-btn{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:6px 9px;border-radius:9px;text-decoration:none;font-size:9px;font-weight:900;white-space:nowrap;border:1px solid rgba(242,189,85,.3)}
+.nav-quick-btn.join{background:rgba(242,189,85,.12);color:#ffe39a}
+.nav-quick-btn.login{background:rgba(92,197,255,.09);color:#dff5ff;border-color:rgba(92,197,255,.25)}
+@media(max-width:1080px){.navlinks{gap:2px}.navlinks a{padding:8px 7px;font-size:10px}}
+@media(max-width:860px){.navlinks{display:none}.nav-quick{margin-left:auto}.menu{display:block;margin-left:0}}
+@media(max-width:620px){.nav{gap:7px}.nav-quick{gap:4px}.nav-quick-btn{font-size:8px;min-height:30px;padding:5px 7px}.lang{max-width:112px!important;min-width:0!important;font-size:11px;padding:8px 7px}.menu{padding:8px 10px;font-size:17px}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 17px;border-radius:14px;border:1px solid transparent;text-decoration:none;font-weight:850;font-size:13px;cursor:pointer;transition:.2s}.btn:hover{transform:translateY(-2px)}.primary{background:linear-gradient(135deg,#ffd56e,#df9d30);color:#171006;box-shadow:0 12px 30px rgba(242,189,85,.16)}.ghost{background:rgba(255,255,255,.045);border-color:var(--line);color:#fff}.blue{background:rgba(92,197,255,.09);border-color:rgba(92,197,255,.28);color:#dff5ff}
 .hero{padding:42px 0 28px;position:relative;overflow:hidden}.hero:before{content:"";position:absolute;width:600px;height:600px;right:-310px;top:-330px;border:1px solid rgba(242,189,85,.16);border-radius:50%;box-shadow:0 0 0 70px rgba(242,189,85,.025),0 0 0 140px rgba(92,197,255,.018);animation:pulse 8s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.08);opacity:.65}}
 .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:center}.eyebrow{display:inline-flex;gap:8px;align-items:center;padding:7px 11px;border-radius:999px;background:rgba(92,219,156,.08);border:1px solid rgba(92,219,156,.25);color:#b2f5d2;font-size:11px;font-weight:900}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 6px rgba(92,219,156,.08)}
@@ -96,6 +103,10 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
 <nav class="navlinks" id="navLinks">
 <a href="#start" data-t="navProblem">समस्या बताएं</a><a href="#how" data-t="navHow">ILS कैसे काम करता है</a><a href="tools.html" data-t="navTools">मुफ़्त टूल्स</a><a href="judgments.html" data-t="navJudgments">Judgments</a><a href="advocates.html" data-t="navAdv">अधिवक्ता</a><a href="assistance.html" data-t="navHelp">कानूनी सहायता</a>
 </nav>
+<div class="nav-quick" aria-label="Professional access">
+<a class="nav-quick-btn join" href="advocate-register.html">Join ILS &amp; Earn</a>
+<a class="nav-quick-btn login" href="portal.html#login">Login</a>
+</div>
 <select id="language" class="lang" aria-label="Language"><option value="hi-IN">हिन्दी</option><option value="en-IN">English</option><option value="hinglish">Hinglish</option><option value="ur-IN">اردو</option><option value="bn-IN">বাংলা</option></select>
 <button class="menu" id="menu" aria-label="Menu">☰</button>
 </div>
