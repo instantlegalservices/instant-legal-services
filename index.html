@@ -254,7 +254,7 @@ function renderResult(q,r){
  const no=r.url===null;
  $("result").innerHTML='<div class="result"><div class="result-top"><div class="result-kicker">ILS '+(no?"NEEDS ONE MORE CLUE":"UNDERSTOOD YOUR PROBLEM")+'</div><h2>'+r.icon+" "+r.title+'</h2><p>'+r.desc+'. '+(no?"कृपया problem में department/service/country-level context बताएं.":"आपकी personal/sensitive details अभी ILS को देने की जरूरत नहीं है.")+'</p></div>'+
  (no?'<div class="routecard"><strong>🧭 अभी official route select नहीं किया गया</strong><small>Problem में “bank”, “cyber fraud”, “consumer”, “police/FIR”, “government complaint”, “challan” जैसे words बताएं या Human Help चुनें.</small></div>':
- '<div class="routecard"><strong>'+r.official+'</strong><small>Verified official route • '+r.desc+'</small><div class="intake-actions"><a class="btn primary" href="'+r.url+'" target="_blank" rel="noopener">🏛️ Official portal खोलें ↗</a><a class="btn ghost" href="'+r.local+'">ILS limited guidance</a></div></div>')+
+ '<div class="routecard"><strong>'+r.official+'</strong><small>Official route • source checked — '+r.desc+'</small><div class="intake-actions"><a class="btn primary" href="'+r.url+'" target="_blank" rel="noopener">🏛️ Official portal खोलें ↗</a><a class="btn ghost" href="'+r.local+'">ILS limited guidance</a></div></div>')+
  '<div class="three">'+
  '<button id="rFree" type="button"><b>🆓 1. मैं खुद भरूँ</b><small>Official portal पर खुद form/complaint भरें. ILS की limited basic guidance free रहेगी.</small><span class="tag free">FREE SELF-SERVICE</span></button>'+
  '<button id="rGuided" type="button"><b>📝 2. मैं खुद भरूँ + Guided</b><small>Paid summarized guidance: problem summary, documents और field-by-field checklist.</small><span class="tag paid">PAID GUIDANCE</span></button>'+
