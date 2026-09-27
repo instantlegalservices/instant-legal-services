@@ -7,6 +7,7 @@ on:
       - "tools.html"
       - "assets/ils-tools.js"
       - "assets/ils-tools-catalog.js"
+      - "assets/ils-accounting-advanced.js"
       - "assets/ils.css"
       - ".github/workflows/test-accounting-tools.yml"
 
