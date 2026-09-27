@@ -36,6 +36,17 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 .smart-action-btn{min-width:42px;padding:7px 10px}
 .smart-action-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:10020;min-width:190px;padding:6px;background:#0b1624;border:1px solid #34455d;border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.45)}
 .smart-action-menu.open{display:block}
+.smart-action-menu{position:fixed;right:auto;top:auto;left:auto;max-width:calc(100vw - 20px);max-height:60vh;overflow:auto}
+@media(max-width:700px){
+  .smart-action-btn{padding:7px 9px;font-size:12px}
+  .smart-action-menu{min-width:205px}
+}
+@media(max-width:500px){
+  .panel{padding:12px;margin-bottom:12px}
+  .panel h2{font-size:18px;margin-bottom:10px}
+  #revenueDashboardPanel .table-wrap{margin-top:8px}
+  #adminDeletionPanel .table-wrap{margin-top:8px!important}
+}
 .smart-action-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;color:#fff;padding:10px 11px;border-radius:7px;cursor:pointer;font-weight:700}
 .smart-action-menu button:hover{background:#17263a}
 .smart-action-menu .danger{color:#ff9b9b}
@@ -44,11 +55,25 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 .deletion-safety{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid #7f1d1d;border-radius:9px;color:#fca5a5;background:rgba(127,29,29,.08);font-size:13px}
 .deletion-table .actions-cell{min-width:110px}
 @media(max-width:850px){.admin-grid{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr}.admin-top{align-items:flex-start;flex-direction:column}}
-@media(max-width:500px){.admin-grid{grid-template-columns:1fr}}
+@media(max-width:500px){
+  .admin-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+  .admin-stat{border-radius:10px;padding:11px 12px}
+  .admin-stat small{font-size:11px;line-height:1.2}
+  .admin-stat strong{font-size:23px;margin-top:3px}
+  .revenue-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .revenue-stat{border-radius:10px;padding:10px 11px}
+  .revenue-stat small{font-size:11px;line-height:1.2}
+  .revenue-stat strong{font-size:22px;margin-top:3px}
+}
 .deletion-table-wrap{max-width:100%;overflow:auto}
 .deletion-table{min-width:860px}
 .deletion-table th:first-child,.deletion-table td:first-child{position:sticky;left:0;z-index:2;background:#111b2a}
 .deletion-table th:first-child{background:#0c1522}
+#adminDeletionPanel>h2{margin-bottom:8px}
+@media(max-width:700px){
+  .deletion-table{min-width:720px}
+  .deletion-table .actions-cell{min-width:190px}
+}
 @media(max-width:700px){.deletion-table{min-width:760px}.deletion-table .actions-cell{white-space:normal;min-width:300px}.deletion-table .actions-cell .btnx{margin:2px}}
 
 /* ILS Advocate Management - restored from working CRM */
@@ -138,7 +163,6 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 
 <section class="panel" id="adminDeletionPanel" style="border:1px solid #7f1d1d">
   <h2>⚠️ Permanent Data Deletion</h2>
-  <p class="deletion-summary">Admin-only destructive tools. Use <strong>⋮ Actions</strong> on a record for Manage/Assign or permanent deletion. Existing CRM, assignment, payment and authentication chains remain unchanged.</p>
   <div id="deletionMsg" class="msg" data-toast="1"></div>
   <div class="table-wrap deletion-table-wrap" style="margin-top:14px">
     <table class="adv-table deletion-table">
@@ -146,7 +170,6 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       <tbody id="clientDeletionBody"><tr><td colspan="6" style="text-align:center">Loading clients…</td></tr></tbody>
     </table>
   </div>
-  <div class="deletion-safety">🔒 Exact phrase <code>DELETE PERMANENTLY</code> + second confirmation required.</div>
 </section>
 
 <section class="panel" id="pricingControlPanel">
@@ -1476,12 +1499,35 @@ $("logoutBtn").addEventListener("click",async()=>{
 $("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
 
 $("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
+function positionSmartMenu(toggle,menu){
+  if(!toggle||!menu)return;
+  const rect=toggle.getBoundingClientRect();
+  const gap=6, pad=10;
+  const menuWidth=Math.min(Math.max(menu.offsetWidth||205,190),window.innerWidth-pad*2);
+  const menuHeight=menu.offsetHeight||120;
+  let left=rect.right-menuWidth;
+  if(left<pad)left=pad;
+  if(left+menuWidth>window.innerWidth-pad)left=window.innerWidth-pad-menuWidth;
+  let top=rect.bottom+gap;
+  if(top+menuHeight>window.innerHeight-pad)top=rect.top-menuHeight-gap;
+  if(top<pad)top=pad;
+  menu.style.left=Math.round(left)+"px";
+  menu.style.top=Math.round(top)+"px";
+}
 document.addEventListener("click",e=>{
   const toggle=e.target.closest("[data-smart-toggle]");
   if(toggle){
-    document.querySelectorAll(".smart-action-menu.open").forEach(m=>{if(m!==toggle.nextElementSibling)m.classList.remove("open")});
+    document.querySelectorAll(".smart-action-menu.open").forEach(m=>{if(m!==toggle.nextElementSibling){m.classList.remove("open");m.style.left="";m.style.top="";}});
     const menu=toggle.nextElementSibling;
-    if(menu){const open=menu.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open));}
+    if(menu){
+      const open=menu.classList.toggle("open");
+      toggle.setAttribute("aria-expanded",String(open));
+      if(open){
+        requestAnimationFrame(()=>positionSmartMenu(toggle,menu));
+      }else{
+        menu.style.left="";menu.style.top="";
+      }
+    }
     return;
   }
   if(!e.target.closest(".smart-action"))document.querySelectorAll(".smart-action-menu.open").forEach(m=>m.classList.remove("open"));
@@ -1539,6 +1585,8 @@ $("upiProofStatusFilter").addEventListener("change",renderUpiProofs);
 $("revenueSearch").addEventListener("input",renderRevenue);
 $("revenueStatusFilter").addEventListener("change",renderRevenue);
 $("revenueServiceStatusFilter").addEventListener("change",renderRevenue);
+window.addEventListener("resize",()=>document.querySelectorAll(".smart-action-menu.open").forEach(m=>m.classList.remove("open")));
+window.addEventListener("scroll",()=>document.querySelectorAll(".smart-action-menu.open").forEach(m=>m.classList.remove("open")),true);
 </script>
 </body>
 </html>
