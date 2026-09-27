@@ -245,7 +245,7 @@ Create your ILS professional profile — Advocate, CA, CS, HR, GST Practitioner 
 
 
 <div id="ilsRoleChooser" style="margin:0 0 16px;padding:14px;border:1px solid rgba(244,195,91,.25);border-radius:16px;background:rgba(244,195,91,.06)">
-<strong>Professional type: <span id="ilsCurrentRole">Advocate</span></strong>
+<strong>Professional type: <span id="ilsCurrentRole">Advocate (default) · CA · CS · HR · GST Practitioner · Assistant / Associate</span></strong>
 <button type="button" class="btn btn-ghost btn-small" id="ilsChooseRole" style="margin-left:10px">Choose / change</button>
 <small style="display:block;opacity:.72;margin-top:6px">Choose: Advocate · CA · CS · HR Professional · GST Practitioner · Assistant / Associate.</small>
 </div>
@@ -1765,6 +1765,21 @@ function configureProfessionalRole(role){
   $("ilsProfessionalPhotoSection").classList.toggle("show",true);
   $("ilsProfessionalCredentials").classList.toggle("show",!assistant);
   $("ilsProfAadhaar").required=assistant;
+  if(assistant){
+    $("ilsProfMembership").value="";
+    $("ilsProfCop").value="";
+    $("ilsProfYears").value="";
+    $("ilsProfFirm").value="";
+    $("ilsProfState").value="";
+    $("ilsProfCity").value="";
+  }
+  const professionalCredentialFields=[
+    $("ilsProfMembership"),$("ilsProfCop"),$("ilsProfYears"),$("ilsProfFirm"),
+    $("ilsProfState"),$("ilsProfCity")
+  ];
+  professionalCredentialFields.forEach(field=>{
+    if(field) field.disabled=assistant;
+  });
   $("ilsProfMembership").required=["ca","cs","gst_practitioner"].includes(role);
   $("ilsProfCop").required=["ca","cs"].includes(role);
   $("ilsProfState").required=["ca","cs","gst_practitioner"].includes(role);
