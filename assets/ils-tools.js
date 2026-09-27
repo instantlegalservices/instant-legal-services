@@ -2199,7 +2199,7 @@ Previous orders"></textarea>
     }
     const target=workspace();
     if(target){
-      requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
+      requestAnimationFrame(()=>target.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}));
     }
   }
 
