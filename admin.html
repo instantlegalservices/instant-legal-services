@@ -1261,7 +1261,7 @@ $("logoutBtn").addEventListener("click",async()=>{
   await sb.auth.signOut();
   location.href="admin.html";
 });
-$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue(),loadUpiProofs()]);msg("appMsg","Dashboard refreshed.","ok")});
+$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
 
 $("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
 $("adminAdvocateSearch").addEventListener("input",renderAdvocateRows);
