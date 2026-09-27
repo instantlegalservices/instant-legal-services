@@ -81,7 +81,17 @@ function inject(){
  const nav=host.querySelector(".navlinks");
  if(nav)nav.appendChild(s);else host.appendChild(s);
 }
-function boot(){mark();inject();apply(get()); const home=document.querySelector("#language"); if(home) home.value=get();}
+function motion(){
+ const reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+ if(reduce)return;
+ const items=document.querySelectorAll(".card,.feature-card,.dcard,.panel,.page-hero,.notice,.tool-card");
+ items.forEach((el,i)=>{el.classList.add("ils-reveal");el.style.setProperty("--ils-delay",(Math.min(i,8)*45)+"ms");});
+ if("IntersectionObserver" in window){
+   const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("ils-visible");io.unobserve(e.target)}}),{threshold:.08});
+   items.forEach(el=>io.observe(el));
+ }else items.forEach(el=>el.classList.add("ils-visible"));
+}
+function boot(){mark();inject();apply(get()); const home=document.querySelector("#language"); if(home) home.value=get(); motion();}
 window.ILSLanguage={get,set,apply,LANGS};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
 })();
