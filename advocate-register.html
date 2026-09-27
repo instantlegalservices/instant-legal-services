@@ -658,8 +658,6 @@ Submit for Review
 
 <div id="ilsAssistantSection" class="ils-prof-section ils-conditional">
   <strong>Assistant / Associate details</strong>
-  <label for="ilsProfAddress2">Address</label>
-  <input id="ilsProfAddress2" maxlength="300" placeholder="Full current address">
   <label>Extra skills (if any)</label>
   <div class="ils-dropdown" id="assistantSkillsDropdown">
     <button type="button" class="btn btn-ghost ils-dropdown-toggle" id="assistantSkillsBtn" aria-expanded="false">
@@ -1737,7 +1735,6 @@ function configureProfessionalRole(role){
   const assistant=role==="assistant_associate";
   $("ilsAssistantSection").classList.toggle("show",assistant);
   $("ilsProfessionalCredentials").classList.toggle("show",!assistant);
-  $("ilsProfAddress2").required=false;
   $("ilsProfAadhaar").required=assistant;
   $("ilsProfMembership").required=["ca","cs","gst_practitioner"].includes(role);
   $("ilsProfCop").required=["ca","cs"].includes(role);
