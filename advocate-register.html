@@ -876,7 +876,22 @@ Submit for Review
 
 
 </form>
-
+<div id="ilsProfessionalPanel" style="display:none;margin-top:16px">
+<div class="card form-card">
+<h2 id="ilsProfessionalTitle" style="margin-top:0">Professional registration</h2>
+<p id="ilsProfessionalNote" style="opacity:.72;line-height:1.5"></p>
+<form id="ilsProfessionalForm" novalidate>
+<input type="hidden" id="ilsProfessionalType">
+<div class="form-row"><div><label>Full Name</label><input id="ilsProfName" maxlength="120" required></div><div><label>Email</label><input id="ilsProfEmail" type="email" maxlength="160" required></div></div>
+<div class="form-row"><div><label>Mobile Number</label><input id="ilsProfMobile" inputmode="numeric" maxlength="10" required></div><div><label>Membership / Registration Number</label><input id="ilsProfMembership" maxlength="100"></div></div>
+<div class="form-row"><div><label>Certificate / Practice status</label><select id="ilsProfCop"><option value="">Select if applicable</option><option>Certificate of Practice — Yes</option><option>Certificate of Practice — No</option><option>Not applicable</option></select></div><div><label>Years of Experience</label><input id="ilsProfYears" type="number" min="0" max="80"></div></div>
+<div class="form-row"><div><label>State</label><input id="ilsProfState" maxlength="80"></div><div><label>City</label><input id="ilsProfCity" maxlength="100"></div></div>
+<div class="form-row"><div><label>Specialization / Services</label><input id="ilsProfSpecialization" maxlength="300"></div><div><label>Firm / Organization</label><input id="ilsProfFirm" maxlength="180"></div></div>
+<div id="ilsPublicRule" class="status" style="display:block;margin-top:12px"></div>
+<label style="display:flex;gap:8px;align-items:flex-start;margin-top:15px;font-weight:500"><input id="ilsProfConsent" type="checkbox" style="width:18px;margin-top:2px" required><span>I confirm that the submitted information is accurate and consent to verification/review before any public listing.</span></label>
+<button class="btn btn-primary" type="submit" id="ilsProfSubmit" style="margin-top:18px">Submit for Review</button>
+<div id="ilsProfStatus" class="status"></div>
+</form></div></div>
 
 </div>
 
