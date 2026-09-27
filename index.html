@@ -3,638 +3,284 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Instant Legal Services | अपनी समस्या बताइए — कानून समझिए, सही रास्ता पाइए</title>
-<meta name="description" content="Instant Legal Services — अपनी legal problem Hindi, Hinglish, text या voice में बताइए. Free legal information, official routes, judgments, tools, advocates और optional professional assistance एक ही जगह.">
+<title>Instant Legal Services | अपनी समस्या बताइए — सही सरकारी रास्ता पाइए</title>
+<meta name="description" content="Instant Legal Services: अपनी समस्या Hindi, English, Hinglish या voice में बताइए. ILS relevant official route समझाता है और free self-service, guided help या associate assistance के विकल्प दिखाता है.">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://instantlegalservices.in/">
 <meta property="og:title" content="Instant Legal Services | अपनी समस्या बताइए">
-<meta property="og:description" content="कानून समझिए, official रास्ता देखिए, free action से शुरू कीजिए और जरूरत होने पर professional help लीजिए.">
+<meta property="og:description" content="Problem बताइए → सही official route समझिए → Free, Guided या Associate assistance चुनिए.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://instantlegalservices.in/">
 <link rel="stylesheet" href="assets/ils.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/ils-core.js?v=13" defer></script>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#06111f">
+<meta name="theme-color" content="#07111f">
 <script src="assets/pwa.js?v=15" defer></script>
-
 <style>
 :root{
-  --smart-bg:#06111f;
-  --smart-bg2:#091a2b;
-  --smart-card:rgba(15,32,51,.88);
-  --smart-card2:#10263c;
-  --smart-line:rgba(255,255,255,.10);
-  --smart-text:#f7fafc;
-  --smart-muted:#aab8c7;
-  --smart-gold:#f0bd55;
-  --smart-gold2:#ffe08a;
-  --smart-blue:#58b9ff;
-  --smart-green:#62d39b;
-  --smart-red:#ff7d78;
-  --smart-shadow:0 24px 70px rgba(0,0,0,.28);
+--b:#07111f;--b2:#0b1a2b;--card:#102337;--line:rgba(255,255,255,.11);
+--txt:#f8fafc;--muted:#9fb0c1;--gold:#f2bd55;--gold2:#ffe39a;
+--blue:#5cc5ff;--green:#5cdb9c;--red:#ff827c;
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body.smart-home{
-  margin:0;
-  background:
-    radial-gradient(circle at 15% 0%,rgba(88,185,255,.12),transparent 28%),
-    radial-gradient(circle at 90% 8%,rgba(240,189,85,.12),transparent 28%),
-    var(--smart-bg);
-  color:var(--smart-text);
-}
-.smart-home a{color:inherit}
-.smart-wrap{width:min(1180px,calc(100% - 30px));margin:auto}
-.smart-header{
-  position:sticky;top:0;z-index:1000;
-  backdrop-filter:blur(16px);
-  background:rgba(6,17,31,.86);
-  border-bottom:1px solid var(--smart-line);
-}
-.smart-nav{min-height:70px;display:flex;align-items:center;gap:18px}
-.smart-brand{display:flex;align-items:center;gap:10px;text-decoration:none;min-width:0}
-.smart-brand img{width:42px;height:42px;object-fit:cover;border-radius:11px;border:1px solid var(--smart-line)}
-.smart-brand strong{font-size:13px;letter-spacing:.08em;white-space:nowrap}
-.smart-brand span{display:block;color:var(--smart-gold2);font-size:10px;letter-spacing:.08em;margin-top:2px}
-.smart-navlinks{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-left:auto}
-.smart-navlinks a{
-  text-decoration:none;color:#d7e0e9;padding:9px 10px;border-radius:10px;font-size:12px;
-}
-.smart-navlinks a:hover{background:rgba(255,255,255,.06);color:#fff}
-.smart-menu{display:none;margin-left:auto}
-.smart-btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  min-height:46px;padding:12px 18px;border-radius:13px;border:1px solid transparent;
-  font:700 14px/1 inherit;text-decoration:none;cursor:pointer;transition:.2s ease;
-}
-.smart-btn:hover{transform:translateY(-2px)}
-.smart-btn-primary{background:linear-gradient(135deg,#f5c45e,#d99a2f);color:#15100a;box-shadow:0 12px 30px rgba(240,189,85,.18)}
-.smart-btn-ghost{background:rgba(255,255,255,.045);border-color:var(--smart-line);color:#fff}
-.smart-btn-blue{background:rgba(88,185,255,.12);border-color:rgba(88,185,255,.30);color:#dff2ff}
-.smart-btn-big{min-height:58px;padding:14px 22px;font-size:16px;border-radius:16px}
-.smart-hero{position:relative;overflow:hidden;padding:58px 0 30px}
-.smart-hero:before{
-  content:"";position:absolute;width:520px;height:520px;right:-230px;top:-260px;border-radius:50%;
-  border:1px solid rgba(240,189,85,.16);box-shadow:0 0 0 80px rgba(240,189,85,.025),0 0 0 160px rgba(240,189,85,.015);
-  animation:smartPulse 7s ease-in-out infinite;
-}
-@keyframes smartPulse{50%{transform:scale(1.08);opacity:.65}}
-.smart-hero-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(340px,.88fr);gap:32px;align-items:center}
-.smart-kicker{
-  display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
-  background:rgba(98,211,155,.08);border:1px solid rgba(98,211,155,.25);color:#aaf1cd;font-size:12px;font-weight:800;
-}
-.smart-dot{width:8px;height:8px;border-radius:50%;background:var(--smart-green);box-shadow:0 0 0 6px rgba(98,211,155,.10);animation:smartBlink 2s infinite}
-@keyframes smartBlink{50%{opacity:.35}}
-.smart-hero h1{font-size:clamp(39px,6vw,72px);line-height:1.01;letter-spacing:-.045em;margin:20px 0 14px}
-.smart-hero h1 .gold{color:var(--smart-gold2)}
-.smart-hero-lead{max-width:690px;color:#c1ccd7;font-size:18px;line-height:1.65;margin:0}
-.smart-hero-lead b{color:#fff}
-.smart-intake{
-  margin-top:24px;padding:14px;border:1px solid var(--smart-line);border-radius:20px;
-  background:rgba(8,23,39,.78);box-shadow:var(--smart-shadow)
-}
-.smart-intake-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-.smart-intake-title{font-weight:900;font-size:16px}
-.smart-mini{font-size:11px;color:#8fa1b2}
-.smart-input-row{display:flex;gap:9px}
-.smart-intake textarea{
-  width:100%;min-height:76px;resize:vertical;padding:14px;border-radius:14px;
-  background:#071522;border:1px solid var(--smart-line);color:#fff;font:500 15px/1.5 inherit;outline:0;
-}
-.smart-intake textarea:focus{border-color:rgba(240,189,85,.6);box-shadow:0 0 0 4px rgba(240,189,85,.07)}
-.smart-voice{
-  min-width:62px;border:1px solid rgba(88,185,255,.28);background:rgba(88,185,255,.08);color:#dff3ff;border-radius:14px;
-  font-size:24px;cursor:pointer
-}
-.smart-voice.listening{animation:smartListen 1s infinite}
-@keyframes smartListen{50%{transform:scale(1.06);background:rgba(255,125,120,.14)}}
-.smart-intake-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.smart-quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
-.smart-quick button{
-  border:1px solid var(--smart-line);background:rgba(255,255,255,.035);color:#bdc9d5;border-radius:999px;
-  padding:8px 11px;font:700 11px inherit;cursor:pointer
-}
-.smart-quick button:hover{border-color:rgba(240,189,85,.45);color:#ffe08a}
-.smart-voice-note{margin-top:9px;color:#8092a5;font-size:10px;min-height:14px}
-.smart-hero-side{position:relative}
-.smart-orbit{
-  min-height:430px;padding:22px;border-radius:28px;border:1px solid var(--smart-line);
-  background:linear-gradient(155deg,rgba(255,255,255,.075),rgba(255,255,255,.02));
-  box-shadow:var(--smart-shadow);overflow:hidden
-}
-.smart-orbit:after{
-  content:"";position:absolute;inset:18% 12%;border:1px dashed rgba(240,189,85,.22);border-radius:50%;
-  animation:smartSpin 18s linear infinite
-}
-@keyframes smartSpin{to{transform:rotate(360deg)}}
-.smart-center{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;
-  width:150px;height:150px;border-radius:50%;display:grid;place-items:center;text-align:center;
-  background:radial-gradient(circle,#1a3852,#0a1726);border:1px solid rgba(240,189,85,.35);
-  box-shadow:0 0 50px rgba(240,189,85,.13)
-}
-.smart-center strong{font-size:19px;line-height:1.15}.smart-center small{display:block;color:#91a4b6;font-size:10px;margin-top:5px}
-.smart-float{
-  position:absolute;z-index:3;display:flex;align-items:center;gap:8px;padding:11px 13px;border-radius:14px;
-  background:#0c2034;border:1px solid var(--smart-line);box-shadow:0 15px 35px rgba(0,0,0,.2);
-  font-size:12px;font-weight:800;animation:smartFloat 4.5s ease-in-out infinite
-}
-.smart-float small{display:block;color:#8295a8;font-size:9px;font-weight:500;margin-top:2px}
-@keyframes smartFloat{50%{transform:translateY(-8px)}}
-.smart-float.f1{top:12%;left:8%}.smart-float.f2{top:20%;right:6%;animation-delay:.7s}.smart-float.f3{bottom:20%;left:5%;animation-delay:1.2s}.smart-float.f4{bottom:9%;right:8%;animation-delay:1.8s}
-.smart-float i{font-style:normal;font-size:20px}
-.smart-hero-side-bottom{display:flex;gap:8px;margin-top:10px}
-.smart-trust-pill{flex:1;text-align:center;padding:9px;border-radius:11px;border:1px solid var(--smart-line);background:rgba(255,255,255,.03);font-size:10px;color:#a6b5c4}
-.smart-section{padding:54px 0}
-.smart-section.alt{background:rgba(255,255,255,.018);border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04)}
-.smart-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:22px}
-.smart-head h2{margin:0 0 6px;font-size:clamp(24px,4vw,34px);letter-spacing:-.025em}
-.smart-head p{margin:0;color:var(--smart-muted);font-size:13px;line-height:1.5}
-.smart-head a{color:var(--smart-gold2);font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}
-.smart-problem-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-.smart-problem{
-  min-height:142px;padding:16px 12px;border:1px solid var(--smart-line);border-radius:17px;background:var(--smart-card);
-  text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;
-  transition:.2s ease;position:relative;overflow:hidden
-}
-.smart-problem:before{content:"";position:absolute;inset:auto -20% -55%;height:100px;background:rgba(240,189,85,.07);filter:blur(22px)}
-.smart-problem:hover{transform:translateY(-5px);border-color:rgba(240,189,85,.42);box-shadow:0 16px 35px rgba(0,0,0,.18)}
-.smart-problem .big{font-size:34px;position:relative}.smart-problem b{font-size:13px;position:relative}.smart-problem small{font-size:10px;color:#8294a6;position:relative;line-height:1.35}
-.smart-free-tag{font-size:9px;color:#aaf1cd;background:rgba(98,211,155,.08);padding:3px 7px;border-radius:999px;position:relative}
-.smart-flow{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-.smart-step{position:relative;padding:20px 14px;border:1px solid var(--smart-line);border-radius:17px;background:var(--smart-card);min-height:155px}
-.smart-step .num{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:rgba(240,189,85,.10);color:var(--smart-gold2);font-weight:900;margin-bottom:14px}
-.smart-step h3{margin:0 0 7px;font-size:15px}.smart-step p{margin:0;color:#91a1b1;font-size:11px;line-height:1.5}
-.smart-step:after{content:"→";position:absolute;right:-9px;top:50%;transform:translateY(-50%);z-index:2;color:var(--smart-gold);font-weight:900}
-.smart-step:last-child:after{display:none}
-.smart-choice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.smart-choice{
-  padding:22px;border:1px solid var(--smart-line);border-radius:20px;background:var(--smart-card);
-  text-decoration:none;transition:.2s ease;min-height:190px
-}
-.smart-choice:hover{transform:translateY(-4px);border-color:rgba(88,185,255,.35)}
-.smart-choice-icon{font-size:31px;margin-bottom:14px}.smart-choice h3{margin:0 0 7px;font-size:18px}.smart-choice p{margin:0;color:#91a1b1;font-size:12px;line-height:1.55}
-.smart-choice .link{display:inline-block;margin-top:16px;color:#cfeeff;font-size:11px;font-weight:900}
-.smart-dynamic-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.smart-loading,.smart-empty{grid-column:1/-1;padding:30px;border:1px dashed var(--smart-line);border-radius:16px;text-align:center;color:#8497aa;font-size:13px}
-.smart-card{background:var(--smart-card);border:1px solid var(--smart-line);border-radius:17px;padding:17px}
-.smart-judgment-card h3{font-size:15px;line-height:1.35;margin:12px 0 8px}.smart-judgment-card p{color:#92a3b4;font-size:11px;line-height:1.5;min-height:50px}
-.smart-meta{display:flex;justify-content:space-between;gap:8px;color:#8799aa;font-size:10px}.smart-badge{color:#bfe9ff;background:rgba(88,185,255,.08);border:1px solid rgba(88,185,255,.18);padding:5px 7px;border-radius:999px}
-.smart-card-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
-.smart-small-btn{min-height:35px;padding:8px 11px;border-radius:10px;font-size:10px}
-.smart-adv-card{cursor:pointer;min-height:190px}.smart-adv-top{display:flex;gap:11px;align-items:center}.smart-adv-photo{width:54px;height:54px;border-radius:14px;object-fit:cover;background:#173047;border:1px solid var(--smart-line)}.smart-adv-name{font-weight:900;font-size:14px}.smart-verified{color:#9ff0c6;font-size:9px;margin-top:4px}.smart-adv-meta{color:#8799aa;font-size:10px;margin-top:3px}.smart-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px}.smart-chip{font-size:9px;padding:5px 7px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--smart-line);color:#b8c5d2}
-.smart-tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}.smart-tool{display:flex;align-items:center;gap:11px;padding:15px;border:1px solid var(--smart-line);border-radius:15px;background:var(--smart-card);text-decoration:none}.smart-tool:hover{border-color:rgba(240,189,85,.38)}.smart-tool-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:rgba(240,189,85,.09);font-size:21px;flex:none}.smart-tool b{display:block;font-size:12px}.smart-tool small{display:block;margin-top:3px;color:#8294a6;font-size:9px}
-.smart-official-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.smart-official{display:flex;align-items:center;gap:14px;padding:20px;border:1px solid var(--smart-line);border-radius:17px;background:var(--smart-card);text-decoration:none}.smart-official:hover{border-color:rgba(98,211,155,.3)}.smart-official-icon{font-size:30px}.smart-official b{font-size:14px}.smart-official small{display:block;color:#8193a5;font-size:10px;margin-top:4px}
-.smart-free-pay{
-  display:grid;grid-template-columns:1fr 1fr;gap:14px
-}
-.smart-free-pay > div{padding:22px;border-radius:20px;border:1px solid var(--smart-line);background:var(--smart-card)}
-.smart-free-pay h3{margin:0 0 8px;font-size:18px}.smart-free-pay p{margin:0;color:#91a2b2;font-size:12px;line-height:1.55}
-.smart-bullets{display:grid;gap:8px;margin-top:14px}.smart-bullet{display:flex;gap:9px;align-items:flex-start;font-size:11px;color:#bdc9d4}.smart-bullet i{font-style:normal;color:var(--smart-green)}
-.smart-final{padding:42px 0 58px}.smart-final-box{
-  padding:30px;border:1px solid rgba(240,189,85,.25);border-radius:24px;
-  background:radial-gradient(circle at 90% 0%,rgba(240,189,85,.12),transparent 38%),var(--smart-card);
-  display:flex;align-items:center;justify-content:space-between;gap:20px
-}.smart-final-box h2{margin:0 0 8px;font-size:30px}.smart-final-box p{margin:0;color:#91a2b2;max-width:700px;font-size:12px;line-height:1.55}
-.smart-footer{border-top:1px solid var(--smart-line);padding:32px 0 45px;color:#8fa1b2}.smart-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:22px}.smart-footer strong{color:#fff;display:block;margin-bottom:9px}.smart-footer a{display:block;text-decoration:none;color:#8fa1b2;font-size:11px;margin:7px 0}.smart-footer a:hover{color:#fff}.smart-footer p{font-size:10px;line-height:1.5}
-.smart-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:18px}.smart-modal.open{display:flex}.smart-modal-box{width:min(700px,100%);max-height:90vh;overflow:auto;background:#0b1a2b;border:1px solid var(--smart-line);border-radius:20px;padding:24px;position:relative}.smart-close{position:absolute;right:12px;top:10px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.07);color:#fff;font-size:22px;cursor:pointer}
-.smart-toast{position:fixed;left:50%;bottom:22px;z-index:10000;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#12283e;border:1px solid var(--smart-line);color:#fff;padding:12px 16px;border-radius:12px;font-size:12px;transition:.25s ease;box-shadow:var(--smart-shadow)}.smart-toast.show{opacity:1;transform:translate(-50%,0)}
-.smart-scenario{min-height:32px;color:#fff;font-size:14px;font-weight:800}.smart-scenario span{color:var(--smart-gold2)}.smart-scenario-wrap{margin-top:13px;padding:10px 13px;border:1px solid var(--smart-line);border-radius:13px;background:rgba(255,255,255,.025)}
-.smart-scenario-label{font-size:9px;color:#7f91a4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
-.smart-appear{animation:smartAppear .65s ease both}@keyframes smartAppear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@media(max-width:1050px){.smart-problem-grid{grid-template-columns:repeat(3,1fr)}.smart-flow{grid-template-columns:repeat(3,1fr)}.smart-step:after{display:none}.smart-dynamic-grid{grid-template-columns:repeat(2,1fr)}.smart-tool-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:820px){
-  .smart-navlinks{display:none}.smart-menu{display:inline-flex;min-height:42px;padding:9px 12px;border:1px solid var(--smart-line);border-radius:11px;background:rgba(255,255,255,.04);color:#fff;font-size:18px}
-  .smart-navlinks.open{display:grid;position:absolute;left:15px;right:15px;top:70px;padding:12px;border:1px solid var(--smart-line);border-radius:15px;background:#0a1929;box-shadow:var(--smart-shadow)}
-  .smart-hero-grid{grid-template-columns:1fr}.smart-orbit{min-height:370px}.smart-choice-grid{grid-template-columns:1fr}.smart-free-pay{grid-template-columns:1fr}.smart-footer-grid{grid-template-columns:1fr 1fr}
-}
-@media(max-width:620px){
-  .smart-wrap{width:min(100% - 20px,1180px)}.smart-hero{padding-top:38px}.smart-hero h1{font-size:43px}.smart-hero-lead{font-size:15px}
-  .smart-input-row{align-items:stretch}.smart-voice{width:58px;min-width:58px}.smart-intake-actions{display:grid;grid-template-columns:1fr 1fr}.smart-intake-actions .smart-btn{width:100%}
-  .smart-problem-grid{grid-template-columns:repeat(2,1fr)}.smart-flow{grid-template-columns:1fr 1fr}.smart-dynamic-grid{grid-template-columns:1fr}.smart-tool-grid{grid-template-columns:1fr}.smart-official-grid{grid-template-columns:1fr}.smart-final-box{display:block}.smart-final-box .smart-intake-actions{margin-top:18px}.smart-footer-grid{grid-template-columns:1fr}.smart-head{display:block}.smart-head>a{display:inline-block;margin-top:9px}
-}
-@media(max-width:390px){.smart-problem-grid{gap:7px}.smart-problem{min-height:132px;padding:11px 7px}.smart-problem .big{font-size:29px}.smart-problem b{font-size:11px}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(circle at 8% 0%,rgba(92,197,255,.15),transparent 30%),radial-gradient(circle at 92% 8%,rgba(242,189,85,.14),transparent 32%),var(--b);color:var(--txt);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:inherit}.wrap{width:min(1180px,calc(100% - 28px));margin:auto}
+.header{position:sticky;top:0;z-index:1000;background:rgba(7,17,31,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.nav{min-height:72px;display:flex;align-items:center;gap:14px}.brand{display:flex;align-items:center;gap:10px;text-decoration:none}.brand img{width:45px;height:45px;border-radius:12px;border:1px solid var(--line);object-fit:cover}.brand b{font-size:14px;letter-spacing:.07em}.brand small{display:block;color:var(--gold2);font-size:9px;margin-top:3px}.navlinks{display:flex;gap:6px;margin-left:auto;align-items:center}.navlinks a{text-decoration:none;padding:9px 10px;border-radius:10px;font-size:11px;color:#c9d4df}.navlinks a:hover{background:rgba(255,255,255,.06);color:#fff}.menu{display:none;margin-left:auto;background:rgba(255,255,255,.05);border:1px solid var(--line);color:#fff;border-radius:12px;padding:10px 13px;font-size:19px}
+.lang{background:#102337;border:1px solid rgba(242,189,85,.35);color:#fff;border-radius:10px;padding:9px 10px;font-weight:800;font-size:11px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 17px;border-radius:14px;border:1px solid transparent;text-decoration:none;font-weight:850;font-size:13px;cursor:pointer;transition:.2s}.btn:hover{transform:translateY(-2px)}.primary{background:linear-gradient(135deg,#ffd56e,#df9d30);color:#171006;box-shadow:0 12px 30px rgba(242,189,85,.16)}.ghost{background:rgba(255,255,255,.045);border-color:var(--line);color:#fff}.blue{background:rgba(92,197,255,.09);border-color:rgba(92,197,255,.28);color:#dff5ff}
+.hero{padding:42px 0 28px;position:relative;overflow:hidden}.hero:before{content:"";position:absolute;width:600px;height:600px;right:-310px;top:-330px;border:1px solid rgba(242,189,85,.16);border-radius:50%;box-shadow:0 0 0 70px rgba(242,189,85,.025),0 0 0 140px rgba(92,197,255,.018);animation:pulse 8s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.08);opacity:.65}}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:center}.eyebrow{display:inline-flex;gap:8px;align-items:center;padding:7px 11px;border-radius:999px;background:rgba(92,219,156,.08);border:1px solid rgba(92,219,156,.25);color:#b2f5d2;font-size:11px;font-weight:900}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 6px rgba(92,219,156,.08)}
+h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margin:18px 0 14px}h1 span{color:var(--gold2)}.lead{font-size:17px;line-height:1.65;color:#b9c7d4;max-width:720px}.lead strong{color:#fff}
+.flowbar{display:flex;gap:7px;flex-wrap:wrap;margin-top:18px}.flowbar span{padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.035);font-size:10px;color:#b9c7d3}.flowbar .active{border-color:rgba(242,189,85,.42);color:var(--gold2);background:rgba(242,189,85,.07)}
+.intake{margin-top:22px;background:rgba(8,23,39,.84);border:1px solid rgba(242,189,85,.23);border-radius:23px;padding:15px;box-shadow:0 25px 70px rgba(0,0,0,.25)}.intake-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.intake-head b{font-size:16px}.intake-head small{color:#8497a9;font-size:10px}.inputrow{display:flex;gap:8px;margin-top:11px}.inputrow textarea{width:100%;min-height:92px;resize:none;border:1px solid var(--line);background:#071521;color:#fff;border-radius:15px;padding:14px;font:600 15px/1.55 inherit;outline:0}.inputrow textarea:focus{border-color:rgba(242,189,85,.6);box-shadow:0 0 0 4px rgba(242,189,85,.06)}.voice{width:64px;min-width:64px;border-radius:15px;background:rgba(92,197,255,.08);border:1px solid rgba(92,197,255,.28);color:#e2f7ff;font-size:25px;cursor:pointer}.voice.listening{animation:listen 1s infinite}@keyframes listen{50%{transform:scale(1.06);background:rgba(255,130,124,.15)}}
+.intake-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.hint{color:#718599;font-size:10px;margin-top:9px;min-height:15px}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.chips button{border:1px solid var(--line);background:rgba(255,255,255,.035);color:#b9c7d3;border-radius:999px;padding:7px 10px;font:700 10px inherit;cursor:pointer}.chips button:hover{border-color:rgba(242,189,85,.45);color:var(--gold2)}
+.visual{min-height:470px;border:1px solid var(--line);border-radius:30px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.018));position:relative;overflow:hidden;box-shadow:0 25px 70px rgba(0,0,0,.24)}.visual:before{content:"";position:absolute;inset:13% 12%;border:1px dashed rgba(242,189,85,.25);border-radius:50%;animation:spin 22s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:158px;height:158px;border-radius:50%;display:grid;place-items:center;text-align:center;background:radial-gradient(circle,#1d405d,#091522);border:1px solid rgba(242,189,85,.4);box-shadow:0 0 60px rgba(242,189,85,.14);z-index:2}.center strong{font-size:20px}.center small{display:block;color:#91a5b8;font-size:10px;margin-top:4px}
+.float{position:absolute;z-index:3;padding:12px 13px;border-radius:15px;background:#0d2135;border:1px solid var(--line);box-shadow:0 15px 35px rgba(0,0,0,.22);font-size:11px;font-weight:900;animation:float 4.5s ease-in-out infinite}.float small{display:block;color:#7e92a6;font-size:9px;font-weight:500;margin-top:3px}.float i{font-style:normal;font-size:20px;margin-right:7px}.f1{left:7%;top:12%}.f2{right:6%;top:19%;animation-delay:.8s}.f3{left:6%;bottom:17%;animation-delay:1.4s}.f4{right:8%;bottom:9%;animation-delay:2s}@keyframes float{50%{transform:translateY(-9px)}}
+.section{padding:50px 0}.section.alt{background:rgba(255,255,255,.018);border-top:1px solid rgba(255,255,255,.045);border-bottom:1px solid rgba(255,255,255,.045)}.head{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:20px}.head h2{margin:0 0 6px;font-size:clamp(25px,4vw,37px);letter-spacing:-.035em}.head p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}.head a{color:var(--gold2);font-size:11px;font-weight:900;text-decoration:none;white-space:nowrap}
+.problems{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.problem{min-height:145px;padding:15px 10px;border:1px solid var(--line);border-radius:18px;background:var(--card);text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:7px;transition:.2s;position:relative;overflow:hidden}.problem:hover{transform:translateY(-5px);border-color:rgba(242,189,85,.42);box-shadow:0 17px 40px rgba(0,0,0,.2)}.problem .ico{font-size:33px}.problem b{font-size:12px}.problem small{color:#8194a7;font-size:9px;line-height:1.35}
+.route{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}.step{min-height:138px;border:1px solid var(--line);border-radius:17px;background:var(--card);padding:16px;position:relative}.step .n{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:rgba(242,189,85,.1);color:var(--gold2);font-weight:900;margin-bottom:12px}.step b{font-size:13px}.step p{color:#8598aa;font-size:10px;line-height:1.45;margin:6px 0}.step:after{content:"→";position:absolute;right:-8px;top:50%;color:var(--gold);z-index:3}.step:last-child:after{display:none}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.choice{padding:22px;border:1px solid var(--line);border-radius:20px;background:var(--card);position:relative;overflow:hidden}.choice:after{content:"";position:absolute;width:150px;height:150px;right:-80px;top:-80px;border-radius:50%;background:rgba(242,189,85,.07)}.choice .num{font-size:10px;color:var(--gold2);font-weight:900;letter-spacing:.08em}.choice .icon{font-size:33px;margin:11px 0}.choice h3{margin:0 0 7px;font-size:19px}.choice p{margin:0;color:#91a2b3;font-size:11px;line-height:1.55}.choice ul{padding-left:18px;color:#b9c6d1;font-size:10px;line-height:1.65}.choice .go{margin-top:13px;width:100%}
+.official{display:flex;gap:14px;align-items:center;padding:18px;border:1px solid rgba(92,219,156,.22);border-radius:18px;background:rgba(92,219,156,.045);text-decoration:none}.official .ico{font-size:30px}.official b{font-size:14px}.official small{display:block;color:#8094a6;font-size:10px;margin-top:4px}.official-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}.card{padding:17px;border:1px solid var(--line);border-radius:17px;background:var(--card);text-decoration:none}.card .ico{font-size:25px}.card b{display:block;margin-top:9px;font-size:12px}.card small{display:block;color:#8194a7;font-size:9px;line-height:1.4;margin-top:4px}
+.dynamic{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.loading{grid-column:1/-1;padding:28px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:#8092a4;font-size:12px}.dcard{padding:16px;border:1px solid var(--line);border-radius:17px;background:var(--card)}.dcard h3{font-size:13px;line-height:1.35;margin:9px 0}.dcard p{font-size:10px;color:#8799aa;line-height:1.45}.meta{display:flex;justify-content:space-between;color:#7d90a3;font-size:9px}.photo{width:50px;height:50px;border-radius:13px;object-fit:cover;background:#19334a;border:1px solid var(--line)}.advtop{display:flex;gap:10px;align-items:center}.advname{font-size:12px;font-weight:900}.verified{font-size:9px;color:#9df0c4;margin-top:3px}
+.footer{border-top:1px solid var(--line);padding:30px 0 45px;color:#879aab}.footergrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:20px}.footer strong{display:block;color:#fff;margin-bottom:8px}.footer p,.footer a{font-size:10px;line-height:1.55}.footer a{display:block;text-decoration:none;color:#879aab;margin:6px 0}.footer a:hover{color:#fff}
+.modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:15px}.modal.open{display:flex}.modalbox{width:min(780px,100%);max-height:91vh;overflow:auto;background:#0a1a2b;border:1px solid rgba(242,189,85,.25);border-radius:23px;padding:23px;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.5)}.close{position:absolute;right:12px;top:10px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.07);color:#fff;font-size:22px;cursor:pointer}.result-top{padding-right:35px}.result-kicker{color:#9fecc4;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.result h2{margin:7px 0;font-size:29px}.result p{color:#9aabbc;font-size:12px;line-height:1.55}.routecard{margin:16px 0;padding:16px;border-radius:17px;background:#0e253a;border:1px solid var(--line)}.routecard strong{font-size:14px}.routecard small{display:block;color:#8396a9;margin-top:5px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:13px}.three button{min-height:150px;text-align:left;border:1px solid var(--line);background:#10263b;color:#fff;border-radius:16px;padding:14px;cursor:pointer}.three button:hover{border-color:rgba(242,189,85,.5);transform:translateY(-2px)}.three b{display:block;font-size:13px}.three small{display:block;color:#91a3b4;font-size:10px;line-height:1.45;margin-top:7px}.tag{display:inline-block;margin-top:10px;padding:5px 7px;border-radius:999px;font-size:8px;font-weight:900}.free{background:rgba(92,219,156,.1);color:#aaf2cc}.paid{background:rgba(242,189,85,.1);color:var(--gold2)}
+.toast{position:fixed;left:50%;bottom:20px;z-index:10000;transform:translate(-50%,20px);opacity:0;background:#112a41;border:1px solid var(--line);padding:11px 15px;border-radius:12px;font-size:11px;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:1050px){.problems{grid-template-columns:repeat(3,1fr)}.route{grid-template-columns:repeat(3,1fr)}.cards{grid-template-columns:repeat(2,1fr)}.dynamic{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:820px){.hero-grid{grid-template-columns:1fr}.visual{min-height:390px}.navlinks{display:none}.menu{display:block}.navlinks.open{display:grid;position:absolute;left:14px;right:14px;top:72px;background:#091a2b;border:1px solid var(--line);border-radius:16px;padding:11px;box-shadow:0 25px 70px rgba(0,0,0,.35)}.choices{grid-template-columns:1fr}.official-grid{grid-template-columns:1fr}.footergrid{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.wrap{width:calc(100% - 18px)}.hero{padding-top:30px}h1{font-size:43px}.lead{font-size:15px}.problems{grid-template-columns:repeat(2,1fr)}.route{grid-template-columns:1fr 1fr}.step:after{display:none}.cards,.dynamic{grid-template-columns:1fr}.three{grid-template-columns:1fr}.footergrid{grid-template-columns:1fr}.head{display:block}.head a{display:inline-block;margin-top:8px}.inputrow{align-items:stretch}.voice{width:57px;min-width:57px}.intake-actions .btn{flex:1}.float{font-size:10px}.float small{font-size:8px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
-
-<body class="smart-home">
-
-<header class="smart-header">
-  <div class="smart-wrap smart-nav">
-    <a class="smart-brand" href="index.html" aria-label="Instant Legal Services Home">
-      <img src="assets/ils-logo.jpg" alt="ILS">
-      <div><strong>INSTANT LEGAL SERVICES</strong><span>कानून समझना • सही रास्ता पाना</span></div>
-    </a>
-    <nav class="smart-navlinks" id="smartNav" aria-label="मुख्य मेनू">
-      <a href="#problem">मेरी समस्या</a>
-      <a href="#how">कैसे काम करता है</a>
-      <a href="legal-search.html">कानून खोजें</a>
-      <a href="judgments.html">Judgments</a>
-      <a href="tools.html">Tools</a>
-      <a href="advocates.html">Advocate</a>
-      <a class="smart-btn smart-btn-primary smart-small-btn" href="assistance.html">Legal Help</a>
-    </nav>
-    <button class="smart-menu" id="smartMenu" type="button" aria-label="मेनू खोलें">☰</button>
-  </div>
+<body>
+<header class="header">
+<div class="wrap nav">
+<a class="brand" href="index.html"><img src="assets/ils-logo.jpg" alt="ILS"><div><b>INSTANT LEGAL SERVICES</b><small id="brandTag">कानून समझना • सही रास्ता पाना</small></div></a>
+<nav class="navlinks" id="navLinks">
+<a href="#start" data-t="navProblem">Problem बताएं</a><a href="#how" data-t="navHow">कैसे काम करता है</a><a href="tools.html" data-t="navTools">Free Tools</a><a href="judgments.html">Judgments</a><a href="advocates.html" data-t="navAdv">Advocate</a><a href="assistance.html" data-t="navHelp">Human Help</a>
+</nav>
+<select id="language" class="lang" aria-label="Language"><option value="hi-IN">हिन्दी</option><option value="en-IN">English</option><option value="hinglish">Hinglish</option><option value="ur-IN">اردو</option><option value="bn-IN">বাংলা</option></select>
+<button class="menu" id="menu" aria-label="Menu">☰</button>
+</div>
 </header>
 
 <main>
+<section class="hero" id="start">
+<div class="wrap hero-grid">
+<div>
+<span class="eyebrow"><span class="dot"></span><span data-t="eyebrow">Free-first legal navigation</span></span>
+<h1 data-t="heroTitle">अपनी <span>समस्या</span> बताइए।<br>सही रास्ता पाइए।</h1>
+<p class="lead" data-t="heroLead"><strong>कानून की धारा जानना जरूरी नहीं.</strong> बस बताइए क्या हुआ. ILS आपकी बात सुनकर समस्या का type समझेगा, relevant official route दिखाएगा और फिर आपकी choice के अनुसार आगे का रास्ता देगा.</p>
+<div class="flowbar"><span class="active" data-t="flow1">① बताइए</span><span data-t="flow2">② समझिए</span><span data-t="flow3">③ Official route</span><span data-t="flow4">④ अपनी मदद चुनें</span></div>
 
-<section class="smart-hero">
-  <div class="smart-wrap smart-hero-grid">
-    <div class="smart-appear">
-      <span class="smart-kicker"><i class="smart-dot"></i> India-wide • आसान भाषा • Free-first</span>
-      <h1>अपनी <span class="gold">समस्या बताइए।</span><br>आगे क्या करना है, समझिए।</h1>
-      <p class="smart-hero-lead"><b>आपको कानून की धारा पता होना जरूरी नहीं है.</b> अपनी बात Hindi, Hinglish, text या voice में बताइए. ILS आपको legal information, official रास्ता, free first action और जरूरत होने पर professional help तक ले जाने के लिए बनाया गया है.</p>
+<div class="intake">
+<div class="intake-head"><b data-t="intakeTitle">🎙️ अपनी समस्या यहाँ बताइए</b><small data-t="intakeSmall">लिखें या बोलें • सरल भाषा</small></div>
+<div class="inputrow"><textarea id="problem" aria-label="Describe your problem" placeholder="जैसे: मेरे account से ₹10,000 online fraud में चले गए हैं…"></textarea><button class="voice" id="voice" aria-label="Voice input">🎙️</button></div>
+<div class="intake-actions"><button class="btn primary" id="understand" type="button" data-t="understand">➡️ मेरी मदद शुरू करें</button><button class="btn ghost" id="speak" type="button" data-t="listen">🔊 मुझे पढ़कर सुनाएं</button></div>
+<div class="chips"><button data-q="मेरे account से online fraud हुआ है">📱 Cyber Fraud</button><button data-q="मुझे police complaint FIR करनी है">🚔 Police / FIR</button><button data-q="मुझे consumer complaint करनी है">🛒 Consumer</button><button data-q="bank ने मेरी complaint solve नहीं की">🏦 Bank Complaint</button><button data-q="सरकारी विभाग की शिकायत करनी है">🏛️ Government Complaint</button><button data-q="मेरा traffic challan है">🚦 eChallan</button></div>
+<div class="hint" id="hint" aria-live="polite">✓ आपकी बात पहले problem category में समझी जाएगी. Sensitive details अभी देने की जरूरत नहीं.</div>
+</div>
+</div>
 
-      <div class="smart-intake" id="problem">
-        <div class="smart-intake-top">
-          <div class="smart-intake-title">🎙️ अपनी समस्या यहाँ बताइए</div>
-          <div class="smart-mini">एक बार में एक बात • सरल भाषा</div>
-        </div>
-        <div class="smart-input-row">
-          <textarea id="smartProblem" placeholder="जैसे: पुलिस FIR नहीं लिख रही है…&#10;या: मेरा cheque bounce हो गया…&#10;या: जमीन के कागज समझ नहीं आ रहे…"></textarea>
-          <button class="smart-voice" id="smartVoice" type="button" title="बोलकर बताएं" aria-label="बोलकर बताएं">🎙️</button>
-        </div>
-        <div class="smart-intake-actions">
-          <button class="smart-btn smart-btn-primary smart-btn-big" id="smartStart" type="button">➡️ मेरी मदद शुरू करें</button>
-          <button class="smart-btn smart-btn-ghost smart-btn-big" id="smartListen" type="button">🔊 सुनें</button>
-        </div>
-        <div class="smart-quick" aria-label="उदाहरण">
-          <button type="button" data-problem="पुलिस FIR नहीं लिख रही है">🚔 FIR / Police</button>
-          <button type="button" data-problem="मेरा cheque bounce हो गया है">💳 Cheque</button>
-          <button type="button" data-problem="मुझे property के कागज समझने हैं">🏠 Property</button>
-          <button type="button" data-problem="मुझे divorce या maintenance की जानकारी चाहिए">👨‍👩‍👧 Family</button>
-          <button type="button" data-problem="मेरे साथ online cyber fraud हुआ है">📱 Cyber Fraud</button>
-          <button type="button" data-problem="मुझे किसी government service का official रास्ता चाहिए">🏛️ Government</button>
-        </div>
-        <div class="smart-voice-note" id="smartVoiceNote">Voice button दबाकर बोल सकते हैं. आपके browser में voice support उपलब्ध न होने पर text भी इस्तेमाल कर सकते हैं.</div>
-      </div>
-
-      <div class="smart-scenario-wrap">
-        <div class="smart-scenario-label">आज लोग किस तरह की समस्या लेकर आते हैं?</div>
-        <div class="smart-scenario" id="smartScenario">🚔 <span>“Police complaint/FIR”</span> — पहले सही official रास्ता समझें.</div>
-      </div>
-    </div>
-
-    <div class="smart-hero-side smart-appear">
-      <div class="smart-orbit" aria-label="ILS service map">
-        <div class="smart-center">⚖️<div><strong>ILS</strong><small>एक जगह • कई रास्ते</small></div></div>
-        <div class="smart-float f1"><i>🔎</i><div>कानून खोजें<small>Acts • Sections • Cases</small></div></div>
-        <div class="smart-float f2"><i>🤖</i><div>AI से पूछें<small>सरल legal information</small></div></div>
-        <div class="smart-float f3"><i>🧰</i><div>Free Tools<small>काम की practical मदद</small></div></div>
-        <div class="smart-float f4"><i>👨‍⚖️</i><div>Professional Help<small>जरूरत पर आगे बढ़ें</small></div></div>
-      </div>
-      <div class="smart-hero-side-bottom">
-        <div class="smart-trust-pill">🆓 Free first action</div>
-        <div class="smart-trust-pill">🏛️ Official route अलग</div>
-        <div class="smart-trust-pill">🔐 Private work secure area में</div>
-      </div>
-    </div>
-  </div>
+<div class="visual" aria-label="ILS problem to solution map">
+<div class="center">⚖️<div><strong>ILS</strong><small>Problem → सही रास्ता</small></div></div>
+<div class="float f1">🎙️ बताइए<small>Voice / Text</small></div>
+<div class="float f2">🧠 समझिए<small>Problem route</small></div>
+<div class="float f3">🏛️ Official<small>Government portal</small></div>
+<div class="float f4">🆓 / 💼 Choice<small>Free • Guided • Associate</small></div>
+</div>
+</div>
 </section>
 
-<section class="smart-section" id="what">
-  <div class="smart-wrap">
-    <div class="smart-head">
-      <div><h2>आपको क्या करना है?</h2><p>कानून की language छोड़िए — अपनी situation के हिसाब से शुरू कीजिए.</p></div>
-    </div>
-    <div class="smart-problem-grid">
-      <a class="smart-problem" href="ai-assistant.html?q=police%20FIR%20complaint"><div class="big">🚔</div><b>Police / FIR</b><small>Complaint, arrest, bail</small><span class="smart-free-tag">पहले जानकारी</span></a>
-      <a class="smart-problem" href="ai-assistant.html?q=cyber%20fraud"><div class="big">📱</div><b>Cyber Fraud</b><small>Online fraud, account issue</small><span class="smart-free-tag">पहले जानकारी</span></a>
-      <a class="smart-problem" href="ai-assistant.html?q=cheque%20bounce"><div class="big">💳</div><b>Cheque / Money</b><small>Cheque, payment, recovery</small><span class="smart-free-tag">पहले जानकारी</span></a>
-      <a class="smart-problem" href="ai-assistant.html?q=property%20dispute"><div class="big">🏠</div><b>Property</b><small>Documents, dispute, notice</small><span class="smart-free-tag">पहले जानकारी</span></a>
-      <a class="smart-problem" href="ai-assistant.html?q=family%20divorce%20maintenance"><div class="big">👨‍👩‍👧</div><b>Family</b><small>Marriage, divorce, maintenance</small><span class="smart-free-tag">पहले जानकारी</span></a>
-      <a class="smart-problem" href="ai-assistant.html?q=consumer%20complaint"><div class="big">🛒</div><b>Consumer</b><small>Refund, defective product</small><span class="smart-free-tag">पहले जानकारी</span></a>
-    </div>
-  </div>
+<section class="section" id="problems">
+<div class="wrap"><div class="head"><div><h2 data-t="problemTitle">आपकी समस्या किस तरह की है?</h2><p data-t="problemSub">Card चुनें या ऊपर अपनी बात बोलें — legal section याद रखने की जरूरत नहीं.</p></div></div>
+<div class="problems">
+<button class="problem" data-q="मेरे account से online fraud हुआ है"><span class="ico">📱</span><b>Cyber / Online Fraud</b><small>Account, UPI, social media</small></button>
+<button class="problem" data-q="मुझे police complaint FIR करनी है"><span class="ico">🚔</span><b>Police / FIR</b><small>Complaint, crime, police issue</small></button>
+<button class="problem" data-q="मुझे consumer complaint करनी है"><span class="ico">🛒</span><b>Consumer</b><small>Refund, product, service</small></button>
+<button class="problem" data-q="bank ने मेरी complaint solve नहीं की"><span class="ico">🏦</span><b>Bank / RBI</b><small>Banking grievance</small></button>
+<button class="problem" data-q="सरकारी विभाग की शिकायत करनी है"><span class="ico">🏛️</span><b>Government</b><small>Department grievance</small></button>
+<button class="problem" data-q="मेरा traffic challan है"><span class="ico">🚦</span><b>Traffic / eChallan</b><small>Challan & status</small></button>
+</div></div>
 </section>
 
-<section class="smart-section alt" id="how">
-  <div class="smart-wrap">
-    <div class="smart-head">
-      <div><h2>ILS कैसे काम करता है?</h2><p>Simple flow: पहले समझिए → फिर free रास्ता → फिर जरूरत पर help.</p></div>
-    </div>
-    <div class="smart-flow">
-      <div class="smart-step"><div class="num">1</div><h3>बताइए</h3><p>अपनी समस्या text या voice में बताइए. आपको legal section जानने की जरूरत नहीं.</p></div>
-      <div class="smart-step"><div class="num">2</div><h3>समझिए</h3><p>समस्या को सरल legal information और relevant route से समझने में मदद.</p></div>
-      <div class="smart-step"><div class="num">3</div><h3>Official रास्ता</h3><p>जहाँ applicable हो, official authority/portal और process अलग दिखाया जाता है.</p></div>
-      <div class="smart-step"><div class="num">4</div><h3>Free action</h3><p>जहाँ genuinely free self-service available हो, पहले वही रास्ता.</p></div>
-      <div class="smart-step"><div class="num">5</div><h3>Help चुनें</h3><p>Guided/admin assistance या independent professional help केवल जरूरत और choice पर.</p></div>
-      <div class="smart-step"><div class="num">6</div><h3>Track करें</h3><p>आगे चलकर secure Case/Service Passport, documents, tasks और status workflow.</p></div>
-    </div>
-  </div>
+<section class="section alt" id="how">
+<div class="wrap"><div class="head"><div><h2 data-t="howTitle">Website वास्तव में कैसे काम करेगी?</h2><p data-t="howSub">यही ILS का main user journey है.</p></div></div>
+<div class="route">
+<div class="step"><div class="n">1</div><b>Problem बताइए</b><p>Hindi, English, Hinglish, Urdu या voice में.</p></div>
+<div class="step"><div class="n">2</div><b>ILS समझे</b><p>Problem को simple category और likely route में बदलें.</p></div>
+<div class="step"><div class="n">3</div><b>Official रास्ता</b><p>जहाँ verified official portal उपलब्ध है, वही दिखे.</p></div>
+<div class="step"><div class="n">4</div><b>Free self-service</b><p>आप चाहें तो खुद complaint/form भरें.</p></div>
+<div class="step"><div class="n">5</div><b>Guided / Associate</b><p>Paid help केवल आपकी choice पर.</p></div>
+<div class="step"><div class="n">6</div><b>आगे का काम</b><p>जरूरत पर ILS tools, professional help या tracking.</p></div>
+</div></div>
 </section>
 
-<section class="smart-section">
-  <div class="smart-wrap">
-    <div class="smart-head">
-      <div><h2>एक ही website पर ये काम</h2><p>हर user को एक ही रास्ते में सब कुछ करने की जरूरत नहीं — जो चाहिए, वही खोलिए.</p></div>
-    </div>
-    <div class="smart-choice-grid">
-      <a class="smart-choice" href="legal-search.html"><div class="smart-choice-icon">🔎</div><h3>कानून खोजें</h3><p>Acts, sections, legal topics और case-law research के लिए search.</p><span class="link">Search Law →</span></a>
-      <a class="smart-choice" href="judgments.html"><div class="smart-choice-icon">⚖️</div><h3>Judgments देखें</h3><p>Verified judgment records और उपलब्ध official-source/PDF links देखें.</p><span class="link">Open Judgments →</span></a>
-      <a class="smart-choice" href="ai-assistant.html"><div class="smart-choice-icon">🤖</div><h3>AI से पूछें</h3><p>General Indian-law information सरल सवालों में पूछें. AI legal outcome guarantee नहीं है.</p><span class="link">Ask ILS AI →</span></a>
-      <a class="smart-choice" href="tools.html"><div class="smart-choice-icon">🧰</div><h3>Free Tools</h3><p>Calculators, checklists और practical utilities से पहले खुद काम समझें.</p><span class="link">Open Tools →</span></a>
-      <a class="smart-choice" href="advocates.html"><div class="smart-choice-icon">👨‍⚖️</div><h3>Advocate खोजें</h3><p>Approved public professional profiles को practice area और location के हिसाब से देखें.</p><span class="link">Find Advocate →</span></a>
-      <a class="smart-choice" href="assistance.html"><div class="smart-choice-icon">🧑‍💼</div><h3>Legal Help लें</h3><p>अपनी requirement submit करें. Professional workflow अलग और clearly explained रहेगा.</p><span class="link">Get Help →</span></a>
-    </div>
-  </div>
+<section class="section" id="choices">
+<div class="wrap"><div class="head"><div><h2 data-t="choiceTitle">Official form मिलने के बाद आपकी 3 choices</h2><p data-t="choiceSub">ILS government portal नहीं है. Government filing और ILS assistance अलग दिखाई जाएगी.</p></div></div>
+<div class="choices">
+<div class="choice"><span class="num">OPTION 01</span><div class="icon">🆓</div><h3 data-t="c1">मैं खुद भरूँ — Free</h3><p>Official portal खुलेगा. ILS केवल limited, simple guidance देगा ताकि आप खुद form भर सकें.</p><ul><li>Official website पर खुद filing</li><li>Basic field guidance</li><li>Government filing fee जहाँ applicable हो, अलग</li></ul><button class="btn ghost go" id="freeChoice" type="button">Free self-service →</button><span class="tag free">NO ILS ASSISTANCE FEE</span></div>
+<div class="choice"><span class="num">OPTION 02</span><div class="icon">📝</div><h3 data-t="c2">मैं खुद भरूँ — Guided</h3><p>आप खुद official form भरेंगे; ILS आपको paid summarized checklist, document list और field-by-field guidance देगा.</p><ul><li>Problem summary</li><li>Required information checklist</li><li>Step-by-step guidance</li></ul><button class="btn primary go" id="guidedChoice" type="button">Guided help देखें →</button><span class="tag paid">PAID GUIDANCE</span></div>
+<div class="choice"><span class="num">OPTION 03</span><div class="icon">🧑‍💼</div><h3 data-t="c3">आप हमारे Associate से भरवाएँ</h3><p>यदि आप खुद form नहीं भरना चाहते, तो paid associate assistance request करें. Scope और fee पहले स्पष्ट होगी.</p><ul><li>Assisted information collection</li><li>Form-filling assistance</li><li>Scope/fee confirmation before work</li></ul><button class="btn blue go" id="associateChoice" type="button">Associate assistance →</button><span class="tag paid">PAID ASSISTANCE</span></div>
+</div></div>
 </section>
 
-<section class="smart-section alt">
-  <div class="smart-wrap">
-    <div class="smart-head">
-      <div><h2>Latest verified judgments</h2><p>Homepage पर live database से latest records दिखते हैं.</p></div><a href="judgments.html">सभी देखें →</a>
-    </div>
-    <div id="smartJudgments" class="smart-dynamic-grid"><div class="smart-loading">⏳ Latest judgments load हो रहे हैं…</div></div>
-  </div>
+<section class="section alt" id="official">
+<div class="wrap"><div class="head"><div><h2>Verified official routes</h2><p>ये external government portals हैं. ILS इन्हें replace नहीं करता.</p></div></div>
+<div class="official-grid">
+<a class="official" href="https://www.cybercrime.gov.in/Webform/Index.aspx" target="_blank" rel="noopener"><span class="ico">📱</span><div><b>National Cyber Crime Portal ↗</b><small>Online cyber crime / financial fraud reporting</small></div></a>
+<a class="official" href="https://consumerhelpline.gov.in/" target="_blank" rel="noopener"><span class="ico">🛒</span><div><b>National Consumer Helpline ↗</b><small>Consumer grievance registration and tracking</small></div></a>
+<a class="official" href="https://pgportal.gov.in/Home/LodgeGrievance" target="_blank" rel="noopener"><span class="ico">🏛️</span><div><b>CPGRAMS ↗</b><small>Central / State public grievance route</small></div></a>
+<a class="official" href="https://digitalpolice.gov.in/" target="_blank" rel="noopener"><span class="ico">🚔</span><div><b>Digital Police ↗</b><small>Crime-related citizen services and state police portals</small></div></a>
+<a class="official" href="https://cms.rbi.org.in/" target="_blank" rel="noopener"><span class="ico">🏦</span><div><b>RBI CMS ↗</b><small>Complaint route for RBI-regulated entities</small></div></a>
+<a class="official" href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener"><span class="ico">🚦</span><div><b>Parivahan eChallan ↗</b><small>Official traffic challan service</small></div></a>
+</div></div>
 </section>
 
-<section class="smart-section">
-  <div class="smart-wrap">
-    <div class="smart-head">
-      <div><h2>Featured professional network</h2><p>Approved public profiles से advocate खोजने का आसान रास्ता.</p></div><a href="advocates.html">सभी advocates →</a>
-    </div>
-    <div id="smartAdvocates" class="smart-dynamic-grid"><div class="smart-loading">⏳ Professional profiles load हो रहे हैं…</div></div>
-  </div>
+<section class="section">
+<div class="wrap"><div class="head"><div><h2>इसके अलावा ILS पर</h2><p>Problem journey के बाद बाकी services secondary discovery के रूप में available रहेंगी.</p></div></div>
+<div class="cards">
+<a class="card" href="legal-search.html"><span class="ico">🔎</span><b>Legal Search</b><small>Acts, sections और legal topics खोजें.</small></a>
+<a class="card" href="judgments.html"><span class="ico">⚖️</span><b>Judgments</b><small>Verified judgment records देखें.</small></a>
+<a class="card" href="tools.html"><span class="ico">🧰</span><b>208+ Legal & Practical Tools</b><small>Useful self-service utilities.</small></a>
+<a class="card" href="advocates.html"><span class="ico">👨‍⚖️</span><b>Find Advocate</b><small>Approved public professional profiles.</small></a>
+<a class="card" href="law-guide.html"><span class="ico">📚</span><b>Law Guide</b><small>Simple legal information.</small></a>
+<a class="card" href="ai-assistant.html"><span class="ico">🤖</span><b>Public Legal AI</b><small>General legal information; no outcome guarantee.</small></a>
+<a class="card" href="faq.html"><span class="ico">❓</span><b>FAQ</b><small>Common questions and answers.</small></a>
+<a class="card" href="customer-portal.html"><span class="ico">🔐</span><b>Client Portal</b><small>Private workflow when enabled.</small></a>
+</div></div>
 </section>
 
-<section class="smart-section alt">
-  <div class="smart-wrap">
-    <div class="smart-head">
-      <div><h2>Free legal resources</h2><p>पहले खुद समझें और जहाँ संभव हो self-service करें.</p></div><a href="tools.html">सभी tools →</a>
-    </div>
-    <div class="smart-tool-grid">
-      <a class="smart-tool" href="acts/"><span class="smart-tool-icon">📜</span><div><b>Indian Acts</b><small>Acts और sections</small></div></a>
-      <a class="smart-tool" href="law-guide.html"><span class="smart-tool-icon">📚</span><div><b>Law Guide</b><small>Simple legal topics</small></div></a>
-      <a class="smart-tool" href="tools.html"><span class="smart-tool-icon">🧮</span><div><b>Legal Tools</b><small>Calculators & checklists</small></div></a>
-      <a class="smart-tool" href="tools.html"><span class="smart-tool-icon">📊</span><div><b>Business / Accounting</b><small>Practical business tools</small></div></a>
-      <a class="smart-tool" href="faq.html"><span class="smart-tool-icon">❓</span><div><b>FAQ</b><small>Common questions</small></div></a>
-      <a class="smart-tool" href="ai-assistant.html"><span class="smart-tool-icon">🤖</span><div><b>ILS AI</b><small>Ask in simple language</small></div></a>
-      <a class="smart-tool" href="legal-search.html"><span class="smart-tool-icon">🔍</span><div><b>Legal Search</b><small>Find laws & topics</small></div></a>
-      <a class="smart-tool" href="assistance.html"><span class="smart-tool-icon">🆘</span><div><b>Get Legal Help</b><small>Requirement intake</small></div></a>
-    </div>
-  </div>
+<section class="section alt">
+<div class="wrap"><div class="head"><div><h2>Latest verified judgments</h2><p>Dynamic public records — homepage पर secondary information.</p></div><a href="judgments.html">View all →</a></div>
+<div id="judgments" class="dynamic"><div class="loading">Loading verified judgments…</div></div></div>
 </section>
 
-<section class="smart-section">
-  <div class="smart-wrap">
-    <div class="smart-head">
-      <div><h2>Official services भी अलग और साफ</h2><p>ILS government नहीं है. Official portal और ILS assistance/fee को अलग रखा जाता है.</p></div>
-    </div>
-    <div class="smart-official-grid">
-      <a class="smart-official" href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener noreferrer"><span class="smart-official-icon">🏛️</span><div><b>eCourts Case Search ↗</b><small>Official eCourts service — external government portal</small></div></a>
-      <a class="smart-official" href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener noreferrer"><span class="smart-official-icon">🚦</span><div><b>Parivahan eChallan ↗</b><small>Official challan service — external government portal</small></div></a>
-    </div>
-  </div>
+<section class="section">
+<div class="wrap"><div class="head"><div><h2>Featured advocates</h2><p>Professional network — user की problem journey के बाद.</p></div><a href="advocates.html">Find advocate →</a></div>
+<div id="advocates" class="dynamic"><div class="loading">Loading professional profiles…</div></div></div>
 </section>
-
-<section class="smart-section alt">
-  <div class="smart-wrap">
-    <div class="smart-head">
-      <div><h2>Free पहले. Paid help केवल जब आप चुनें.</h2><p>Project blueprint का free-first model homepage पर साफ दिखाई देगा.</p></div>
-    </div>
-    <div class="smart-free-pay">
-      <div>
-        <h3>🆓 पहले क्या मिलेगा?</h3>
-        <p>General legal information, verified public resources, official-route links और genuinely free self-service जहाँ उपलब्ध हो.</p>
-        <div class="smart-bullets">
-          <div class="smart-bullet"><i>✓</i><span>Problem समझने से शुरुआत</span></div>
-          <div class="smart-bullet"><i>✓</i><span>Official source/route को प्राथमिकता</span></div>
-          <div class="smart-bullet"><i>✓</i><span>Tools, Acts, judgments और AI information access</span></div>
-        </div>
-      </div>
-      <div>
-        <h3>💼 जरूरत होने पर क्या?</h3>
-        <p>Guided/admin assistance या independent professional legal work के लिए अलग workflow, scope और applicable fee स्पष्ट दिखेगी.</p>
-        <div class="smart-bullets">
-          <div class="smart-bullet"><i>✓</i><span>क्या खरीदा जा रहा है, पहले समझें</span></div>
-          <div class="smart-bullet"><i>✓</i><span>Government fee और ILS/professional fee अलग</span></div>
-          <div class="smart-bullet"><i>✓</i><span>Legal judgment/representation independent professional के पास</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="smart-final">
-  <div class="smart-wrap">
-    <div class="smart-final-box">
-      <div>
-        <h2>समझ नहीं आ रहा कहाँ से शुरू करें?</h2>
-        <p>बस अपनी problem लिखें या बोलें. आपको “Section कौन-सी है?” से शुरुआत नहीं करनी है.</p>
-      </div>
-      <div class="smart-intake-actions">
-        <a class="smart-btn smart-btn-primary smart-btn-big" href="#problem">🎙️ Problem बताएं</a>
-        <a class="smart-btn smart-btn-ghost smart-btn-big" href="assistance.html">🧑‍💼 Human Help</a>
-      </div>
-    </div>
-  </div>
-</section>
-
 </main>
 
-<div id="smartModal" class="smart-modal" aria-hidden="true">
-  <div class="smart-modal-box" role="dialog" aria-modal="true" aria-label="Advocate profile">
-    <button class="smart-close" id="smartClose" type="button" aria-label="Close">×</button>
-    <div id="smartModalContent"></div>
-  </div>
-</div>
-<div id="smartToast" class="smart-toast" role="status" aria-live="polite"></div>
+<div class="modal" id="modal" aria-hidden="true">
+<div class="modalbox">
+<button class="close" id="close" type="button">×</button>
+<div id="result"></div>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<footer class="smart-footer">
-  <div class="smart-wrap smart-footer-grid">
-    <div><strong>Instant Legal Services</strong><p>India-wide legal information, research, tools, official-route navigation and professional network coordination. General information only; professional legal work is independent.</p><p>© 2026 Instant Legal Services</p></div>
-    <div><strong>Explore</strong><a href="legal-search.html">Legal Search</a><a href="acts/">Acts</a><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="tools.html">Tools</a></div>
-    <div><strong>Help</strong><a href="ai-assistant.html">AI Assistant</a><a href="assistance.html">Legal Help</a><a href="advocates.html">Find Advocate</a><a href="faq.html">FAQ</a></div>
-    <div><strong>Portals</strong><a href="customer-portal.html">Client Login</a><a href="portal.html#advocate-portal">Advocate Portal</a><a href="admin.html">Admin</a></div>
-  </div>
-</footer>
+<footer class="footer"><div class="wrap footergrid">
+<div><strong>Instant Legal Services</strong><p>Problem-first legal navigation, public legal information, official-route discovery, tools and professional network coordination.</p><p>ILS is not a government portal. Government portals, fees and filing decisions remain with the relevant authority/user.</p></div>
+<div><strong>Explore</strong><a href="legal-search.html">Legal Search</a><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="tools.html">Tools</a></div>
+<div><strong>Help</strong><a href="assistance.html">Legal Assistance</a><a href="advocates.html">Find Advocate</a><a href="faq.html">FAQ</a></div>
+<div><strong>Portals</strong><a href="customer-portal.html">Client Login</a><a href="portal.html#advocate-portal">Advocate Portal</a><a href="admin.html">Admin</a></div>
+</div></footer>
 
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"LegalService","name":"Instant Legal Services","url":"https://instantlegalservices.in/","areaServed":"India","serviceType":["Legal Information","Legal Research","Legal Assistance","Advocate Network"]}
-</script>
-
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LegalService","name":"Instant Legal Services","url":"https://instantlegalservices.in/","areaServed":"India","serviceType":["Legal Information","Official Route Navigation","Legal Assistance","Advocate Network"]}</script>
 <script>
 (function(){
 "use strict";
+const $=id=>document.getElementById(id);
+const langText={
+"hi-IN":{eyebrow:"Free-first legal navigation",heroTitle:"अपनी <span>समस्या</span> बताइए।<br>सही रास्ता पाइए।",heroLead:"<strong>कानून की धारा जानना जरूरी नहीं.</strong> बस बताइए क्या हुआ. ILS आपकी बात सुनकर समस्या का type समझेगा, relevant official route दिखाएगा और फिर आपकी choice के अनुसार आगे का रास्ता देगा.",flow1:"① बताइए",flow2:"② समझिए",flow3:"③ Official route",flow4:"④ अपनी मदद चुनें",intakeTitle:"🎙️ अपनी समस्या यहाँ बताइए",intakeSmall:"लिखें या बोलें • सरल भाषा",understand:"➡️ मेरी मदद शुरू करें",listen:"🔊 मुझे पढ़कर सुनाएं",problemTitle:"आपकी समस्या किस तरह की है?",problemSub:"Card चुनें या ऊपर अपनी बात बोलें — legal section याद रखने की जरूरत नहीं.",howTitle:"Website वास्तव में कैसे काम करेगी?",howSub:"यही ILS का main user journey है.",choiceTitle:"Official form मिलने के बाद आपकी 3 choices",choiceSub:"ILS government portal नहीं है. Government filing और ILS assistance अलग दिखाई जाएगी.",c1:"मैं खुद भरूँ — Free",c2:"मैं खुद भरूँ — Guided",c3:"आप हमारे Associate से भरवाएँ",navProblem:"Problem बताएं",navHow:"कैसे काम करता है",navTools:"Free Tools",navAdv:"Advocate",navHelp:"Human Help"},
+"en-IN":{eyebrow:"Free-first legal navigation",heroTitle:"Tell us your <span>problem.</span><br>Get the right route.",heroLead:"<strong>You do not need to know the legal section.</strong> Tell us what happened. ILS understands the problem type, shows a relevant official route and then gives you choices for what to do next.",flow1:"① Tell us",flow2:"② Understand",flow3:"③ Official route",flow4:"④ Choose help",intakeTitle:"🎙️ Tell us your problem",intakeSmall:"Type or speak • simple language",understand:"➡️ Start helping me",listen:"🔊 Read this to me",problemTitle:"What kind of problem is this?",problemSub:"Choose a card or speak above — you do not need to remember a legal section.",howTitle:"How will the website actually work?",howSub:"This is the main ILS user journey.",choiceTitle:"Your 3 choices after the official route",choiceSub:"ILS is not a government portal. Government filing and ILS assistance remain separate.",c1:"I will fill it — Free",c2:"I will fill it — Guided",c3:"Have an Associate assist me",navProblem:"Tell problem",navHow:"How it works",navTools:"Free Tools",navAdv:"Advocate",navHelp:"Human Help"},
+"hinglish":{eyebrow:"Free-first legal navigation",heroTitle:"Apni <span>problem</span> batao.<br>Sahi raasta pao.",heroLead:"<strong>Legal section yaad hona zaroori nahi.</strong> Bas batao kya hua. ILS problem ko samajhkar relevant official route dikhayega, phir aapko next-step choices dega.",flow1:"① Batao",flow2:"② Samjho",flow3:"③ Official route",flow4:"④ Help choose karo",intakeTitle:"🎙️ Apni problem yahan batao",intakeSmall:"Type ya voice • simple language",understand:"➡️ Meri help start karo",listen:"🔊 Mujhe padhkar sunao",problemTitle:"Aapki problem kis type ki hai?",problemSub:"Card choose karo ya upar bolkar batao — legal section yaad nahi rakhni.",howTitle:"Website actually kaise kaam karegi?",howSub:"Ye ILS ka main user journey hai.",choiceTitle:"Official form ke baad 3 choices",choiceSub:"ILS government portal nahi hai. Government filing aur ILS assistance alag rahengi.",c1:"Main khud bharunga — Free",c2:"Main khud bharunga — Guided",c3:"Associate se bharwaunga",navProblem:"Problem batao",navHow:"Kaise kaam karega",navTools:"Free Tools",navAdv:"Advocate",navHelp:"Human Help"},
+"ur-IN":{eyebrow:"Free-first legal navigation",heroTitle:"اپنا <span>مسئلہ</span> بتائیں۔<br>صحیح راستہ پائیں۔",heroLead:"<strong>قانون کی دفعہ جاننا ضروری نہیں۔</strong> بس بتائیں کیا ہوا۔ ILS مسئلے کی قسم سمجھے گا، متعلقہ سرکاری راستہ دکھائے گا اور اگلا انتخاب آپ کو دے گا۔",flow1:"① بتائیں",flow2:"② سمجھیں",flow3:"③ سرکاری راستہ",flow4:"④ مدد منتخب کریں",intakeTitle:"🎙️ اپنا مسئلہ یہاں بتائیں",intakeSmall:"لکھیں یا بولیں • آسان زبان",understand:"➡️ میری مدد شروع کریں",listen:"🔊 مجھے پڑھ کر سنائیں",problemTitle:"آپ کا مسئلہ کس قسم کا ہے؟",problemSub:"کارڈ منتخب کریں یا اوپر بول کر بتائیں۔",howTitle:"ویب سائٹ کیسے کام کرے گی؟",howSub:"یہ ILS کا بنیادی سفر ہے۔",choiceTitle:"سرکاری راستے کے بعد 3 انتخاب",choiceSub:"ILS سرکاری پورٹل نہیں ہے۔ سرکاری فائلنگ اور ILS مدد الگ رہیں گی۔",c1:"میں خود بھروں — مفت",c2:"میں خود بھروں — رہنمائی",c3:"Associate سے مدد لوں",navProblem:"مسئلہ بتائیں",navHow:"کیسے کام کرے گا",navTools:"Free Tools",navAdv:"Advocate",navHelp:"Human Help"},
+"bn-IN":{eyebrow:"Free-first legal navigation",heroTitle:"আপনার <span>সমস্যা</span> বলুন।<br>সঠিক পথ পান।",heroLead:"<strong>আইনের ধারা জানা জরুরি নয়।</strong> কী হয়েছে বলুন। ILS সমস্যার ধরন বুঝে প্রাসঙ্গিক সরকারি পথ দেখাবে এবং পরের পছন্দ দেবে।",flow1:"① বলুন",flow2:"② বুঝুন",flow3:"③ সরকারি পথ",flow4:"④ সাহায্য বেছে নিন",intakeTitle:"🎙️ আপনার সমস্যা বলুন",intakeSmall:"লিখুন বা বলুন • সহজ ভাষা",understand:"➡️ সাহায্য শুরু করুন",listen:"🔊 পড়ে শোনান",problemTitle:"আপনার সমস্যা কী ধরনের?",problemSub:"কার্ড বেছে নিন বা উপরে বলে জানান।",howTitle:"ওয়েবসাইট কীভাবে কাজ করবে?",howSub:"এটাই ILS-এর মূল ব্যবহারকারীর পথ।",choiceTitle:"সরকারি পথের পর ৩টি পছন্দ",choiceSub:"ILS সরকারি পোর্টাল নয়। সরকারি ফাইলিং ও ILS সহায়তা আলাদা।",c1:"আমি নিজে করব — Free",c2:"আমি নিজে করব — Guided",c3:"Associate-এর সাহায্য নেব",navProblem:"সমস্যা বলুন",navHow:"কীভাবে কাজ করে",navTools:"Free Tools",navAdv:"Advocate",navHelp:"Human Help"}
+};
+const recognitionLang={ "hi-IN":"hi-IN","en-IN":"en-IN","hinglish":"en-IN","ur-IN":"ur-IN","bn-IN":"bn-IN" };
+let currentRoute=null;
 
-const esc = v => window.ILS?.esc ? ILS.esc(v) : String(v ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-const $ = id => document.getElementById(id);
-
-function toast(message){
-  const t=$("smartToast"); if(!t)return;
-  t.textContent=message; t.classList.add("show");
-  clearTimeout(window.__smartToastTimer);
-  window.__smartToastTimer=setTimeout(()=>t.classList.remove("show"),3200);
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(window.__t);window.__t=setTimeout(()=>t.classList.remove("show"),3000)}
+function setLang(v){
+ const d=langText[v]||langText["hi-IN"]; document.documentElement.lang=v==="hinglish"?"en-IN":v;
+ document.querySelectorAll("[data-t]").forEach(el=>{const k=el.getAttribute("data-t");if(d[k]!==undefined)el.innerHTML=d[k]});
+ $("problem").placeholder=v==="en-IN"?"Example: ₹10,000 was taken from my bank account online…":v==="hinglish"?"Example: Mere account se ₹10,000 online fraud mein chale gaye…":v==="ur-IN"?"مثال: میرے اکاؤنٹ سے ₹10000 آن لائن فراڈ میں چلے گئے…":v==="bn-IN"?"উদাহরণ: আমার অ্যাকাউন্ট থেকে ₹10000 অনলাইন প্রতারণায় চলে গেছে…":"जैसे: मेरे account से ₹10,000 online fraud में चले गए हैं…";
+ localStorage.setItem("ils-home-lang",v);
 }
-
-function performSearch(query){
-  const q=String(query||"").trim();
-  if(!q){ $("smartProblem")?.focus(); return; }
-  const n=q.toLowerCase().replace(/\s+/g," ").trim();
-  const sectionRules=[
-    [/^(section\s*)?115(\s+bns)?$/i,"sections/bns-115.html"],
-    [/^(bns\s*)?115$/i,"sections/bns-115.html"],
-    [/^(section\s*)?318(\s+bns)?$/i,"sections/bns-318.html"],
-    [/^(bns\s*)?318$/i,"sections/bns-318.html"],
-    [/^(section\s*)?173(\s+bnss)?$/i,"sections/bnss-173.html"],
-    [/^(bnss\s*)?173$/i,"sections/bnss-173.html"],
-    [/^(section\s*)?187(\s+bnss)?$/i,"sections/bnss-187.html"],
-    [/^(bnss\s*)?187$/i,"sections/bnss-187.html"],
-    [/^(section\s*)?479(\s+bnss)?$/i,"sections/bnss-479.html"],
-    [/^(bnss\s*)?479$/i,"sections/bnss-479.html"],
-    [/^(section\s*)?480(\s+bnss)?$/i,"sections/bnss-480.html"],
-    [/^(bnss\s*)?480$/i,"sections/bnss-480.html"],
-    [/^(section\s*)?482(\s+bnss)?$/i,"sections/bnss-482.html"],
-    [/^(bnss\s*)?482$/i,"sections/bnss-482.html"],
-    [/^(section\s*)?63(\s+bsa)?$/i,"sections/bsa-63.html"],
-    [/^(bsa\s*)?63$/i,"sections/bsa-63.html"],
-    [/^(section\s*)?138(\s+(ni|negotiable instruments)(\s+act)?)?$/i,"sections/ni-138.html"],
-    [/^(ni\s+act\s*)?138$/i,"sections/ni-138.html"],
-    [/^(section\s*)?13(\s+hma)?$/i,"sections/hma-13.html"],
-    [/^(hma\s*)?13$/i,"sections/hma-13.html"],
-    [/^(section\s*)?12(\s+(dv|domestic violence)(\s+act)?)?$/i,"sections/dv-12.html"],
-    [/^(dv\s+act\s*)?12$/i,"sections/dv-12.html"],
-    [/^(section\s*)?20(\s+ndps)?$/i,"sections/ndps-20.html"],
-    [/^(ndps\s*)?20$/i,"sections/ndps-20.html"],
-    [/^(section\s*)?37(\s+ndps)?$/i,"sections/ndps-37.html"],
-    [/^(ndps\s*)?37$/i,"sections/ndps-37.html"]
-  ];
-  for(const [rule,path] of sectionRules){if(rule.test(n)){location.href=path;return;}}
-  const acts=[
-    ["bns","acts/bns-2023.html"],["bnss","acts/bnss-2023.html"],["bsa","acts/bsa-2023.html"],
-    ["constitution","acts/constitution-of-india.html"],["constitution of india","acts/constitution-of-india.html"],
-    ["cpc","acts/code-of-civil-procedure-1908.html"],["civil procedure code","acts/code-of-civil-procedure-1908.html"],
-    ["hindu marriage act","acts/hindu-marriage-act-1955.html"],["domestic violence act","acts/domestic-violence-act-2005.html"],
-    ["negotiable instruments act","acts/negotiable-instruments-act-1881.html"],["ni act","acts/negotiable-instruments-act-1881.html"],
-    ["consumer protection act","acts/consumer-protection-act-2019.html"],["ndps act","acts/ndps-act-1985.html"]
-  ];
-  const exact=acts.find(([name])=>n===name); if(exact){location.href=exact[1];return;}
-  if(/\b(tool|tools|calculator|calculation|limitation|court fee|stamp duty|interest calculator|maintenance calculator|case timeline|case checklist|legal diagnostic)\b/i.test(n)){location.href="tools.html";return;}
-  if(/\b(advocate|lawyer|lawyers|vakil|counsel|find advocate|law firm)\b/i.test(n)){location.href="advocates.html?q="+encodeURIComponent(q);return;}
-  if(/\b(judgment|judgement|case law|case-law|supreme court|high court|verdict|precedent|citation|case)\b/i.test(n)){location.href="judgments.html?q="+encodeURIComponent(q);return;}
-  if(/\b(what|why|how|can|whether|is it|am i|my|police|arrest|bail|divorce|maintenance|property|cheque|cyber|criminal|civil|legal notice|rights|law|fir|fraud)\b/i.test(n)){location.href="ai-assistant.html?q="+encodeURIComponent(q);return;}
-  location.href="legal-search.html?q="+encodeURIComponent(q);
+function classify(q){
+ const n=q.toLowerCase();
+ const rules=[
+  {keys:["cyber","online fraud","upi","otp","hack","phishing","account se","फ्रॉड","साइबर","ऑनलाइन ठगी","ठगी","فراڈ"],title:"Cyber / Online Financial Fraud",desc:"Online/cyber complaint route",url:"https://www.cybercrime.gov.in/Webform/Index.aspx",official:"National Cyber Crime Reporting Portal",icon:"📱",emergency:"Financial cyber fraud: official portal also provides 1930 helpline.",local:"government/cyber-crime-reporting/"},
+  {keys:["consumer","refund","defective","product","service complaint","कंज्यूमर","रिफंड","उत्पाद","उपभोक्ता"],title:"Consumer Grievance",desc:"Consumer complaint / grievance route",url:"https://consumerhelpline.gov.in/",official:"National Consumer Helpline",icon:"🛒",local:"government/consumer-helpline/"},
+  {keys:["bank","rbi","loan","credit card","debit card","bank complaint","बैंक","आरबीआई","बैंक ने"],title:"Banking / RBI Complaint",desc:"Complaint route for RBI-regulated entities",url:"https://cms.rbi.org.in/",official:"RBI Complaint Management System",icon:"🏦",local:"government/rbi-complaint-management/"},
+  {keys:["government","govt","department","pension","सरकारी","सरकार","विभाग","शिकायत"],title:"Government Department Grievance",desc:"Public grievance route",url:"https://pgportal.gov.in/Home/LodgeGrievance",official:"CPGRAMS",icon:"🏛️",local:"government/cpgrams-grievance/"},
+  {keys:["police","fir","crime","arrest","police complaint","थाना","एफआईआर","पुलिस","جرم","پولیس"],title:"Police / Crime Complaint",desc:"Police citizen-services route",url:"https://digitalpolice.gov.in/",official:"Digital Police / State Police Citizen Portals",icon:"🚔",local:"government/"},
+  {keys:["challan","traffic","echallan","e challan","चालान","ट्रैफिक"],title:"Traffic / eChallan",desc:"Official traffic challan service",url:"https://echallan.parivahan.gov.in/index/accused-challan",official:"Parivahan eChallan",icon:"🚦",local:"government/echallan/"},
+  {keys:["gst","gst complaint","gst portal","जीएसटी"],title:"GST / Tax Portal Issue",desc:"GST official helpdesk / grievance route",url:"https://selfservice.gstsystem.in/",official:"GST Self Service / Helpdesk",icon:"🧾",local:"government/gst-portal/"},
+  {keys:["income tax","itr","income-tax","आयकर","इनकम टैक्स"],title:"Income Tax / e-Filing",desc:"Official income-tax services route",url:"https://www.incometax.gov.in/",official:"Income Tax e-Filing",icon:"💼",local:"government/income-tax-e-filing/"},
+  {keys:["epfo","pf","pension fund","epf","ईपीएफ","पीएफ"],title:"EPFO Grievance",desc:"Official EPFO grievance route",url:"https://epfigms.gov.in/",official:"EPFiGMS",icon:"🧑‍💼",local:"government/epfigms-grievance/"},
+  {keys:["court case","case status","ecourt","e court","अदालत","केस स्टेटस","कोर्ट"],title:"Court / Case Status",desc:"Official eCourts route",url:"https://services.ecourts.gov.in/ecourtindia_v6/",official:"eCourts",icon:"⚖️",local:"government/ecourts-case-status/"}
+ ];
+ return rules.find(r=>r.keys.some(k=>n.includes(k)))||{title:"Need a little more detail",desc:"ILS needs one more clue before choosing an official route.",url:null,official:"No route selected yet",icon:"🧭",local:"assistance.html"};
 }
-
-function startProblem(){
-  const q=$("smartProblem")?.value.trim()||"";
-  if(!q){toast("पहले अपनी problem लिखें या 🎙️ बोलकर बताएं.");$("smartProblem")?.focus();return;}
-  location.href="ai-assistant.html?q="+encodeURIComponent(q);
+function understand(q){
+ if(!q.trim()){toast("पहले अपनी problem लिखें या voice से बताएं.");$("problem").focus();return}
+ currentRoute=classify(q); renderResult(q,currentRoute);
 }
-
-function speakProblem(){
-  const text=$("smartProblem")?.value.trim();
-  if(!text){toast("पहले कोई text लिखें या voice से बताएं.");return;}
-  if(!("speechSynthesis" in window)){toast("इस browser में read-aloud उपलब्ध नहीं है.");return;}
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang=/[\u0900-\u097F]/.test(text)?"hi-IN":"en-IN";
-  u.rate=.92;
-  window.speechSynthesis.speak(u);
+function renderResult(q,r){
+ const no=r.url===null;
+ $("result").innerHTML='<div class="result"><div class="result-top"><div class="result-kicker">ILS '+(no?"NEEDS ONE MORE CLUE":"UNDERSTOOD YOUR PROBLEM")+'</div><h2>'+r.icon+" "+r.title+'</h2><p>'+r.desc+'. '+(no?"कृपया problem में department/service/country-level context बताएं.":"आपकी personal/sensitive details अभी ILS को देने की जरूरत नहीं है.")+'</p></div>'+
+ (no?'<div class="routecard"><strong>🧭 अभी official route select नहीं किया गया</strong><small>Problem में “bank”, “cyber fraud”, “consumer”, “police/FIR”, “government complaint”, “challan” जैसे words बताएं या Human Help चुनें.</small></div>':
+ '<div class="routecard"><strong>'+r.official+'</strong><small>Verified official route • '+r.desc+'</small><div class="intake-actions"><a class="btn primary" href="'+r.url+'" target="_blank" rel="noopener">🏛️ Official portal खोलें ↗</a><a class="btn ghost" href="'+r.local+'">ILS limited guidance</a></div></div>')+
+ '<div class="three">'+
+ '<button id="rFree" type="button"><b>🆓 1. मैं खुद भरूँ</b><small>Official portal पर खुद form/complaint भरें. ILS की limited basic guidance free रहेगी.</small><span class="tag free">FREE SELF-SERVICE</span></button>'+
+ '<button id="rGuided" type="button"><b>📝 2. मैं खुद भरूँ + Guided</b><small>Paid summarized guidance: problem summary, documents और field-by-field checklist.</small><span class="tag paid">PAID GUIDANCE</span></button>'+
+ '<button id="rAssociate" type="button"><b>🧑‍💼 3. Associate से भरवाएँ</b><small>Paid assistance request. Scope और applicable fee work शुरू होने से पहले स्पष्ट होगी.</small><span class="tag paid">PAID ASSISTANCE</span></button>'+
+ '</div></div>';
+ $("modal").classList.add("open");$("modal").setAttribute("aria-hidden","false");
+ $("rFree").onclick=()=>{if(r.url)window.open(r.url,"_blank","noopener");else toast("पहले problem में थोड़ा और detail दें.");};
+ $("rGuided").onclick=()=>location.href="assistance.html?mode=guided&problem="+encodeURIComponent(q)+"&route="+encodeURIComponent(r.title);
+ $("rAssociate").onclick=()=>location.href="assistance.html?mode=associate&problem="+encodeURIComponent(q)+"&route="+encodeURIComponent(r.title);
 }
-
-function voiceInput(){
-  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SpeechRecognition){toast("इस browser में voice input उपलब्ध नहीं है. Text से भी शुरू कर सकते हैं.");return;}
-  const r=new SpeechRecognition();
-  r.lang="hi-IN"; r.interimResults=false; r.maxAlternatives=1;
-  const btn=$("smartVoice"), note=$("smartVoiceNote");
-  btn?.classList.add("listening"); if(note)note.textContent="🎙️ सुन रहा हूँ… अपनी problem बोलिए.";
-  r.onresult=e=>{
-    const t=e.results?.[0]?.[0]?.transcript||"";
-    const box=$("smartProblem"); if(box){box.value=t;box.focus();}
-    if(note)note.textContent="✓ आपकी बात लिख दी गई है. अब “मेरी मदद शुरू करें” दबाएं.";
-  };
-  r.onerror=e=>{if(note)note.textContent="Voice input पूरा नहीं हो पाया. Text से भी शुरू कर सकते हैं.";toast("Voice input उपलब्ध नहीं हो पाया.");};
-  r.onend=()=>btn?.classList.remove("listening");
-  try{r.start();}catch(e){btn?.classList.remove("listening");toast("Voice input अभी शुरू नहीं हो सका.");}
+function speak(){
+ const text=$("problem").value.trim()||$("result")?.innerText||"अपनी समस्या बताइए। ILS सही रास्ता खोजने में मदद करेगा।";
+ if(!("speechSynthesis" in window)){toast("इस browser में read-aloud available नहीं है.");return}
+ speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=recognitionLang[$("language").value]||"hi-IN";u.rate=.92;speechSynthesis.speak(u);
 }
-
-function profileHTML(a){
-  if(window.ILS?.profileHTML){return ILS.profileHTML(a);}
-  return "<h2>"+esc(a?.advocate_name||"Advocate")+"</h2><p>"+esc(a?.practice_state||"India")+"</p>";
+function startVoice(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){toast("इस browser में voice input available नहीं है.");return}
+ const rec=new SR();rec.lang=recognitionLang[$("language").value]||"hi-IN";rec.interimResults=false;rec.maxAlternatives=1;
+ $("voice").classList.add("listening");$("hint").textContent="🎙️ सुन रहा हूँ… अपनी problem बताइए.";
+ rec.onresult=e=>{$("problem").value=e.results[0][0].transcript;$("hint").textContent="✓ आपकी बात मिल गई. अब “मेरी मदद शुरू करें” दबाएं.";};
+ rec.onerror=()=>{$("hint").textContent="Voice input नहीं मिला. आप type भी कर सकते हैं.";};
+ rec.onend=()=>$("voice").classList.remove("listening");rec.start();
 }
-function openProfile(a){
-  const modal=$("smartModal"), content=$("smartModalContent"); if(!modal||!content)return;
-  content.innerHTML=profileHTML(a); modal.classList.add("open"); modal.setAttribute("aria-hidden","false");
+function routeChoice(id){
+ const q=$("problem").value.trim();if(!q){toast("पहले problem बताइए.");$("problem").focus();return}
+ currentRoute=classify(q);
+ if(id==="free"){if(currentRoute.url)window.open(currentRoute.url,"_blank","noopener");else understand(q)}
+ if(id==="guided")location.href="assistance.html?mode=guided&problem="+encodeURIComponent(q)+"&route="+encodeURIComponent(currentRoute.title);
+ if(id==="associate")location.href="assistance.html?mode=associate&problem="+encodeURIComponent(q)+"&route="+encodeURIComponent(currentRoute.title);
 }
-function closeProfile(){const m=$("smartModal");if(m){m.classList.remove("open");m.setAttribute("aria-hidden","true");}}
-
-function renderJudgments(rows){
-  const c=$("smartJudgments"); if(!c)return;
-  const list=Array.isArray(rows)?rows:[];
-  if(!list.length){c.innerHTML='<div class="smart-empty">अभी verified judgments उपलब्ध नहीं हैं. Judgments page खोलकर फिर देखें.</div>';return;}
-  c.innerHTML=list.slice(0,4).map(j=>{
-    const official=j.official_source_url?'<a class="smart-btn smart-btn-ghost smart-small-btn" href="'+esc(j.official_source_url)+'" target="_blank" rel="noopener noreferrer">Official ↗</a>':"";
-    const pdf=j.source_pdf_url?'<a class="smart-btn smart-btn-primary smart-small-btn" href="'+esc(j.source_pdf_url)+'" target="_blank" rel="noopener noreferrer">PDF</a>':"";
-    const date=window.ILS?.formatDate?ILS.formatDate(j.judgment_date):(j.judgment_date||"");
-    return '<article class="smart-card smart-judgment-card smart-appear"><div class="smart-meta"><span class="smart-badge">'+esc(j.court_name||j.primary_category||"Judgment")+'</span><span>'+esc(date)+'</span></div><h3>'+esc(j.case_title||"Judgment")+'</h3><p>'+esc(j.short_summary||j.legal_principle||"Verified judgment record available.")+'</p><div class="smart-card-actions">'+official+pdf+'</div></article>';
-  }).join("");
+function loadDynamic(){
+ if(!window.ILS)return;
+ ILS.judgments({limit:4}).then(rows=>{
+  const el=$("judgments");if(!rows?.length){el.innerHTML='<div class="loading">Verified judgments अभी उपलब्ध नहीं हैं.</div>';return}
+  el.innerHTML=rows.map(x=>'<article class="dcard"><div class="meta"><span>'+ILS.esc(x.court||"Court")+'</span><span>'+ILS.esc(ILS.formatDate?.(x.judgment_date)||"")+'</span></div><h3>'+ILS.esc(x.title||x.case_title||"Judgment")+'</h3><p>'+ILS.esc(x.summary||x.short_summary||"Verified judgment record.")+'</p><a class="btn ghost" href="judgment.html?id='+encodeURIComponent(x.id||"")+'">View →</a></article>').join("");
+ }).catch(()=>{$("judgments").innerHTML='<div class="loading">Judgments could not be loaded right now.</div>'});
+ ILS.advocates({limit:4,featured:true}).then(rows=>{
+  const el=$("advocates");if(!rows?.length){el.innerHTML='<div class="loading">Featured profiles अभी उपलब्ध नहीं हैं.</div>';return}
+  el.innerHTML=rows.map(x=>'<article class="dcard"><div class="advtop"><img class="photo" src="'+ILS.esc(x.photo_url||x.profile_photo_url||"assets/ils-logo.jpg")+'" alt=""><div><div class="advname">'+ILS.esc(x.advocate_name||"Advocate")+'</div><div class="verified">✓ '+ILS.esc(x.verification_status||"Verified public profile")+'</div></div></div><p>'+ILS.esc(x.primary_practice_area||"Legal practice")+' • '+ILS.esc(x.practice_state||"India")+'</p><a class="btn ghost" href="advocates.html">View profile →</a></article>').join("");
+ }).catch(()=>{$("advocates").innerHTML='<div class="loading">Professional profiles could not be loaded right now.</div>'});
 }
-
-function renderAdvocates(rows){
-  const c=$("smartAdvocates"); if(!c)return;
-  const list=Array.isArray(rows)?rows:[];
-  if(!list.length){c.innerHTML='<div class="smart-empty">अभी approved public profiles उपलब्ध नहीं हैं. Find Advocate page खोलकर search करें.</div>';return;}
-  c.innerHTML=list.slice(0,4).map((a,i)=>{
-    const photo=a.photo_url||a.profile_photo_url||"";
-    const areas=window.ILS?.split?ILS.split(a.primary_practice_area).slice(0,3):[];
-    return '<article class="smart-card smart-adv-card smart-appear" data-smart-adv="'+i+'" tabindex="0" role="button"><div class="smart-adv-top">'+(photo?'<img class="smart-adv-photo" src="'+esc(photo)+'" alt="'+esc(a.advocate_name||"Advocate")+'" loading="lazy" onerror="this.style.display=\'none\'">':'<div class="smart-adv-photo" aria-hidden="true"></div>')+'<div><div class="smart-adv-name">'+esc(a.advocate_name||"Advocate")+'</div><div class="smart-verified">✓ Verified public profile</div><div class="smart-adv-meta">'+esc(a.practice_state||"India")+'</div></div></div><div class="smart-chips">'+(areas.length?areas.map(x=>'<span class="smart-chip">'+esc(x)+'</span>').join(""):'<span class="smart-chip">Professional Profile</span>')+'</div><div style="margin-top:14px;color:#ffe08a;font-size:10px;font-weight:900">Profile देखें →</div></article>';
-  }).join("");
-  c.querySelectorAll("[data-smart-adv]").forEach(el=>{
-    const i=Number(el.getAttribute("data-smart-adv"));
-    const open=()=>openProfile(list[i]);
-    el.addEventListener("click",open);
-    el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
-  });
-}
-
-async function loadDynamic(){
-  try{if(window.ILS?.init)await ILS.init();}catch(e){console.error("ILS home init",e);}
-  const jp=window.ILS?.judgments?ILS.judgments({limit:4}):Promise.reject(new Error("judgment service unavailable"));
-  const ap=window.ILS?.advocates?ILS.advocates({limit:4,featured:true}):Promise.reject(new Error("advocate service unavailable"));
-  const [j,a]=await Promise.allSettled([jp,ap]);
-  if(j.status==="fulfilled")renderJudgments(j.value);else{$("smartJudgments").innerHTML='<div class="smart-empty">Judgment service temporarily unavailable. <a href="judgments.html">Open Judgments →</a></div>';console.error(j.reason);}
-  if(a.status==="fulfilled")renderAdvocates(a.value);else{$("smartAdvocates").innerHTML='<div class="smart-empty">Professional profiles temporarily unavailable. <a href="advocates.html">Find Advocate →</a></div>';console.error(a.reason);}
-}
-
-const scenarios=[
-  "🚔 <span>“Police complaint / FIR”</span> — पहले सही official रास्ता समझें.",
-  "💳 <span>“Cheque bounce”</span> — facts और dates समझकर आगे बढ़ें.",
-  "🏠 <span>“Property के कागज”</span> — पहले documents और issue identify करें.",
-  "📱 <span>“Cyber fraud”</span> — जल्दी official reporting route देखें.",
-  "👨‍👩‍👧 <span>“Divorce / maintenance”</span> — simple language में options समझें.",
-  "🏛️ <span>“Government service”</span> — official portal और process अलग देखें."
-];
-let scenarioIndex=0;
-function rotateScenario(){
-  const el=$("smartScenario");if(!el)return;
-  el.classList.remove("smart-appear");void el.offsetWidth;
-  el.innerHTML=scenarios[scenarioIndex%scenarios.length];el.classList.add("smart-appear");scenarioIndex++;
-}
-
 document.addEventListener("DOMContentLoaded",()=>{
-  $("smartMenu")?.addEventListener("click",()=>$("smartNav")?.classList.toggle("open"));
-  document.querySelectorAll(".smart-navlinks a").forEach(a=>a.addEventListener("click",()=>$("smartNav")?.classList.remove("open")));
-  $("smartStart")?.addEventListener("click",startProblem);
-  $("smartListen")?.addEventListener("click",speakProblem);
-  $("smartVoice")?.addEventListener("click",voiceInput);
-  $("smartClose")?.addEventListener("click",closeProfile);
-  $("smartModal")?.addEventListener("click",e=>{if(e.target===$("smartModal"))closeProfile();});
-  document.addEventListener("keydown",e=>{if(e.key==="Escape")closeProfile();});
-  document.querySelectorAll("[data-problem]").forEach(b=>b.addEventListener("click",()=>{const box=$("smartProblem");if(box){box.value=b.getAttribute("data-problem")||"";box.focus();}}));
-  $("smartProblem")?.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")startProblem();});
-  rotateScenario();setInterval(rotateScenario,4200);
-  setTimeout(loadDynamic,0);
+ const saved=localStorage.getItem("ils-home-lang")||"hi-IN";$("language").value=saved;setLang(saved);
+ $("language").addEventListener("change",e=>setLang(e.target.value));
+ $("menu").onclick=()=>{$("navLinks").classList.toggle("open")};
+ $("voice").onclick=startVoice;$("speak").onclick=speak;
+ $("understand").onclick=()=>understand($("problem").value);
+ document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{$("problem").value=b.getAttribute("data-q");$("problem").scrollIntoView({behavior:"smooth",block:"center"});$("hint").textContent="✓ Problem selected. अब “मेरी मदद शुरू करें” दबाएं."});
+ $("close").onclick=()=>{$("modal").classList.remove("open");$("modal").setAttribute("aria-hidden","true")};
+ $("modal").addEventListener("click",e=>{if(e.target===$("modal"))$("close").click()});
+ $("freeChoice").onclick=()=>routeChoice("free");$("guidedChoice").onclick=()=>routeChoice("guided");$("associateChoice").onclick=()=>routeChoice("associate");
+ $("problem").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")understand(e.target.value)});
+ loadDynamic();
 });
-window.closeProfile=closeProfile;
-window.performSearch=performSearch;
 })();
 </script>
 </body>
