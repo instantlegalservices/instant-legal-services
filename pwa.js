@@ -96,7 +96,7 @@
 
             if (
               script &&
-              !script.includes("sw.js?v=13")
+              !script.includes("sw.js?v=14")
             ) {
               await registration.unregister();
             }
