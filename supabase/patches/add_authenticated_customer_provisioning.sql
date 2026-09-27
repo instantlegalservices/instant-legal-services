@@ -35,5 +35,5 @@ begin
   return jsonb_build_object('ok',true,'customer_profile_id',v_id,'user_id',v_user);
 end;$function$;
 
-revoke all on function public.provision_customer_profile(text,text,bigint) from public;
+revoke execute on function public.provision_customer_profile(text,text,bigint) from anon, authenticated, public;
 grant execute on function public.provision_customer_profile(text,text,bigint) to authenticated;
