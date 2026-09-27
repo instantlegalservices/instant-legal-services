@@ -279,7 +279,7 @@ function startVoice(){
 }
 function routeChoice(id){
  const q=$("problem").value.trim();if(!q){toast("पहले problem बताइए.");$("problem").focus();return}
- currentRoute=classify(q);
+ currentRoute=enrichGovernmentRoute(classify(q));
  if(id==="free"){if(currentRoute.url)window.open(currentRoute.url,"_blank","noopener");else understand(q)}
  if(id==="guided")location.href="assistance.html?mode=guided&problem="+encodeURIComponent(q)+"&route="+encodeURIComponent(currentRoute.title);
  if(id==="associate")location.href="assistance.html?mode=associate&problem="+encodeURIComponent(q)+"&route="+encodeURIComponent(currentRoute.title);
@@ -295,7 +295,8 @@ function loadDynamic(){
   el.innerHTML=rows.map(x=>'<article class="dcard"><div class="advtop"><img class="photo" src="'+ILS.esc(x.photo_url||x.profile_photo_url||"assets/ils-logo.jpg")+'" alt=""><div><div class="advname">'+ILS.esc(x.advocate_name||"Advocate")+'</div><div class="verified">✓ '+ILS.esc(x.verification_status||"Verified public profile")+'</div></div></div><p>'+ILS.esc(x.primary_practice_area||"Legal practice")+' • '+ILS.esc(x.practice_state||"India")+'</p><a class="btn ghost" href="advocates.html">View profile →</a></article>').join("");
  }).catch(()=>{$("advocates").innerHTML='<div class="loading">Professional profiles could not be loaded right now.</div>'});
 }
-document.addEventListener("DOMContentLoaded",()=>{\n loadGovernmentCatalog();
+document.addEventListener("DOMContentLoaded",()=>{
+ loadGovernmentCatalog();
  const saved=localStorage.getItem("ils-home-lang")||"hi-IN";$("language").value=saved;setLang(saved);
  $("language").addEventListener("change",e=>setLang(e.target.value));
  $("menu").onclick=()=>{$("navLinks").classList.toggle("open")};
