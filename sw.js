@@ -1,4 +1,4 @@
-const CACHE = "ils-v13-final";
+const CACHE = "ils-v14-professional-ui";
 
 const STATIC_ASSETS = [
   "./",
@@ -15,8 +15,8 @@ const STATIC_ASSETS = [
   "./faq.html",
   "./manifest.webmanifest",
   "./assets/ils.css",
-  "./assets/ils-core.js?v=12",
-  "./assets/pwa.js?v=12"
+  "./assets/ils-core.js?v=13",
+  "./assets/pwa.js?v=16"
 ];
 
 self.addEventListener("install", event => {
