@@ -616,6 +616,22 @@ Submit for Review
   <div><label for="ilsProfAddress">Address</label><input id="ilsProfAddress" maxlength="300" required></div>
 </div>
 
+<div class="ils-prof-section" id="ilsProfessionalPhotoSection">
+  <strong>Profile Photo</strong>
+  <div class="reg-photo-box" style="margin-top:10px">
+    <img id="ilsProfPhotoPreview" class="photo-preview" alt="Professional profile photo preview" style="display:none">
+    <div class="photo-actions">
+      <label class="btn btn-primary">📷 Take Photo
+        <input id="ilsProfCameraInput" type="file" accept="image/jpeg,image/png,image/webp" capture="user" hidden>
+      </label>
+      <label class="btn btn-ghost">🖼️ Choose from Gallery
+        <input id="ilsProfGalleryInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+      </label>
+    </div>
+    <div id="ilsProfPhotoStatus" class="photo-help">JPG, PNG or WebP · Maximum 2 MB · Optional</div>
+  </div>
+</div>
+
 <div id="ilsProfessionalCredentials" class="ils-prof-section">
   <strong id="ilsCredentialsTitle">Professional credentials</strong>
   <div class="form-row">
@@ -634,26 +650,26 @@ Submit for Review
   <label>Specialization / Services</label>
   <div class="ils-dropdown" id="professionalSpecializationDropdown">
     <button type="button" class="btn btn-ghost ils-dropdown-toggle" id="professionalSpecializationBtn" aria-expanded="false">
-      <span id="professionalSpecializationSummary">Click to choose services</span><span>⌄</span>
+      <span id="professionalSpecializationSummary">Click to choose services · select at least 3</span><span>⌄</span>
     </button>
     <div class="ils-dropdown-menu">
       <div class="practice-grid" id="professionalSpecializationGrid">
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Accounting & Audit"><label>Accounting &amp; Audit</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Taxation & Income Tax"><label>Taxation &amp; Income Tax</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="GST & Indirect Tax"><label>GST &amp; Indirect Tax</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Corporate / MCA Compliance"><label>Corporate / MCA Compliance</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Secretarial Compliance"><label>Secretarial Compliance</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Payroll & HR Compliance"><label>Payroll &amp; HR Compliance</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Recruitment & HR Operations"><label>Recruitment &amp; HR Operations</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Labour & Employment Compliance"><label>Labour &amp; Employment Compliance</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Bookkeeping & MIS"><label>Bookkeeping &amp; MIS</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="GST Registration / Returns"><label>GST Registration / Returns</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Business Documentation"><label>Business Documentation</label></div>
-        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Compliance Support"><label>Compliance Support</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec1" value="Accounting & Audit"><label for="profSpec1">Accounting &amp; Audit</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec2" value="Taxation & Income Tax"><label for="profSpec2">Taxation &amp; Income Tax</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec3" value="GST & Indirect Tax"><label for="profSpec3">GST &amp; Indirect Tax</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec4" value="Corporate / MCA Compliance"><label for="profSpec4">Corporate / MCA Compliance</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec5" value="Secretarial Compliance"><label for="profSpec5">Secretarial Compliance</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec6" value="Payroll & HR Compliance"><label for="profSpec6">Payroll &amp; HR Compliance</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec7" value="Recruitment & HR Operations"><label for="profSpec7">Recruitment &amp; HR Operations</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec8" value="Labour & Employment Compliance"><label for="profSpec8">Labour &amp; Employment Compliance</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec9" value="Bookkeeping & MIS"><label for="profSpec9">Bookkeeping &amp; MIS</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec10" value="GST Registration / Returns"><label for="profSpec10">GST Registration / Returns</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec11" value="Business Documentation"><label for="profSpec11">Business Documentation</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" id="profSpec12" value="Compliance Support"><label for="profSpec12">Compliance Support</label></div>
       </div>
     </div>
   </div>
-  <div id="ilsSpecializationHelp" class="ils-selection-summary">Choose the services relevant to your category.</div>
+  <div id="ilsSpecializationHelp" class="ils-selection-summary">Select at least 3 services relevant to your category.</div>
 </div>
 
 <div id="ilsAssistantSection" class="ils-prof-section ils-conditional">
@@ -1734,6 +1750,7 @@ function configureProfessionalRole(role){
   rolePanel.style.display="block";
   const assistant=role==="assistant_associate";
   $("ilsAssistantSection").classList.toggle("show",assistant);
+  $("ilsProfessionalPhotoSection").classList.toggle("show",true);
   $("ilsProfessionalCredentials").classList.toggle("show",!assistant);
   $("ilsProfAadhaar").required=assistant;
   $("ilsProfMembership").required=["ca","cs","gst_practitioner"].includes(role);
@@ -1753,6 +1770,24 @@ document.querySelectorAll("[data-prof-role]").forEach(btn=>btn.addEventListener(
   resetProfessionalFields();
   configureProfessionalRole(role);
 }));
+
+let selectedProfessionalPhoto=null;
+
+function bindProfessionalPhotoInput(inputId){
+  const input=$(inputId); if(!input)return;
+  input.addEventListener("change",()=>{
+    const file=input.files?.[0]; if(!file)return;
+    if(!/^image\/(jpeg|png|webp)$/.test(file.type)){input.value="";throw new Error("Profile photo must be JPG, PNG or WebP.");}
+    if(file.size>2*1024*1024){input.value="";throw new Error("Profile photo must be 2 MB or smaller.");}
+    selectedProfessionalPhoto=file;
+    const preview=$("ilsProfPhotoPreview");
+    preview.src=URL.createObjectURL(file);
+    preview.style.display="block";
+    $("ilsProfPhotoStatus").textContent=file.name+" · "+Math.round(file.size/1024)+" KB";
+  });
+}
+bindProfessionalPhotoInput("ilsProfCameraInput");
+bindProfessionalPhotoInput("ilsProfGalleryInput");
 
 $("ilsProfessionalForm").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -1776,11 +1811,24 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
     if(password!==password2)throw new Error("Passwords do not match.");
     if(!signature||signature.toLowerCase()!==name.toLowerCase())throw new Error("Undertaking signature must exactly match the full name.");
     if(!$("ilsProfConsent").checked)throw new Error("Please accept the ILS undertaking.");
-    if(!["assistant_associate"].includes(role)&&!specialization)throw new Error("Select at least one specialization/service.");
+    const minServices=["ca","cs","hr","gst_practitioner"].includes(role)?3:0;
+    if(minServices && selectedText(".profSpecOption").length<minServices)throw new Error("Please select at least 3 service / specialization options.");
+    if(role==="assistant_associate" && extraSkills && selectedText(".assistantSkillOption").length<1)throw new Error("Select a valid extra skill or leave extra skills blank.");
     if(["ca","cs"].includes(role)&&!$("ilsProfMembership").value.trim())throw new Error("Membership number is required for CA/CS.");
     if(role==="gst_practitioner"&&!$("ilsProfMembership").value.trim())throw new Error("GST Practitioner enrolment/registration number is required.");
     if(role==="assistant_associate"&&!/^[0-9]{12}$/.test($("ilsProfAadhaar").value.replace(/\s|-/g,"")))throw new Error("Enter a valid 12 digit Aadhaar number.");
     const client=ILS.ready(); if(!client)throw new Error("Service connection unavailable.");
+
+    let professionalPhotoPath="";
+    if(selectedProfessionalPhoto){
+      const ext=selectedProfessionalPhoto.type==="image/png"?"png":selectedProfessionalPhoto.type==="image/webp"?"webp":"jpg";
+      professionalPhotoPath=`professional-pending/${role}/${crypto.randomUUID()}.${ext}`;
+      const upload=await client.storage.from("advocate-photo-pending").upload(professionalPhotoPath,selectedProfessionalPhoto,{
+        cacheControl:"3600",upsert:false,contentType:selectedProfessionalPhoto.type
+      });
+      if(upload.error)throw new Error("Profile photo upload failed: "+upload.error.message);
+    }
+
     const r=await client.functions.invoke("register-professional",{body:{
       professional_type:role,
       full_name:name,email,mobile,
@@ -1796,12 +1844,17 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
       aadhaar_number:role==="assistant_associate"?$("ilsProfAadhaar").value.replace(/\s|-/g,""):"",
       password,
       undertaking_accepted:true,
-      undertaking_signed_name:signature
+      undertaking_signed_name:signature,
+      photo_storage_path:professionalPhotoPath
     }});
     if(r.error)throw new Error(r.error.message||"Registration service failed.");
     if(!r.data?.ok)throw new Error(r.data?.message||"Registration failed.");
     s.className="status ok";s.textContent=r.data.message||"Secure login created and registration submitted for review.";
     e.target.reset();
+    selectedProfessionalPhoto=null;
+    $("ilsProfPhotoPreview").src="";
+    $("ilsProfPhotoPreview").style.display="none";
+    $("ilsProfPhotoStatus").textContent="JPG, PNG or WebP · Maximum 2 MB · Optional";
     document.querySelectorAll(".profSpecOption,.assistantSkillOption").forEach(x=>x.checked=false);
     refreshSummary(".profSpecOption","professionalSpecializationSummary","Click to choose services");
     refreshSummary(".assistantSkillOption","assistantSkillsSummary","Click to choose extra skills");
