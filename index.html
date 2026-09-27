@@ -328,7 +328,7 @@ function loadDynamic(){
  }).catch(()=>{$("judgments").innerHTML='<div class="loading">Judgments could not be loaded right now.</div>'});
  ILS.advocates({limit:4,featured:true}).then(rows=>{
   const el=$("advocates");if(!rows?.length){el.innerHTML='<div class="loading">Featured profiles अभी उपलब्ध नहीं हैं.</div>';return}
-  el.innerHTML=rows.map(x=>'<article class="dcard"><div class="advtop"><img class="photo" src="'+ILS.esc(x.photo_url||x.profile_photo_url||"assets/ils-logo.jpg")+'" alt=""><div><div class="advname">'+ILS.esc(x.advocate_name||"Advocate")+'</div><div class="verified">✓ '+ILS.esc(x.verification_status||"Verified public profile")+'</div></div></div><p>'+ILS.esc(x.primary_practice_area||"Legal practice")+' • '+ILS.esc(x.practice_state||"India")+'</p><a class="btn ghost" href="advocates.html">View profile →</a></article>').join("");
+  el.innerHTML=rows.map(x=>'<article class="dcard"><div class="advtop"><img class="photo" src="'+ILS.esc(x.photo_url||x.profile_photo_url||"assets/ils-logo.jpg")+'" alt=""><div><div class="advname">'+ILS.esc(x.advocate_name||"Professional")+'</div><div class="verified">✓ '+ILS.esc(x.professional_type==="ca"?"Verified CA":x.professional_type==="cs"?"Verified CS":"Verified Advocate")+'</div></div></div><p>'+ILS.esc(x.primary_practice_area||"Legal practice")+' • '+ILS.esc(x.practice_state||"India")+'</p><a class="btn ghost" href="advocates.html">View profile →</a></article>').join("");
  }).catch(()=>{$("advocates").innerHTML='<div class="loading">Professional profiles could not be loaded right now.</div>'});
 }
 document.addEventListener("DOMContentLoaded",()=>{
