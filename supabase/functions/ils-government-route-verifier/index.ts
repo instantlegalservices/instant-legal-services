@@ -3,8 +3,15 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const corsHeaders = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "POST,OPTIONS",
+  "access-control-allow-headers": "authorization,x-client-info,apikey,content-type",
+  "access-control-max-age": "86400"
+};
+
 function json(body: unknown, status = 200, extra: Record<string,string> = {}) {
-  return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store", ...extra } });
+  return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store", ...corsHeaders, ...extra } });
 }
 function hostAllowed(host: string, domain: string) {
   const h = host.toLowerCase().replace(/^www\./, "");
@@ -19,7 +26,7 @@ async function verifyAdmin(admin: any, token: string) {
   return { ok: true as const, user_id: data.user.id };
 }
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "POST,OPTIONS", "access-control-allow-headers": "authorization,apikey,content-type" }});
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (req.method !== "POST") return json({ ok: false, error: "Method not allowed" }, 405);
   const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
   if (!token) return json({ ok: false, error: "Bearer token required" }, 401);
