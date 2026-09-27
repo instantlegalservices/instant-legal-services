@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ILS Client Account | Customer Login & Registration</title>
+<meta name="description" content="Create or access your Instant Legal Services client account.">
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{--bg:#07101c;--panel:#0d1827;--line:rgba(255,255,255,.1);--gold:#d7a84f;--text:#f6f8fb;--muted:#aab6c6}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 80% 0%,rgba(215,168,79,.12),transparent 32%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;padding:24px}
+main{width:min(620px,100%);margin:30px auto}.brand{font-weight:800;letter-spacing:.4px;margin-bottom:18px}.brand span{color:var(--gold)}
+.card{background:rgba(13,24,39,.94);border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 25px 70px rgba(0,0,0,.25)}
+h1{margin:0 0 8px;font-size:30px}h2{font-size:19px;margin:0 0 12px}.sub{color:var(--muted);line-height:1.6;margin-bottom:22px}
+.tabs{display:flex;gap:8px;margin-bottom:18px}.tab{flex:1;padding:11px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04);color:#fff;cursor:pointer}.tab.active{border-color:rgba(215,168,79,.6);color:#f1c56a}
+label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width:100%;padding:13px;border-radius:9px;border:1px solid #39485e;background:#08111e;color:#fff;font-size:15px}button.primary{width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;background:linear-gradient(135deg,#f1c56a,#d7a84f);color:#08111e;font-weight:800;cursor:pointer}.note{margin-top:12px;font-size:12px;color:#8796a8}.status{margin-top:16px;padding:12px;border-radius:10px;background:#111f31;border:1px solid var(--line);white-space:pre-wrap}.status.ok{border-color:#2e7d5b}.status.err{border-color:#934550}.hidden{display:none}.back{display:inline-block;margin-top:18px;color:#f1c56a;text-decoration:none;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<div class="brand">INSTANT <span>LEGAL SERVICES</span></div>
+<div class="card">
+<h1>Client Account</h1>
+<p class="sub">Create an authenticated customer account or sign in to continue. Your account is separate from the public lead/client-access link.</p>
+<div class="tabs"><button class="tab active" id="tabLogin" type="button">Sign in</button><button class="tab" id="tabSignup" type="button">Create account</button></div>
+
+<section id="loginPanel">
+<h2>Sign in</h2>
+<label for="loginEmail">Email</label><input id="loginEmail" type="email" autocomplete="username">
+<label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password">
+<button class="primary" id="loginBtn" type="button">Sign in</button>
+</section>
+
+<section id="signupPanel" class="hidden">
+<h2>Create customer account</h2>
+<label for="signupName">Full name</label><input id="signupName" type="text" autocomplete="name">
+<label for="signupMobile">Mobile (optional)</label><input id="signupMobile" type="tel" inputmode="numeric" autocomplete="tel">
+<label for="signupEmail">Email</label><input id="signupEmail" type="email" autocomplete="email">
+<label for="signupPassword">Password</label><input id="signupPassword" type="password" autocomplete="new-password">
+<label for="signupLead">Existing client requirement ID (optional)</label><input id="signupLead" type="number" min="1" inputmode="numeric">
+<button class="primary" id="signupBtn" type="button">Create account</button>
+<p class="note">Only enter a client requirement ID that ILS has already provided to you. Do not use someone else’s ID.</p>
+</section>
+
+<div id="status" class="status">Ready.</div>
+<a class="back" href="index.html">← Back to ILS</a>
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
+const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+function status(msg,ok=false){$("status").textContent=msg;$("status").className="status "+(ok?"ok":"err");}
+function show(mode){
+ const login=mode==="login"; $("loginPanel").classList.toggle("hidden",!login);$("signupPanel").classList.toggle("hidden",login);
+ $("tabLogin").classList.toggle("active",login);$("tabSignup").classList.toggle("active",!login);
+}
+$("tabLogin").onclick=()=>show("login");$("tabSignup").onclick=()=>show("signup");
+
+async function provision(user){
+ const name=$("signupName").value.trim(), mobile=$("signupMobile").value.trim(), lead=$("signupLead").value.trim();
+ const {data,error}=await sb.rpc("provision_customer_profile",{p_full_name:name,p_mobile:mobile||null,p_client_requirement_id:lead?Number(lead):null});
+ if(error||!data?.ok) throw new Error(error?.message||"CUSTOMER_PROFILE_PROVISION_FAILED");
+ return data;
+}
+$("signupBtn").onclick=async()=>{
+ $("signupBtn").disabled=true;
+ try{
+   const name=$("signupName").value.trim(),email=$("signupEmail").value.trim(),password=$("signupPassword").value;
+   if(!name||!email||!password) throw new Error("Full name, email and password are required.");
+   if(password.length<8) throw new Error("Password must be at least 8 characters.");
+   const {data,error}=await sb.auth.signUp({email,password});
+   if(error) throw error;
+   if(!data.user) throw new Error("AUTH_USER_NOT_CREATED");
+   if(data.session){
+     const p=await provision(data.user);
+     status("Customer account and profile provisioned successfully.\nProfile: "+p.customer_profile_id,true);
+     show("login");
+   }else{
+     status("Account created. Please complete the email confirmation if required, then sign in here.",true);
+   }
+ }catch(e){status(e.message||"Unable to create account.");}
+ finally{$("signupBtn").disabled=false;}
+};
+$("loginBtn").onclick=async()=>{
+ $("loginBtn").disabled=true;
+ try{
+   const email=$("loginEmail").value.trim(),password=$("loginPassword").value;
+   const {data,error}=await sb.auth.signInWithPassword({email,password});
+   if(error) throw error;
+   const {data:profile,error:pe}=await sb.from("customer_profiles").select("id,full_name,status").eq("user_id",data.user.id).maybeSingle();
+   if(pe) throw pe;
+   if(!profile){
+     const name=data.user.user_metadata?.full_name||data.user.email?.split("@")[0]||"ILS Customer";
+     const {data:p,error:e}=await sb.rpc("provision_customer_profile",{p_full_name:name,p_mobile:null,p_client_requirement_id:null});
+     if(e||!p?.ok) throw new Error(e?.message||"CUSTOMER_PROFILE_PROVISION_FAILED");
+     status("Signed in. Missing customer profile was safely provisioned.\nProfile: "+p.customer_profile_id,true);
+   }else{
+     if(profile.status!=="active") throw new Error("CUSTOMER_ACCOUNT_SUSPENDED");
+     status("Signed in successfully.\nWelcome, "+profile.full_name+".",true);
+   }
+ }catch(e){status(e.message||"Unable to sign in.");}
+ finally{$("loginBtn").disabled=false;}
+};
+</script>
+</body>
+</html>
