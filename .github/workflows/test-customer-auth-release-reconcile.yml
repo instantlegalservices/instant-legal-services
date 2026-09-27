@@ -2,10 +2,7 @@ name: ILS TEST Customer Auth Release Reconcile
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "ils-test-customer-auth.html"
-      - ".github/workflows/test-customer-auth-release-reconcile.yml"
+  # Manual execution only: genuine TEST credentials are intentionally not stored in source.
 
 jobs:
   customer-auth-release-reconcile:
@@ -34,6 +31,16 @@ jobs:
           sleep 2
           curl --fail --silent --show-error http://127.0.0.1:4173/ils-test-customer-auth.html > /dev/null
 
+      - name: Preflight TEST secrets
+        env:
+          TEST_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.ILS_TEST_CUSTOMER_PASSWORD }}
+          TEST_OPERATOR_JWT: ${{ secrets.ILS_TEST_OPERATOR_JWT }}
+        run: |
+          test -n "$TEST_EMAIL"
+          test -n "$TEST_PASSWORD"
+          test -n "$TEST_OPERATOR_JWT"
+
       - name: Run genuine TEST customer flow and reconcile gates
         env:
           TEST_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
@@ -43,108 +50,59 @@ jobs:
         run: |
           node <<'NODE'
           const { chromium } = require('playwright');
-
           const required = [
             ['ILS_TEST_CUSTOMER_EMAIL', process.env.TEST_EMAIL],
             ['ILS_TEST_CUSTOMER_PASSWORD', process.env.TEST_PASSWORD],
-            ['ILS_TEST_OPERATOR_JWT', process.env.TEST_OPERATOR_JWT],
-            ['ILS_TEST_SERVICE_ROLE_KEY', process.env.TEST_SERVICE_ROLE_KEY],
+            ['ILS_TEST_OPERATOR_JWT', process.env.TEST_OPERATOR_JWT]
           ];
           for (const [name, value] of required) {
             if (!value) throw new Error('Missing required GitHub Actions secret: ' + name);
           }
-
           const base = 'http://127.0.0.1:4173/ils-test-customer-auth.html';
           const supabaseUrl = process.env.TEST_SUPABASE_URL;
-
           (async () => {
             const browser = await chromium.launch({ headless: true });
             const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
             const failures = [];
-
             page.on('pageerror', e => failures.push('pageerror: ' + e.message));
-            page.on('console', m => {
-              if (m.type() === 'error') failures.push('console: ' + m.text());
-            });
-
+            page.on('console', m => { if (m.type() === 'error') failures.push('console: ' + m.text()); });
             await page.goto(base, { waitUntil: 'networkidle' });
-
             await page.locator('#email').fill(process.env.TEST_EMAIL);
             await page.locator('#password').fill(process.env.TEST_PASSWORD);
             await page.locator('#signin').click();
             await page.waitForTimeout(1000);
-
             const signInOutput = await page.locator('#out').innerText();
-            if (!signInOutput.includes('SIGNIN_OK') || !signInOutput.includes('session_present')) {
-              throw new Error('Normal TEST customer sign-in did not produce an authenticated session: ' + signInOutput);
-            }
-
+            if (!signInOutput.includes('SIGNIN_OK') || !signInOutput.includes('session_present')) throw new Error('Normal TEST customer sign-in failed: ' + signInOutput);
             await page.locator('#onboard').click();
             await page.waitForTimeout(1000);
             const onboardingOutput = await page.locator('#out').innerText();
-            if (!onboardingOutput.includes('ONBOARDING_OK')) {
-              throw new Error('Canonical customer onboarding failed: ' + onboardingOutput);
-            }
-
+            if (!onboardingOutput.includes('ONBOARDING_OK')) throw new Error('Canonical onboarding failed: ' + onboardingOutput);
             await page.locator('#e2e').click();
             await page.waitForTimeout(1000);
             const e2eOutput = await page.locator('#out').innerText();
-            if (!e2eOutput.includes('CUSTOMER_ACTION_E2E_RESULT')) {
-              throw new Error('Customer Action E2E did not return a result: ' + e2eOutput);
-            }
-            if (e2eOutput.includes('"http_status":401') || e2eOutput.includes('"http_status":403')) {
-              throw new Error('Customer Action E2E was rejected: ' + e2eOutput);
-            }
-
-            // The proof gate requires the protected TEST operator path.
-            const reconcile = await fetch(
-              supabaseUrl + '/functions/v1/ils-test-customer-action-genuine-e2e-gate-reconcile',
-              {
-                method: 'POST',
-                headers: {
-                  Authorization: 'Bearer ' + process.env.TEST_OPERATOR_JWT,
-                  'Content-Type': 'application/json'
-                },
-                body: '{}'
-              }
-            );
+            if (!e2eOutput.includes('CUSTOMER_ACTION_E2E_RESULT')) throw new Error('Customer Action E2E failed: ' + e2eOutput);
+            if (e2eOutput.includes('"http_status":401') || e2eOutput.includes('"http_status":403')) throw new Error('Customer Action E2E rejected: ' + e2eOutput);
+            const reconcile = await fetch(supabaseUrl + '/functions/v1/ils-test-customer-action-genuine-e2e-gate-reconcile', {
+              method: 'POST',
+              headers: { Authorization: 'Bearer ' + process.env.TEST_OPERATOR_JWT, 'Content-Type': 'application/json' },
+              body: '{}'
+            });
             const reconcileBody = await reconcile.json();
-            if (reconcile.status !== 200 || reconcileBody.gate !== 'GO') {
-              throw new Error('Genuine Customer Action proof-gate reconcile failed: ' + JSON.stringify(reconcileBody));
-            }
-
-            // Protected TEST operator bridge performs the canonical unified readiness refresh.
-            const unified = await fetch(
-              supabaseUrl + '/functions/v1/ils-test-customer-action-unified-gate-reconcile',
-              {
-                method: 'POST',
-                headers: {
-                  Authorization: 'Bearer ' + process.env.TEST_OPERATOR_JWT,
-                  'Content-Type': 'application/json'
-                },
-                body: '{}'
-              }
-            );
+            if (reconcile.status !== 200 || reconcileBody.gate !== 'GO') throw new Error('Genuine proof-gate reconcile failed: ' + JSON.stringify(reconcileBody));
+            const unified = await fetch(supabaseUrl + '/functions/v1/ils-test-customer-action-unified-gate-reconcile', {
+              method: 'POST',
+              headers: { Authorization: 'Bearer ' + process.env.TEST_OPERATOR_JWT, 'Content-Type': 'application/json' },
+              body: '{}'
+            });
             const unifiedBody = await unified.json();
-            if (unified.status !== 200 || unifiedBody.gate !== 'UNIFIED_GATE_EVALUATED') {
-              throw new Error('Unified Customer Action reconciliation failed: ' + JSON.stringify(unifiedBody));
-            }
-
+            if (unified.status !== 200 || unifiedBody.gate !== 'UNIFIED_GATE_EVALUATED') throw new Error('Unified reconcile failed: ' + JSON.stringify(unifiedBody));
             const row = unifiedBody.readiness;
-            if (!row || row.gate_status !== 'GO' || row.current_status !== 'VERIFIED' ||
-                Number(row.genuine_verified_evidence) < 1 || row.release_blocked !== false) {
-              throw new Error('Customer Action readiness remains blocked after canonical refresh: ' + JSON.stringify(row));
-            }
-
+            if (!row || row.gate_status !== 'GO' || row.current_status !== 'VERIFIED' || Number(row.genuine_verified_evidence) < 1 || row.release_blocked !== false) throw new Error('Customer Action readiness remains blocked: ' + JSON.stringify(row));
             if (failures.length) throw new Error(failures.join('\n'));
-
-            console.log('PASS: normal TEST customer auth, canonical onboarding, Customer Action E2E, proof-gate reconcile, and unified readiness refresh.');
+            console.log('PASS: genuine TEST customer auth, onboarding, Customer Action E2E, proof-gate and unified readiness.');
             console.log(JSON.stringify(row));
             await browser.close();
-          })().catch(async err => {
-            console.error(err);
-            process.exitCode = 1;
-          });
+          })().catch(err => { console.error(err); process.exitCode = 1; });
           NODE
 
       - name: Final TEST gate snapshot
@@ -156,17 +114,11 @@ jobs:
           test -n "$TEST_OPERATOR_JWT"
           node <<'NODE'
           (async () => {
-            const r = await fetch(
-              process.env.TEST_SUPABASE_URL + '/functions/v1/ils-test-customer-action-unified-gate-reconcile',
-              {
-                method: 'POST',
-                headers: {
-                  Authorization: 'Bearer ' + process.env.TEST_OPERATOR_JWT,
-                  'Content-Type': 'application/json'
-                },
-                body: '{}'
-              }
-            );
+            const r = await fetch(process.env.TEST_SUPABASE_URL + '/functions/v1/ils-test-customer-action-unified-gate-reconcile', {
+              method: 'POST',
+              headers: { Authorization: 'Bearer ' + process.env.TEST_OPERATOR_JWT, 'Content-Type': 'application/json' },
+              body: '{}'
+            });
             if (!r.ok) throw new Error('Gate snapshot failed: HTTP ' + r.status + ' ' + await r.text());
             console.log(await r.text());
           })().catch(err => { console.error(err); process.exitCode = 1; });
