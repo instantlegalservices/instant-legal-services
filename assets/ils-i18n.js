@@ -69,7 +69,7 @@ function mark(){
  });
 }
 function inject(){
- if(document.querySelector("[data-ils-lang-select]"))return;
+ if(document.querySelector("[data-ils-lang-select]")||document.querySelector("#language")){ const existing=document.querySelector("#language"); if(existing){existing.setAttribute("data-ils-lang-select",""); existing.addEventListener("change",e=>{localStorage.setItem("ils-language",e.target.value);localStorage.setItem("ils-home-lang",e.target.value);});} return;}
  const host=document.querySelector(".navbar");
  if(!host)return;
  const s=document.createElement("select");
@@ -81,7 +81,7 @@ function inject(){
  const nav=host.querySelector(".navlinks");
  if(nav)nav.appendChild(s);else host.appendChild(s);
 }
-function boot(){mark();inject();apply(get())}
+function boot(){mark();inject();apply(get()); const home=document.querySelector("#language"); if(home) home.value=get();}
 window.ILSLanguage={get,set,apply,LANGS};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
 })();
