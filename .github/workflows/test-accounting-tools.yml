@@ -70,13 +70,6 @@ jobs:
             // This is a no-payment contract test; it does not call Razorpay/UPI.
             // Establish the same tool workspace used by the real paid-tier UI before invoking the order helper.
             // This is test-context only; production code is unchanged.
-            await page.locator('.tool-card .tool-open[data-tool="profit-loss-tool"]').click();
-            await page.locator('#toolStatus').waitFor({ state: 'attached' });
-
-            const paidTierChecks = [
-              { slug: 'professional-report-guided', amount: 85 },
-              { slug: 'professional-report-professional', amount: 125 }
-            ];
             await page.evaluate(() => {
               window.__ilsOriginalReady = window.ILS.ready;
             });
@@ -96,6 +89,12 @@ jobs:
                 }
               });
             });
+            const paidTierChecks = [
+              { slug: 'professional-report-guided', amount: 85 },
+              { slug: 'professional-report-professional', amount: 125 }
+            ];
+            await page.locator('.tool-card .tool-open[data-tool="profit-loss-tool"]').click();
+            await page.locator('#toolStatus').waitFor({ state: 'attached' });
             try {
               for (const tier of paidTierChecks) {
                 const statusBox = page.locator('#toolStatus');
