@@ -169,6 +169,7 @@ async function pay(guided,rd){
   status("Creating your secure service order…");
   const paid=await ILSPayments.startPayment({serviceSlug,details,description:guided?"ILS Guided Official-Route Assistance":"ILS Digital Form Assistance — Basic"});
   status("Payment verified. Order: "+(paid.order_number||paid.order_id||"created")+"\n"+(guided?"Your guidance pack is unlocked below.":"Your assistance request has entered the service workflow."),"ok");
+  const passportLink=document.createElement("a");passportLink.className="btn btn-ghost";passportLink.href="passport.html?order_id="+encodeURIComponent(paid.order_id||"");passportLink.textContent="📘 Open My Action Passport";document.querySelector(".pay-actions").appendChild(passportLink);
   btn.classList.add("hide");document.getElementById("loginBtn").classList.add("hide");
   if(guided){
     document.getElementById("guidancePack").innerHTML="<h3>✓ Guidance pack unlocked</h3><ul>"+(rd?.items||["Confirm official route","Keep reference numbers and dates ready","Do not share OTP/password/PIN","Verify the official form before submitting"]).map(x=>"<li>"+x+"</li>").join("")+"</ul><p style='margin:10px 0 0;color:#b9c6d1;font-size:10px;line-height:1.5'>Use the official portal button above to complete the filing yourself. ILS does not submit government filings in this guided option.</p>";
