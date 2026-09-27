@@ -34,6 +34,11 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 .actions-cell{white-space:nowrap}
 @media(max-width:850px){.admin-grid{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr}.admin-top{align-items:flex-start;flex-direction:column}}
 @media(max-width:500px){.admin-grid{grid-template-columns:1fr}}
+.deletion-table-wrap{max-width:100%;overflow:auto}
+.deletion-table{min-width:860px}
+.deletion-table th:first-child,.deletion-table td:first-child{position:sticky;left:0;z-index:2;background:#111b2a}
+.deletion-table th:first-child{background:#0c1522}
+@media(max-width:700px){.deletion-table{min-width:760px}.deletion-table .actions-cell{white-space:normal;min-width:300px}.deletion-table .actions-cell .btnx{margin:2px}}
 
 /* ILS Advocate Management - restored from working CRM */
 .adv-panel{margin-top:20px}
@@ -117,15 +122,15 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
         <div class="revenue-stat"><small>Paid Revenue</small><strong id="revRevenuePaid">₹0</strong></div>
       </div>
       <div class="toolbar" style="margin-top:14px"><input id="revenueSearch" placeholder="Search order, service or tool…"><select id="revenueStatusFilter"><option value="">All order status</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option></select><select id="revenueServiceStatusFilter"><option value="">All service status</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="assigned">Assigned</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="refunded">Refunded</option></select><button class="btnx secondary" id="refreshRevenueBtn" type="button">↻ Refresh Revenue</button></div>
-      <div class="table-wrap"><table><thead><tr><th>Order</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
     </section>
 
 <section class="panel" id="adminDeletionPanel" style="border:1px solid #7f1d1d">
   <h2>⚠️ Permanent Data Deletion</h2>
   <p style="color:#fca5a5">Admin-only destructive controls. Deletion is permanent and cannot be undone. Client deletion removes the client matter, related service requests/orders/entitlements and stored matter documents. Order deletion removes the order and payment-proof records. Profile deletion removes the selected professional/advocate profile and its stored profile photo; the login account is removed only when no other profile still references it.</p>
   <div id="deletionMsg" class="msg"></div>
-  <div class="table-wrap" style="margin-top:14px">
-    <table class="adv-table">
+  <div class="table-wrap deletion-table-wrap" style="margin-top:14px">
+    <table class="adv-table deletion-table">
       <thead><tr><th>Client</th><th>Mobile</th><th>Location</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
       <tbody id="clientDeletionBody"><tr><td colspan="6" style="text-align:center">Loading clients…</td></tr></tbody>
     </table>
@@ -1257,7 +1262,7 @@ function renderRevenue(){
   const ss=($("revenueServiceStatusFilter")?.value||"").toLowerCase();
   const rows=revenueRows.filter(r=>{
     const os=String(r.status||"").toLowerCase(),vs=String(r.service_status||"").toLowerCase();
-    return (!st||os===st)&&(!ss||vs===ss)&&(!q||[r.order_number,r.service_name,r.service_slug,r.source_tool_name,r.source_tool_slug,r.status,r.service_status].filter(Boolean).join(" ").toLowerCase().includes(q));
+    return (!st||os===st)&&(!ss||vs===ss)&&(!q||[r.order_number,r.customer_name,r.customer_mobile,r.details?.name,r.service_name,r.service_slug,r.source_tool_name,r.source_tool_slug,r.status,r.service_status].filter(Boolean).join(" ").toLowerCase().includes(q));
   });
   body.innerHTML=rows.length?rows.map(r=>{
     const current=String(r.service_status||"pending").toLowerCase();
@@ -1265,6 +1270,7 @@ function renderRevenue(){
     const opts=options.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v==="in_progress"?"In Progress":v.replace("_"," ").replace(/\b\w/g,c=>c.toUpperCase())}</option>`).join("");
     return `<tr>
       <td><strong>${esc(r.order_number||r.id||"—")}</strong></td>
+      <td><strong>${esc(r.customer_name||r.details?.name||"—")}</strong>${r.customer_mobile?`<div class="queue-note">${esc(r.customer_mobile)}</div>`:""}</td>
       <td>${esc(r.service_name||r.service_slug||"—")}</td>
       <td>${esc(r.currency||"INR")} ₹${Number(r.total||0).toLocaleString("en-IN")}</td>
       <td class="revenue-status status-${esc(String(r.status||"").toLowerCase())}">${esc(r.status||"—")}</td>
@@ -1392,7 +1398,7 @@ function renderClientDeletionRows(){
     '<td>'+esc([r.district_city,r.state].filter(Boolean).join(", ")||"—")+'</td>'+
     '<td>'+esc(r.status||"New")+'</td>'+
     '<td>'+esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")+'</td>'+
-    '<td><button class="btnx" style="background:#7f1d1d;color:#fff" type="button" data-delete-client="'+esc(r.id)+'">Delete Complete Client Data</button></td>'+
+    '<td class="actions-cell"><button class="btnx secondary" type="button" data-client-manage="'+esc(r.id)+'">Manage / Assign</button> <button class="btnx" style="background:#7f1d1d;color:#fff" type="button" data-delete-client="'+esc(r.id)+'">Delete Complete Client Data</button></td>'+
     '</tr>').join(""):'<tr><td colspan="6" style="text-align:center">No clients found.</td></tr>';
 }
 
@@ -1466,6 +1472,10 @@ document.addEventListener("click",e=>{
   if(p)adminPermanentDelete(p.dataset.deleteProfile,p.dataset.deleteId);
   const o=e.target.closest("[data-delete-order]");
   if(o)adminPermanentDelete("order",o.dataset.deleteOrder);
+  const d=e.target.closest("[data-delete-client]");
+  if(d)adminPermanentDelete("client",d.dataset.deleteClient);
+  const m=e.target.closest("[data-client-manage]");
+  if(m)openLeadManager(m.dataset.clientManage);
 });
 $("adminAdvocateSearch").addEventListener("input",renderAdvocateRows);
 $("adminAdvocateStatus").addEventListener("change",renderAdvocateRows);
