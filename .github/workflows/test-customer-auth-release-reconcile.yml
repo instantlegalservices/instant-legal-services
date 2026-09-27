@@ -39,7 +39,6 @@ jobs:
           TEST_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
           TEST_PASSWORD: ${{ secrets.ILS_TEST_CUSTOMER_PASSWORD }}
           TEST_OPERATOR_JWT: ${{ secrets.ILS_TEST_OPERATOR_JWT }}
-          TEST_SERVICE_ROLE_KEY: ${{ secrets.ILS_TEST_SERVICE_ROLE_KEY }}
           TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
         run: |
           node <<'NODE'
@@ -114,42 +113,24 @@ jobs:
               throw new Error('Genuine Customer Action proof-gate reconcile failed: ' + JSON.stringify(reconcileBody));
             }
 
-            // Refresh the canonical unified readiness projection through the
-            // existing SECURITY DEFINER function. No ad-hoc table writes.
-            const refresh = await fetch(
-              supabaseUrl + '/rest/v1/rpc/ils_refresh_unified_e2e_critical_path_readiness',
+            // Protected TEST operator bridge performs the canonical unified readiness refresh.
+            const unified = await fetch(
+              supabaseUrl + '/functions/v1/ils-test-customer-action-unified-gate-reconcile',
               {
                 method: 'POST',
                 headers: {
-                  apikey: process.env.TEST_SERVICE_ROLE_KEY,
-                  Authorization: 'Bearer ' + process.env.TEST_SERVICE_ROLE_KEY,
+                  Authorization: 'Bearer ' + process.env.TEST_OPERATOR_JWT,
                   'Content-Type': 'application/json'
                 },
                 body: '{}'
               }
             );
-            const refreshText = await refresh.text();
-            if (!refresh.ok) {
-              throw new Error('Unified readiness refresh failed: HTTP ' + refresh.status + ' ' + refreshText);
+            const unifiedBody = await unified.json();
+            if (unified.status !== 200 || unifiedBody.gate !== 'UNIFIED_GATE_EVALUATED') {
+              throw new Error('Unified Customer Action reconciliation failed: ' + JSON.stringify(unifiedBody));
             }
 
-            // Verify the canonical projection after refresh.
-            const readiness = await fetch(
-              supabaseUrl +
-              '/rest/v1/ils_unified_e2e_critical_path_readiness?path_code=eq.CUSTOMER_ACTION_E2E&select=path_code,current_status,gate_status,genuine_verified_evidence,release_blocked,blocker_reason',
-              {
-                headers: {
-                  apikey: process.env.TEST_SERVICE_ROLE_KEY,
-                  Authorization: 'Bearer ' + process.env.TEST_SERVICE_ROLE_KEY
-                }
-              }
-            );
-            if (!readiness.ok) {
-              throw new Error('Unified readiness read failed: HTTP ' + readiness.status + ' ' + await readiness.text());
-            }
-
-            const rows = await readiness.json();
-            const row = rows[0];
+            const row = unifiedBody.readiness;
             if (!row || row.gate_status !== 'GO' || row.current_status !== 'VERIFIED' ||
                 Number(row.genuine_verified_evidence) < 1 || row.release_blocked !== false) {
               throw new Error('Customer Action readiness remains blocked after canonical refresh: ' + JSON.stringify(row));
@@ -169,20 +150,21 @@ jobs:
       - name: Final TEST gate snapshot
         if: always()
         env:
-          TEST_SERVICE_ROLE_KEY: ${{ secrets.ILS_TEST_SERVICE_ROLE_KEY }}
+          TEST_OPERATOR_JWT: ${{ secrets.ILS_TEST_OPERATOR_JWT }}
           TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
         run: |
-          test -n "$TEST_SERVICE_ROLE_KEY"
+          test -n "$TEST_OPERATOR_JWT"
           node <<'NODE'
           (async () => {
             const r = await fetch(
-              process.env.TEST_SUPABASE_URL +
-              '/rest/v1/ils_unified_e2e_critical_path_readiness?select=path_code,current_status,gate_status,release_blocked&order=sequence_no.asc',
+              process.env.TEST_SUPABASE_URL + '/functions/v1/ils-test-customer-action-unified-gate-reconcile',
               {
+                method: 'POST',
                 headers: {
-                  apikey: process.env.TEST_SERVICE_ROLE_KEY,
-                  Authorization: 'Bearer ' + process.env.TEST_SERVICE_ROLE_KEY
-                }
+                  Authorization: 'Bearer ' + process.env.TEST_OPERATOR_JWT,
+                  'Content-Type': 'application/json'
+                },
+                body: '{}'
               }
             );
             if (!r.ok) throw new Error('Gate snapshot failed: HTTP ' + r.status + ' ' + await r.text());
