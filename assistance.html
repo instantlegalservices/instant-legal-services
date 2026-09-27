@@ -15,6 +15,7 @@ if(window.supabase && !window.supabaseClient){window.supabaseClient=window.supab
 </script>
 <script src="assets/ils-core.js?v=20260927-connfix2" defer></script>
 <script src="assets/ils-payments.js?v=20260927-connfix2" defer></script>
+<script src="assets/ils-tools.js?v=20260927-qr1" defer></script>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c">
 <script src="assets/pwa.js" defer></script>
 <style>
@@ -62,6 +63,7 @@ if(window.supabase && !window.supabaseClient){window.supabaseClient=window.supab
 </div>
 <div id="loginNote" class="login-note">Paid options require an authenticated ILS customer session. The official free route remains available without paying ILS.</div>
 <div id="paymentStatus" class="statusline"></div>
+<div id="toolStatus" class="status" style="margin-top:12px"></div>
 </div>
 </div></div></div></section>
 
@@ -151,8 +153,7 @@ function showMode(){
 async function pay(guided,rd){
  const btn=document.getElementById("payBtn");btn.disabled=true;
  try{
-  if(!window.ILSPayments)throw new Error("Payment module is not ready. Please try again.");
-  await ILSPayments.ensureLogin();
+  if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
   if(!guided){
    const mobile=document.getElementById("assistMobile").value.trim();
    if(!/^[0-9]{10}$/.test(mobile))throw new Error("Enter a valid 10-digit mobile number.");
@@ -172,18 +173,52 @@ async function pay(guided,rd){
   };
   const serviceSlug=guided?"official-route-guidance":"digital-form-assistance";
   status("Creating your secure service order…");
-  const paid=await ILSPayments.startPayment({serviceSlug,details,description:guided?"ILS Guided Official-Route Assistance":"ILS Digital Form Assistance — Basic"});
-  status("Payment verified. Order: "+(paid.order_number||paid.order_id||"created")+"\n"+(guided?"Your guidance pack is unlocked below.":"Your assistance request has entered the service workflow."),"ok");
-  const passportLink=document.createElement("a");passportLink.className="btn btn-ghost";passportLink.href="passport.html?order_id="+encodeURIComponent(paid.order_id||"");passportLink.textContent="📘 Open My Action Passport";document.querySelector(".pay-actions").appendChild(passportLink);
-  btn.classList.add("hide");document.getElementById("loginBtn").classList.add("hide");
+
+  document.getElementById("paymentStatus").className="status";
+  document.getElementById("paymentStatus").textContent="";
+  document.getElementById("paymentStatus").style.display="none";
+
+  const paid=await new Promise((resolve,reject)=>{
+   let settled=false;
+   const onPaid=(result)=>{
+    if(settled)return;
+    settled=true;
+    resolve(result||{ok:true});
+   };
+   try{
+    const result=window.ILS_TOOLS.createOrder(
+      serviceSlug,
+      details,
+      null,
+      onPaid,
+      {forceQr:true}
+    );
+    if(result?.then)result.catch(err=>{if(!settled)reject(err);});
+   }catch(err){reject(err);}
+   setTimeout(()=>{
+    if(!settled && !document.getElementById("toolStatus")?.innerText?.trim()){
+     reject(new Error("Unable to open the payment screen. Please try again."));
+    }
+   },5000);
+  });
+
+  const orderNumber=paid.order_number||"created";
+  status("Payment verified. Order: "+orderNumber+"\n"+(guided?"Your guidance pack is unlocked below.":"Your assistance request has entered the service workflow."),"ok");
+  const passportLink=document.createElement("a");
+  passportLink.className="btn btn-ghost";
+  passportLink.href="passport.html?order_id="+encodeURIComponent(paid.order_id||"");
+  passportLink.textContent="📘 Open My Action Passport";
+  document.querySelector(".pay-actions").appendChild(passportLink);
+  btn.classList.add("hide");
+  document.getElementById("loginBtn").classList.add("hide");
   if(guided){
     document.getElementById("guidancePack").innerHTML="<h3>✓ Guidance pack unlocked</h3><ul>"+(rd?.items||["Confirm official route","Keep reference numbers and dates ready","Do not share OTP/password/PIN","Verify the official form before submitting"]).map(x=>"<li>"+x+"</li>").join("")+"</ul><p style='margin:10px 0 0;color:#b9c6d1;font-size:10px;line-height:1.5'>Use the official portal button above to complete the filing yourself. ILS does not submit government filings in this guided option.</p>";
-  } else {
+  }else{
     document.getElementById("guidancePack").innerHTML="<h3>✓ Assistance request created</h3><p style='margin:0;color:#b9c6d1;font-size:10px;line-height:1.5'>Keep your order number. The request contains only the scope you supplied for digital/form assistance. An associate workflow can continue from the paid service request.</p>";
   }
  }catch(e){
   const msg=String(e?.message||e);
-  status(msg.includes("Please login")?"Please sign in or create your ILS customer account, then return here to continue.":msg,"err");
+  status(msg.includes("Please sign in")||msg.includes("Please login")?"Please sign in or create your ILS customer account, then return here to continue.":msg,"err");
  }finally{btn.disabled=false;}
 }
 document.addEventListener("DOMContentLoaded",()=>{
