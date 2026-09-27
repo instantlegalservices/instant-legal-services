@@ -75,8 +75,9 @@ jobs:
               'profit-loss-tool'
             ];
 
-            if (window.ILS_TOOL_CATALOG.length !== 208) {
-              throw new Error('Authoritative tool catalog count changed: ' + window.ILS_TOOL_CATALOG.length);
+            const runtimeCount = await page.evaluate(() => Array.isArray(window.ILS_TOOL_CATALOG) ? window.ILS_TOOL_CATALOG.length : -1);
+            if (runtimeCount !== 208) {
+              throw new Error('Authoritative tool catalog count changed: ' + runtimeCount);
             }
 
             for (const slug of expectedSlugs) {
