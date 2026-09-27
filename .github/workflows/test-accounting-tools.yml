@@ -138,7 +138,7 @@ jobs:
                 },
                 rpc: async (name, args) => {
                   if (name === 'ils_create_service_order') {
-                    if (args.p_service_slug !== 'professional-report-basic') {
+                    if (args.p_service_slug !== 'accounting-print-basic') {
                       throw new Error('Wrong accounting service slug: ' + args.p_service_slug);
                     }
                     return {
@@ -212,7 +212,7 @@ jobs:
               window.ILS.ready = () => fakeSupabase;
             });
 
-            const exportButton = page.locator('.tool-export-buy[data-export-service="professional-report-basic"]').first();
+            const exportButton = page.locator('.tool-export-buy[data-export-service="accounting-print-basic"]').first();
             await exportButton.click();
 
             const payNow = page.locator('#payNowBtn');

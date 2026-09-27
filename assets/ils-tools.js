@@ -540,7 +540,7 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
     micro19: { slug:'tool-output-micro-19', name:'Guided Output', price:19, desc:'Result + guided explanation + print / PDF' },
     micro29: { slug:'tool-output-micro-29', name:'Detailed Output', price:29, desc:'Detailed result + assumptions + print / PDF' },
     micro39: { slug:'tool-output-micro-39', name:'Professional Output', price:39, desc:'Professional result pack + print / PDF' },
-    basic: { slug:'professional-report-basic', name:'Basic Report', price:45, desc:'Calculation summary + print / Save as PDF' },
+    basic: { slug:'accounting-print-basic', name:'Basic Report', price:45, desc:'Calculation summary + print / Save as PDF' },
     guided: { slug:'professional-report-guided', name:'Guided Report', price:85, desc:'Summary + step-by-step explanation + assumptions' },
     professional: { slug:'professional-report-professional', name:'Professional Report', price:125, desc:'Detailed inputs + formulas + guidance + print / PDF' }
   };
