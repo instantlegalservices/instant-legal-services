@@ -1861,6 +1861,53 @@ $("galleryInput").addEventListener(
 
 
 
+/* Professional role chooser and separate non-advocate submission */
+const roleModal=$("ilsRoleModal"), rolePanel=$("ilsProfessionalPanel");
+const roleMeta={
+ ca:["Chartered Accountant (CA)","CA membership details will be reviewed before any public profile is enabled.","CA profiles are never public by default; they require credential verification, approval and explicit public_profile enablement."],
+ cs:["Company Secretary (CS)","CS membership / practice details will be reviewed before any public profile is enabled.","CS profiles are never public by default; they require credential verification, approval and explicit public_profile enablement."],
+ hr:["HR Professional","Internal ILS network request.","HR profiles remain internal and never appear on the public homepage."],
+ gst_practitioner:["GST Practitioner","Internal ILS support-network request.","GST Practitioner profiles remain internal and never appear on the public homepage."],
+ assistant_associate:["Assistant / Associate","Internal ILS support-network request.","Assistant / Associate profiles remain internal and never appear on the public homepage."]
+};
+$("ilsChooseRole").addEventListener("click",()=>{roleModal.style.display="flex"});
+$("ilsRoleClose").addEventListener("click",()=>{roleModal.style.display="none"});
+roleModal.addEventListener("click",e=>{if(e.target===roleModal)roleModal.style.display="none"});
+document.querySelectorAll("[data-prof-role]").forEach(btn=>btn.addEventListener("click",()=>{
+ const role=btn.dataset.profRole; roleModal.style.display="none";
+ if(role==="advocate"){rolePanel.style.display="none";$("regForm").style.display="";$("ilsCurrentRole").textContent="Advocate";return}
+ const meta=roleMeta[role]; $("regForm").style.display="none"; rolePanel.style.display="block";
+ $("ilsCurrentRole").textContent=meta[0]; $("ilsProfessionalType").value=role;
+ $("ilsProfessionalTitle").textContent="Join as "+meta[0]; $("ilsProfessionalNote").textContent=meta[1];
+ $("ilsPublicRule").textContent=meta[2]; $("ilsProfMembership").required=(role==="ca"||role==="cs");
+}));
+
+$("ilsProfessionalForm").addEventListener("submit",async e=>{
+ e.preventDefault(); const s=$("ilsProfStatus"),b=$("ilsProfSubmit"); s.className="status";s.style.display="block";s.textContent="Submitting…";b.disabled=true;
+ try{
+  const role=$("ilsProfessionalType").value, name=$("ilsProfName").value.trim(), email=$("ilsProfEmail").value.trim().toLowerCase(), mobile=$("ilsProfMobile").value.trim();
+  if(!role||!roleMeta[role])throw new Error("Select a professional category.");
+  if(!name||!email||!mobile)throw new Error("Name, email and mobile are required.");
+  if(!/^[0-9]{10}$/.test(mobile))throw new Error("Enter a valid 10-digit mobile number.");
+  if(!/^\S+@\S+\.\S+$/.test(email))throw new Error("Enter a valid email address.");
+  if((role==="ca"||role==="cs")&&!$("ilsProfMembership").value.trim())throw new Error("Membership / registration number is required for CA/CS verification.");
+  if(!$("ilsProfConsent").checked)throw new Error("Please accept the verification declaration.");
+  const client=ILS.ready(); if(!client)throw new Error("Service connection unavailable.");
+  const r=await client.functions.invoke("register-professional",{body:{
+   professional_type:role,full_name:name,email,mobile,
+   membership_number:$("ilsProfMembership").value.trim(),
+   certificate_of_practice:$("ilsProfCop").value,
+   state:$("ilsProfState").value.trim(),city:$("ilsProfCity").value.trim(),
+   specialization:$("ilsProfSpecialization").value.trim(),
+   years_of_experience:$("ilsProfYears").value,
+   firm_or_organization:$("ilsProfFirm").value.trim()
+  }});
+  if(r.error)throw new Error(r.error.message||"Registration service failed.");
+  if(!r.data?.ok)throw new Error(r.data?.message||"Registration failed.");
+  s.className="status ok";s.textContent=r.data.message||"Registration submitted for review.";e.target.reset();
+ }catch(err){s.className="status err";s.textContent=err?.message||"Registration service unavailable."}finally{b.disabled=false}
+});
+
 /* =====================================================
    FORM SUBMISSION
 ===================================================== */
