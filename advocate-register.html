@@ -217,6 +217,24 @@ Create your professional advocate profile. Your information will be reviewed bef
 <div class="wrap">
 
 
+<div id="ilsRoleChooser" style="margin:0 0 16px;padding:14px;border:1px solid rgba(244,195,91,.25);border-radius:16px;background:rgba(244,195,91,.06)">
+<strong>Professional type: <span id="ilsCurrentRole">Advocate</span></strong>
+<button type="button" class="btn btn-ghost btn-small" id="ilsChooseRole" style="margin-left:10px">Choose / change</button>
+<small style="display:block;opacity:.72;margin-top:6px">Existing Advocate registration remains unchanged. CA/CS require verification before public listing; HR, GST Practitioner and Assistant/Associate remain internal.</small>
+</div>
+<div id="ilsRoleModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:14px">
+<div style="width:min(680px,100%);max-height:90vh;overflow:auto;background:#0a1a2b;border:1px solid rgba(244,195,91,.28);border-radius:22px;padding:20px">
+<button type="button" id="ilsRoleClose" style="float:right;border:0;background:rgba(255,255,255,.07);color:#fff;border-radius:50%;width:36px;height:36px;font-size:20px">×</button>
+<h2 style="margin-top:0">Join ILS Professional Network</h2>
+<p style="opacity:.72;line-height:1.5">Select your professional category.</p>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+<button type="button" data-prof-role="advocate" class="btn btn-ghost">⚖️ Advocate</button>
+<button type="button" data-prof-role="ca" class="btn btn-ghost">📊 Chartered Accountant (CA)</button>
+<button type="button" data-prof-role="cs" class="btn btn-ghost">🏢 Company Secretary (CS)</button>
+<button type="button" data-prof-role="hr" class="btn btn-ghost">👥 HR Professional</button>
+<button type="button" data-prof-role="gst_practitioner" class="btn btn-ghost">🧾 GST Practitioner</button>
+<button type="button" data-prof-role="assistant_associate" class="btn btn-ghost">🤝 Assistant / Associate</button>
+</div></div></div>
 <form id="regForm"
       class="card form-card"
       novalidate>
