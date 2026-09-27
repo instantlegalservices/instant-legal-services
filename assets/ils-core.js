@@ -124,7 +124,7 @@ window.ILS = (() => {
 
     if (!document.querySelector("script[data-ils-i18n]")) {
       const s = document.createElement("script");
-      s.src = "assets/ils-i18n.js";
+      s.src = "/assets/ils-i18n.js";
       s.dataset.ilsI18n = "1";
       document.head.appendChild(s);
     }
