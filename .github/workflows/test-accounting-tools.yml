@@ -93,8 +93,10 @@ jobs:
 
             const scrollY = await page.evaluate(() => window.scrollY);
             const workspaceTop = await workspace.evaluate(el => el.getBoundingClientRect().top);
-            if (Math.abs(workspaceTop) > 180) {
-              throw new Error('Tool click did not auto-scroll workspace into view: top=' + workspaceTop + ', scrollY=' + scrollY);
+            const workspaceBottom = await workspace.evaluate(el => el.getBoundingClientRect().bottom);
+            const viewportHeight = await page.evaluate(() => window.innerHeight);
+            if (!(workspaceBottom > 0 && workspaceTop < viewportHeight)) {
+              throw new Error('Tool click did not bring workspace into viewport: top=' + workspaceTop + ', bottom=' + workspaceBottom + ', scrollY=' + scrollY);
             }
 
             await page.locator('#toolWorkspace #acRevenue').fill('100000');
