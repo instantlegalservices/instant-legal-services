@@ -88,13 +88,18 @@ jobs:
 
             await page.locator('.tool-card .tool-open[data-tool="profit-loss-tool"]').click();
             await page.locator('#plAccountingMode').click();
-            await page.waitForTimeout(500);
+            const workspace = page.locator('#toolWorkspace');
+            await workspace.waitFor({ state: 'visible' });
 
-            const workspaceVisible = await page.locator('#toolWorkspace').isVisible();
-            if (!workspaceVisible) throw new Error('Accounting workspace is not visible');
+            await page.waitForFunction(() => {
+              const el = document.getElementById('toolWorkspace');
+              if (!el) return false;
+              const top = el.getBoundingClientRect().top;
+              return Math.abs(top) <= 180;
+            }, { timeout: 3000 });
 
             const scrollY = await page.evaluate(() => window.scrollY);
-            const workspaceTop = await page.locator('#toolWorkspace').evaluate(el => el.getBoundingClientRect().top);
+            const workspaceTop = await workspace.evaluate(el => el.getBoundingClientRect().top);
             if (Math.abs(workspaceTop) > 180) {
               throw new Error('Tool click did not auto-scroll workspace into view: top=' + workspaceTop + ', scrollY=' + scrollY);
             }
