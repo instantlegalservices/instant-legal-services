@@ -63,6 +63,21 @@
   gap:10px;
   margin-top:8px;
 }
+.ils-dropdown{position:relative;margin-top:8px}
+.ils-dropdown-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left}
+.ils-dropdown-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 7px);z-index:9000;max-height:320px;overflow:auto;padding:10px;border:1px solid rgba(244,195,91,.25);border-radius:15px;background:#0a1a2b;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.ils-dropdown.open .ils-dropdown-menu{display:block}
+.ils-dropdown-menu .practice-grid{margin-top:0}
+.ils-dropdown-menu label{font-size:12px}
+.ils-selection-summary{font-size:12px;opacity:.75;margin-top:6px}
+.ils-prof-section{padding:14px;border:1px solid rgba(255,255,255,.09);border-radius:15px;background:rgba(255,255,255,.025);margin-top:14px}
+.ils-conditional{display:none}
+.ils-conditional.show{display:block}
+.ils-undertaking{padding:14px;border:1px solid rgba(244,195,91,.22);border-radius:15px;background:rgba(244,195,91,.05);margin-top:15px;line-height:1.55}
+@media(max-width:650px){
+  .practice-grid{grid-template-columns:1fr}
+  .ils-dropdown-menu{max-height:55vh}
+}
 
 .practice-item{
   position:relative;
@@ -448,340 +463,61 @@ Select State first
 <!-- =========================
      COURT / JURISDICTION
 ========================= -->
-
-<label style="margin-top:18px">
-  Court / Jurisdiction
-</label>
-
-<div class="practice-counter">
-  Select minimum <strong>1</strong> and maximum <strong>2</strong> courts.
-  <span id="courtCounter">0/2</span>
+<label style="margin-top:18px">Court / Jurisdiction</label>
+<div class="practice-counter">Click to open and choose 1–2 courts. <span id="courtCounter">0/2</span></div>
+<div class="ils-dropdown" id="courtDropdown">
+  <button type="button" class="btn btn-ghost ils-dropdown-toggle" id="courtDropdownBtn" aria-expanded="false">
+    <span id="courtDropdownSummary">Choose court / jurisdiction</span><span>⌄</span>
+  </button>
+  <div class="ils-dropdown-menu" id="courtDropdownMenu">
+    <div id="courtGrid" class="practice-grid">
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court1" value="District & Sessions Court"><label for="court1">District & Sessions Court</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court2" value="Commercial Court"><label for="court2">Commercial Court</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court3" value="Tehsil Court"><label for="court3">Tehsil Court</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court4" value="Consumer Court / Consumer Commission"><label for="court4">Consumer Court / Consumer Commission</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court5" value="Labour Court"><label for="court5">Labour Court</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court6" value="Family Court"><label for="court6">Family Court</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court7" value="Munsif Court / Civil Judge (Junior Division)"><label for="court7">Munsif Court / Civil Judge (Junior Division)</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court8" value="Civil Judge / Senior Civil Court"><label for="court8">Civil Judge / Senior Civil Court</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court9" value="Magistrate Court / JM / CJM"><label for="court9">Magistrate Court / JM / CJM</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court10" value="High Court"><label for="court10">High Court</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court11" value="Supreme Court of India"><label for="court11">Supreme Court of India</label></div>
+      <div class="practice-item"><input type="checkbox" class="courtOption" id="court12" value="Other Court"><label for="court12">Other Court</label></div>
+    </div>
+  </div>
 </div>
-
-<div id="courtGrid" class="practice-grid court-grid">
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court1" value="District & Sessions Court">
-    <label for="court1">District & Sessions Court</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court2" value="Commercial Court">
-    <label for="court2">Commercial Court</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court3" value="Tehsil Court">
-    <label for="court3">Tehsil Court</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court4" value="Consumer Court / Consumer Commission">
-    <label for="court4">Consumer Court / Consumer Commission</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court5" value="Labour Court">
-    <label for="court5">Labour Court</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court6" value="Family Court">
-    <label for="court6">Family Court</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court7" value="Munsif Court / Civil Judge (Junior Division)">
-    <label for="court7">Munsif Court / Civil Judge (Junior Division)</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court8" value="Civil Judge / Senior Civil Court">
-    <label for="court8">Civil Judge / Senior Civil Court</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court9" value="Magistrate Court / JM / CJM">
-    <label for="court9">Magistrate Court / JM / CJM</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court10" value="High Court">
-    <label for="court10">High Court</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court11" value="Supreme Court of India">
-    <label for="court11">Supreme Court of India</label>
-  </div>
-
-  <div class="practice-item">
-    <input type="checkbox" class="courtOption" id="court12" value="Other Court">
-    <label for="court12">Other Court</label>
-  </div>
-
-</div>
-
-<input id="courtOther"
-       maxlength="160"
-       placeholder="Optional: enter specific court / bench / complex name"
-       style="margin-top:8px">
-
-
+<input id="courtOther" maxlength="160" placeholder="Optional: specific court / bench / complex name" style="margin-top:8px">
 
 <!-- =========================
      PRACTICE AREAS
 ========================= -->
-
-<label style="margin-top:18px">
-
-Practice Areas
-
-</label>
-
-
-<div class="practice-counter">
-
-Select maximum <strong>4</strong> practice areas.
-
-<span id="practiceCounter">
-0/4
-</span>
-
+<label style="margin-top:18px">Practice Areas</label>
+<div class="practice-counter">Click to open and choose up to 4 practice areas. <span id="practiceCounter">0/4</span></div>
+<div class="ils-dropdown" id="practiceDropdown">
+  <button type="button" class="btn btn-ghost ils-dropdown-toggle" id="practiceDropdownBtn" aria-expanded="false">
+    <span id="practiceDropdownSummary">Choose practice areas</span><span>⌄</span>
+  </button>
+  <div class="ils-dropdown-menu" id="practiceDropdownMenu">
+    <div id="practiceGrid" class="practice-grid">
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice1" value="Criminal Law"><label for="practice1">Criminal Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice2" value="Civil Law"><label for="practice2">Civil Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice3" value="Matrimonial / Family Law"><label for="practice3">Matrimonial / Family Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice4" value="Consumer Law"><label for="practice4">Consumer Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice5" value="NI Act / Cheque Bounce"><label for="practice5">NI Act / Cheque Bounce</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice6" value="NDPS Law"><label for="practice6">NDPS Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice7" value="Commercial Law"><label for="practice7">Commercial Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice8" value="Labour / Employment Law"><label for="practice8">Labour / Employment Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice9" value="Property Law"><label for="practice9">Property Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice10" value="Tax / GST"><label for="practice10">Tax / GST</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice11" value="Cyber Crime Law"><label for="practice11">Cyber Crime Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice12" value="Service Matters"><label for="practice12">Service Matters</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice13" value="Writ / Constitutional Law"><label for="practice13">Writ / Constitutional Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice14" value="Arbitration / ADR"><label for="practice14">Arbitration / ADR</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice15" value="Motor Vehicle Law"><label for="practice15">Motor Vehicle Law</label></div>
+      <div class="practice-item"><input type="checkbox" class="practiceOption" id="practice16" value="Legal Drafting"><label for="practice16">Legal Drafting</label></div>
+    </div>
+  </div>
 </div>
-
-
-<div id="practiceGrid"
-     class="practice-grid">
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice1"
-       value="Criminal Law">
-
-<label for="practice1">
-Criminal Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice2"
-       value="Civil Law">
-
-<label for="practice2">
-Civil Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice3"
-       value="Matrimonial / Family Law">
-
-<label for="practice3">
-Matrimonial / Family Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice4"
-       value="Consumer Law">
-
-<label for="practice4">
-Consumer Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice5"
-       value="NI Act / Cheque Bounce">
-
-<label for="practice5">
-NI Act / Cheque Bounce
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice6"
-       value="NDPS Law">
-
-<label for="practice6">
-NDPS Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice7"
-       value="Commercial Law">
-
-<label for="practice7">
-Commercial Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice8"
-       value="Labour / Employment Law">
-
-<label for="practice8">
-Labour / Employment Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice9"
-       value="Property Law">
-
-<label for="practice9">
-Property Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice10"
-       value="Tax / GST">
-
-<label for="practice10">
-Tax / GST
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice11"
-       value="Cyber Crime Law">
-
-<label for="practice11">
-Cyber Crime Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice12"
-       value="Service Matters">
-
-<label for="practice12">
-Service Matters
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice13"
-       value="Writ / Constitutional Law">
-
-<label for="practice13">
-Writ / Constitutional Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice14"
-       value="Arbitration / ADR">
-
-<label for="practice14">
-Arbitration / ADR
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice15"
-       value="Motor Vehicle Law">
-
-<label for="practice15">
-Motor Vehicle Law
-</label>
-
-</div>
-
-
-<div class="practice-item">
-
-<input type="checkbox"
-       class="practiceOption"
-       id="practice16"
-       value="Legal Drafting">
-
-<label for="practice16">
-Legal Drafting
-</label>
-
-</div>
-
-
-</div>
-
-
 
 <!-- =========================
      EXPERIENCE / PASSWORD
@@ -837,25 +573,13 @@ Confirm Password
 
 
 
-<label style="
-display:flex;
-gap:8px;
-align-items:flex-start;
-font-weight:500;
-margin-top:15px">
-
-<input id="agree"
-       type="checkbox"
-       style="width:18px;margin-top:2px"
-       required>
-
-<span>
-
-I confirm that the professional information submitted is accurate and understand that approval is subject to verification and review.
-
-</span>
-
-</label>
+<div class="ils-undertaking">
+<strong>ILS Advocate Undertaking</strong>
+<p style="margin:7px 0">I undertake to follow applicable Indian law, applicable professional/ethical requirements and ILS rules; to provide truthful information; to protect confidential/client information; and not to participate in unlawful, fraudulent, deceptive, abusive or unethical work through ILS. I understand that ILS may suspend/reject access or a profile where verification, conduct or information does not meet applicable requirements.</p>
+<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500;margin-top:10px"><input id="agree" type="checkbox" style="width:18px;margin-top:2px" required><span>I accept the undertaking above.</span></label>
+<label for="undertakingSignature" style="margin-top:10px">Type full name as electronic undertaking signature</label>
+<input id="undertakingSignature" maxlength="120" autocomplete="name" required>
+</div>
 
 
 
@@ -882,14 +606,100 @@ Submit for Review
 <p id="ilsProfessionalNote" style="opacity:.72;line-height:1.5"></p>
 <form id="ilsProfessionalForm" novalidate>
 <input type="hidden" id="ilsProfessionalType">
-<div class="form-row"><div><label>Full Name</label><input id="ilsProfName" maxlength="120" required></div><div><label>Email</label><input id="ilsProfEmail" type="email" maxlength="160" required></div></div>
-<div class="form-row"><div><label>Mobile Number</label><input id="ilsProfMobile" inputmode="numeric" maxlength="10" required></div><div><label>Membership / Registration Number</label><input id="ilsProfMembership" maxlength="100"></div></div>
-<div class="form-row"><div><label>Certificate / Practice status</label><select id="ilsProfCop"><option value="">Select if applicable</option><option>Certificate of Practice — Yes</option><option>Certificate of Practice — No</option><option>Not applicable</option></select></div><div><label>Years of Experience</label><input id="ilsProfYears" type="number" min="0" max="80"></div></div>
-<div class="form-row"><div><label>State</label><input id="ilsProfState" maxlength="80"></div><div><label>City</label><input id="ilsProfCity" maxlength="100"></div></div>
-<div class="form-row"><div><label>Specialization / Services</label><input id="ilsProfSpecialization" maxlength="300"></div><div><label>Firm / Organization</label><input id="ilsProfFirm" maxlength="180"></div></div>
+
+<div class="form-row">
+  <div><label for="ilsProfName">Full Name</label><input id="ilsProfName" autocomplete="name" maxlength="120" required></div>
+  <div><label for="ilsProfEmail">Email</label><input id="ilsProfEmail" type="email" autocomplete="email" maxlength="160" required></div>
+</div>
+<div class="form-row">
+  <div><label for="ilsProfMobile">Mobile Number</label><input id="ilsProfMobile" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" required></div>
+  <div><label for="ilsProfAddress">Address</label><input id="ilsProfAddress" maxlength="300" required></div>
+</div>
+
+<div id="ilsProfessionalCredentials" class="ils-prof-section">
+  <strong id="ilsCredentialsTitle">Professional credentials</strong>
+  <div class="form-row">
+    <div><label for="ilsProfMembership">Membership / Registration / Enrolment Number</label><input id="ilsProfMembership" maxlength="100"></div>
+    <div><label for="ilsProfCop">Certificate / Practice status</label><select id="ilsProfCop"><option value="">Select if applicable</option><option>Certificate of Practice — Yes</option><option>Certificate of Practice — No</option><option>Not applicable</option></select></div>
+  </div>
+  <div class="form-row">
+    <div><label for="ilsProfYears">Years of Experience</label><input id="ilsProfYears" type="number" min="0" max="80"></div>
+    <div><label for="ilsProfFirm">Firm / Organization</label><input id="ilsProfFirm" maxlength="180"></div>
+  </div>
+  <div class="form-row">
+    <div><label for="ilsProfState">State</label><input id="ilsProfState" maxlength="80"></div>
+    <div><label for="ilsProfCity">City</label><input id="ilsProfCity" maxlength="100"></div>
+  </div>
+
+  <label>Specialization / Services</label>
+  <div class="ils-dropdown" id="professionalSpecializationDropdown">
+    <button type="button" class="btn btn-ghost ils-dropdown-toggle" id="professionalSpecializationBtn" aria-expanded="false">
+      <span id="professionalSpecializationSummary">Click to choose services</span><span>⌄</span>
+    </button>
+    <div class="ils-dropdown-menu">
+      <div class="practice-grid" id="professionalSpecializationGrid">
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Accounting & Audit"><label>Accounting &amp; Audit</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Taxation & Income Tax"><label>Taxation &amp; Income Tax</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="GST & Indirect Tax"><label>GST &amp; Indirect Tax</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Corporate / MCA Compliance"><label>Corporate / MCA Compliance</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Secretarial Compliance"><label>Secretarial Compliance</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Payroll & HR Compliance"><label>Payroll &amp; HR Compliance</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Recruitment & HR Operations"><label>Recruitment &amp; HR Operations</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Labour & Employment Compliance"><label>Labour &amp; Employment Compliance</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Bookkeeping & MIS"><label>Bookkeeping &amp; MIS</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="GST Registration / Returns"><label>GST Registration / Returns</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Business Documentation"><label>Business Documentation</label></div>
+        <div class="practice-item"><input type="checkbox" class="profSpecOption" value="Compliance Support"><label>Compliance Support</label></div>
+      </div>
+    </div>
+  </div>
+  <div id="ilsSpecializationHelp" class="ils-selection-summary">Choose the services relevant to your category.</div>
+</div>
+
+<div id="ilsAssistantSection" class="ils-prof-section ils-conditional">
+  <strong>Assistant / Associate details</strong>
+  <label for="ilsProfAddress2">Address</label>
+  <input id="ilsProfAddress2" maxlength="300" placeholder="Full current address">
+  <label>Extra skills (if any)</label>
+  <div class="ils-dropdown" id="assistantSkillsDropdown">
+    <button type="button" class="btn btn-ghost ils-dropdown-toggle" id="assistantSkillsBtn" aria-expanded="false">
+      <span id="assistantSkillsSummary">Click to choose extra skills</span><span>⌄</span>
+    </button>
+    <div class="ils-dropdown-menu">
+      <div class="practice-grid">
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Typing / Data Entry"><label>Typing / Data Entry</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Video Editing"><label>Video Editing</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Graphic Design"><label>Graphic Design</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Coding / Web Development"><label>Coding / Web Development</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Riding / Field Work"><label>Riding / Field Work</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="MS Office / Excel"><label>MS Office / Excel</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="PDF / Document Formatting"><label>PDF / Document Formatting</label></div>
+        <div class="practice-item"><input type="checkbox" class="assistantSkillOption" value="Social Media / Content"><label>Social Media / Content</label></div>
+      </div>
+    </div>
+  </div>
+  <div class="ils-selection-summary">Only genuine skills should be selected. ILS may verify skills before assigning work.</div>
+  <label for="ilsProfAadhaar">Aadhaar Number</label>
+  <input id="ilsProfAadhaar" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="12 digit Aadhaar number">
+  <small style="display:block;opacity:.68;margin-top:6px">Used only for secure internal identity review. ILS does not publish Aadhaar. The server stores a cryptographic hash and last 4 digits only.</small>
+</div>
+
+<div class="form-row">
+  <div><label for="ilsProfPassword">Create Password</label><input id="ilsProfPassword" type="password" minlength="8" autocomplete="new-password" required></div>
+  <div><label for="ilsProfPassword2">Confirm Password</label><input id="ilsProfPassword2" type="password" minlength="8" autocomplete="new-password" required></div>
+</div>
+
 <div id="ilsPublicRule" class="status" style="display:block;margin-top:12px"></div>
-<label style="display:flex;gap:8px;align-items:flex-start;margin-top:15px;font-weight:500"><input id="ilsProfConsent" type="checkbox" style="width:18px;margin-top:2px" required><span>I confirm that the submitted information is accurate and consent to verification/review before any public listing.</span></label>
-<button class="btn btn-primary" type="submit" id="ilsProfSubmit" style="margin-top:18px">Submit for Review</button>
+
+<div class="ils-undertaking">
+  <strong>ILS Professional Undertaking</strong>
+  <p style="margin:7px 0">I undertake to follow applicable Indian law, applicable professional/ethical requirements and ILS rules; to provide truthful information; to protect confidential/client information; and not to participate in unlawful, fraudulent, deceptive, abusive or unethical work through ILS. I understand that ILS may suspend/reject access or a profile where verification, conduct or information does not meet applicable requirements.</p>
+  <label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-weight:500"><input id="ilsProfConsent" type="checkbox" style="width:18px;margin-top:2px" required><span>I accept the undertaking above.</span></label>
+  <label for="ilsProfSignature" style="margin-top:10px">Type full name as electronic undertaking signature</label>
+  <input id="ilsProfSignature" maxlength="120" autocomplete="name" required>
+</div>
+
+<button class="btn btn-primary" type="submit" id="ilsProfSubmit" style="margin-top:18px">Create Login &amp; Submit for Review</button>
 <div id="ilsProfStatus" class="status"></div>
 </form></div></div>
 
@@ -1861,51 +1671,146 @@ $("galleryInput").addEventListener(
 
 
 
-/* Professional role chooser and separate non-advocate submission */
+/* Professional role chooser + safe multi-select controls */
 const roleModal=$("ilsRoleModal"), rolePanel=$("ilsProfessionalPanel");
 const roleMeta={
- ca:["Chartered Accountant (CA)","CA membership details will be reviewed before any public profile is enabled.","CA profiles are never public by default; they require credential verification, approval and explicit public_profile enablement."],
- cs:["Company Secretary (CS)","CS membership / practice details will be reviewed before any public profile is enabled.","CS profiles are never public by default; they require credential verification, approval and explicit public_profile enablement."],
- hr:["HR Professional","Internal ILS network request.","HR profiles remain internal and never appear on the public homepage."],
- gst_practitioner:["GST Practitioner","Internal ILS support-network request.","GST Practitioner profiles remain internal and never appear on the public homepage."],
- assistant_associate:["Assistant / Associate","Internal ILS support-network request.","Assistant / Associate profiles remain internal and never appear on the public homepage."]
+  ca:["Chartered Accountant (CA)","CA membership and practice details will be reviewed. Public visibility is possible only after verification and approval.","CA profiles remain hidden until verification and approval."],
+  cs:["Company Secretary (CS)","CS membership and practice details will be reviewed. ICSI guidance requires a Certificate of Practice for practice as a CS in practice.","CS profiles remain hidden until verification and approval."],
+  hr:["HR Professional","HR specialization and experience are reviewed for internal ILS coordination.","HR profiles remain internal and never appear on the public homepage."],
+  gst_practitioner:["GST Practitioner","GST enrolment/registration and GST service areas are reviewed for internal ILS coordination.","GST Practitioner profiles remain internal and never appear on the public homepage."],
+  assistant_associate:["Assistant / Associate","Internal support-network onboarding. Only genuine skills should be selected.","Assistant / Associate profiles remain internal and never appear on the public homepage."]
 };
+
+function setupDropdown(dropId,btnId,summaryId){
+  const box=$(dropId),btn=$(btnId),summary=$(summaryId);
+  if(!box||!btn)return;
+  btn.addEventListener("click",e=>{
+    e.stopPropagation();
+    const open=box.classList.toggle("open");
+    btn.setAttribute("aria-expanded",String(open));
+  });
+  box.querySelector(".ils-dropdown-menu")?.addEventListener("click",e=>e.stopPropagation());
+  return {box,btn,summary};
+}
+function selectedText(selector,limit){
+  return [...document.querySelectorAll(selector)].filter(x=>x.checked).slice(0,limit||99).map(x=>x.value);
+}
+function refreshSummary(selector,summaryId,emptyText){
+  const vals=selectedText(selector);
+  const el=$(summaryId); if(!el)return;
+  el.textContent=vals.length?vals.join(" • "):emptyText;
+}
+setupDropdown("courtDropdown","courtDropdownBtn","courtDropdownSummary");
+setupDropdown("practiceDropdown","practiceDropdownBtn","practiceDropdownSummary");
+setupDropdown("professionalSpecializationDropdown","professionalSpecializationBtn","professionalSpecializationSummary");
+setupDropdown("assistantSkillsDropdown","assistantSkillsBtn","assistantSkillsSummary");
+document.addEventListener("click",()=>{
+  document.querySelectorAll(".ils-dropdown.open").forEach(box=>{
+    box.classList.remove("open");
+    box.querySelector(".ils-dropdown-toggle")?.setAttribute("aria-expanded","false");
+  });
+});
+document.querySelectorAll(".courtOption").forEach(x=>x.addEventListener("change",()=>refreshSummary(".courtOption","courtDropdownSummary","Choose court / jurisdiction")));
+document.querySelectorAll(".practiceOption").forEach(x=>x.addEventListener("change",()=>refreshSummary(".practiceOption","practiceDropdownSummary","Choose practice areas")));
+document.querySelectorAll(".profSpecOption").forEach(x=>x.addEventListener("change",()=>refreshSummary(".profSpecOption","professionalSpecializationSummary","Click to choose services")));
+document.querySelectorAll(".assistantSkillOption").forEach(x=>x.addEventListener("change",()=>refreshSummary(".assistantSkillOption","assistantSkillsSummary","Click to choose extra skills")));
+
 $("ilsChooseRole").addEventListener("click",()=>{roleModal.style.display="flex"});
 $("ilsRoleClose").addEventListener("click",()=>{roleModal.style.display="none"});
 roleModal.addEventListener("click",e=>{if(e.target===roleModal)roleModal.style.display="none"});
+
+function resetProfessionalFields(){
+  $("ilsProfessionalForm").reset();
+  document.querySelectorAll(".profSpecOption,.assistantSkillOption").forEach(x=>x.checked=false);
+  refreshSummary(".profSpecOption","professionalSpecializationSummary","Click to choose services");
+  refreshSummary(".assistantSkillOption","assistantSkillsSummary","Click to choose extra skills");
+}
+function configureProfessionalRole(role){
+  const meta=roleMeta[role]; if(!meta)return;
+  $("ilsProfessionalType").value=role;
+  $("ilsCurrentRole").textContent=meta[0];
+  $("ilsProfessionalTitle").textContent="Join as "+meta[0];
+  $("ilsProfessionalNote").textContent=meta[1];
+  $("ilsPublicRule").textContent=meta[2];
+  $("regForm").style.display="none";
+  rolePanel.style.display="block";
+  const assistant=role==="assistant_associate";
+  $("ilsAssistantSection").classList.toggle("show",assistant);
+  $("ilsProfessionalCredentials").classList.toggle("show",!assistant);
+  $("ilsProfAddress2").required=false;
+  $("ilsProfAadhaar").required=assistant;
+  $("ilsProfMembership").required=["ca","cs","gst_practitioner"].includes(role);
+  $("ilsProfCop").required=["ca","cs"].includes(role);
+  $("ilsProfState").required=["ca","cs","gst_practitioner"].includes(role);
+  $("ilsProfCity").required=["ca","cs","gst_practitioner"].includes(role);
+}
 document.querySelectorAll("[data-prof-role]").forEach(btn=>btn.addEventListener("click",()=>{
- const role=btn.dataset.profRole; roleModal.style.display="none";
- if(role==="advocate"){rolePanel.style.display="none";$("regForm").style.display="";$("ilsCurrentRole").textContent="Advocate";return}
- const meta=roleMeta[role]; $("regForm").style.display="none"; rolePanel.style.display="block";
- $("ilsCurrentRole").textContent=meta[0]; $("ilsProfessionalType").value=role;
- $("ilsProfessionalTitle").textContent="Join as "+meta[0]; $("ilsProfessionalNote").textContent=meta[1];
- $("ilsPublicRule").textContent=meta[2]; $("ilsProfMembership").required=(role==="ca"||role==="cs");
+  const role=btn.dataset.profRole;
+  roleModal.style.display="none";
+  if(role==="advocate"){
+    rolePanel.style.display="none";
+    $("regForm").style.display="";
+    $("ilsCurrentRole").textContent="Advocate";
+    return;
+  }
+  resetProfessionalFields();
+  configureProfessionalRole(role);
 }));
 
 $("ilsProfessionalForm").addEventListener("submit",async e=>{
- e.preventDefault(); const s=$("ilsProfStatus"),b=$("ilsProfSubmit"); s.className="status";s.style.display="block";s.textContent="Submitting…";b.disabled=true;
- try{
-  const role=$("ilsProfessionalType").value, name=$("ilsProfName").value.trim(), email=$("ilsProfEmail").value.trim().toLowerCase(), mobile=$("ilsProfMobile").value.trim();
-  if(!role||!roleMeta[role])throw new Error("Select a professional category.");
-  if(!name||!email||!mobile)throw new Error("Name, email and mobile are required.");
-  if(!/^[0-9]{10}$/.test(mobile))throw new Error("Enter a valid 10-digit mobile number.");
-  if(!/^\S+@\S+\.\S+$/.test(email))throw new Error("Enter a valid email address.");
-  if((role==="ca"||role==="cs")&&!$("ilsProfMembership").value.trim())throw new Error("Membership / registration number is required for CA/CS verification.");
-  if(!$("ilsProfConsent").checked)throw new Error("Please accept the verification declaration.");
-  const client=ILS.ready(); if(!client)throw new Error("Service connection unavailable.");
-  const r=await client.functions.invoke("register-professional",{body:{
-   professional_type:role,full_name:name,email,mobile,
-   membership_number:$("ilsProfMembership").value.trim(),
-   certificate_of_practice:$("ilsProfCop").value,
-   state:$("ilsProfState").value.trim(),city:$("ilsProfCity").value.trim(),
-   specialization:$("ilsProfSpecialization").value.trim(),
-   years_of_experience:$("ilsProfYears").value,
-   firm_or_organization:$("ilsProfFirm").value.trim()
-  }});
-  if(r.error)throw new Error(r.error.message||"Registration service failed.");
-  if(!r.data?.ok)throw new Error(r.data?.message||"Registration failed.");
-  s.className="status ok";s.textContent=r.data.message||"Registration submitted for review.";e.target.reset();
- }catch(err){s.className="status err";s.textContent=err?.message||"Registration service unavailable."}finally{b.disabled=false}
+  e.preventDefault();
+  const s=$("ilsProfStatus"),b=$("ilsProfSubmit");
+  s.className="status";s.style.display="block";s.textContent="Creating secure login and submitting…";b.disabled=true;
+  try{
+    const role=$("ilsProfessionalType").value;
+    const name=$("ilsProfName").value.trim();
+    const email=$("ilsProfEmail").value.trim().toLowerCase();
+    const mobile=$("ilsProfMobile").value.trim();
+    const password=$("ilsProfPassword").value;
+    const password2=$("ilsProfPassword2").value;
+    const signature=$("ilsProfSignature").value.trim();
+    const specialization=selectedText(".profSpecOption").join(" | ");
+    const extraSkills=selectedText(".assistantSkillOption").join(" | ");
+    if(!role||!roleMeta[role])throw new Error("Select a professional category.");
+    if(!name||!email||!mobile||!$("ilsProfAddress").value.trim())throw new Error("Name, email, mobile and address are required.");
+    if(!/^[0-9]{10}$/.test(mobile))throw new Error("Enter a valid 10-digit mobile number.");
+    if(!/^\S+@\S+\.\S+$/.test(email))throw new Error("Enter a valid email address.");
+    if(password.length<8)throw new Error("Password must contain at least 8 characters.");
+    if(password!==password2)throw new Error("Passwords do not match.");
+    if(!signature||signature.toLowerCase()!==name.toLowerCase())throw new Error("Undertaking signature must exactly match the full name.");
+    if(!$("ilsProfConsent").checked)throw new Error("Please accept the ILS undertaking.");
+    if(!["assistant_associate"].includes(role)&&!specialization)throw new Error("Select at least one specialization/service.");
+    if(["ca","cs"].includes(role)&&!$("ilsProfMembership").value.trim())throw new Error("Membership number is required for CA/CS.");
+    if(role==="gst_practitioner"&&!$("ilsProfMembership").value.trim())throw new Error("GST Practitioner enrolment/registration number is required.");
+    if(role==="assistant_associate"&&!/^[0-9]{12}$/.test($("ilsProfAadhaar").value.replace(/\s|-/g,"")))throw new Error("Enter a valid 12 digit Aadhaar number.");
+    const client=ILS.ready(); if(!client)throw new Error("Service connection unavailable.");
+    const r=await client.functions.invoke("register-professional",{body:{
+      professional_type:role,
+      full_name:name,email,mobile,
+      address:$("ilsProfAddress").value.trim(),
+      membership_number:$("ilsProfMembership").value.trim(),
+      certificate_of_practice:$("ilsProfCop").value,
+      state:$("ilsProfState").value.trim(),
+      city:$("ilsProfCity").value.trim(),
+      specialization,
+      years_of_experience:$("ilsProfYears").value,
+      firm_or_organization:$("ilsProfFirm").value.trim(),
+      extra_skills:role==="assistant_associate"?extraSkills:"",
+      aadhaar_number:role==="assistant_associate"?$("ilsProfAadhaar").value.replace(/\s|-/g,""):"",
+      password,
+      undertaking_accepted:true,
+      undertaking_signed_name:signature
+    }});
+    if(r.error)throw new Error(r.error.message||"Registration service failed.");
+    if(!r.data?.ok)throw new Error(r.data?.message||"Registration failed.");
+    s.className="status ok";s.textContent=r.data.message||"Secure login created and registration submitted for review.";
+    e.target.reset();
+    document.querySelectorAll(".profSpecOption,.assistantSkillOption").forEach(x=>x.checked=false);
+    refreshSummary(".profSpecOption","professionalSpecializationSummary","Click to choose services");
+    refreshSummary(".assistantSkillOption","assistantSkillsSummary","Click to choose extra skills");
+  }catch(err){
+    s.className="status err";s.textContent=err?.message||"Registration service unavailable.";
+  }finally{b.disabled=false}
 });
 
 /* =====================================================
@@ -2011,6 +1916,16 @@ async function(event){
               "Please upload your profile photo."
             );
 
+        }
+
+        if(!$("agree").checked){
+            throw new Error("Please accept the ILS undertaking.");
+        }
+
+        const undertakingSignature=$("undertakingSignature").value.trim();
+        const advocateNameForSignature=$("aname").value.trim();
+        if(!undertakingSignature || undertakingSignature.toLowerCase()!==advocateNameForSignature.toLowerCase()){
+            throw new Error("Undertaking signature must exactly match the advocate's full name.");
         }
 
 
@@ -2180,7 +2095,13 @@ async function(event){
             photoPath,
 
           password:
-            password
+            password,
+
+          undertaking_accepted:
+            $("agree").checked,
+
+          undertaking_signed_name:
+            $("undertakingSignature").value.trim()
 
         };
 
@@ -2268,6 +2189,8 @@ async function(event){
 
         updateCourtCounter();
         updatePracticeCounter();
+        refreshSummary(".courtOption","courtDropdownSummary","Choose court / jurisdiction");
+        refreshSummary(".practiceOption","practiceDropdownSummary","Choose practice areas");
 
 
     }
