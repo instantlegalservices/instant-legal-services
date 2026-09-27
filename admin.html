@@ -51,7 +51,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 .modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.modal-actions .btnx{flex:1;min-width:150px}
 @media(max-width:850px){.adv-toolbar{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}}
 
-.crm-comms{display:grid;gap:16px;margin-top:18px}.crm-box{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.crm-chat{max-height:260px;min-height:120px;overflow:auto}.crm-msg{padding:9px;border-bottom:1px solid #26354a}.crm-meta{font-size:11px;color:#8e9bad;margin-bottom:4px}.crm-progress{max-height:240px;overflow:auto}.crm-progress-item{background:#0d1927;border:1px solid #26354a;border-radius:8px;padding:9px;margin-bottom:8px}.crm-comms-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.revenue-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.revenue-stat{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.revenue-stat small{color:#9ca7b6}.revenue-stat strong{display:block;font-size:24px;margin-top:4px}.revenue-status{font-weight:700}.status-paid{color:#8fe0a0}.status-pending{color:#ffd77a}.status-failed{color:#ff9b9b}@media(max-width:900px){.revenue-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:500px){.revenue-grid{grid-template-columns:1fr}}</style>
+.crm-comms{display:grid;gap:16px;margin-top:18px}.crm-box{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.crm-chat{max-height:260px;min-height:120px;overflow:auto}.crm-msg{padding:9px;border-bottom:1px solid #26354a}.crm-meta{font-size:11px;color:#8e9bad;margin-bottom:4px}.crm-progress{max-height:240px;overflow:auto}.crm-progress-item{background:#0d1927;border:1px solid #26354a;border-radius:8px;padding:9px;margin-bottom:8px}.crm-comms-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.action-queue-toolbar{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:15px}.action-queue-table{min-width:1250px}.queue-status{font-weight:700}.queue-actions{display:flex;gap:6px;flex-wrap:wrap}.queue-note{font-size:12px;color:#9ca7b6;margin-top:4px}@media(max-width:850px){.action-queue-toolbar{grid-template-columns:1fr}}.revenue-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.revenue-stat{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.revenue-stat small{color:#9ca7b6}.revenue-stat strong{display:block;font-size:24px;margin-top:4px}.revenue-status{font-weight:700}.status-paid{color:#8fe0a0}.status-pending{color:#ffd77a}.status-failed{color:#ff9b9b}@media(max-width:900px){.revenue-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:500px){.revenue-grid{grid-template-columns:1fr}}</style>
 </head>
 <body>
 <div id="loginView" class="login">
@@ -119,6 +119,13 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       <div class="toolbar" style="margin-top:14px"><input id="revenueSearch" placeholder="Search order, service or tool…"><select id="revenueStatusFilter"><option value="">All order status</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option></select><select id="revenueServiceStatusFilter"><option value="">All service status</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="assigned">Assigned</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="refunded">Refunded</option></select><button class="btnx secondary" id="refreshRevenueBtn" type="button">↻ Refresh Revenue</button></div>
       <div class="table-wrap"><table><thead><tr><th>Order</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
     </section>
+
+    <section class="panel" id="actionAssistanceQueuePanel">
+<h2>🧑‍💻 Action Assistance Queue</h2>
+<p style="color:#9ca7b6;margin-top:-6px">Paid associate requests only. Assign, work, QA-check and complete without changing the existing payment chain.</p>
+<div class="action-queue-toolbar"><input id="actionQueueSearch" placeholder="Search order, customer, mobile, problem or official route…"><select id="actionQueueStatusFilter"><option value="">All queue status</option><option value="pending_assignment">Pending assignment</option><option value="assigned">Assigned</option><option value="in_progress">In progress</option><option value="qa_hold">QA hold</option><option value="qa_pass">QA passed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><button id="refreshActionQueueBtn" class="btnx secondary" type="button">↻ Refresh Queue</button></div>
+<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Order</th><th>Customer</th><th>Problem / Route</th><th>Status</th><th>Assigned</th><th>Created</th><th>Customer Note</th><th>Action</th></tr></thead><tbody id="actionQueueBody"><tr><td colspan="8" style="text-align:center">Loading associate queue…</td></tr></tbody></table></div>
+<div id="actionQueueMsg" class="msg" style="margin-top:12px"></div></section>
 
     <section class="panel" id="upiProofPanel">
       <h2>🔐 UPI Payment Proof Verification</h2>
@@ -302,6 +309,7 @@ const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
 const $=id=>document.getElementById(id);
+let currentAdminUserId=null;
 function msg(id,text,type){
   const el=$(id); if(!el)return;
   el.className="msg "+(type||"");
@@ -1152,6 +1160,39 @@ function renderRevenue(){
     });
   });
 }
+let actionQueueRows=[];
+function queueStatusLabel(v){return String(v||"").replace(/_/g," ").replace(/\b\w/g,m=>m.toUpperCase());}
+async function loadActionAssistanceQueue(){
+ const body=$("actionQueueBody");if(body)body.innerHTML='<tr><td colspan="8" style="text-align:center">Loading associate queue…</td></tr>';
+ try{const {data,error}=await sb.from("ils_action_assistance_queue").select("id,order_id,service_request_id,user_id,problem,official_route,official_url,customer_name,customer_mobile,customer_state,customer_city,status,assigned_to,assigned_at,customer_visible_note,internal_note,qa_checked_at,qa_checked_by,completed_at,created_at,updated_at").order("created_at",{ascending:false}).limit(250);if(error)throw error;actionQueueRows=Array.isArray(data)?data:[];renderActionAssistanceQueue();}
+ catch(e){console.error("Action assistance queue:",e);if(body)body.innerHTML='<tr><td colspan="8" style="text-align:center">Queue unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';}}
+function renderActionAssistanceQueue(){
+ const body=$("actionQueueBody");if(!body)return;const q=($("actionQueueSearch")?.value||"").toLowerCase().trim();const st=($("actionQueueStatusFilter")?.value||"").toLowerCase();
+ const rows=actionQueueRows.filter(r=>{const hay=[r.order_id,r.service_request_id,r.customer_name,r.customer_mobile,r.customer_state,r.customer_city,r.problem,r.official_route,r.status].filter(Boolean).join(" ").toLowerCase();return(!st||String(r.status||"").toLowerCase()===st)&&(!q||hay.includes(q));});
+ body.innerHTML=rows.length?rows.map(r=>{
+  const status=String(r.status||"pending_assignment");const assigned=r.assigned_to?'<span>'+esc(r.assigned_to===currentAdminUserId?"Me":"Assigned")+'</span><div class="queue-note">'+esc(r.assigned_at?new Date(r.assigned_at).toLocaleString("en-IN"):"")+'</div>':"—";const actions=[];
+  if((status==="pending_assignment"||status==="assigned")&&r.assigned_to!==currentAdminUserId)actions.push('<button class="btnx secondary queueAction" data-id="'+esc(r.id)+'" data-action="assign">Assign to me</button>');
+  if((status==="assigned"||status==="pending_assignment")&&r.assigned_to===currentAdminUserId)actions.push('<button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="start">Start work</button>');
+  if(status==="in_progress")actions.push('<button class="btnx secondary queueAction" data-id="'+esc(r.id)+'" data-action="hold">QA hold</button><button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="pass">QA pass</button>');
+  if(status==="qa_hold")actions.push('<button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="resume">Resume</button><button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="pass">QA pass</button>');
+  if(status==="qa_pass")actions.push('<button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="complete">Complete</button>');
+  if(!["completed","cancelled"].includes(status))actions.push('<button class="btnx secondary queueAction" data-id="'+esc(r.id)+'" data-action="note">Note</button>');
+  return '<tr><td><strong>'+esc(r.order_id||"—")+'</strong><div class="queue-note">Request '+esc(r.service_request_id||"—")+'</div></td><td>'+esc(r.customer_name||"—")+'<div class="queue-note">'+esc(r.customer_mobile||"")+' · '+esc([r.customer_city,r.customer_state].filter(Boolean).join(", "))+'</div></td><td>'+esc(r.problem||"—")+'<div class="queue-note">'+esc(r.official_route||"—")+(r.official_url?' · <a href="'+esc(r.official_url)+'" target="_blank" rel="noopener">Official route</a>':"")+'</div></td><td class="queue-status">'+esc(queueStatusLabel(status))+'</td><td>'+assigned+'</td><td>'+esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")+'</td><td>'+esc(r.customer_visible_note||"—")+(r.internal_note?'<div class="queue-note">Internal: '+esc(r.internal_note)+'</div>':"")+'</td><td class="queue-actions">'+(actions.join("")||"—")+'</td></tr>';
+ }).join(""):'<tr><td colspan="8" style="text-align:center">No associate requests match the filter.</td></tr>';
+ body.querySelectorAll(".queueAction").forEach(btn=>btn.addEventListener("click",()=>handleActionQueueAction(btn.dataset.id,btn.dataset.action)));
+}
+async function handleActionQueueAction(id,action){
+ const row=actionQueueRows.find(x=>String(x.id)===String(id));if(!row)return;let patch={};
+ if(action==="assign")patch={status:"assigned",assigned_to:currentAdminUserId,assigned_at:new Date().toISOString()};
+ else if(action==="start"){if(row.assigned_to!==currentAdminUserId){msg("actionQueueMsg","Assign this request to yourself before starting work.","err");return;}patch={status:"in_progress"};}
+ else if(action==="hold")patch={status:"qa_hold",qa_checked_at:new Date().toISOString(),qa_checked_by:currentAdminUserId};
+ else if(action==="pass")patch={status:"qa_pass",qa_checked_at:new Date().toISOString(),qa_checked_by:currentAdminUserId};
+ else if(action==="resume")patch={status:"in_progress"};
+ else if(action==="complete"){if(row.status!=="qa_pass"){msg("actionQueueMsg","Completion requires QA pass first.","err");return;}patch={status:"completed",completed_at:new Date().toISOString()};}
+ else if(action==="note"){const note=prompt("Customer-visible note:",row.customer_visible_note||"");if(note===null)return;const internal=prompt("Internal note (optional):",row.internal_note||"");if(internal===null)return;patch={customer_visible_note:note.trim(),internal_note:internal.trim()};}
+ else return;
+ try{const {error}=await sb.from("ils_action_assistance_queue").update(patch).eq("id",id);if(error)throw error;msg("actionQueueMsg",action==="complete"?"Associate request completed.":"Associate queue updated.","ok");await loadActionAssistanceQueue();}
+ catch(e){console.error("Action queue update:",e);msg("actionQueueMsg","Queue update failed: "+(e?.message||"Unknown error"),"err");}}
 async function openApp(){
   const check=await isAdmin();
   if(!check.ok){
@@ -1163,8 +1204,9 @@ async function openApp(){
 
   $("loginView").classList.add("hidden");
   $("appView").classList.remove("hidden");
+  currentAdminUserId=check.session.user.id;
   $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
-  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue(),loadUpiProofs()]);
+  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadRevenue(),loadUpiProofs(),loadActionAssistanceQueue()]);
 }
 
 $("loginForm").addEventListener("submit",async e=>{
@@ -1217,6 +1259,9 @@ $("sendAdminChatBtn").addEventListener("click",sendAdminClientMessage);
 $("refreshAdminChatBtn").addEventListener("click",()=>loadAdminClientCommunication($("manageLeadId").value));
 $("addAdminProgressBtn").addEventListener("click",addAdminWorkProgress);
 $("refreshRevenueBtn").addEventListener("click",loadRevenue);
+$("refreshActionQueueBtn").addEventListener("click",loadActionAssistanceQueue);
+$("actionQueueSearch").addEventListener("input",renderActionAssistanceQueue);
+$("actionQueueStatusFilter").addEventListener("change",renderActionAssistanceQueue);
 $("refreshUpiProofsBtn").addEventListener("click",loadUpiProofs);
 $("upiProofStatusFilter").addEventListener("change",renderUpiProofs);
 $("revenueSearch").addEventListener("input",renderRevenue);
