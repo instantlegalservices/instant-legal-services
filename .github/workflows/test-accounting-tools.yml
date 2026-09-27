@@ -52,14 +52,9 @@ jobs:
 
             await page.goto(process.env.BASE_URL, { waitUntil: 'networkidle' });
 
-            const accountingFilter = page.locator('[data-filter="accounting"]');
-            await accountingFilter.click();
-
-            const cards = page.locator('.tool-card[data-category~="accounting"]');
-            if (await cards.count() !== 3) {
-              throw new Error('Expected exactly 3 accounting tool cards');
-            }
-
+            // Accounting tools are catalog entries, not a dedicated UI filter category.
+            // Identify them by their authoritative tool slugs so the regression test
+            // remains stable when the profession/category taxonomy changes.
             const expectedSlugs = [
               'accounting-computation',
               'balance-sheet-tool',
