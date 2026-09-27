@@ -1,0 +1,184 @@
+name: ILS TEST Customer Auth Release Reconcile
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "ils-test-customer-auth.html"
+      - ".github/workflows/test-customer-auth-release-reconcile.yml"
+
+jobs:
+  customer-auth-release-reconcile:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout isolated TEST branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run genuine TEST customer flow and reconcile gates
+        env:
+          TEST_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.ILS_TEST_CUSTOMER_PASSWORD }}
+          TEST_OPERATOR_JWT: ${{ secrets.ILS_TEST_OPERATOR_JWT }}
+          TEST_SERVICE_ROLE_KEY: ${{ secrets.ILS_TEST_SERVICE_ROLE_KEY }}
+          TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          const required = [
+            ['ILS_TEST_CUSTOMER_EMAIL', process.env.TEST_EMAIL],
+            ['ILS_TEST_CUSTOMER_PASSWORD', process.env.TEST_PASSWORD],
+            ['ILS_TEST_OPERATOR_JWT', process.env.TEST_OPERATOR_JWT],
+            ['ILS_TEST_SERVICE_ROLE_KEY', process.env.TEST_SERVICE_ROLE_KEY],
+          ];
+          for (const [name, value] of required) {
+            if (!value) throw new Error('Missing required GitHub Actions secret: ' + name);
+          }
+
+          const base = 'http://127.0.0.1:4173/ils-test-customer-auth.html';
+          const supabaseUrl = process.env.TEST_SUPABASE_URL;
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+            const failures = [];
+
+            page.on('pageerror', e => failures.push('pageerror: ' + e.message));
+            page.on('console', m => {
+              if (m.type() === 'error') failures.push('console: ' + m.text());
+            });
+
+            await page.goto(base, { waitUntil: 'networkidle' });
+
+            await page.locator('#email').fill(process.env.TEST_EMAIL);
+            await page.locator('#password').fill(process.env.TEST_PASSWORD);
+            await page.locator('#signin').click();
+            await page.waitForTimeout(1000);
+
+            const signInOutput = await page.locator('#out').innerText();
+            if (!signInOutput.includes('SIGNIN_OK') || !signInOutput.includes('session_present')) {
+              throw new Error('Normal TEST customer sign-in did not produce an authenticated session: ' + signInOutput);
+            }
+
+            await page.locator('#onboard').click();
+            await page.waitForTimeout(1000);
+            const onboardingOutput = await page.locator('#out').innerText();
+            if (!onboardingOutput.includes('ONBOARDING_OK')) {
+              throw new Error('Canonical customer onboarding failed: ' + onboardingOutput);
+            }
+
+            await page.locator('#e2e').click();
+            await page.waitForTimeout(1000);
+            const e2eOutput = await page.locator('#out').innerText();
+            if (!e2eOutput.includes('CUSTOMER_ACTION_E2E_RESULT')) {
+              throw new Error('Customer Action E2E did not return a result: ' + e2eOutput);
+            }
+            if (e2eOutput.includes('"http_status":401') || e2eOutput.includes('"http_status":403')) {
+              throw new Error('Customer Action E2E was rejected: ' + e2eOutput);
+            }
+
+            // The proof gate requires the protected TEST operator path.
+            const reconcile = await fetch(
+              supabaseUrl + '/functions/v1/ils-test-customer-action-genuine-e2e-gate-reconcile',
+              {
+                method: 'POST',
+                headers: {
+                  Authorization: 'Bearer ' + process.env.TEST_OPERATOR_JWT,
+                  'Content-Type': 'application/json'
+                },
+                body: '{}'
+              }
+            );
+            const reconcileBody = await reconcile.json();
+            if (reconcile.status !== 200 || reconcileBody.gate !== 'GO') {
+              throw new Error('Genuine Customer Action proof-gate reconcile failed: ' + JSON.stringify(reconcileBody));
+            }
+
+            // Refresh the canonical unified readiness projection through the
+            // existing SECURITY DEFINER function. No ad-hoc table writes.
+            const refresh = await fetch(
+              supabaseUrl + '/rest/v1/rpc/ils_refresh_unified_e2e_critical_path_readiness',
+              {
+                method: 'POST',
+                headers: {
+                  apikey: process.env.TEST_SERVICE_ROLE_KEY,
+                  Authorization: 'Bearer ' + process.env.TEST_SERVICE_ROLE_KEY,
+                  'Content-Type': 'application/json'
+                },
+                body: '{}'
+              }
+            );
+            const refreshText = await refresh.text();
+            if (!refresh.ok) {
+              throw new Error('Unified readiness refresh failed: HTTP ' + refresh.status + ' ' + refreshText);
+            }
+
+            // Verify the canonical projection after refresh.
+            const readiness = await fetch(
+              supabaseUrl +
+              '/rest/v1/ils_unified_e2e_critical_path_readiness?path_code=eq.CUSTOMER_ACTION_E2E&select=path_code,current_status,gate_status,genuine_verified_evidence,release_blocked,blocker_reason',
+              {
+                headers: {
+                  apikey: process.env.TEST_SERVICE_ROLE_KEY,
+                  Authorization: 'Bearer ' + process.env.TEST_SERVICE_ROLE_KEY
+                }
+              }
+            );
+            if (!readiness.ok) {
+              throw new Error('Unified readiness read failed: HTTP ' + readiness.status + ' ' + await readiness.text());
+            }
+
+            const rows = await readiness.json();
+            const row = rows[0];
+            if (!row || row.gate_status !== 'GO' || row.current_status !== 'VERIFIED' ||
+                Number(row.genuine_verified_evidence) < 1 || row.release_blocked !== false) {
+              throw new Error('Customer Action readiness remains blocked after canonical refresh: ' + JSON.stringify(row));
+            }
+
+            if (failures.length) throw new Error(failures.join('\n'));
+
+            console.log('PASS: normal TEST customer auth, canonical onboarding, Customer Action E2E, proof-gate reconcile, and unified readiness refresh.');
+            console.log(JSON.stringify(row));
+            await browser.close();
+          })().catch(async err => {
+            console.error(err);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Final TEST gate snapshot
+        if: always()
+        env:
+          TEST_SERVICE_ROLE_KEY: ${{ secrets.ILS_TEST_SERVICE_ROLE_KEY }}
+          TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+        run: |
+          test -n "$TEST_SERVICE_ROLE_KEY"
+          node <<'NODE'
+          (async () => {
+            const r = await fetch(
+              process.env.TEST_SUPABASE_URL +
+              '/rest/v1/ils_unified_e2e_critical_path_readiness?select=path_code,current_status,gate_status,release_blocked&order=sequence_no.asc',
+              {
+                headers: {
+                  apikey: process.env.TEST_SERVICE_ROLE_KEY,
+                  Authorization: 'Bearer ' + process.env.TEST_SERVICE_ROLE_KEY
+                }
+              }
+            );
+            if (!r.ok) throw new Error('Gate snapshot failed: HTTP ' + r.status + ' ' + await r.text());
+            console.log(await r.text());
+          })().catch(err => { console.error(err); process.exitCode = 1; });
+          NODE
