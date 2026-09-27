@@ -6,6 +6,7 @@ on:
     paths:
       - "tools.html"
       - "assets/ils-tools.js"
+      - "assets/ils-tools-catalog.js"
       - "assets/ils.css"
       - ".github/workflows/test-accounting-tools.yml"
 
