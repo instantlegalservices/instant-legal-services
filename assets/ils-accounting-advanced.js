@@ -196,6 +196,12 @@
 
   function bind(){
     addCards();
+    // The core catalog renderer runs first on DOMContentLoaded. Re-apply its
+    // filter/count after the five additive cards are mounted so #toolCount
+    // reflects the complete visible suite (213), without changing the
+    // authoritative 208-item catalog.
+    const search=document.getElementById('toolSearch');
+    if(search) search.dispatchEvent(new Event('input',{bubbles:true}));
     document.addEventListener('click',e=>{
       const b=e.target.closest('.tool-open'); if(!b)return;
       const slug=b.dataset.tool;
