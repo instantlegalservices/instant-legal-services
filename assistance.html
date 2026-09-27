@@ -7,9 +7,14 @@
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://instantlegalservices.in/assistance.html">
 <link rel="stylesheet" href="assets/ils.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/ils-core.js?v=20260927-connfix1" defer></script>
-<script src="assets/ils-payments.js?v=20260927-connfix1" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2';"></script>
+<script>
+window.ILS_SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
+window.ILS_SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+if(window.supabase && !window.supabaseClient){window.supabaseClient=window.supabase.createClient(window.ILS_SUPABASE_URL,window.ILS_SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});}
+</script>
+<script src="assets/ils-core.js?v=20260927-connfix2" defer></script>
+<script src="assets/ils-payments.js?v=20260927-connfix2" defer></script>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#07101c">
 <script src="assets/pwa.js" defer></script>
 <style>
