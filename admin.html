@@ -1285,7 +1285,7 @@ function renderRevenue(){
       <td><select class="revenueServiceStatus" data-service-request-id="${esc(r.service_request_id||"")}" ${r.service_request_id?"":"disabled"}>${opts}</select></td>
       <td>${esc(r.source_tool_name||r.source_tool_slug||"Direct")}</td>
       <td>${esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")}</td>
-      <td>${r.service_request_id?`<button class="btnx secondary revenueSaveStatus" type="button" data-service-request-id="${esc(r.service_request_id)}">Save</button>`:"—"} <button class="btnx" style="background:#7f1d1d;color:#fff" type="button" data-delete-order="${esc(r.id||"")}">Delete</button></td>
+      <td><div class="smart-action"><button class="btnx secondary smart-action-btn" type="button" data-smart-toggle aria-expanded="false">⋮ Actions</button><div class="smart-action-menu">${r.service_request_id?`<button class="revenueSaveStatus" type="button" data-service-request-id="${esc(r.service_request_id)}">Save status</button>`:""}<button class="danger" type="button" data-delete-order="${esc(r.id||"")}">Delete order</button></div></div></td>
     </tr>`;
   }).join(""):'<tr><td colspan="8" style="text-align:center">No matching orders.</td></tr>';
 
