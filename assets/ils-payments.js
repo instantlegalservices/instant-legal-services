@@ -13,10 +13,33 @@
     if (window.supabaseClient) return window.supabaseClient;
 
     try {
-      if (typeof supabaseClient !== "undefined") {
+      if (typeof supabaseClient !== "undefined" && supabaseClient) {
+        window.supabaseClient = supabaseClient;
         return supabaseClient;
       }
     } catch (e) {}
+
+    /* Defensive fallback: payment/session code must not depend on
+       another module having already published the shared client. */
+    try {
+      if (window.supabase?.createClient) {
+        const client = window.supabase.createClient(
+          "https://odqebkdzkjfxzyzbrndt.supabase.co",
+          "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi",
+          {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: true
+            }
+          }
+        );
+        window.supabaseClient = client;
+        return client;
+      }
+    } catch (e) {
+      console.error("ILS Supabase client initialization failed:", e);
+    }
 
     return null;
   }
