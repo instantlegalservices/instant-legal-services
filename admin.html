@@ -1586,6 +1586,44 @@ $("revenueStatusFilter").addEventListener("change",renderRevenue);
 $("revenueServiceStatusFilter").addEventListener("change",renderRevenue);
 window.addEventListener("resize",()=>document.querySelectorAll(".smart-action-menu.open").forEach(m=>m.classList.remove("open")));
 window.addEventListener("scroll",()=>document.querySelectorAll(".smart-action-menu.open").forEach(m=>m.classList.remove("open")),true);
+
+/* Mobile admin navigation: self-contained binding so the admin page does not
+   depend on the shared ILS runtime merely to open the hamburger menu. */
+(function bindAdminMobileMenu(){
+  function bind(){
+    const buttons=document.querySelectorAll("[data-menu]");
+    const nav=document.querySelector(".navlinks");
+    if(!buttons.length||!nav)return;
+    buttons.forEach(button=>{
+      if(button.dataset.adminMenuBound==="1")return;
+      button.dataset.adminMenuBound="1";
+      button.setAttribute("aria-expanded","false");
+      button.addEventListener("click",event=>{
+        event.preventDefault();
+        event.stopPropagation();
+        const open=nav.classList.toggle("open");
+        button.setAttribute("aria-expanded",String(open));
+      });
+    });
+    nav.querySelectorAll("a").forEach(link=>{
+      if(link.dataset.adminNavBound==="1")return;
+      link.dataset.adminNavBound="1";
+      link.addEventListener("click",()=>{
+        nav.classList.remove("open");
+        buttons.forEach(button=>button.setAttribute("aria-expanded","false"));
+      });
+    });
+    document.addEventListener("click",event=>{
+      if(!event.target.closest(".navbar")){
+        nav.classList.remove("open");
+        buttons.forEach(button=>button.setAttribute("aria-expanded","false"));
+      }
+    },{passive:true});
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind,{once:true});
+  else bind();
+})();
+
 </script>
 </body>
 </html>
