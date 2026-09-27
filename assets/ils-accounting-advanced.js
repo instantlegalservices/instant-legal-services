@@ -190,7 +190,7 @@
     if(slug==='inventory-valuation')return inventoryValuation();
     if(slug==='fixed-asset-register')return fixedAssets();
     if(slug==='payroll-compliance-estimator')return payroll();
-    if(upgraded.has(slug))return advancedExisting(slug);
+    // Existing catalog tools must continue through the authoritative core workflow.\n    // The additive layer owns only the five new accounting tools.\n    return false;
     return false;
   }
 
