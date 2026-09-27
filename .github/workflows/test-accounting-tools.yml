@@ -68,10 +68,13 @@ jobs:
             // Identify them by their authoritative tool slugs so the regression test
             // remains stable when the profession/category taxonomy changes.
             const expectedSlugs = [
-              'accounting-computation',
               'balance-sheet-tool',
               'profit-loss-tool'
             ];
+
+            if (window.ILS_TOOL_CATALOG.length !== 208) {
+              throw new Error('Authoritative tool catalog count changed: ' + window.ILS_TOOL_CATALOG.length);
+            }
 
             for (const slug of expectedSlugs) {
               if (await page.locator('.tool-card .tool-open[data-tool="' + slug + '"]').count() !== 1) {
@@ -79,7 +82,8 @@ jobs:
               }
             }
 
-            await page.locator('.tool-card .tool-open[data-tool="accounting-computation"]').click();
+            await page.locator('.tool-card .tool-open[data-tool="profit-loss-tool"]').click();
+            await page.locator('#plAccountingMode').click();
             await page.waitForTimeout(500);
 
             const workspaceVisible = await page.locator('#toolWorkspace').isVisible();
