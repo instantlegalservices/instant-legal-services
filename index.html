@@ -201,6 +201,33 @@ function setLang(v){
  $("problem").placeholder=v==="en-IN"?"Example: ₹10,000 was taken from my bank account online…":v==="hinglish"?"Example: Mere account se ₹10,000 online fraud mein chale gaye…":v==="ur-IN"?"مثال: میرے اکاؤنٹ سے ₹10000 آن لائن فراڈ میں چلے گئے…":v==="bn-IN"?"উদাহরণ: আমার অ্যাকাউন্ট থেকে ₹10000 অনলাইন প্রতারণায় চলে গেছে…":"जैसे: मेरे account से ₹10,000 online fraud में चले गए हैं…";
  localStorage.setItem("ils-home-lang",v);
 }
+let governmentCatalog = [];
+const GOVERNMENT_SUPABASE_URL = "https://odqebkdzkjfxzyzbrndt.supabase.co";
+const GOVERNMENT_SUPABASE_KEY = "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+const governmentCodeByTitle = {
+ "Cyber / Online Financial Fraud":"cyber-financial-fraud",
+ "Consumer Grievance":"consumer-grievance",
+ "Banking / RBI Complaint":"rbi-complaint",
+ "Government Department Grievance":"cpgrams",
+ "Police / Crime Complaint":"digital-police",
+ "GST / Tax Portal Issue":"gst-helpdesk",
+ "Income Tax / e-Filing":"income-tax",
+ "EPFO Grievance":"epfo-grievance"
+};
+async function loadGovernmentCatalog(){
+ try{
+  if(!window.supabase) return;
+  const client=window.supabase.createClient(GOVERNMENT_SUPABASE_URL,GOVERNMENT_SUPABASE_KEY,{auth:{persistSession:false}});
+  const {data,error}=await client.from("ils_government_route_catalog").select("service_code,title,description,authority,official_url,official_domain,first_action,tracking_supported,free_self_fill,guided_fee,assistant_chargeable,verification_status,source_checked_at").eq("active",true);
+  if(!error && Array.isArray(data)) governmentCatalog=data;
+ }catch(e){console.warn("Government route catalogue unavailable; deterministic fallback retained.",e)}
+}
+function enrichGovernmentRoute(route){
+ const code=governmentCodeByTitle[route.title];
+ const row=governmentCatalog.find(x=>x.service_code===code);
+ if(!row) return route;
+ return {...route,url:row.official_url,official:row.title,desc:row.description||route.desc,authority:row.authority||"",verification_status:row.verification_status,source_checked_at:row.source_checked_at,first_action:row.first_action,tracking_supported:row.tracking_supported};
+}
 function classify(q){
  const n=q.toLowerCase();
  const rules=[
@@ -219,7 +246,7 @@ function classify(q){
 }
 function understand(q){
  if(!q.trim()){toast("पहले अपनी problem लिखें या voice से बताएं.");$("problem").focus();return}
- currentRoute=classify(q); renderResult(q,currentRoute);
+ currentRoute=enrichGovernmentRoute(classify(q)); renderResult(q,currentRoute);
 }
 function renderResult(q,r){
  const no=r.url===null;
@@ -268,7 +295,7 @@ function loadDynamic(){
   el.innerHTML=rows.map(x=>'<article class="dcard"><div class="advtop"><img class="photo" src="'+ILS.esc(x.photo_url||x.profile_photo_url||"assets/ils-logo.jpg")+'" alt=""><div><div class="advname">'+ILS.esc(x.advocate_name||"Advocate")+'</div><div class="verified">✓ '+ILS.esc(x.verification_status||"Verified public profile")+'</div></div></div><p>'+ILS.esc(x.primary_practice_area||"Legal practice")+' • '+ILS.esc(x.practice_state||"India")+'</p><a class="btn ghost" href="advocates.html">View profile →</a></article>').join("");
  }).catch(()=>{$("advocates").innerHTML='<div class="loading">Professional profiles could not be loaded right now.</div>'});
 }
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded",()=>{\n loadGovernmentCatalog();
  const saved=localStorage.getItem("ils-home-lang")||"hi-IN";$("language").value=saved;setLang(saved);
  $("language").addEventListener("change",e=>setLang(e.target.value));
  $("menu").onclick=()=>{$("navLinks").classList.toggle("open")};
