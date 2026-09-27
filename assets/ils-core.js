@@ -215,7 +215,8 @@ window.ILS = (() => {
         verification_status,
         status,
         public_profile,
-        created_at
+        created_at,
+        professional_type
       `);
 
     const safeQ = String(q || "")
