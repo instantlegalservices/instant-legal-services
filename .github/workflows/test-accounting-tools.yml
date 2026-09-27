@@ -72,17 +72,25 @@ jobs:
               { slug: 'professional-report-guided', amount: 85 },
               { slug: 'professional-report-professional', amount: 125 }
             ];
-            const originalReady = window.ILS.ready;
             const tierResults = [];
-            window.ILS.ready = () => ({
-              auth: { getUser: async () => ({ data: { user: { id: 'e2e-paid-tier-user' } } }) },
-              rpc: async (name, args) => {
-                if (name !== 'ils_create_service_order') throw new Error('Unexpected paid-tier RPC: ' + name);
-                const expected = paidTierChecks.find(x => x.slug === args.p_service_slug);
-                if (!expected) throw new Error('Wrong paid-tier service slug: ' + args.p_service_slug);
-                tierResults.push({ slug: args.p_service_slug, amount: expected.amount });
-                return { data: { ok: true, order_id: 'e2e-' + expected.slug, order_number: 'ILS-E2E-' + expected.amount, amount: expected.amount, service_name: 'Paid Tier' }, error: null };
-              }
+            await page.evaluate(() => {
+              window.__ilsOriginalReady = window.ILS.ready;
+            });
+            await page.evaluate(() => {
+              window.ILS.ready = () => ({
+                auth: { getUser: async () => ({ data: { user: { id: 'e2e-paid-tier-user' } } }) },
+                rpc: async (name, args) => {
+                  if (name !== 'ils_create_service_order') throw new Error('Unexpected paid-tier RPC: ' + name);
+                  const expected = [
+                    { slug: 'professional-report-guided', amount: 85 },
+                    { slug: 'professional-report-professional', amount: 125 }
+                  ].find(x => x.slug === args.p_service_slug);
+                  if (!expected) throw new Error('Wrong paid-tier service slug: ' + args.p_service_slug);
+                  window.__e2eTierResults = window.__e2eTierResults || [];
+                  window.__e2eTierResults.push({ slug: args.p_service_slug, amount: expected.amount });
+                  return { data: { ok: true, order_id: 'e2e-' + expected.slug, order_number: 'ILS-E2E-' + expected.amount, amount: expected.amount, service_name: 'Paid Tier' }, error: null };
+                }
+              });
             });
             try {
               for (const tier of paidTierChecks) {
@@ -99,8 +107,9 @@ jobs:
                 }
               }
             } finally {
-              window.ILS.ready = originalReady;
+              await page.evaluate(() => { window.ILS.ready = window.__ilsOriginalReady; });
             }
+            const tierResults = await page.evaluate(() => window.__e2eTierResults || []);
             if (JSON.stringify(tierResults) !== JSON.stringify(paidTierChecks)) {
               throw new Error('Paid-tier mapping regression: ' + JSON.stringify(tierResults));
             }
@@ -250,6 +259,7 @@ jobs:
               };
 
               window.__e2eProofSubmitted = false;
+              window.__ilsOriginalReady = window.ILS.ready;
               window.ILS.ready = () => fakeSupabase;
             });
 
@@ -332,6 +342,8 @@ jobs:
             await page.locator('#brRun').click();
             const brText = await page.locator('#toolWorkspace').innerText();
             if (!brText.includes('₹1,00,500.00')) throw new Error('Bank reconciliation adjusted balance missing');
+
+            await page.evaluate(() => { if (window.__ilsOriginalReady) window.ILS.ready = window.__ilsOriginalReady; });
 
             if (failures.length) {
               throw new Error(failures.join('\n'));
