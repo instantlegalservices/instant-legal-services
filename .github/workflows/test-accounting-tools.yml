@@ -54,6 +54,15 @@ jobs:
 
             await page.goto(process.env.BASE_URL, { waitUntil: 'networkidle' });
             await page.reload({ waitUntil: 'networkidle' });
+            const catalogProbe = await page.evaluate(() => ({
+              hasCatalog: Array.isArray(window.ILS_TOOL_CATALOG),
+              accounting: Array.isArray(window.ILS_TOOL_CATALOG)
+                ? window.ILS_TOOL_CATALOG.find(x => x.slug === 'accounting-computation') || null
+                : null
+            }));
+            if (!catalogProbe.hasCatalog || !catalogProbe.accounting) {
+              throw new Error('Accounting catalog did not load: ' + JSON.stringify(catalogProbe));
+            }
 
             // Accounting tools are catalog entries, not a dedicated UI filter category.
             // Identify them by their authoritative tool slugs so the regression test
