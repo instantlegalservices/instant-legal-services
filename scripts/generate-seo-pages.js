@@ -355,7 +355,7 @@ const GOVERNMENT_SERVICES = [
     description:
       "Official route for reporting cyber crime; financial cyber fraud should be reported immediately through the official 1930 route.",
     officialUrl:
-      "https://www.cybercrime.gov.in/"
+      "https://cybercrime.gov.in/"
   },
   {
     slug: "echallan",
