@@ -268,6 +268,30 @@ jobs:
               throw new Error('Unlocked PDF/print control is not visible'); 
             }
 
+            // Advanced accounting layer regression: new tools and dedicated workflows.
+            for (const slug of ['bank-reconciliation','trial-balance','inventory-valuation','fixed-asset-register','payroll-compliance-estimator']) {
+              if (await page.locator('.tool-card .tool-open[data-tool="' + slug + '"]').count() !== 1) {
+                throw new Error('Missing advanced accounting tool: ' + slug);
+              }
+            }
+
+            await page.locator('.tool-card .tool-open[data-tool="trial-balance"]').click();
+            await page.locator('#tbRows').fill('Cash | 50000 | 0\nSales | 0 | 80000\nCapital | 0 | 50000\nRent | 30000 | 0');
+            await page.locator('#tbRun').click();
+            const tbText = await page.locator('#toolWorkspace').innerText();
+            for (const expected of ['Trial Balance','₹80,000.00','Balanced']) {
+              if (!tbText.includes(expected)) throw new Error('Trial balance output missing: ' + expected);
+            }
+
+            await page.locator('.tool-card .tool-open[data-tool="bank-reconciliation"]').click();
+            await page.locator('#brBook').fill('100000');
+            await page.locator('#brBank').fill('105000');
+            await page.locator('#brCredits').fill('Interest | 1000');
+            await page.locator('#brDebits').fill('Charges | 500');
+            await page.locator('#brRun').click();
+            const brText = await page.locator('#toolWorkspace').innerText();
+            if (!brText.includes('₹100,500.00')) throw new Error('Bank reconciliation adjusted balance missing');
+
             if (failures.length) {
               throw new Error(failures.join('\n'));
             }
