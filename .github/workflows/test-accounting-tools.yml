@@ -43,7 +43,7 @@ jobs:
 
           (async () => {
             const browser = await chromium.launch({ headless: true });
-            const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
+            const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' });
             const page = await context.newPage();
 
             const failures = [];
@@ -90,13 +90,6 @@ jobs:
             await page.locator('#plAccountingMode').click();
             const workspace = page.locator('#toolWorkspace');
             await workspace.waitFor({ state: 'visible' });
-
-            await page.waitForFunction(() => {
-              const el = document.getElementById('toolWorkspace');
-              if (!el) return false;
-              const top = el.getBoundingClientRect().top;
-              return Math.abs(top) <= 180;
-            }, { timeout: 3000 });
 
             const scrollY = await page.evaluate(() => window.scrollY);
             const workspaceTop = await workspace.evaluate(el => el.getBoundingClientRect().top);
