@@ -91,7 +91,23 @@ function motion(){
    items.forEach(el=>io.observe(el));
  }else items.forEach(el=>el.classList.add("ils-visible"));
 }
-function boot(){mark();inject();apply(get()); const home=document.querySelector("#language"); if(home) home.value=get(); motion();}
+function premiumMotion(){
+ const reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+ document.body.classList.add("ils-enhanced-ui");
+ if(reduce)return;
+ if(!document.querySelector(".ils-scroll-progress")){
+   const bar=document.createElement("div");bar.className="ils-scroll-progress";bar.setAttribute("aria-hidden","true");document.body.appendChild(bar);
+   const update=()=>{const d=document.documentElement,h=d.scrollHeight-d.clientHeight;bar.style.width=(h>0?(window.scrollY/h)*100:0)+"%"}; 
+   window.addEventListener("scroll",update,{passive:true});window.addEventListener("resize",update,{passive:true});update();
+ }
+ if(!document.querySelector(".ils-page-glow") && window.matchMedia("(pointer:fine)").matches){
+   const glow=document.createElement("div");glow.className="ils-page-glow";glow.setAttribute("aria-hidden","true");document.body.appendChild(glow);
+   let raf=0;
+   window.addEventListener("pointermove",e=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{glow.style.left=e.clientX+"px";glow.style.top=e.clientY+"px";glow.style.opacity=".8"})},{passive:true});
+   window.addEventListener("pointerleave",()=>{glow.style.opacity="0"},{passive:true});
+ }
+}
+function boot(){mark();inject();apply(get()); const home=document.querySelector("#language"); if(home) home.value=get(); motion(); premiumMotion();}
 window.ILSLanguage={get,set,apply,LANGS};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
 })();
