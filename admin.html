@@ -120,6 +120,22 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       <div class="table-wrap"><table><thead><tr><th>Order</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
     </section>
 
+<section class="panel" id="adminDeletionPanel" style="border:1px solid #7f1d1d">
+  <h2>⚠️ Permanent Data Deletion</h2>
+  <p style="color:#fca5a5">Admin-only destructive controls. Deletion is permanent and cannot be undone. Client deletion removes the client matter, related service requests/orders/entitlements and stored matter documents. Order deletion removes the order and payment-proof records. Profile deletion removes the selected professional/advocate profile and its stored profile photo; the login account is removed only when no other profile still references it.</p>
+  <div id="deletionMsg" class="msg"></div>
+  <div class="table-wrap" style="margin-top:14px">
+    <table class="adv-table">
+      <thead><tr><th>Client</th><th>Mobile</th><th>Location</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+      <tbody id="clientDeletionBody"><tr><td colspan="6" style="text-align:center">Loading clients…</td></tr></tbody>
+    </table>
+  </div>
+  <p style="color:#9ca7b6;margin:18px 0 8px">Orders can also be permanently deleted directly from the Revenue table below.</p>
+  <div style="padding:12px;border:1px solid #7f1d1d;border-radius:10px;background:rgba(127,29,29,.08)">
+    <strong>Safety confirmation:</strong> every deletion requires the exact phrase <code>DELETE PERMANENTLY</code> and a second confirmation.
+  </div>
+</section>
+
 <section class="panel" id="pricingControlPanel">
 <h2>💰 Pricing & Professional Fee Control</h2>
 <p style="color:#9ca7b6;margin-top:-6px">Admin-only control. Service/tool prices are used by the existing order RPC at checkout. Professional/associate fees are configuration only until a service explicitly uses them. Every pricing change is recorded in the admin pricing audit.</p>
@@ -641,7 +657,7 @@ function renderAdvocateRows(){
       <td>${esc(a.primary_practice_area||"—")}</td>
       <td>${esc(String(a.years_of_practice??"—"))} years</td>
       <td><span class="verify-badge ${cls}">${esc(st)}</span></td>
-      <td><button class="adv-action adv-view" type="button" data-adv-view="${esc(a.id)}">Manage</button></td>
+      <td><button class="adv-action adv-view" type="button" data-adv-view="${esc(a.id)}">Manage</button> <button class="btnx" style="background:#7f1d1d;color:#fff" type="button" data-delete-profile="advocate" data-delete-id="${esc(a.id)}">Delete</button></td>
     </tr>`;
   }).join("");
   tbody.querySelectorAll("[data-adv-view]").forEach(b=>b.addEventListener("click",()=>openAdvocate(b.dataset.advView)));
@@ -673,7 +689,8 @@ async function loadProfessionals(){
     const publicText=canPublic&&p.public_profile?"Enabled":"Private";
     const action='<button class="btnx primary profApprove" data-id="'+esc(p.id)+'">Approve</button> '+
       '<button class="btnx" style="background:#9b4b4b;color:#fff" data-id="'+esc(p.id)+'" data-action="reject">Reject</button> '+
-      (canPublic?'<button class="btnx secondary profPublic" data-id="'+esc(p.id)+'">'+(p.public_profile?"Hide":"Publish")+'</button>':"");
+      (canPublic?'<button class="btnx secondary profPublic" data-id="'+esc(p.id)+'">'+(p.public_profile?"Hide":"Publish")+'</button>':"")+
+      ' <button class="btnx" style="background:#7f1d1d;color:#fff" data-delete-profile="professional" data-delete-id="'+esc(p.id)+'" type="button">Delete</button>';
     return '<tr><td><strong>'+esc(label)+'</strong></td>'+
       '<td>'+esc(p.full_name||"—")+'</td>'+
       '<td>'+esc(p.email||"—")+'<br>'+esc(p.mobile||"—")+'</td>'+
@@ -1254,7 +1271,7 @@ function renderRevenue(){
       <td><select class="revenueServiceStatus" data-service-request-id="${esc(r.service_request_id||"")}" ${r.service_request_id?"":"disabled"}>${opts}</select></td>
       <td>${esc(r.source_tool_name||r.source_tool_slug||"Direct")}</td>
       <td>${esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")}</td>
-      <td>${r.service_request_id?`<button class="btnx secondary revenueSaveStatus" type="button" data-service-request-id="${esc(r.service_request_id)}">Save</button>`:"—"}</td>
+      <td>${r.service_request_id?`<button class="btnx secondary revenueSaveStatus" type="button" data-service-request-id="${esc(r.service_request_id)}">Save</button>`:"—"} <button class="btnx" style="background:#7f1d1d;color:#fff" type="button" data-delete-order="${esc(r.id||"")}">Delete</button></td>
     </tr>`;
   }).join(""):'<tr><td colspan="8" style="text-align:center">No matching orders.</td></tr>';
 
@@ -1348,6 +1365,65 @@ async function verifyGovRoutes(){
  }catch(e){console.error("Government route verification:",e);msg("govRouteVerificationMsg","Verification failed or was blocked: "+(e?.message||"Unknown error"),"err");}
  finally{if(btn)btn.disabled=false;}
 }
+let clientDeletionRows=[];
+
+async function loadClientDeletionRows(){
+  const body=$("clientDeletionBody"); if(!body)return;
+  body.innerHTML='<tr><td colspan="6" style="text-align:center">Loading clients…</td></tr>';
+  try{
+    const {data,error}=await sb.from("client_requirements")
+      .select("id,client_name,mobile,state,district_city,status,created_at")
+      .order("created_at",{ascending:false}).limit(250);
+    if(error)throw error;
+    clientDeletionRows=Array.isArray(data)?data:[];
+    renderClientDeletionRows();
+  }catch(e){
+    console.error("Client deletion list:",e);
+    body.innerHTML='<tr><td colspan="6" style="text-align:center">Unable to load clients.</td></tr>';
+    msg("deletionMsg","Client list unavailable: "+(e?.message||"Administrator access required."),"err");
+  }
+}
+
+function renderClientDeletionRows(){
+  const body=$("clientDeletionBody");if(!body)return;
+  body.innerHTML=clientDeletionRows.length?clientDeletionRows.map(r=>'<tr>'+
+    '<td><strong>'+esc(r.client_name||"—")+'</strong><br><small>ID '+esc(r.id)+'</small></td>'+
+    '<td>'+esc(r.mobile||"—")+'</td>'+
+    '<td>'+esc([r.district_city,r.state].filter(Boolean).join(", ")||"—")+'</td>'+
+    '<td>'+esc(r.status||"New")+'</td>'+
+    '<td>'+esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")+'</td>'+
+    '<td><button class="btnx" style="background:#7f1d1d;color:#fff" type="button" data-delete-client="'+esc(r.id)+'">Delete Complete Client Data</button></td>'+
+    '</tr>').join(""):'<tr><td colspan="6" style="text-align:center">No clients found.</td></tr>';
+}
+
+async function adminPermanentDelete(entityType,entityId){
+  const labels={advocate:"advocate profile",professional:"professional profile",client:"client and all related data",order:"order and related payment data"};
+  const label=labels[entityType]||entityType;
+  if(!entityId)return;
+  if(!confirm("WARNING: This will permanently delete the "+label+". This cannot be undone. Continue?"))return;
+  const typed=prompt('Type exactly DELETE PERMANENTLY to confirm permanent deletion of this '+label+'.');
+  if(typed!=="DELETE PERMANENTLY"){
+    msg("deletionMsg","Deletion cancelled. Exact confirmation was not entered.","");
+    return;
+  }
+  msg("deletionMsg","Deleting "+label+" safely…","");
+  try{
+    const {data,error}=await sb.functions.invoke("admin-delete-data",{body:{entity_type:entityType,entity_id:String(entityId),confirm:"DELETE PERMANENTLY"}});
+    if(error)throw error;
+    if(!data?.ok)throw new Error(data?.message||"Deletion failed.");
+    const cleanup=[];
+    if(data.auth_deleted)cleanup.push("login removed");
+    if(data.auth_delete_skipped)cleanup.push("login retained for safety");
+    const storageFailures=(data.storage||[]).filter(x=>!x.ok);
+    if(storageFailures.length)cleanup.push(storageFailures.length+" stored file cleanup(s) need review");
+    msg("deletionMsg",data.message+(cleanup.length?" ("+cleanup.join("; ")+")":""),"ok");
+    await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows()]);
+  }catch(e){
+    console.error("Permanent deletion:",e);
+    msg("deletionMsg","Deletion failed: "+(e?.message||"Unknown error"),"err");
+  }
+}
+
 async function openApp(){
   const check=await isAdmin();
   if(!check.ok){
@@ -1361,7 +1437,7 @@ async function openApp(){
   $("appView").classList.remove("hidden");
   currentAdminUserId=check.session.user.id;
   $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
-  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);
+  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);
 }
 
 $("loginForm").addEventListener("submit",async e=>{
@@ -1382,9 +1458,19 @@ $("logoutBtn").addEventListener("click",async()=>{
   await sb.auth.signOut();
   location.href="admin.html";
 });
-$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
+$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
 
 $("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
+$("clientDeletionBody")?.addEventListener("click",e=>{
+  const b=e.target.closest("[data-delete-client]");
+  if(b)adminPermanentDelete("client",b.dataset.deleteClient);
+});
+document.addEventListener("click",e=>{
+  const p=e.target.closest("[data-delete-profile]");
+  if(p)adminPermanentDelete(p.dataset.deleteProfile,p.dataset.deleteId);
+  const o=e.target.closest("[data-delete-order]");
+  if(o)adminPermanentDelete("order",o.dataset.deleteOrder);
+});
 $("adminAdvocateSearch").addEventListener("input",renderAdvocateRows);
 $("adminAdvocateStatus").addEventListener("change",renderAdvocateRows);
 $("closeAdvocateModal").addEventListener("click",closeAdvocate);
