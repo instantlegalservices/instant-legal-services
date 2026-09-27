@@ -72,7 +72,6 @@ jobs:
               { slug: 'professional-report-guided', amount: 85 },
               { slug: 'professional-report-professional', amount: 125 }
             ];
-            const tierResults = [];
             await page.evaluate(() => {
               window.__ilsOriginalReady = window.ILS.ready;
             });
