@@ -1,0 +1,35 @@
+name: Test Location Migration Writer
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/location-migration.js"
+      - "scripts/location-migration-writer.js"
+      - "scripts/test-location-migration-writer.js"
+      - ".github/workflows/test-location-migration-writer.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-location-migration-writer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js
+        run: node --version
+
+      - name: Run migration writer adversarial tests
+        run: node scripts/test-location-migration-writer.js

@@ -1,0 +1,46 @@
+name: Test Sitemap Composer Dry Run
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/sitemap-composer-dry-run.js"
+      - "scripts/test-sitemap-composer-dry-run.js"
+      - "scripts/sitemap-composer.js"
+      - "scripts/location-registry-feed.js"
+      - "scripts/location-sitemap.js"
+      - "sitemap.xml"
+      - ".github/workflows/test-sitemap-composer-dry-run.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-sitemap-composer-dry-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js version
+        run: node --version
+
+      - name: Verify sitemap exists
+        run: test -f sitemap.xml
+
+      - name: Run adversarial dry-run tests
+        run: node scripts/test-sitemap-composer-dry-run.js
+
+      - name: Run production dry-run auditor
+        env:
+          LOCATION_REGISTRY_SUPABASE_URL: ${{ secrets.LOCATION_REGISTRY_SUPABASE_URL }}
+          LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sitemap-composer-dry-run.js

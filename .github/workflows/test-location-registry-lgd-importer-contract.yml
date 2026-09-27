@@ -1,0 +1,30 @@
+name: Test Location Registry LGD Importer Contract
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/test-location-registry-lgd-importer-contract.js"
+      - ".github/workflows/test-location-registry-lgd-importer-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lgd-importer-contract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run LGD importer contract tests
+        run: node scripts/test-location-registry-lgd-importer-contract.js

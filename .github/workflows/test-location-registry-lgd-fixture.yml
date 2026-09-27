@@ -1,0 +1,31 @@
+name: Test Location Registry LGD Fixture
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/location-registry-lgd-importer.js"
+      - "scripts/test-location-registry-lgd-fixture.js"
+      - ".github/workflows/test-location-registry-lgd-fixture.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lgd-fixture:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run LGD fixture import verification
+        run: node scripts/test-location-registry-lgd-fixture.js
