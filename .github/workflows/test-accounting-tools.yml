@@ -43,7 +43,8 @@ jobs:
 
           (async () => {
             const browser = await chromium.launch({ headless: true });
-            const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+            const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
+            const page = await context.newPage();
 
             const failures = [];
             page.on('pageerror', e => failures.push('pageerror: ' + e.message));
