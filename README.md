@@ -1,7 +1,7 @@
 # Instant Legal Services — V9 FINAL HARDENED BUILD
 
 ## Included
-- Existing V9 public pages and preserved working `portal.html` CRM/portals
+- Existing V9 public pages, current professional login portal (`portal.html`) and current admin CRM (`admin.html`)
 - Fixed V9 hash router
 - Verified/completed-only public judgment queries
 - OpenRouter-only AI Edge Function
