@@ -123,6 +123,25 @@ function detectRoute(){
 function status(msg,kind){
  const el=document.getElementById("paymentStatus");el.textContent=msg;el.className="statusline show "+(kind||"");
 }
+async function loadConfiguredAssistancePrice(serviceSlug, fallback){
+ try{
+  const sb=window.ILS?.ready?.() || await window.ILS?.init?.();
+  if(!sb)return fallback;
+  const {data:service,error:serviceError}=await sb.from("services").select("id").eq("slug",serviceSlug).eq("is_active",true).maybeSingle();
+  if(serviceError||!service?.id)return fallback;
+  const {data:price,error:priceError}=await sb.from("service_prices").select("price").eq("service_id",service.id).eq("is_active",true).order("created_at",{ascending:false}).limit(1).maybeSingle();
+  if(priceError||price?.price===null||price?.price===undefined)return fallback;
+  const n=Number(price.price);return Number.isFinite(n)&&n>=0?n:fallback;
+ }catch(e){console.warn("Configured assistance price unavailable; using safe display fallback.",e);return fallback;}
+}
+
+async function applyConfiguredAssistancePrice(serviceSlug,fallback){
+ const amount=await loadConfiguredAssistancePrice(serviceSlug,fallback);
+ document.getElementById("payPrice").textContent="₹"+amount.toLocaleString("en-IN",{maximumFractionDigits:2});
+ const btn=document.getElementById("payBtn");
+ if(btn)btn.textContent=(mode==="guided"?"Pay ₹":"Pay ₹")+amount.toLocaleString("en-IN",{maximumFractionDigits:2})+(mode==="guided"?" & unlock guidance":" & request assistance");
+}
+
 function showMode(){
  if(mode!=="guided"&&mode!=="associate")return;
  const rd=detectRoute();
@@ -132,6 +151,8 @@ function showMode(){
  document.getElementById("routeName").textContent=rd?.title||route||"Official route";
  document.getElementById("problemText").textContent=problem||"Problem details were not carried forward. You can return to the problem search.";
  const guided=mode==="guided";
+ const configuredServiceSlug=guided?"official-route-guidance":"digital-form-assistance";
+ const configuredFallback=guided?19:45;
  document.getElementById("modePill").textContent=guided?"PAID GUIDED SELF-SERVICE":"PAID ASSOCIATE ASSISTANCE";
  document.getElementById("modeTitle").textContent=guided?"Fill the official form yourself — with a concise guidance pack.":"Have an ILS associate assist with the digital/form-filling task.";
  document.getElementById("modeLead").textContent=guided?"You remain in control of the official filing. ILS provides a summarized, non-legal checklist and field guidance.":"This is non-legal digital/administrative assistance. The associate does not provide legal advice or replace an independent professional.";
@@ -148,6 +169,7 @@ function showMode(){
  const items=rd?.items||["Confirm the authority/portal before entering any personal information","Keep relevant reference numbers and dates ready","Do not share OTP, passwords, PINs or payment credentials","Government fees and official processing remain outside ILS"];
  pack.innerHTML="<h3>What you will receive</h3><ul>"+items.map(x=>"<li>"+x+"</li>").join("")+"</ul>"+(guided?"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, this checklist and route-specific field guidance will be shown again in a clean copy-ready format.</p>":"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, the request enters the existing service-order workflow. An associate can then coordinate the stated non-legal digital task.</p>");
  document.getElementById("payBtn").onclick=()=>pay(guided,rd);
+ applyConfiguredAssistancePrice(configuredServiceSlug,configuredFallback);
  document.getElementById("loginBtn").onclick=()=>{};
 }
 async function pay(guided,rd){
