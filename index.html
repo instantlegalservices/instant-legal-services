@@ -1,2327 +1,641 @@
 <!doctype html>
-<html lang="en-IN">
+<html lang="hi-IN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>Instant Legal Services | Legal Search, Judgments, Advocates & Legal Help</title>
-
-<meta name="description"
-content="Instant Legal Services — search Indian laws and judgments, find advocates, use free legal tools and request professional legal assistance across India.">
-
-<meta name="keywords"
-content="legal services India, legal search India, Supreme Court judgments, High Court judgments, Indian Acts, advocate search, legal help, legal research">
-
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Instant Legal Services | अपनी समस्या बताइए — कानून समझिए, सही रास्ता पाइए</title>
+<meta name="description" content="Instant Legal Services — अपनी legal problem Hindi, Hinglish, text या voice में बताइए. Free legal information, official routes, judgments, tools, advocates और optional professional assistance एक ही जगह.">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://instantlegalservices.in/">
-
-<meta property="og:title"
-content="Instant Legal Services | Legal Search & Legal Help">
-<meta property="og:description"
-content="Search Indian law, explore judgments, find advocates and get professional legal assistance.">
+<meta property="og:title" content="Instant Legal Services | अपनी समस्या बताइए">
+<meta property="og:description" content="कानून समझिए, official रास्ता देखिए, free action से शुरू कीजिए और जरूरत होने पर professional help लीजिए.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://instantlegalservices.in/">
-
 <link rel="stylesheet" href="assets/ils.css">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/ils-core.js?v=13" defer></script>
-
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#07101c">
-
+<meta name="theme-color" content="#06111f">
 <script src="assets/pwa.js?v=15" defer></script>
 
 <style>
-/* =========================================================
-   ILS HOMEPAGE — CLEAN CONVERSION DESIGN
-   Existing backend/functions remain untouched.
-   ========================================================= */
-
 :root{
-  --home-bg:#07101c;
-  --home-panel:#0d1827;
-  --home-panel-2:#111f31;
-  --home-border:rgba(255,255,255,.09);
-  --home-text:#f5f7fa;
-  --home-muted:#9aa8b8;
-  --home-accent:#d7a84f;
-  --home-accent-2:#f2c76b;
+  --smart-bg:#06111f;
+  --smart-bg2:#091a2b;
+  --smart-card:rgba(15,32,51,.88);
+  --smart-card2:#10263c;
+  --smart-line:rgba(255,255,255,.10);
+  --smart-text:#f7fafc;
+  --smart-muted:#aab8c7;
+  --smart-gold:#f0bd55;
+  --smart-gold2:#ffe08a;
+  --smart-blue:#58b9ff;
+  --smart-green:#62d39b;
+  --smart-red:#ff7d78;
+  --smart-shadow:0 24px 70px rgba(0,0,0,.28);
 }
-
-.home-page{
-  background:
-    radial-gradient(circle at 80% 0%,rgba(215,168,79,.09),transparent 30%),
-    var(--home-bg);
-}
-
-.home-hero{
-  padding:70px 0 55px;
-  border-bottom:1px solid var(--home-border);
-}
-
-.home-hero-grid{
-  display:grid;
-  grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);
-  gap:45px;
-  align-items:center;
-}
-
-.home-eyebrow{
-  display:inline-flex;
-  align-items:center;
-  gap:7px;
-  padding:7px 12px;
-  border:1px solid rgba(215,168,79,.3);
-  border-radius:999px;
-  color:var(--home-accent-2);
-  background:rgba(215,168,79,.07);
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:.04em;
-  text-transform:uppercase;
-}
-
-.home-hero h1{
-  margin:18px 0 15px;
-  font-size:clamp(38px,5vw,64px);
-  line-height:1.04;
-  letter-spacing:-.035em;
-}
-
-.home-hero h1 span{
-  color:var(--home-accent);
-}
-
-.home-lead{
-  max-width:700px;
-  color:var(--home-muted);
-  font-size:17px;
-  line-height:1.65;
-}
-
-.home-search{
-  display:flex;
-  gap:10px;
-  margin-top:25px;
-  max-width:720px;
-}
-
-.home-search input{
-  flex:1;
-  min-width:0;
-  padding:16px 18px;
-  border-radius:12px;
-  border:1px solid var(--home-border);
-  background:#091523;
-  color:white;
-  outline:none;
-  font-size:15px;
-}
-
-.home-search input:focus{
-  border-color:rgba(215,168,79,.65);
-  box-shadow:0 0 0 3px rgba(215,168,79,.09);
-}
-
-.home-search button{
-  white-space:nowrap;
-}
-
-.home-search-hints{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  margin-top:11px;
-}
-
-.home-search-hints button{
-  border:1px solid var(--home-border);
-  background:rgba(255,255,255,.035);
-  color:#bdc8d4;
-  border-radius:999px;
-  padding:6px 10px;
-  font-size:11px;
-  cursor:pointer;
-}
-
-.home-search-hints button:hover{
-  border-color:rgba(215,168,79,.45);
-  color:var(--home-accent-2);
-}
-
-.home-actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-top:20px;
-}
-
-.home-trust{
-  margin-top:17px;
-  color:#7f8d9d;
-  font-size:11px;
-}
-
-.home-hero-panel{
-  padding:24px;
-  border:1px solid var(--home-border);
-  border-radius:18px;
-  background:
-    linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
-  box-shadow:0 25px 70px rgba(0,0,0,.18);
-}
-
-.home-panel-title{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:15px;
-}
-
-.home-panel-title strong{
-  font-size:17px;
-}
-
-.home-panel-title span{
-  color:var(--home-accent);
-  font-size:11px;
-}
-
-.home-quick{
-  display:grid;
-  gap:9px;
-}
-
-.home-quick a{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:13px 14px;
-  border:1px solid var(--home-border);
-  border-radius:11px;
-  background:rgba(255,255,255,.025);
-  color:var(--home-text);
-  text-decoration:none;
-}
-
-.home-quick a:hover{
-  border-color:rgba(215,168,79,.42);
-  transform:translateY(-1px);
-}
-
-.home-quick b{
-  font-size:13px;
-}
-
-.home-quick small{
-  display:block;
-  color:#8492a2;
-  font-size:10px;
-  margin-top:3px;
-}
-
-.home-quick i{
-  color:var(--home-accent);
-  font-style:normal;
-}
-
-.home-services{
-  padding:42px 0;
-  border-bottom:1px solid var(--home-border);
-}
-
-.home-service-grid{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:12px;
-}
-
-.home-service{
-  position:relative;
-  padding:18px;
-  border:1px solid var(--home-border);
-  border-radius:14px;
-  background:var(--home-panel);
-  text-decoration:none;
-  color:white;
-  transition:.18s ease;
-}
-
-.home-service:hover{
-  transform:translateY(-3px);
-  border-color:rgba(215,168,79,.4);
-}
-
-.home-service .icon{
-  font-size:22px;
-  margin-bottom:11px;
-}
-
-.home-service h3{
-  font-size:14px;
-  margin:0 0 5px;
-}
-
-.home-service p{
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body.smart-home{
   margin:0;
-  color:#8d9aaa;
-  font-size:11px;
-  line-height:1.45;
-}
-
-.home-service .price{
-  display:inline-block;
-  margin-top:10px;
-  color:var(--home-accent-2);
-  font-weight:700;
-  font-size:11px;
-}
-
-.home-section{
-  padding:55px 0;
-}
-
-.home-section.alt{
-  background:rgba(255,255,255,.018);
-  border-top:1px solid rgba(255,255,255,.035);
-  border-bottom:1px solid rgba(255,255,255,.035);
-}
-
-.home-section-head{
-  display:flex;
-  align-items:end;
-  justify-content:space-between;
-  gap:20px;
-  margin-bottom:22px;
-}
-
-.home-section-head h2{
-  margin:0 0 5px;
-  font-size:27px;
-}
-
-.home-section-head p{
-  margin:0;
-  color:var(--home-muted);
-  font-size:13px;
-}
-
-.home-link{
-  color:var(--home-accent-2);
-  text-decoration:none;
-  font-size:12px;
-  font-weight:700;
-  white-space:nowrap;
-}
-
-.home-dynamic-grid{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:15px;
-}
-
-.home-dynamic-card{
-  min-width:0;
-}
-
-.home-loading{
-  grid-column:1/-1;
-  padding:30px;
-  text-align:center;
-  border:1px dashed var(--home-border);
-  border-radius:14px;
-  color:#8492a2;
-  font-size:13px;
-}
-
-.home-empty{
-  grid-column:1/-1;
-  padding:28px;
-  border:1px dashed var(--home-border);
-  border-radius:14px;
-  text-align:center;
-  color:#8492a2;
-}
-
-.home-tools-grid{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:13px;
-}
-
-.home-tool{
-  display:flex;
-  align-items:center;
-  gap:13px;
-  padding:16px;
-  border:1px solid var(--home-border);
-  border-radius:13px;
-  background:var(--home-panel);
-  color:white;
-  text-decoration:none;
-}
-
-.home-tool:hover{
-  border-color:rgba(215,168,79,.4);
-}
-
-.home-tool .tool-icon{
-  width:40px;
-  height:40px;
-  display:grid;
-  place-items:center;
-  flex:none;
-  border-radius:10px;
-  background:rgba(215,168,79,.09);
-  font-size:19px;
-}
-
-.home-tool b{
-  display:block;
-  font-size:13px;
-}
-
-.home-tool small{
-  display:block;
-  margin-top:3px;
-  color:#8290a0;
-  font-size:10px;
-}
-
-.home-official-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:14px;
-}
-
-.home-official{
-  display:flex;
-  align-items:center;
-  gap:15px;
-  padding:19px;
-  border:1px solid var(--home-border);
-  border-radius:14px;
-  background:var(--home-panel);
-  color:white;
-  text-decoration:none;
-}
-
-.home-official:hover{
-  border-color:rgba(215,168,79,.4);
-}
-
-.home-official-icon{
-  font-size:27px;
-}
-
-.home-official b{
-  display:block;
-  font-size:14px;
-}
-
-.home-official small{
-  display:block;
-  color:#8492a2;
-  margin-top:4px;
-  font-size:11px;
-}
-
-.home-final-cta{
-  padding:34px;
-  border:1px solid rgba(215,168,79,.22);
-  border-radius:18px;
   background:
-    radial-gradient(circle at 90% 10%,rgba(215,168,79,.1),transparent 35%),
-    var(--home-panel);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:25px;
+    radial-gradient(circle at 15% 0%,rgba(88,185,255,.12),transparent 28%),
+    radial-gradient(circle at 90% 8%,rgba(240,189,85,.12),transparent 28%),
+    var(--smart-bg);
+  color:var(--smart-text);
 }
-
-.home-final-cta h2{
-  margin:7px 0;
-  font-size:28px;
+.smart-home a{color:inherit}
+.smart-wrap{width:min(1180px,calc(100% - 30px));margin:auto}
+.smart-header{
+  position:sticky;top:0;z-index:1000;
+  backdrop-filter:blur(16px);
+  background:rgba(6,17,31,.86);
+  border-bottom:1px solid var(--smart-line);
 }
-
-.home-final-cta p{
-  margin:0;
-  max-width:650px;
-  color:#8f9baa;
-  font-size:13px;
-  line-height:1.55;
+.smart-nav{min-height:70px;display:flex;align-items:center;gap:18px}
+.smart-brand{display:flex;align-items:center;gap:10px;text-decoration:none;min-width:0}
+.smart-brand img{width:42px;height:42px;object-fit:cover;border-radius:11px;border:1px solid var(--smart-line)}
+.smart-brand strong{font-size:13px;letter-spacing:.08em;white-space:nowrap}
+.smart-brand span{display:block;color:var(--smart-gold2);font-size:10px;letter-spacing:.08em;margin-top:2px}
+.smart-navlinks{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-left:auto}
+.smart-navlinks a{
+  text-decoration:none;color:#d7e0e9;padding:9px 10px;border-radius:10px;font-size:12px;
 }
-
-.home-profile-modal{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:rgba(0,0,0,.75);
+.smart-navlinks a:hover{background:rgba(255,255,255,.06);color:#fff}
+.smart-menu{display:none;margin-left:auto}
+.smart-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:46px;padding:12px 18px;border-radius:13px;border:1px solid transparent;
+  font:700 14px/1 inherit;text-decoration:none;cursor:pointer;transition:.2s ease;
 }
-
-.home-profile-modal.open{
-  display:flex;
+.smart-btn:hover{transform:translateY(-2px)}
+.smart-btn-primary{background:linear-gradient(135deg,#f5c45e,#d99a2f);color:#15100a;box-shadow:0 12px 30px rgba(240,189,85,.18)}
+.smart-btn-ghost{background:rgba(255,255,255,.045);border-color:var(--smart-line);color:#fff}
+.smart-btn-blue{background:rgba(88,185,255,.12);border-color:rgba(88,185,255,.30);color:#dff2ff}
+.smart-btn-big{min-height:58px;padding:14px 22px;font-size:16px;border-radius:16px}
+.smart-hero{position:relative;overflow:hidden;padding:58px 0 30px}
+.smart-hero:before{
+  content:"";position:absolute;width:520px;height:520px;right:-230px;top:-260px;border-radius:50%;
+  border:1px solid rgba(240,189,85,.16);box-shadow:0 0 0 80px rgba(240,189,85,.025),0 0 0 160px rgba(240,189,85,.015);
+  animation:smartPulse 7s ease-in-out infinite;
 }
-
-.home-profile-box{
-  width:min(700px,100%);
-  max-height:90vh;
-  overflow:auto;
-  position:relative;
-  padding:24px;
-  border-radius:18px;
-  background:#0d1827;
-  border:1px solid var(--home-border);
+@keyframes smartPulse{50%{transform:scale(1.08);opacity:.65}}
+.smart-hero-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(340px,.88fr);gap:32px;align-items:center}
+.smart-kicker{
+  display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+  background:rgba(98,211,155,.08);border:1px solid rgba(98,211,155,.25);color:#aaf1cd;font-size:12px;font-weight:800;
 }
-
-.home-close{
-  position:absolute;
-  right:13px;
-  top:10px;
-  width:34px;
-  height:34px;
-  border:0;
-  border-radius:50%;
-  background:rgba(255,255,255,.07);
-  color:white;
-  font-size:22px;
-  cursor:pointer;
+.smart-dot{width:8px;height:8px;border-radius:50%;background:var(--smart-green);box-shadow:0 0 0 6px rgba(98,211,155,.10);animation:smartBlink 2s infinite}
+@keyframes smartBlink{50%{opacity:.35}}
+.smart-hero h1{font-size:clamp(39px,6vw,72px);line-height:1.01;letter-spacing:-.045em;margin:20px 0 14px}
+.smart-hero h1 .gold{color:var(--smart-gold2)}
+.smart-hero-lead{max-width:690px;color:#c1ccd7;font-size:18px;line-height:1.65;margin:0}
+.smart-hero-lead b{color:#fff}
+.smart-intake{
+  margin-top:24px;padding:14px;border:1px solid var(--smart-line);border-radius:20px;
+  background:rgba(8,23,39,.78);box-shadow:var(--smart-shadow)
 }
-
-@media(max-width:1000px){
-  .home-service-grid{
-    grid-template-columns:repeat(3,1fr);
-  }
-
-  .home-dynamic-grid{
-    grid-template-columns:repeat(2,1fr);
-  }
-
-  .home-tools-grid{
-    grid-template-columns:repeat(2,1fr);
-  }
+.smart-intake-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.smart-intake-title{font-weight:900;font-size:16px}
+.smart-mini{font-size:11px;color:#8fa1b2}
+.smart-input-row{display:flex;gap:9px}
+.smart-intake textarea{
+  width:100%;min-height:76px;resize:vertical;padding:14px;border-radius:14px;
+  background:#071522;border:1px solid var(--smart-line);color:#fff;font:500 15px/1.5 inherit;outline:0;
 }
-
-@media(max-width:760px){
-  .home-hero{
-    padding:45px 0 38px;
-  }
-
-  .home-hero-grid{
-    grid-template-columns:1fr;
-    gap:25px;
-  }
-
-  .home-hero h1{
-    font-size:39px;
-  }
-
-  .home-lead{
-    font-size:14px;
-  }
-
-  .home-search{
-    flex-direction:column;
-  }
-
-  .home-search button{
-    width:100%;
-  }
-
-  .home-service-grid{
-    grid-template-columns:repeat(2,1fr);
-  }
-
-  .home-section{
-    padding:40px 0;
-  }
-
-  .home-section-head h2{
-    font-size:22px;
-  }
-
-  .home-dynamic-grid{
-    grid-template-columns:1fr;
-  }
-
-  .home-tools-grid{
-    grid-template-columns:1fr;
-  }
-
-  .home-official-grid{
-    grid-template-columns:1fr;
-  }
-
-  .home-final-cta{
-    flex-direction:column;
-    align-items:flex-start;
-    padding:25px;
-  }
+.smart-intake textarea:focus{border-color:rgba(240,189,85,.6);box-shadow:0 0 0 4px rgba(240,189,85,.07)}
+.smart-voice{
+  min-width:62px;border:1px solid rgba(88,185,255,.28);background:rgba(88,185,255,.08);color:#dff3ff;border-radius:14px;
+  font-size:24px;cursor:pointer
 }
-
-@media(max-width:430px){
-  .home-service-grid{
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-  }
-
-  .home-service{
-    padding:13px;
-  }
-
-  .home-service h3{
-    font-size:12px;
-  }
-
-  .home-service p{
-    font-size:10px;
-  }
-
-  .home-actions{
-    flex-direction:column;
-  }
-
-  .home-actions .btn{
-    width:100%;
-    text-align:center;
-  }
+.smart-voice.listening{animation:smartListen 1s infinite}
+@keyframes smartListen{50%{transform:scale(1.06);background:rgba(255,125,120,.14)}}
+.smart-intake-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.smart-quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.smart-quick button{
+  border:1px solid var(--smart-line);background:rgba(255,255,255,.035);color:#bdc9d5;border-radius:999px;
+  padding:8px 11px;font:700 11px inherit;cursor:pointer
 }
+.smart-quick button:hover{border-color:rgba(240,189,85,.45);color:#ffe08a}
+.smart-voice-note{margin-top:9px;color:#8092a5;font-size:10px;min-height:14px}
+.smart-hero-side{position:relative}
+.smart-orbit{
+  min-height:430px;padding:22px;border-radius:28px;border:1px solid var(--smart-line);
+  background:linear-gradient(155deg,rgba(255,255,255,.075),rgba(255,255,255,.02));
+  box-shadow:var(--smart-shadow);overflow:hidden
+}
+.smart-orbit:after{
+  content:"";position:absolute;inset:18% 12%;border:1px dashed rgba(240,189,85,.22);border-radius:50%;
+  animation:smartSpin 18s linear infinite
+}
+@keyframes smartSpin{to{transform:rotate(360deg)}}
+.smart-center{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;
+  width:150px;height:150px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle,#1a3852,#0a1726);border:1px solid rgba(240,189,85,.35);
+  box-shadow:0 0 50px rgba(240,189,85,.13)
+}
+.smart-center strong{font-size:19px;line-height:1.15}.smart-center small{display:block;color:#91a4b6;font-size:10px;margin-top:5px}
+.smart-float{
+  position:absolute;z-index:3;display:flex;align-items:center;gap:8px;padding:11px 13px;border-radius:14px;
+  background:#0c2034;border:1px solid var(--smart-line);box-shadow:0 15px 35px rgba(0,0,0,.2);
+  font-size:12px;font-weight:800;animation:smartFloat 4.5s ease-in-out infinite
+}
+.smart-float small{display:block;color:#8295a8;font-size:9px;font-weight:500;margin-top:2px}
+@keyframes smartFloat{50%{transform:translateY(-8px)}}
+.smart-float.f1{top:12%;left:8%}.smart-float.f2{top:20%;right:6%;animation-delay:.7s}.smart-float.f3{bottom:20%;left:5%;animation-delay:1.2s}.smart-float.f4{bottom:9%;right:8%;animation-delay:1.8s}
+.smart-float i{font-style:normal;font-size:20px}
+.smart-hero-side-bottom{display:flex;gap:8px;margin-top:10px}
+.smart-trust-pill{flex:1;text-align:center;padding:9px;border-radius:11px;border:1px solid var(--smart-line);background:rgba(255,255,255,.03);font-size:10px;color:#a6b5c4}
+.smart-section{padding:54px 0}
+.smart-section.alt{background:rgba(255,255,255,.018);border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04)}
+.smart-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:22px}
+.smart-head h2{margin:0 0 6px;font-size:clamp(24px,4vw,34px);letter-spacing:-.025em}
+.smart-head p{margin:0;color:var(--smart-muted);font-size:13px;line-height:1.5}
+.smart-head a{color:var(--smart-gold2);font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}
+.smart-problem-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.smart-problem{
+  min-height:142px;padding:16px 12px;border:1px solid var(--smart-line);border-radius:17px;background:var(--smart-card);
+  text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;
+  transition:.2s ease;position:relative;overflow:hidden
+}
+.smart-problem:before{content:"";position:absolute;inset:auto -20% -55%;height:100px;background:rgba(240,189,85,.07);filter:blur(22px)}
+.smart-problem:hover{transform:translateY(-5px);border-color:rgba(240,189,85,.42);box-shadow:0 16px 35px rgba(0,0,0,.18)}
+.smart-problem .big{font-size:34px;position:relative}.smart-problem b{font-size:13px;position:relative}.smart-problem small{font-size:10px;color:#8294a6;position:relative;line-height:1.35}
+.smart-free-tag{font-size:9px;color:#aaf1cd;background:rgba(98,211,155,.08);padding:3px 7px;border-radius:999px;position:relative}
+.smart-flow{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.smart-step{position:relative;padding:20px 14px;border:1px solid var(--smart-line);border-radius:17px;background:var(--smart-card);min-height:155px}
+.smart-step .num{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:rgba(240,189,85,.10);color:var(--smart-gold2);font-weight:900;margin-bottom:14px}
+.smart-step h3{margin:0 0 7px;font-size:15px}.smart-step p{margin:0;color:#91a1b1;font-size:11px;line-height:1.5}
+.smart-step:after{content:"→";position:absolute;right:-9px;top:50%;transform:translateY(-50%);z-index:2;color:var(--smart-gold);font-weight:900}
+.smart-step:last-child:after{display:none}
+.smart-choice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.smart-choice{
+  padding:22px;border:1px solid var(--smart-line);border-radius:20px;background:var(--smart-card);
+  text-decoration:none;transition:.2s ease;min-height:190px
+}
+.smart-choice:hover{transform:translateY(-4px);border-color:rgba(88,185,255,.35)}
+.smart-choice-icon{font-size:31px;margin-bottom:14px}.smart-choice h3{margin:0 0 7px;font-size:18px}.smart-choice p{margin:0;color:#91a1b1;font-size:12px;line-height:1.55}
+.smart-choice .link{display:inline-block;margin-top:16px;color:#cfeeff;font-size:11px;font-weight:900}
+.smart-dynamic-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.smart-loading,.smart-empty{grid-column:1/-1;padding:30px;border:1px dashed var(--smart-line);border-radius:16px;text-align:center;color:#8497aa;font-size:13px}
+.smart-card{background:var(--smart-card);border:1px solid var(--smart-line);border-radius:17px;padding:17px}
+.smart-judgment-card h3{font-size:15px;line-height:1.35;margin:12px 0 8px}.smart-judgment-card p{color:#92a3b4;font-size:11px;line-height:1.5;min-height:50px}
+.smart-meta{display:flex;justify-content:space-between;gap:8px;color:#8799aa;font-size:10px}.smart-badge{color:#bfe9ff;background:rgba(88,185,255,.08);border:1px solid rgba(88,185,255,.18);padding:5px 7px;border-radius:999px}
+.smart-card-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.smart-small-btn{min-height:35px;padding:8px 11px;border-radius:10px;font-size:10px}
+.smart-adv-card{cursor:pointer;min-height:190px}.smart-adv-top{display:flex;gap:11px;align-items:center}.smart-adv-photo{width:54px;height:54px;border-radius:14px;object-fit:cover;background:#173047;border:1px solid var(--smart-line)}.smart-adv-name{font-weight:900;font-size:14px}.smart-verified{color:#9ff0c6;font-size:9px;margin-top:4px}.smart-adv-meta{color:#8799aa;font-size:10px;margin-top:3px}.smart-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px}.smart-chip{font-size:9px;padding:5px 7px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--smart-line);color:#b8c5d2}
+.smart-tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}.smart-tool{display:flex;align-items:center;gap:11px;padding:15px;border:1px solid var(--smart-line);border-radius:15px;background:var(--smart-card);text-decoration:none}.smart-tool:hover{border-color:rgba(240,189,85,.38)}.smart-tool-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:rgba(240,189,85,.09);font-size:21px;flex:none}.smart-tool b{display:block;font-size:12px}.smart-tool small{display:block;margin-top:3px;color:#8294a6;font-size:9px}
+.smart-official-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.smart-official{display:flex;align-items:center;gap:14px;padding:20px;border:1px solid var(--smart-line);border-radius:17px;background:var(--smart-card);text-decoration:none}.smart-official:hover{border-color:rgba(98,211,155,.3)}.smart-official-icon{font-size:30px}.smart-official b{font-size:14px}.smart-official small{display:block;color:#8193a5;font-size:10px;margin-top:4px}
+.smart-free-pay{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px
+}
+.smart-free-pay > div{padding:22px;border-radius:20px;border:1px solid var(--smart-line);background:var(--smart-card)}
+.smart-free-pay h3{margin:0 0 8px;font-size:18px}.smart-free-pay p{margin:0;color:#91a2b2;font-size:12px;line-height:1.55}
+.smart-bullets{display:grid;gap:8px;margin-top:14px}.smart-bullet{display:flex;gap:9px;align-items:flex-start;font-size:11px;color:#bdc9d4}.smart-bullet i{font-style:normal;color:var(--smart-green)}
+.smart-final{padding:42px 0 58px}.smart-final-box{
+  padding:30px;border:1px solid rgba(240,189,85,.25);border-radius:24px;
+  background:radial-gradient(circle at 90% 0%,rgba(240,189,85,.12),transparent 38%),var(--smart-card);
+  display:flex;align-items:center;justify-content:space-between;gap:20px
+}.smart-final-box h2{margin:0 0 8px;font-size:30px}.smart-final-box p{margin:0;color:#91a2b2;max-width:700px;font-size:12px;line-height:1.55}
+.smart-footer{border-top:1px solid var(--smart-line);padding:32px 0 45px;color:#8fa1b2}.smart-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:22px}.smart-footer strong{color:#fff;display:block;margin-bottom:9px}.smart-footer a{display:block;text-decoration:none;color:#8fa1b2;font-size:11px;margin:7px 0}.smart-footer a:hover{color:#fff}.smart-footer p{font-size:10px;line-height:1.5}
+.smart-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:18px}.smart-modal.open{display:flex}.smart-modal-box{width:min(700px,100%);max-height:90vh;overflow:auto;background:#0b1a2b;border:1px solid var(--smart-line);border-radius:20px;padding:24px;position:relative}.smart-close{position:absolute;right:12px;top:10px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.07);color:#fff;font-size:22px;cursor:pointer}
+.smart-toast{position:fixed;left:50%;bottom:22px;z-index:10000;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#12283e;border:1px solid var(--smart-line);color:#fff;padding:12px 16px;border-radius:12px;font-size:12px;transition:.25s ease;box-shadow:var(--smart-shadow)}.smart-toast.show{opacity:1;transform:translate(-50%,0)}
+.smart-scenario{min-height:32px;color:#fff;font-size:14px;font-weight:800}.smart-scenario span{color:var(--smart-gold2)}.smart-scenario-wrap{margin-top:13px;padding:10px 13px;border:1px solid var(--smart-line);border-radius:13px;background:rgba(255,255,255,.025)}
+.smart-scenario-label{font-size:9px;color:#7f91a4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.smart-appear{animation:smartAppear .65s ease both}@keyframes smartAppear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(max-width:1050px){.smart-problem-grid{grid-template-columns:repeat(3,1fr)}.smart-flow{grid-template-columns:repeat(3,1fr)}.smart-step:after{display:none}.smart-dynamic-grid{grid-template-columns:repeat(2,1fr)}.smart-tool-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:820px){
+  .smart-navlinks{display:none}.smart-menu{display:inline-flex;min-height:42px;padding:9px 12px;border:1px solid var(--smart-line);border-radius:11px;background:rgba(255,255,255,.04);color:#fff;font-size:18px}
+  .smart-navlinks.open{display:grid;position:absolute;left:15px;right:15px;top:70px;padding:12px;border:1px solid var(--smart-line);border-radius:15px;background:#0a1929;box-shadow:var(--smart-shadow)}
+  .smart-hero-grid{grid-template-columns:1fr}.smart-orbit{min-height:370px}.smart-choice-grid{grid-template-columns:1fr}.smart-free-pay{grid-template-columns:1fr}.smart-footer-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:620px){
+  .smart-wrap{width:min(100% - 20px,1180px)}.smart-hero{padding-top:38px}.smart-hero h1{font-size:43px}.smart-hero-lead{font-size:15px}
+  .smart-input-row{align-items:stretch}.smart-voice{width:58px;min-width:58px}.smart-intake-actions{display:grid;grid-template-columns:1fr 1fr}.smart-intake-actions .smart-btn{width:100%}
+  .smart-problem-grid{grid-template-columns:repeat(2,1fr)}.smart-flow{grid-template-columns:1fr 1fr}.smart-dynamic-grid{grid-template-columns:1fr}.smart-tool-grid{grid-template-columns:1fr}.smart-official-grid{grid-template-columns:1fr}.smart-final-box{display:block}.smart-final-box .smart-intake-actions{margin-top:18px}.smart-footer-grid{grid-template-columns:1fr}.smart-head{display:block}.smart-head>a{display:inline-block;margin-top:9px}
+}
+@media(max-width:390px){.smart-problem-grid{gap:7px}.smart-problem{min-height:132px;padding:11px 7px}.smart-problem .big{font-size:29px}.smart-problem b{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 
-<body class="home-page">
+<body class="smart-home">
 
-<header class="site-header">
-  <div class="wrap navbar">
-
-    <a class="brand" href="index.html" aria-label="Instant Legal Services home">
-      <img
-        class="brand-logo"
-        src="assets/ils-logo.jpg"
-        alt="Instant Legal Services logo">
-
-      <span class="brand-text">
-        INSTANT <span>LEGAL SERVICES</span>
-      </span>
+<header class="smart-header">
+  <div class="smart-wrap smart-nav">
+    <a class="smart-brand" href="index.html" aria-label="Instant Legal Services Home">
+      <img src="assets/ils-logo.jpg" alt="ILS">
+      <div><strong>INSTANT LEGAL SERVICES</strong><span>कानून समझना • सही रास्ता पाना</span></div>
     </a>
-
-    <nav class="navlinks" aria-label="Primary navigation">
-
-      <a class="active" href="index.html">Home</a>
-
-      <a href="legal-search.html">Legal Search</a>
-
-      <a href="acts/">Acts</a>
-
+    <nav class="smart-navlinks" id="smartNav" aria-label="मुख्य मेनू">
+      <a href="#problem">मेरी समस्या</a>
+      <a href="#how">कैसे काम करता है</a>
+      <a href="legal-search.html">कानून खोजें</a>
       <a href="judgments.html">Judgments</a>
-
-      <a href="advocates.html">Find Advocate</a>
-
       <a href="tools.html">Tools</a>
-
-      <a href="ai-assistant.html">AI Assistant</a>
-
-      <a href="customer-portal.html">Client Login</a>
-
-      <a href="law-guide.html">Law Guide</a>
-
-      <a class="btn btn-primary btn-small"
-         href="assistance.html">
-        Get Legal Help
-      </a>
-
+      <a href="advocates.html">Advocate</a>
+      <a class="smart-btn smart-btn-primary smart-small-btn" href="assistance.html">Legal Help</a>
     </nav>
-
-    <button
-      class="menu"
-      data-menu
-      aria-label="Open menu">
-      ☰
-    </button>
-
-    <button
-      class="btn btn-ghost btn-small"
-      data-install-app
-      hidden>
-      Install App
-    </button>
-
+    <button class="smart-menu" id="smartMenu" type="button" aria-label="मेनू खोलें">☰</button>
   </div>
 </header>
 
-
 <main>
 
-<!-- =======================================================
-     HERO
-======================================================= -->
+<section class="smart-hero">
+  <div class="smart-wrap smart-hero-grid">
+    <div class="smart-appear">
+      <span class="smart-kicker"><i class="smart-dot"></i> India-wide • आसान भाषा • Free-first</span>
+      <h1>अपनी <span class="gold">समस्या बताइए।</span><br>आगे क्या करना है, समझिए।</h1>
+      <p class="smart-hero-lead"><b>आपको कानून की धारा पता होना जरूरी नहीं है.</b> अपनी बात Hindi, Hinglish, text या voice में बताइए. ILS आपको legal information, official रास्ता, free first action और जरूरत होने पर professional help तक ले जाने के लिए बनाया गया है.</p>
 
-<section class="home-hero">
-
-  <div class="wrap home-hero-grid">
-
-    <div>
-
-      <span class="home-eyebrow">
-        ⚖ India-Wide Legal Platform
-      </span>
-
-      <h1>
-        Find the law.<br>
-        <span>Find the right help.</span>
-      </h1>
-
-      <p class="home-lead">
-        Search Indian laws and judgments, explore verified legal
-        information, find professional advocates and request
-        legal assistance — all from one simple platform.
-      </p>
-
-
-<form
-  id="homeSearchForm"
-  class="home-search"
-  role="search"
-  >
-
-        <input
-          id="homeSearch"
-          type="search"
-          placeholder="Search a case, section, Act or legal topic…"
-          autocomplete="off"
-          aria-label="Search Indian legal information">
-
-        <button
-          class="btn btn-primary"
-          type="submit">
-          Search
-        </button>
-
-      </form>
-
-
-      <div class="home-search-hints">
-
-        <button type="button" data-search="BNS 115">
-          BNS 115
-        </button>
-
-        <button type="button" data-search="BNSS 173">
-          BNSS 173
-        </button>
-
-        <button type="button" data-search="Section 138 NI Act">
-          NI Act 138
-        </button>
-
-        <button type="button" data-search="Bail">
-          Bail
-        </button>
-
-        <button type="button" data-search="Maintenance">
-          Maintenance
-        </button>
-
+      <div class="smart-intake" id="problem">
+        <div class="smart-intake-top">
+          <div class="smart-intake-title">🎙️ अपनी समस्या यहाँ बताइए</div>
+          <div class="smart-mini">एक बार में एक बात • सरल भाषा</div>
+        </div>
+        <div class="smart-input-row">
+          <textarea id="smartProblem" placeholder="जैसे: पुलिस FIR नहीं लिख रही है…&#10;या: मेरा cheque bounce हो गया…&#10;या: जमीन के कागज समझ नहीं आ रहे…"></textarea>
+          <button class="smart-voice" id="smartVoice" type="button" title="बोलकर बताएं" aria-label="बोलकर बताएं">🎙️</button>
+        </div>
+        <div class="smart-intake-actions">
+          <button class="smart-btn smart-btn-primary smart-btn-big" id="smartStart" type="button">➡️ मेरी मदद शुरू करें</button>
+          <button class="smart-btn smart-btn-ghost smart-btn-big" id="smartListen" type="button">🔊 सुनें</button>
+        </div>
+        <div class="smart-quick" aria-label="उदाहरण">
+          <button type="button" data-problem="पुलिस FIR नहीं लिख रही है">🚔 FIR / Police</button>
+          <button type="button" data-problem="मेरा cheque bounce हो गया है">💳 Cheque</button>
+          <button type="button" data-problem="मुझे property के कागज समझने हैं">🏠 Property</button>
+          <button type="button" data-problem="मुझे divorce या maintenance की जानकारी चाहिए">👨‍👩‍👧 Family</button>
+          <button type="button" data-problem="मेरे साथ online cyber fraud हुआ है">📱 Cyber Fraud</button>
+          <button type="button" data-problem="मुझे किसी government service का official रास्ता चाहिए">🏛️ Government</button>
+        </div>
+        <div class="smart-voice-note" id="smartVoiceNote">Voice button दबाकर बोल सकते हैं. आपके browser में voice support उपलब्ध न होने पर text भी इस्तेमाल कर सकते हैं.</div>
       </div>
 
-
-      <div class="home-actions">
-
-        <a
-          class="btn btn-primary"
-          href="assistance.html">
-          Get Legal Help
-        </a>
-
-        <a
-          class="btn btn-ghost"
-          href="ai-assistant.html">
-          🤖 Ask ILS AI
-        </a>
-
-        <a
-          class="btn btn-ghost"
-          href="advocates.html">
-          👨‍⚖️ Find Advocate
-        </a>
-
+      <div class="smart-scenario-wrap">
+        <div class="smart-scenario-label">आज लोग किस तरह की समस्या लेकर आते हैं?</div>
+        <div class="smart-scenario" id="smartScenario">🚔 <span>“Police complaint/FIR”</span> — पहले सही official रास्ता समझें.</div>
       </div>
-
-
-      <div class="home-trust">
-        General legal information only. Professional services
-        are provided independently by appropriate professionals.
-      </div>
-
     </div>
 
-
-    <!-- HERO QUICK PANEL -->
-
-    <aside class="home-hero-panel">
-
-      <div class="home-panel-title">
-        <strong>Quick Legal Access</strong>
-        <span>ILS</span>
+    <div class="smart-hero-side smart-appear">
+      <div class="smart-orbit" aria-label="ILS service map">
+        <div class="smart-center">⚖️<div><strong>ILS</strong><small>एक जगह • कई रास्ते</small></div></div>
+        <div class="smart-float f1"><i>🔎</i><div>कानून खोजें<small>Acts • Sections • Cases</small></div></div>
+        <div class="smart-float f2"><i>🤖</i><div>AI से पूछें<small>सरल legal information</small></div></div>
+        <div class="smart-float f3"><i>🧰</i><div>Free Tools<small>काम की practical मदद</small></div></div>
+        <div class="smart-float f4"><i>👨‍⚖️</i><div>Professional Help<small>जरूरत पर आगे बढ़ें</small></div></div>
       </div>
-
-
-      <div class="home-quick">
-
-        <a href="legal-search.html">
-          <div>
-            <b>🔎 Legal Search</b>
-            <small>Search laws, cases and topics</small>
-          </div>
-          <i>→</i>
-        </a>
-
-
-        <a href="judgments.html">
-          <div>
-            <b>⚖️ Latest Judgments</b>
-            <small>Verified Supreme Court & High Court records</small>
-          </div>
-          <i>→</i>
-        </a>
-
-
-        <a href="advocates.html">
-          <div>
-            <b>👨‍⚖️ Find an Advocate</b>
-            <small>Explore approved professional profiles</small>
-          </div>
-          <i>→</i>
-        </a>
-
-
-        <a href="tools.html">
-          <div>
-            <b>🧰 Free Legal Tools</b>
-            <small>Practical calculators and legal utilities</small>
-          </div>
-          <i>→</i>
-        </a>
-
-
-        <a href="acts/">
-          <div>
-            <b>📜 Indian Acts</b>
-            <small>Browse Acts and sections</small>
-          </div>
-          <i>→</i>
-        </a>
-
+      <div class="smart-hero-side-bottom">
+        <div class="smart-trust-pill">🆓 Free first action</div>
+        <div class="smart-trust-pill">🏛️ Official route अलग</div>
+        <div class="smart-trust-pill">🔐 Private work secure area में</div>
       </div>
-
-    </aside>
-
+    </div>
   </div>
-
 </section>
 
-
-<!-- =======================================================
-     POPULAR PAID SERVICES
-======================================================= -->
-
-<section class="home-services">
-
-  <div class="wrap">
-
-    <div class="home-section-head">
-
-      <div>
-        <h2>Popular Legal Services</h2>
-
-        <p>
-          Start with a professional service when you need more
-          than general information.
-        </p>
-      </div>
-
-      <a
-        class="home-link"
-        href="assistance.html">
-        View all services →
-      </a>
-
+<section class="smart-section" id="what">
+  <div class="smart-wrap">
+    <div class="smart-head">
+      <div><h2>आपको क्या करना है?</h2><p>कानून की language छोड़िए — अपनी situation के हिसाब से शुरू कीजिए.</p></div>
     </div>
-
-
-    <div class="home-service-grid">
-
-      <a class="home-service" href="assistance.html">
-
-        <div class="icon">📄</div>
-
-        <h3>Legal Notice</h3>
-
-        <p>
-          Professional legal notice drafting assistance.
-        </p>
-
-        <span class="price">From ₹499</span>
-
-      </a>
-
-
-      <a class="home-service" href="assistance.html">
-
-        <div class="icon">⚖️</div>
-
-        <h3>Case Preparation</h3>
-
-        <p>
-          Structured preparation and legal assistance.
-        </p>
-
-        <span class="price">From ₹499</span>
-
-      </a>
-
-
-      <a class="home-service" href="assistance.html">
-
-        <div class="icon">🔬</div>
-
-        <h3>Legal Research</h3>
-
-        <p>
-          Focused research for a specific legal issue.
-        </p>
-
-        <span class="price">From ₹299</span>
-
-      </a>
-
-
-      <a class="home-service" href="assistance.html">
-
-        <div class="icon">🏠</div>
-
-        <h3>Property Due Diligence</h3>
-
-        <p>
-          Professional property-document review assistance.
-        </p>
-
-        <span class="price">From ₹2,999</span>
-
-      </a>
-
-
-      <a class="home-service" href="assistance.html">
-
-        <div class="icon">💬</div>
-
-        <h3>Legal Consultation</h3>
-
-        <p>
-          Connect your requirement with appropriate professional assistance.
-        </p>
-
-        <span class="price">From ₹299</span>
-
-      </a>
-
+    <div class="smart-problem-grid">
+      <a class="smart-problem" href="ai-assistant.html?q=police%20FIR%20complaint"><div class="big">🚔</div><b>Police / FIR</b><small>Complaint, arrest, bail</small><span class="smart-free-tag">पहले जानकारी</span></a>
+      <a class="smart-problem" href="ai-assistant.html?q=cyber%20fraud"><div class="big">📱</div><b>Cyber Fraud</b><small>Online fraud, account issue</small><span class="smart-free-tag">पहले जानकारी</span></a>
+      <a class="smart-problem" href="ai-assistant.html?q=cheque%20bounce"><div class="big">💳</div><b>Cheque / Money</b><small>Cheque, payment, recovery</small><span class="smart-free-tag">पहले जानकारी</span></a>
+      <a class="smart-problem" href="ai-assistant.html?q=property%20dispute"><div class="big">🏠</div><b>Property</b><small>Documents, dispute, notice</small><span class="smart-free-tag">पहले जानकारी</span></a>
+      <a class="smart-problem" href="ai-assistant.html?q=family%20divorce%20maintenance"><div class="big">👨‍👩‍👧</div><b>Family</b><small>Marriage, divorce, maintenance</small><span class="smart-free-tag">पहले जानकारी</span></a>
+      <a class="smart-problem" href="ai-assistant.html?q=consumer%20complaint"><div class="big">🛒</div><b>Consumer</b><small>Refund, defective product</small><span class="smart-free-tag">पहले जानकारी</span></a>
     </div>
-
   </div>
-
 </section>
 
-
-<!-- =======================================================
-     LATEST JUDGMENTS — DYNAMIC
-======================================================= -->
-
-<section class="home-section alt">
-
-  <div class="wrap">
-
-    <div class="home-section-head">
-
-      <div>
-        <h2>Latest Verified Judgments</h2>
-
-        <p>
-          Recently published verified judgment records from the ILS database.
-        </p>
-      </div>
-
-      <a
-        class="home-link"
-        href="judgments.html">
-        View all →
-      </a>
-
+<section class="smart-section alt" id="how">
+  <div class="smart-wrap">
+    <div class="smart-head">
+      <div><h2>ILS कैसे काम करता है?</h2><p>Simple flow: पहले समझिए → फिर free रास्ता → फिर जरूरत पर help.</p></div>
     </div>
-
-
-    <div
-      id="latestJudgments"
-      class="home-dynamic-grid">
-
-      <div class="home-loading">
-        Loading latest judgments…
-      </div>
-
+    <div class="smart-flow">
+      <div class="smart-step"><div class="num">1</div><h3>बताइए</h3><p>अपनी समस्या text या voice में बताइए. आपको legal section जानने की जरूरत नहीं.</p></div>
+      <div class="smart-step"><div class="num">2</div><h3>समझिए</h3><p>समस्या को सरल legal information और relevant route से समझने में मदद.</p></div>
+      <div class="smart-step"><div class="num">3</div><h3>Official रास्ता</h3><p>जहाँ applicable हो, official authority/portal और process अलग दिखाया जाता है.</p></div>
+      <div class="smart-step"><div class="num">4</div><h3>Free action</h3><p>जहाँ genuinely free self-service available हो, पहले वही रास्ता.</p></div>
+      <div class="smart-step"><div class="num">5</div><h3>Help चुनें</h3><p>Guided/admin assistance या independent professional help केवल जरूरत और choice पर.</p></div>
+      <div class="smart-step"><div class="num">6</div><h3>Track करें</h3><p>आगे चलकर secure Case/Service Passport, documents, tasks और status workflow.</p></div>
     </div>
-
   </div>
-
 </section>
 
-
-<!-- =======================================================
-     FEATURED ADVOCATES — DYNAMIC
-======================================================= -->
-
-<section class="home-section">
-
-  <div class="wrap">
-
-    <div class="home-section-head">
-
-      <div>
-        <h2>Featured Network Advocates</h2>
-
-        <p>
-          Approved public professional profiles from the ILS network.
-        </p>
-      </div>
-
-      <a
-        class="home-link"
-        href="advocates.html">
-        Find more advocates →
-      </a>
-
+<section class="smart-section">
+  <div class="smart-wrap">
+    <div class="smart-head">
+      <div><h2>एक ही website पर ये काम</h2><p>हर user को एक ही रास्ते में सब कुछ करने की जरूरत नहीं — जो चाहिए, वही खोलिए.</p></div>
     </div>
-
-
-    <div
-      id="featuredAdvocates"
-      class="home-dynamic-grid">
-
-      <div class="home-loading">
-        Loading professional profiles…
-      </div>
-
+    <div class="smart-choice-grid">
+      <a class="smart-choice" href="legal-search.html"><div class="smart-choice-icon">🔎</div><h3>कानून खोजें</h3><p>Acts, sections, legal topics और case-law research के लिए search.</p><span class="link">Search Law →</span></a>
+      <a class="smart-choice" href="judgments.html"><div class="smart-choice-icon">⚖️</div><h3>Judgments देखें</h3><p>Verified judgment records और उपलब्ध official-source/PDF links देखें.</p><span class="link">Open Judgments →</span></a>
+      <a class="smart-choice" href="ai-assistant.html"><div class="smart-choice-icon">🤖</div><h3>AI से पूछें</h3><p>General Indian-law information सरल सवालों में पूछें. AI legal outcome guarantee नहीं है.</p><span class="link">Ask ILS AI →</span></a>
+      <a class="smart-choice" href="tools.html"><div class="smart-choice-icon">🧰</div><h3>Free Tools</h3><p>Calculators, checklists और practical utilities से पहले खुद काम समझें.</p><span class="link">Open Tools →</span></a>
+      <a class="smart-choice" href="advocates.html"><div class="smart-choice-icon">👨‍⚖️</div><h3>Advocate खोजें</h3><p>Approved public professional profiles को practice area और location के हिसाब से देखें.</p><span class="link">Find Advocate →</span></a>
+      <a class="smart-choice" href="assistance.html"><div class="smart-choice-icon">🧑‍💼</div><h3>Legal Help लें</h3><p>अपनी requirement submit करें. Professional workflow अलग और clearly explained रहेगा.</p><span class="link">Get Help →</span></a>
     </div>
-
   </div>
-
 </section>
 
-
-<!-- =======================================================
-     FREE TRAFFIC MAGNETS
-======================================================= -->
-
-<section class="home-section alt">
-
-  <div class="wrap">
-
-    <div class="home-section-head">
-
-      <div>
-        <h2>Free Legal Resources</h2>
-
-        <p>
-          Useful tools and legal information — available without a complicated journey.
-        </p>
-      </div>
-
+<section class="smart-section alt">
+  <div class="smart-wrap">
+    <div class="smart-head">
+      <div><h2>Latest verified judgments</h2><p>Homepage पर live database से latest records दिखते हैं.</p></div><a href="judgments.html">सभी देखें →</a>
     </div>
-
-
-    <div class="home-tools-grid">
-
-
-      <a class="home-tool" href="acts/">
-
-        <span class="tool-icon">📜</span>
-
-        <div>
-          <b>Indian Acts Library</b>
-          <small>Browse Acts and sections</small>
-        </div>
-
-      </a>
-
-
-      <a class="home-tool" href="law-guide.html">
-
-        <span class="tool-icon">📚</span>
-
-        <div>
-          <b>Law Guide</b>
-          <small>Common legal topics and practice areas</small>
-        </div>
-
-      </a>
-
-
-      <a class="home-tool" href="tools.html">
-
-        <span class="tool-icon">🧰</span>
-
-        <div>
-          <b>Legal Tools</b>
-          <small>Free calculators and practical utilities</small>
-        </div>
-
-      </a>
-
-
-<a class="home-tool" href="tools.html">
-
-        <span class="tool-icon">🧮</span>
-
-        <div>
-          <b>Professional Tools</b>
-          <small>GST, TDS, accounting, fee & compliance tools</small>
-        </div>
-
-      </a>
-
-
-            <a class="home-tool" href="ai-assistant.html">
-
-        <span class="tool-icon">🤖</span>
-
-        <div>
-          <b>ILS AI Assistant</b>
-          <small>Ask general Indian-law questions</small>
-        </div>
-
-      </a>
-
-
-    </div>
-
+    <div id="smartJudgments" class="smart-dynamic-grid"><div class="smart-loading">⏳ Latest judgments load हो रहे हैं…</div></div>
   </div>
-
 </section>
 
-
-<!-- =======================================================
-     OFFICIAL SERVICES
-======================================================= -->
-
-<section class="home-section">
-
-  <div class="wrap">
-
-    <div class="home-section-head">
-
-      <div>
-
-        <h2>Official Quick Access</h2>
-
-        <p>
-          Direct access to official government services.
-          ILS does not operate these portals.
-        </p>
-
-      </div>
-
+<section class="smart-section">
+  <div class="smart-wrap">
+    <div class="smart-head">
+      <div><h2>Featured professional network</h2><p>Approved public profiles से advocate खोजने का आसान रास्ता.</p></div><a href="advocates.html">सभी advocates →</a>
     </div>
-
-
-    <div class="home-official-grid">
-
-
-      <a
-        class="home-official"
-        href="https://services.ecourts.gov.in/ecourtindia_v6/"
-        target="_blank"
-        rel="noopener noreferrer">
-
-        <span class="home-official-icon">🏛️</span>
-
-        <div>
-          <b>eCourts Case Search ↗</b>
-          <small>
-            Official Indian eCourts case-status service
-          </small>
-        </div>
-
-      </a>
-
-
-      <a
-        class="home-official"
-        href="https://echallan.parivahan.gov.in/index/accused-challan"
-        target="_blank"
-        rel="noopener noreferrer">
-
-        <span class="home-official-icon">🚦</span>
-
-        <div>
-          <b>Parivahan eChallan ↗</b>
-          <small>
-            Official government challan service
-          </small>
-        </div>
-
-      </a>
-
-
-    </div>
-
+    <div id="smartAdvocates" class="smart-dynamic-grid"><div class="smart-loading">⏳ Professional profiles load हो रहे हैं…</div></div>
   </div>
-
 </section>
 
-
-<!-- =======================================================
-     SIMPLE HOW IT WORKS
-======================================================= -->
-
-<section class="home-section alt">
-
-  <div class="wrap">
-
-    <div class="home-section-head">
-
-      <div>
-
-        <h2>How Instant Legal Services Works</h2>
-
-        <p>
-          Simple access without unnecessary steps.
-        </p>
-
-      </div>
-
+<section class="smart-section alt">
+  <div class="smart-wrap">
+    <div class="smart-head">
+      <div><h2>Free legal resources</h2><p>पहले खुद समझें और जहाँ संभव हो self-service करें.</p></div><a href="tools.html">सभी tools →</a>
     </div>
-
-
-    <div class="home-tools-grid">
-
-
-      <div class="home-tool">
-
-        <span class="tool-icon">01</span>
-
-        <div>
-          <b>Search</b>
-          <small>
-            Find laws, judgments or legal information.
-          </small>
-        </div>
-
-      </div>
-
-
-      <div class="home-tool">
-
-        <span class="tool-icon">02</span>
-
-        <div>
-          <b>Understand</b>
-          <small>
-            Explore relevant legal information and resources.
-          </small>
-        </div>
-
-      </div>
-
-
-      <div class="home-tool">
-
-        <span class="tool-icon">03</span>
-
-        <div>
-          <b>Connect</b>
-          <small>
-            Explore approved professional profiles.
-          </small>
-        </div>
-
-      </div>
-
-
-      <div class="home-tool">
-
-        <span class="tool-icon">04</span>
-
-        <div>
-          <b>Get Assistance</b>
-          <small>
-            Submit your requirement for professional assistance.
-          </small>
-        </div>
-
-      </div>
-
-
+    <div class="smart-tool-grid">
+      <a class="smart-tool" href="acts/"><span class="smart-tool-icon">📜</span><div><b>Indian Acts</b><small>Acts और sections</small></div></a>
+      <a class="smart-tool" href="law-guide.html"><span class="smart-tool-icon">📚</span><div><b>Law Guide</b><small>Simple legal topics</small></div></a>
+      <a class="smart-tool" href="tools.html"><span class="smart-tool-icon">🧮</span><div><b>Legal Tools</b><small>Calculators & checklists</small></div></a>
+      <a class="smart-tool" href="tools.html"><span class="smart-tool-icon">📊</span><div><b>Business / Accounting</b><small>Practical business tools</small></div></a>
+      <a class="smart-tool" href="faq.html"><span class="smart-tool-icon">❓</span><div><b>FAQ</b><small>Common questions</small></div></a>
+      <a class="smart-tool" href="ai-assistant.html"><span class="smart-tool-icon">🤖</span><div><b>ILS AI</b><small>Ask in simple language</small></div></a>
+      <a class="smart-tool" href="legal-search.html"><span class="smart-tool-icon">🔍</span><div><b>Legal Search</b><small>Find laws & topics</small></div></a>
+      <a class="smart-tool" href="assistance.html"><span class="smart-tool-icon">🆘</span><div><b>Get Legal Help</b><small>Requirement intake</small></div></a>
     </div>
-
   </div>
-
 </section>
 
-
-<!-- =======================================================
-     FINAL CONVERSION CTA
-======================================================= -->
-
-<section class="home-section">
-
-  <div class="wrap">
-
-    <div class="home-final-cta">
-
-      <div>
-
-        <span class="home-eyebrow">
-          Professional Legal Assistance
-        </span>
-
-        <h2>
-          Have a legal problem?
-        </h2>
-
-        <p>
-          Tell us the basic nature of your matter and jurisdiction.
-          Start your legal assistance request and follow the appropriate
-          professional workflow.
-        </p>
-
-      </div>
-
-
-      <div class="home-actions">
-
-        <a
-          class="btn btn-primary"
-          href="assistance.html">
-          Start Legal Assistance
-        </a>
-
-        <a
-          class="btn btn-ghost"
-          href="ai-assistant.html">
-          Ask ILS AI
-        </a>
-
-      </div>
-
+<section class="smart-section">
+  <div class="smart-wrap">
+    <div class="smart-head">
+      <div><h2>Official services भी अलग और साफ</h2><p>ILS government नहीं है. Official portal और ILS assistance/fee को अलग रखा जाता है.</p></div>
     </div>
-
+    <div class="smart-official-grid">
+      <a class="smart-official" href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener noreferrer"><span class="smart-official-icon">🏛️</span><div><b>eCourts Case Search ↗</b><small>Official eCourts service — external government portal</small></div></a>
+      <a class="smart-official" href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener noreferrer"><span class="smart-official-icon">🚦</span><div><b>Parivahan eChallan ↗</b><small>Official challan service — external government portal</small></div></a>
+    </div>
   </div>
+</section>
 
+<section class="smart-section alt">
+  <div class="smart-wrap">
+    <div class="smart-head">
+      <div><h2>Free पहले. Paid help केवल जब आप चुनें.</h2><p>Project blueprint का free-first model homepage पर साफ दिखाई देगा.</p></div>
+    </div>
+    <div class="smart-free-pay">
+      <div>
+        <h3>🆓 पहले क्या मिलेगा?</h3>
+        <p>General legal information, verified public resources, official-route links और genuinely free self-service जहाँ उपलब्ध हो.</p>
+        <div class="smart-bullets">
+          <div class="smart-bullet"><i>✓</i><span>Problem समझने से शुरुआत</span></div>
+          <div class="smart-bullet"><i>✓</i><span>Official source/route को प्राथमिकता</span></div>
+          <div class="smart-bullet"><i>✓</i><span>Tools, Acts, judgments और AI information access</span></div>
+        </div>
+      </div>
+      <div>
+        <h3>💼 जरूरत होने पर क्या?</h3>
+        <p>Guided/admin assistance या independent professional legal work के लिए अलग workflow, scope और applicable fee स्पष्ट दिखेगी.</p>
+        <div class="smart-bullets">
+          <div class="smart-bullet"><i>✓</i><span>क्या खरीदा जा रहा है, पहले समझें</span></div>
+          <div class="smart-bullet"><i>✓</i><span>Government fee और ILS/professional fee अलग</span></div>
+          <div class="smart-bullet"><i>✓</i><span>Legal judgment/representation independent professional के पास</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="smart-final">
+  <div class="smart-wrap">
+    <div class="smart-final-box">
+      <div>
+        <h2>समझ नहीं आ रहा कहाँ से शुरू करें?</h2>
+        <p>बस अपनी problem लिखें या बोलें. आपको “Section कौन-सी है?” से शुरुआत नहीं करनी है.</p>
+      </div>
+      <div class="smart-intake-actions">
+        <a class="smart-btn smart-btn-primary smart-btn-big" href="#problem">🎙️ Problem बताएं</a>
+        <a class="smart-btn smart-btn-ghost smart-btn-big" href="assistance.html">🧑‍💼 Human Help</a>
+      </div>
+    </div>
+  </div>
 </section>
 
 </main>
 
-
-<!-- =======================================================
-     PROFILE MODAL
-======================================================= -->
-
-<div
-  id="profileModal"
-  class="home-profile-modal"
-  aria-hidden="true">
-
-  <div
-    class="home-profile-box"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Advocate profile">
-
-    <button
-      class="home-close"
-      type="button"
-      onclick="closeProfile()"
-      aria-label="Close">
-      ×
-    </button>
-
-    <div id="profileContent"></div>
-
+<div id="smartModal" class="smart-modal" aria-hidden="true">
+  <div class="smart-modal-box" role="dialog" aria-modal="true" aria-label="Advocate profile">
+    <button class="smart-close" id="smartClose" type="button" aria-label="Close">×</button>
+    <div id="smartModalContent"></div>
   </div>
-
 </div>
+<div id="smartToast" class="smart-toast" role="status" aria-live="polite"></div>
 
-
-<!-- =======================================================
-     FOOTER
-======================================================= -->
-
-<footer class="footer">
-
-  <div class="wrap footer-grid">
-
-    <div>
-
-      <strong>Instant Legal Services</strong>
-
-      <p>
-        Legal information, research access and professional
-        network coordination across India.
-      </p>
-
-      <p>
-        Public information only. No guarantee of outcome or
-        professional ranking is intended.
-      </p>
-
-    </div>
-
-
-    <div>
-
-      <strong>Explore</strong>
-
-      <a href="legal-search.html">Legal Search</a>
-
-      <a href="acts/">Acts Library</a>
-
-      <a href="judgments.html">Judgments</a>
-
-      <a href="law-guide.html">Law Guide</a>
-
-      <a href="advocates.html">Find Advocate</a>
-
-      <a href="tools.html">Legal Tools</a>
-
-    </div>
-
-
-    <div>
-
-      <strong>Services</strong>
-
-      <a href="assistance.html">Legal Assistance</a>
-
-      <a href="ai-assistant.html">AI Assistant</a>
-
-      <a href="advocate-register.html">
-        Join ILS Network
-      </a>
-
-      <a href="faq.html">FAQ</a>
-
-    </div>
-
-
-    <div>
-
-      <strong>Portals</strong>
-
-      <a href="portal.html#client">
-        Client Portal
-      </a>
-
-     <a href="portal.html#advocate-portal">Advocate Portal</a>
-
-      <a href="admin.html">
-        Admin
-      </a>
-
-      <p>
-        © 2026 Instant Legal Services
-      </p>
-
-    </div>
-
+<footer class="smart-footer">
+  <div class="smart-wrap smart-footer-grid">
+    <div><strong>Instant Legal Services</strong><p>India-wide legal information, research, tools, official-route navigation and professional network coordination. General information only; professional legal work is independent.</p><p>© 2026 Instant Legal Services</p></div>
+    <div><strong>Explore</strong><a href="legal-search.html">Legal Search</a><a href="acts/">Acts</a><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a><a href="tools.html">Tools</a></div>
+    <div><strong>Help</strong><a href="ai-assistant.html">AI Assistant</a><a href="assistance.html">Legal Help</a><a href="advocates.html">Find Advocate</a><a href="faq.html">FAQ</a></div>
+    <div><strong>Portals</strong><a href="customer-portal.html">Client Login</a><a href="portal.html#advocate-portal">Advocate Portal</a><a href="admin.html">Admin</a></div>
   </div>
-
 </footer>
 
-
-<!-- =======================================================
-     SEO STRUCTURED DATA
-======================================================= -->
-
 <script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"LegalService",
-  "name":"Instant Legal Services",
-  "url":"https://instantlegalservices.in/",
-  "areaServed":"India",
-  "serviceType":[
-    "Legal Information",
-    "Legal Research",
-    "Legal Assistance",
-    "Advocate Network"
-  ]
-}
+{"@context":"https://schema.org","@type":"LegalService","name":"Instant Legal Services","url":"https://instantlegalservices.in/","areaServed":"India","serviceType":["Legal Information","Legal Research","Legal Assistance","Advocate Network"]}
 </script>
 
-
-<!-- =======================================================
-     HOMEPAGE JAVASCRIPT
-======================================================= -->
-
 <script>
-
 (function(){
-
 "use strict";
 
+const esc = v => window.ILS?.esc ? ILS.esc(v) : String(v ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const $ = id => document.getElementById(id);
 
-/* =========================================================
-   SAFE HTML ESCAPE
-========================================================= */
-
-function esc(value){
-
-  if(window.ILS && typeof ILS.esc === "function"){
-    return ILS.esc(value);
-  }
-
-  return String(value ?? "").replace(
-    /[&<>"']/g,
-    function(c){
-
-      return {
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#039;"
-      }[c];
-
-    }
-  );
-
+function toast(message){
+  const t=$("smartToast"); if(!t)return;
+  t.textContent=message; t.classList.add("show");
+  clearTimeout(window.__smartToastTimer);
+  window.__smartToastTimer=setTimeout(()=>t.classList.remove("show"),3200);
 }
-
-
-/* =========================================================
-   PROFILE MODAL
-========================================================= */
-
-window.closeProfile = function(){
-
-  const modal =
-    document.getElementById("profileModal");
-
-  if(!modal) return;
-
-  modal.classList.remove("open");
-
-  modal.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-
-};
-
-
-window.showProfile = function(advocate){
-
-  const modal =
-    document.getElementById("profileModal");
-
-  const content =
-    document.getElementById("profileContent");
-
-  if(
-    !modal ||
-    !content ||
-    !window.ILS
-  ){
-    return;
-  }
-
-  try{
-
-    content.innerHTML =
-      ILS.profileHTML(advocate);
-
-    modal.classList.add("open");
-
-    modal.setAttribute(
-      "aria-hidden",
-      "false"
-    );
-
-  }catch(error){
-
-    console.error(
-      "ILS PROFILE ERROR:",
-      error
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   JUDGMENTS
-========================================================= */
-
-function renderJudgments(rows){
-
-  const container =
-    document.getElementById(
-      "latestJudgments"
-    );
-
-  if(!container) return;
-
-
-  const list =
-    Array.isArray(rows)
-      ? rows
-      : [];
-
-
-  if(!list.length){
-
-    container.innerHTML =
-      '<div class="home-empty">' +
-      'No verified judgments are available at the moment.' +
-      '</div>';
-
-    return;
-
-  }
-
-
-  container.innerHTML =
-    list.slice(0,4).map(
-      function(j){
-
-        const official =
-          j.official_source_url
-          ?
-          '<a class="btn btn-ghost btn-small" ' +
-          'href="' + esc(j.official_source_url) + '"' +
-          ' target="_blank" ' +
-          'rel="noopener noreferrer">' +
-          'Official source ↗' +
-          '</a>'
-          :
-          "";
-
-
-        const pdf =
-          j.source_pdf_url
-          ?
-          '<a class="btn btn-primary btn-small" ' +
-          'href="' + esc(j.source_pdf_url) + '"' +
-          ' target="_blank" ' +
-          'rel="noopener noreferrer">' +
-          'PDF' +
-          '</a>'
-          :
-          "";
-
-
-        const date =
-          window.ILS &&
-          typeof ILS.formatDate === "function"
-          ?
-          ILS.formatDate(
-            j.judgment_date
-          )
-          :
-          (
-            j.judgment_date || ""
-          );
-
-
-        return (
-
-          '<article class="card judgment-card home-dynamic-card">' +
-
-            '<div class="judgment-top">' +
-
-              '<span class="badge">' +
-                esc(
-                  j.court_name ||
-                  j.primary_category ||
-                  "Judgment"
-                ) +
-              '</span>' +
-
-              '<span class="judgment-date">' +
-                esc(date) +
-              '</span>' +
-
-            '</div>' +
-
-
-            '<h3>' +
-              esc(
-                j.case_title ||
-                "Judgment"
-              ) +
-            '</h3>' +
-
-
-            '<p>' +
-              esc(
-                j.short_summary ||
-                j.legal_principle ||
-                "Verified judgment record available."
-              ) +
-            '</p>' +
-
-
-            '<div class="actions">' +
-              official +
-              pdf +
-            '</div>' +
-
-          '</article>'
-
-        );
-
-      }
-    ).join("");
-
-}
-
-
-/* =========================================================
-   ADVOCATES
-========================================================= */
-
-function renderAdvocates(rows){
-
-  const container =
-    document.getElementById(
-      "featuredAdvocates"
-    );
-
-  if(!container) return;
-
-
-  const list =
-    Array.isArray(rows)
-      ? rows
-      : [];
-
-
-  if(!list.length){
-
-    container.innerHTML =
-      '<div class="home-empty">' +
-      'No approved public profiles are available at the moment.' +
-      '</div>';
-
-    return;
-
-  }
-
-
-  container.innerHTML =
-    list.slice(0,4).map(
-      function(a,index){
-
-        const photo =
-          a.photo_url ||
-          a.profile_photo_url ||
-          "";
-
-
-        const name =
-          a.advocate_name ||
-          "Advocate";
-
-
-        const state =
-          a.practice_state ||
-          "India";
-
-
-        const areas =
-          (
-            window.ILS &&
-            typeof ILS.split === "function"
-          )
-          ?
-          ILS.split(
-            a.primary_practice_area
-          ).slice(0,3)
-          :
-          [];
-
-
-        return (
-
-          '<article ' +
-
-            'class="card adv-card home-dynamic-card" ' +
-
-            'data-advocate-index="' +
-              index +
-            '" ' +
-
-            'role="button" ' +
-            'tabindex="0">' +
-
-
-            '<div class="adv-top">' +
-
-
-              (
-                photo
-
-                ?
-
-                '<img ' +
-                  'class="adv-photo" ' +
-                  'src="' +
-                    esc(photo) +
-                  '" ' +
-                  'alt="' +
-                    esc(name) +
-                  '" ' +
-                  'loading="lazy" ' +
-                  'onerror="this.style.display=\'none\'">' +
-
-                ''
-
-                :
-
-                '<div ' +
-                  'class="adv-photo" ' +
-                  'aria-hidden="true">' +
-                '</div>'
-              )
-
-
-              +
-
-
-              '<div>' +
-
-                '<div class="adv-name">' +
-                  esc(name) +
-                '</div>' +
-
-                '<div class="verified">' +
-                  '✓ Verified' +
-                '</div>' +
-
-                '<div class="meta">' +
-                  esc(state) +
-                '</div>' +
-
-              '</div>' +
-
-
-            '</div>' +
-
-
-            '<div class="chips">' +
-
-              (
-                areas.length
-
-                ?
-
-                areas.map(
-                  function(area){
-
-                    return (
-                      '<span class="chip">' +
-                        esc(area) +
-                      '</span>'
-                    );
-
-                  }
-                ).join("")
-
-                :
-
-                '<span class="chip">' +
-                  'Professional Profile' +
-                '</span>'
-              )
-
-            + '</div>' +
-
-
-            '<div style="margin-top:12px;' +
-              'font-size:12px;' +
-              'font-weight:700;' +
-              'color:#d7a84f;">' +
-
-              'View profile →' +
-
-            '</div>' +
-
-
-          '</article>'
-
-        );
-
-      }
-    ).join("");
-
-
-  container
-    .querySelectorAll(
-      "[data-advocate-index]"
-    )
-    .forEach(
-      function(card){
-
-        const index =
-          Number(
-            card.getAttribute(
-              "data-advocate-index"
-            )
-          );
-
-
-        function open(){
-
-          showProfile(
-            list[index]
-          );
-
-        }
-
-
-        card.addEventListener(
-          "click",
-          open
-        );
-
-
-        card.addEventListener(
-          "keydown",
-          function(event){
-
-            if(
-              event.key === "Enter" ||
-              event.key === " "
-            ){
-
-              event.preventDefault();
-
-              open();
-
-            }
-
-          }
-        );
-
-      }
-    );
-
-}
-
-
-/* =========================================================
-   HOME DATA
-========================================================= */
-
-async function loadHome(){
-
-  const judgmentsContainer =
-    document.getElementById(
-      "latestJudgments"
-    );
-
-  const advocatesContainer =
-    document.getElementById(
-      "featuredAdvocates"
-    );
-
-
-  try{
-
-    if(
-      window.ILS &&
-      typeof ILS.init === "function"
-    ){
-
-      await ILS.init();
-
-    }
-
-  }catch(error){
-
-    console.error(
-      "ILS HOME INIT ERROR:",
-      error
-    );
-
-  }
-
-
-  const advocatePromise =
-
-    (
-      window.ILS &&
-      typeof ILS.advocates === "function"
-    )
-
-    ?
-
-    ILS.advocates({
-      limit:4,
-      featured:true
-    })
-
-    :
-
-    Promise.reject(
-      new Error(
-        "Advocate service unavailable."
-      )
-    );
-
-
-  const judgmentPromise =
-
-    (
-      window.ILS &&
-      typeof ILS.judgments === "function"
-    )
-
-    ?
-
-    ILS.judgments({
-      limit:4
-    })
-
-    :
-
-    Promise.reject(
-      new Error(
-        "Judgment service unavailable."
-      )
-    );
-
-
-  const results =
-    await Promise.allSettled([
-      advocatePromise,
-      judgmentPromise
-    ]);
-
-
-  /* Advocates */
-
-  if(
-    results[0].status ===
-    "fulfilled"
-  ){
-
-    renderAdvocates(
-      results[0].value
-    );
-
-  }else{
-
-    console.error(
-      "HOME ADVOCATES ERROR:",
-      results[0].reason
-    );
-
-
-    if(advocatesContainer){
-
-      advocatesContainer.innerHTML =
-        '<div class="home-empty">' +
-        'Professional profiles are temporarily unavailable. ' +
-        'Please open Find Advocate to try again.' +
-        '</div>';
-
-    }
-
-  }
-
-
-  /* Judgments */
-
-  if(
-    results[1].status ===
-    "fulfilled"
-  ){
-
-    renderJudgments(
-      results[1].value
-    );
-
-  }else{
-
-    console.error(
-      "HOME JUDGMENTS ERROR:",
-      results[1].reason
-    );
-
-
-    if(judgmentsContainer){
-
-      judgmentsContainer.innerHTML =
-        '<div class="home-empty">' +
-        'Judgment service is temporarily unavailable. ' +
-        'Please open Judgments to try again.' +
-        '</div>';
-
-    }
-
-  }
-
-}
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
 
 function performSearch(query){
-
-  const q = String(query || "").trim();
-
-  if(!q){
-    const input = document.getElementById("homeSearch");
-    if(input) input.focus();
-    return;
-  }
-
-  const normalized = q.toLowerCase().replace(/\s+/g," ").trim();
-
-  const sectionRules = [
-    [/^(section\s*)?115(\s+bns)?$/i, "sections/bns-115.html"],
-    [/^(bns\s*)?115$/i, "sections/bns-115.html"],
-    [/^(section\s*)?318(\s+bns)?$/i, "sections/bns-318.html"],
-    [/^(bns\s*)?318$/i, "sections/bns-318.html"],
-    [/^(section\s*)?173(\s+bnss)?$/i, "sections/bnss-173.html"],
-    [/^(bnss\s*)?173$/i, "sections/bnss-173.html"],
-    [/^(section\s*)?187(\s+bnss)?$/i, "sections/bnss-187.html"],
-    [/^(bnss\s*)?187$/i, "sections/bnss-187.html"],
-    [/^(section\s*)?479(\s+bnss)?$/i, "sections/bnss-479.html"],
-    [/^(bnss\s*)?479$/i, "sections/bnss-479.html"],
-    [/^(section\s*)?480(\s+bnss)?$/i, "sections/bnss-480.html"],
-    [/^(bnss\s*)?480$/i, "sections/bnss-480.html"],
-    [/^(section\s*)?482(\s+bnss)?$/i, "sections/bnss-482.html"],
-    [/^(bnss\s*)?482$/i, "sections/bnss-482.html"],
-    [/^(section\s*)?63(\s+bsa)?$/i, "sections/bsa-63.html"],
-    [/^(bsa\s*)?63$/i, "sections/bsa-63.html"],
-    [/^(section\s*)?138(\s+(ni|negotiable instruments)(\s+act)?)?$/i, "sections/ni-138.html"],
-    [/^(ni\s+act\s*)?138$/i, "sections/ni-138.html"],
-    [/^(section\s*)?13(\s+hma)?$/i, "sections/hma-13.html"],
-    [/^(hma\s*)?13$/i, "sections/hma-13.html"],
-    [/^(section\s*)?12(\s+(dv|domestic violence)(\s+act)?)?$/i, "sections/dv-12.html"],
-    [/^(dv\s+act\s*)?12$/i, "sections/dv-12.html"],
-    [/^(section\s*)?20(\s+ndps)?$/i, "sections/ndps-20.html"],
-    [/^(ndps\s*)?20$/i, "sections/ndps-20.html"],
-    [/^(section\s*)?37(\s+ndps)?$/i, "sections/ndps-37.html"],
-    [/^(ndps\s*)?37$/i, "sections/ndps-37.html"],
-    [/^(section\s*)?115(\s+cpc)?$/i, "sections/cpc-115-up.html"]
+  const q=String(query||"").trim();
+  if(!q){ $("smartProblem")?.focus(); return; }
+  const n=q.toLowerCase().replace(/\s+/g," ").trim();
+  const sectionRules=[
+    [/^(section\s*)?115(\s+bns)?$/i,"sections/bns-115.html"],
+    [/^(bns\s*)?115$/i,"sections/bns-115.html"],
+    [/^(section\s*)?318(\s+bns)?$/i,"sections/bns-318.html"],
+    [/^(bns\s*)?318$/i,"sections/bns-318.html"],
+    [/^(section\s*)?173(\s+bnss)?$/i,"sections/bnss-173.html"],
+    [/^(bnss\s*)?173$/i,"sections/bnss-173.html"],
+    [/^(section\s*)?187(\s+bnss)?$/i,"sections/bnss-187.html"],
+    [/^(bnss\s*)?187$/i,"sections/bnss-187.html"],
+    [/^(section\s*)?479(\s+bnss)?$/i,"sections/bnss-479.html"],
+    [/^(bnss\s*)?479$/i,"sections/bnss-479.html"],
+    [/^(section\s*)?480(\s+bnss)?$/i,"sections/bnss-480.html"],
+    [/^(bnss\s*)?480$/i,"sections/bnss-480.html"],
+    [/^(section\s*)?482(\s+bnss)?$/i,"sections/bnss-482.html"],
+    [/^(bnss\s*)?482$/i,"sections/bnss-482.html"],
+    [/^(section\s*)?63(\s+bsa)?$/i,"sections/bsa-63.html"],
+    [/^(bsa\s*)?63$/i,"sections/bsa-63.html"],
+    [/^(section\s*)?138(\s+(ni|negotiable instruments)(\s+act)?)?$/i,"sections/ni-138.html"],
+    [/^(ni\s+act\s*)?138$/i,"sections/ni-138.html"],
+    [/^(section\s*)?13(\s+hma)?$/i,"sections/hma-13.html"],
+    [/^(hma\s*)?13$/i,"sections/hma-13.html"],
+    [/^(section\s*)?12(\s+(dv|domestic violence)(\s+act)?)?$/i,"sections/dv-12.html"],
+    [/^(dv\s+act\s*)?12$/i,"sections/dv-12.html"],
+    [/^(section\s*)?20(\s+ndps)?$/i,"sections/ndps-20.html"],
+    [/^(ndps\s*)?20$/i,"sections/ndps-20.html"],
+    [/^(section\s*)?37(\s+ndps)?$/i,"sections/ndps-37.html"],
+    [/^(ndps\s*)?37$/i,"sections/ndps-37.html"]
   ];
-
-  for(const [rule,path] of sectionRules){
-    if(rule.test(normalized)){
-      window.location.href = path;
-      return;
-    }
-  }
-
-  const acts = [
-    ["bns","acts/bns-2023.html"],
-    ["bnss","acts/bnss-2023.html"],
-    ["bsa","acts/bsa-2023.html"],
-    ["constitution","acts/constitution-of-india.html"],
-    ["constitution of india","acts/constitution-of-india.html"],
-    ["cpc","acts/code-of-civil-procedure-1908.html"],
-    ["civil procedure code","acts/code-of-civil-procedure-1908.html"],
-    ["hindu marriage act","acts/hindu-marriage-act-1955.html"],
-    ["domestic violence act","acts/domestic-violence-act-2005.html"],
-    ["negotiable instruments act","acts/negotiable-instruments-act-1881.html"],
-    ["ni act","acts/negotiable-instruments-act-1881.html"],
-    ["consumer protection act","acts/consumer-protection-act-2019.html"],
-    ["ndps act","acts/ndps-act-1985.html"]
+  for(const [rule,path] of sectionRules){if(rule.test(n)){location.href=path;return;}}
+  const acts=[
+    ["bns","acts/bns-2023.html"],["bnss","acts/bnss-2023.html"],["bsa","acts/bsa-2023.html"],
+    ["constitution","acts/constitution-of-india.html"],["constitution of india","acts/constitution-of-india.html"],
+    ["cpc","acts/code-of-civil-procedure-1908.html"],["civil procedure code","acts/code-of-civil-procedure-1908.html"],
+    ["hindu marriage act","acts/hindu-marriage-act-1955.html"],["domestic violence act","acts/domestic-violence-act-2005.html"],
+    ["negotiable instruments act","acts/negotiable-instruments-act-1881.html"],["ni act","acts/negotiable-instruments-act-1881.html"],
+    ["consumer protection act","acts/consumer-protection-act-2019.html"],["ndps act","acts/ndps-act-1985.html"]
   ];
-
-  const exactAct = acts.find(([name]) => normalized === name);
-  if(exactAct){
-    window.location.href = exactAct[1];
-    return;
-  }
-
-  if(/\b(tool|tools|calculator|calculation|limitation|court fee|stamp duty|interest calculator|maintenance calculator|case timeline|case checklist|legal diagnostic)\b/i.test(normalized)){
-    window.location.href = "tools.html";
-    return;
-  }
-
-  if(/\b(advocate|lawyer|lawyers|vakil|counsel|find advocate|law firm)\b/i.test(normalized)){
-    window.location.href = "advocates.html?q=" + encodeURIComponent(q);
-    return;
-  }
-
-  if(/\b(judgment|judgement|case law|case-law|supreme court|high court|verdict|precedent|citation|case)\b/i.test(normalized)){
-    window.location.href = "judgments.html?q=" + encodeURIComponent(q);
-    return;
-  }
-
-  if(/\b(what|why|how|can|whether|is it|am i|my|police|arrest|bail|divorce|maintenance|property|cheque|cyber|criminal|civil|legal notice|rights|law)\b/i.test(normalized)){
-    window.location.href = "ai-assistant.html?q=" + encodeURIComponent(q);
-    return;
-  }
-
-  window.location.href =
-    "legal-search.html?q=" + encodeURIComponent(q);
+  const exact=acts.find(([name])=>n===name); if(exact){location.href=exact[1];return;}
+  if(/\b(tool|tools|calculator|calculation|limitation|court fee|stamp duty|interest calculator|maintenance calculator|case timeline|case checklist|legal diagnostic)\b/i.test(n)){location.href="tools.html";return;}
+  if(/\b(advocate|lawyer|lawyers|vakil|counsel|find advocate|law firm)\b/i.test(n)){location.href="advocates.html?q="+encodeURIComponent(q);return;}
+  if(/\b(judgment|judgement|case law|case-law|supreme court|high court|verdict|precedent|citation|case)\b/i.test(n)){location.href="judgments.html?q="+encodeURIComponent(q);return;}
+  if(/\b(what|why|how|can|whether|is it|am i|my|police|arrest|bail|divorce|maintenance|property|cheque|cyber|criminal|civil|legal notice|rights|law|fir|fraud)\b/i.test(n)){location.href="ai-assistant.html?q="+encodeURIComponent(q);return;}
+  location.href="legal-search.html?q="+encodeURIComponent(q);
 }
 
+function startProblem(){
+  const q=$("smartProblem")?.value.trim()||"";
+  if(!q){toast("पहले अपनी problem लिखें या 🎙️ बोलकर बताएं.");$("smartProblem")?.focus();return;}
+  location.href="ai-assistant.html?q="+encodeURIComponent(q);
+}
 
-/* =========================================================
-   DOM READY
-========================================================= */
+function speakProblem(){
+  const text=$("smartProblem")?.value.trim();
+  if(!text){toast("पहले कोई text लिखें या voice से बताएं.");return;}
+  if(!("speechSynthesis" in window)){toast("इस browser में read-aloud उपलब्ध नहीं है.");return;}
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=/[\u0900-\u097F]/.test(text)?"hi-IN":"en-IN";
+  u.rate=.92;
+  window.speechSynthesis.speak(u);
+}
 
-document.addEventListener(
-  "DOMContentLoaded",
-  function(){
+function voiceInput(){
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){toast("इस browser में voice input उपलब्ध नहीं है. Text से भी शुरू कर सकते हैं.");return;}
+  const r=new SpeechRecognition();
+  r.lang="hi-IN"; r.interimResults=false; r.maxAlternatives=1;
+  const btn=$("smartVoice"), note=$("smartVoiceNote");
+  btn?.classList.add("listening"); if(note)note.textContent="🎙️ सुन रहा हूँ… अपनी problem बोलिए.";
+  r.onresult=e=>{
+    const t=e.results?.[0]?.[0]?.transcript||"";
+    const box=$("smartProblem"); if(box){box.value=t;box.focus();}
+    if(note)note.textContent="✓ आपकी बात लिख दी गई है. अब “मेरी मदद शुरू करें” दबाएं.";
+  };
+  r.onerror=e=>{if(note)note.textContent="Voice input पूरा नहीं हो पाया. Text से भी शुरू कर सकते हैं.";toast("Voice input उपलब्ध नहीं हो पाया.");};
+  r.onend=()=>btn?.classList.remove("listening");
+  try{r.start();}catch(e){btn?.classList.remove("listening");toast("Voice input अभी शुरू नहीं हो सका.");}
+}
 
-    const form =
-      document.getElementById(
-        "homeSearchForm"
-      );
+function profileHTML(a){
+  if(window.ILS?.profileHTML){return ILS.profileHTML(a);}
+  return "<h2>"+esc(a?.advocate_name||"Advocate")+"</h2><p>"+esc(a?.practice_state||"India")+"</p>";
+}
+function openProfile(a){
+  const modal=$("smartModal"), content=$("smartModalContent"); if(!modal||!content)return;
+  content.innerHTML=profileHTML(a); modal.classList.add("open"); modal.setAttribute("aria-hidden","false");
+}
+function closeProfile(){const m=$("smartModal");if(m){m.classList.remove("open");m.setAttribute("aria-hidden","true");}}
 
+function renderJudgments(rows){
+  const c=$("smartJudgments"); if(!c)return;
+  const list=Array.isArray(rows)?rows:[];
+  if(!list.length){c.innerHTML='<div class="smart-empty">अभी verified judgments उपलब्ध नहीं हैं. Judgments page खोलकर फिर देखें.</div>';return;}
+  c.innerHTML=list.slice(0,4).map(j=>{
+    const official=j.official_source_url?'<a class="smart-btn smart-btn-ghost smart-small-btn" href="'+esc(j.official_source_url)+'" target="_blank" rel="noopener noreferrer">Official ↗</a>':"";
+    const pdf=j.source_pdf_url?'<a class="smart-btn smart-btn-primary smart-small-btn" href="'+esc(j.source_pdf_url)+'" target="_blank" rel="noopener noreferrer">PDF</a>':"";
+    const date=window.ILS?.formatDate?ILS.formatDate(j.judgment_date):(j.judgment_date||"");
+    return '<article class="smart-card smart-judgment-card smart-appear"><div class="smart-meta"><span class="smart-badge">'+esc(j.court_name||j.primary_category||"Judgment")+'</span><span>'+esc(date)+'</span></div><h3>'+esc(j.case_title||"Judgment")+'</h3><p>'+esc(j.short_summary||j.legal_principle||"Verified judgment record available.")+'</p><div class="smart-card-actions">'+official+pdf+'</div></article>';
+  }).join("");
+}
 
-    const input =
-      document.getElementById(
-        "homeSearch"
-      );
+function renderAdvocates(rows){
+  const c=$("smartAdvocates"); if(!c)return;
+  const list=Array.isArray(rows)?rows:[];
+  if(!list.length){c.innerHTML='<div class="smart-empty">अभी approved public profiles उपलब्ध नहीं हैं. Find Advocate page खोलकर search करें.</div>';return;}
+  c.innerHTML=list.slice(0,4).map((a,i)=>{
+    const photo=a.photo_url||a.profile_photo_url||"";
+    const areas=window.ILS?.split?ILS.split(a.primary_practice_area).slice(0,3):[];
+    return '<article class="smart-card smart-adv-card smart-appear" data-smart-adv="'+i+'" tabindex="0" role="button"><div class="smart-adv-top">'+(photo?'<img class="smart-adv-photo" src="'+esc(photo)+'" alt="'+esc(a.advocate_name||"Advocate")+'" loading="lazy" onerror="this.style.display=\'none\'">':'<div class="smart-adv-photo" aria-hidden="true"></div>')+'<div><div class="smart-adv-name">'+esc(a.advocate_name||"Advocate")+'</div><div class="smart-verified">✓ Verified public profile</div><div class="smart-adv-meta">'+esc(a.practice_state||"India")+'</div></div></div><div class="smart-chips">'+(areas.length?areas.map(x=>'<span class="smart-chip">'+esc(x)+'</span>').join(""):'<span class="smart-chip">Professional Profile</span>')+'</div><div style="margin-top:14px;color:#ffe08a;font-size:10px;font-weight:900">Profile देखें →</div></article>';
+  }).join("");
+  c.querySelectorAll("[data-smart-adv]").forEach(el=>{
+    const i=Number(el.getAttribute("data-smart-adv"));
+    const open=()=>openProfile(list[i]);
+    el.addEventListener("click",open);
+    el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
+  });
+}
 
+async function loadDynamic(){
+  try{if(window.ILS?.init)await ILS.init();}catch(e){console.error("ILS home init",e);}
+  const jp=window.ILS?.judgments?ILS.judgments({limit:4}):Promise.reject(new Error("judgment service unavailable"));
+  const ap=window.ILS?.advocates?ILS.advocates({limit:4,featured:true}):Promise.reject(new Error("advocate service unavailable"));
+  const [j,a]=await Promise.allSettled([jp,ap]);
+  if(j.status==="fulfilled")renderJudgments(j.value);else{$("smartJudgments").innerHTML='<div class="smart-empty">Judgment service temporarily unavailable. <a href="judgments.html">Open Judgments →</a></div>';console.error(j.reason);}
+  if(a.status==="fulfilled")renderAdvocates(a.value);else{$("smartAdvocates").innerHTML='<div class="smart-empty">Professional profiles temporarily unavailable. <a href="advocates.html">Find Advocate →</a></div>';console.error(a.reason);}
+}
 
-    if(form){
+const scenarios=[
+  "🚔 <span>“Police complaint / FIR”</span> — पहले सही official रास्ता समझें.",
+  "💳 <span>“Cheque bounce”</span> — facts और dates समझकर आगे बढ़ें.",
+  "🏠 <span>“Property के कागज”</span> — पहले documents और issue identify करें.",
+  "📱 <span>“Cyber fraud”</span> — जल्दी official reporting route देखें.",
+  "👨‍👩‍👧 <span>“Divorce / maintenance”</span> — simple language में options समझें.",
+  "🏛️ <span>“Government service”</span> — official portal और process अलग देखें."
+];
+let scenarioIndex=0;
+function rotateScenario(){
+  const el=$("smartScenario");if(!el)return;
+  el.classList.remove("smart-appear");void el.offsetWidth;
+  el.innerHTML=scenarios[scenarioIndex%scenarios.length];el.classList.add("smart-appear");scenarioIndex++;
+}
 
-      form.addEventListener(
-        "submit",
-        function(event){
-
-          event.preventDefault();
-
-          performSearch(
-            input
-              ? input.value
-              : ""
-          );
-
-        }
-      );
-
-    }
-
-
-    document
-      .querySelectorAll(
-        "[data-search]"
-      )
-      .forEach(
-        function(button){
-
-          button.addEventListener(
-            "click",
-            function(){
-
-              const query =
-                button.getAttribute(
-                  "data-search"
-                ) || "";
-
-
-              if(input){
-
-                input.value =
-                  query;
-
-                input.focus();
-
-              }
-
-            }
-          );
-
-        }
-      );
-
-
-    const modal =
-      document.getElementById(
-        "profileModal"
-      );
-
-
-    if(modal){
-
-      modal.addEventListener(
-        "click",
-        function(event){
-
-          if(
-            event.target === modal
-          ){
-
-            closeProfile();
-
-          }
-
-        }
-      );
-
-    }
-
-
-    document.addEventListener(
-      "keydown",
-      function(event){
-
-        if(
-          event.key === "Escape"
-        ){
-
-          closeProfile();
-
-        }
-
-      }
-    );
-
-
-    /*
-      Small delay allows the deferred
-      ILS core script to initialize.
-    */
-
-    setTimeout(
-      loadHome,
-      0
-    );
-
-  },
-  {
-    once:true
-  }
-
-);
-
+document.addEventListener("DOMContentLoaded",()=>{
+  $("smartMenu")?.addEventListener("click",()=>$("smartNav")?.classList.toggle("open"));
+  document.querySelectorAll(".smart-navlinks a").forEach(a=>a.addEventListener("click",()=>$("smartNav")?.classList.remove("open")));
+  $("smartStart")?.addEventListener("click",startProblem);
+  $("smartListen")?.addEventListener("click",speakProblem);
+  $("smartVoice")?.addEventListener("click",voiceInput);
+  $("smartClose")?.addEventListener("click",closeProfile);
+  $("smartModal")?.addEventListener("click",e=>{if(e.target===$("smartModal"))closeProfile();});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")closeProfile();});
+  document.querySelectorAll("[data-problem]").forEach(b=>b.addEventListener("click",()=>{const box=$("smartProblem");if(box){box.value=b.getAttribute("data-problem")||"";box.focus();}}));
+  $("smartProblem")?.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")startProblem();});
+  rotateScenario();setInterval(rotateScenario,4200);
+  setTimeout(loadDynamic,0);
+});
+window.closeProfile=closeProfile;
+window.performSearch=performSearch;
 })();
-
-</script>
-
-<script>
-window.homeSearch = function () {
-  const input = document.getElementById("homeSearch");
-  performSearch(input ? input.value : "");
-  return false;
-};
 </script>
 </body>
 </html>
