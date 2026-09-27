@@ -277,7 +277,7 @@ jobs:
             }
 
             await page.locator('.tool-card .tool-open[data-tool="trial-balance"]').click();
-            await page.locator('#tbRows').fill('Cash | 50000 | 0\nSales | 0 | 80000\nCapital | 0 | 50000\nRent | 30000 | 0');
+            await page.locator('#tbRows').fill('Cash | 100000 | 0\nSales | 0 | 80000\nCapital | 0 | 50000\nRent | 30000 | 0');
             await page.locator('#tbRun').click();
             const tbText = await page.locator('#toolWorkspace').innerText();
             for (const expected of ['Trial Balance','₹80,000.00','Balanced']) {
