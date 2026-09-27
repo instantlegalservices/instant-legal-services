@@ -56,6 +56,18 @@
 .photo-actions label{
   cursor:pointer;
 }
+.ils-file-input{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  clip-path:inset(50%);
+  white-space:nowrap;
+  border:0;
+}
 
 .practice-grid{
   display:grid;
@@ -387,10 +399,10 @@ Profile Photo
 📷 Take Photo
 
 <input id="cameraInput"
+       class="ils-file-input"
        type="file"
        accept="image/jpeg,image/png,image/webp"
-       capture="user"
-       hidden>
+       capture="user">
 
 </label>
 
@@ -400,9 +412,9 @@ Profile Photo
 🖼️ Choose from Gallery
 
 <input id="galleryInput"
+       class="ils-file-input"
        type="file"
-       accept="image/jpeg,image/png,image/webp"
-       hidden>
+       accept="image/jpeg,image/png,image/webp">
 
 </label>
 
@@ -622,10 +634,10 @@ Submit for Review
     <img id="ilsProfPhotoPreview" class="photo-preview" alt="Professional profile photo preview" style="display:none">
     <div class="photo-actions">
       <label class="btn btn-primary">📷 Take Photo
-        <input id="ilsProfCameraInput" type="file" accept="image/jpeg,image/png,image/webp" capture="user" hidden>
+        <input id="ilsProfCameraInput" class="ils-file-input" type="file" accept="image/jpeg,image/png,image/webp" capture="user">
       </label>
       <label class="btn btn-ghost">🖼️ Choose from Gallery
-        <input id="ilsProfGalleryInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+        <input id="ilsProfGalleryInput" class="ils-file-input" type="file" accept="image/jpeg,image/png,image/webp">
       </label>
     </div>
     <div id="ilsProfPhotoStatus" class="photo-help">JPG, PNG or WebP · Maximum 2 MB · Optional</div>
