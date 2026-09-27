@@ -106,9 +106,9 @@ jobs:
                 await page.evaluate(async ({ slug }) => {
                   await window.ILS_TOOLS.createOrder(slug, { e2e: true }, null, null, { forceQr: true });
                 }, { slug: tier.slug });
-                if (!await statusBox.getByText('Pay Securely', { exact: false }).count()) {
-                  throw new Error('Paid-tier order UI did not open for ' + tier.slug);
-                }
+                await statusBox.locator('#payNowBtn').waitFor({ state: 'visible' }).catch(() => {
+                  throw new Error('Paid-tier payment button did not open for ' + tier.slug);
+                });
               }
             } finally {
               await page.evaluate(() => { window.ILS.ready = window.__ilsOriginalReady; });
