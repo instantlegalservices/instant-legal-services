@@ -120,6 +120,27 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       <div class="table-wrap"><table><thead><tr><th>Order</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
     </section>
 
+<section class="panel" id="pricingControlPanel">
+<h2>💰 Pricing & Professional Fee Control</h2>
+<p style="color:#9ca7b6;margin-top:-6px">Admin-only control. Service/tool prices are used by the existing order RPC at checkout. Professional/associate fees are configuration only until a service explicitly uses them. Every pricing change is recorded in the admin pricing audit.</p>
+<div id="pricingMsg" class="msg"></div>
+<div class="toolbar" style="margin-top:14px"><input id="pricingSearch" placeholder="Search service, tool or category…"><button class="btnx secondary" id="refreshPricingBtn" type="button">↻ Refresh Pricing</button></div>
+<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Service / Tool</th><th>Slug</th><th>Category</th><th>Current Price</th><th>New Price (₹)</th><th>Action</th></tr></thead><tbody id="pricingBody"><tr><td colspan="6" style="text-align:center">Loading pricing…</td></tr></tbody></table></div>
+<h3 style="margin-top:24px">Associate & Professional Fee Matrix</h3>
+<p style="color:#9ca7b6">Admin decides the configured fee for each professional type. No public user can create, edit or publish these rows.</p>
+<form id="professionalFeeForm" class="toolbar" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;align-items:end">
+<div><label>Professional type</label><select id="feeProfessionalType"><option value="advocate">Advocate</option><option value="ca">CA</option><option value="cs">CS</option><option value="hr">HR</option><option value="gst_practitioner">GST Practitioner</option><option value="assistant_associate">Assistant / Associate</option></select></div>
+<div><label>Fee code</label><input id="feeCode" maxlength="60" placeholder="consultation"></div>
+<div><label>Fee name</label><input id="feeName" maxlength="120" placeholder="Initial consultation"></div>
+<div><label>Amount (₹)</label><input id="feeAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0"></div>
+<div><label>Billing</label><select id="feeBillingType"><option value="one_time">One time</option><option value="per_task">Per task</option><option value="per_hour">Per hour</option><option value="per_case">Per case</option></select></div>
+<div style="grid-column:1/-1"><label>Notes</label><input id="feeNotes" maxlength="500" placeholder="Internal admin note / scope"></div>
+<div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap"><button class="btnx primary" id="saveProfessionalFeeBtn" type="submit">Save Fee</button><button class="btnx secondary" id="clearProfessionalFeeBtn" type="button">Clear</button></div>
+</form>
+<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Type</th><th>Fee</th><th>Amount</th><th>Billing</th><th>Status</th><th>Notes</th><th>Updated</th><th>Action</th></tr></thead><tbody id="professionalFeeBody"><tr><td colspan="8" style="text-align:center">Loading fees…</td></tr></tbody></table></div>
+<div class="table-wrap" style="margin-top:14px"><table class="action-queue-table"><thead><tr><th>Recent pricing changes</th><th>Entity</th><th>Old</th><th>New</th><th>When</th></tr></thead><tbody id="pricingAuditBody"><tr><td colspan="5" style="text-align:center">Loading audit…</td></tr></tbody></table></div>
+</section>
+
 <section class="panel" id="govRouteVerificationPanel">
 <h2>🌐 Official Route Verification</h2>
 <p style="color:#9ca7b6;margin-top:-6px">Admin-only live verification of the 10 ILS official-route catalogue entries. Uses your current authenticated admin session; no customer signup or production payment flow is touched.</p>
@@ -1288,6 +1309,23 @@ async function handleActionQueueAction(id,action){
  else return;
  try{const {error}=await sb.from("ils_action_assistance_queue").update(patch).eq("id",id);if(error)throw error;msg("actionQueueMsg",action==="complete"?"Associate request completed.":"Associate queue updated.","ok");await loadActionAssistanceQueue();}
  catch(e){console.error("Action queue update:",e);msg("actionQueueMsg","Queue update failed: "+(e?.message||"Unknown error"),"err");}}
+let pricingServiceRows=[], professionalFeeRows=[];
+function clearProfessionalFeeForm(){["feeCode","feeName","feeAmount","feeNotes"].forEach(id=>$(id).value="");$("feeProfessionalType").value="advocate";$("feeBillingType").value="one_time";$("professionalFeeForm").dataset.editId="";$("saveProfessionalFeeBtn").textContent="Save Fee";}
+function renderPricingRows(){
+ const body=$("pricingBody");if(!body)return;const q=($("pricingSearch")?.value||"").toLowerCase().trim();
+ const rows=pricingServiceRows.filter(r=>!q||[r.name,r.slug,r.category].filter(Boolean).join(" ").toLowerCase().includes(q));
+ body.innerHTML=rows.length?rows.map(r=>{const p=Number(r.price?.price||0);return '<tr><td><strong>'+esc(r.name||"—")+'</strong></td><td>'+esc(r.slug||"—")+'</td><td>'+esc(r.category||"—")+'</td><td>₹'+p.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td><input class="pricingNewValue" data-service-id="'+esc(r.id)+'" type="number" min="0" step="0.01" value="'+esc(p)+'"></td><td><button class="btnx primary pricingSaveBtn" type="button" data-service-id="'+esc(r.id)+'">Save</button></td></tr>';}).join(""):'<tr><td colspan="6" style="text-align:center">No services/tools found.</td></tr>';
+ body.querySelectorAll(".pricingSaveBtn").forEach(btn=>btn.addEventListener("click",async()=>{const id=btn.dataset.serviceId,row=pricingServiceRows.find(x=>String(x.id)===String(id)),input=body.querySelector('.pricingNewValue[data-service-id="'+CSS.escape(id)+'"]'),amount=Number(input?.value),old=Number(row?.price?.price||0);if(!row||!Number.isFinite(amount)||amount<0){msg("pricingMsg","Enter a valid non-negative price.","err");return;}if(amount===old){msg("pricingMsg","No price change detected.","err");return;}if(!confirm("Change "+(row.name||row.slug)+" from ₹"+old.toLocaleString("en-IN")+" to ₹"+amount.toLocaleString("en-IN")+"?\n\nExisting paid orders will not be repriced."))return;btn.disabled=true;btn.textContent="Saving…";try{const result=row.price?.id?await sb.from("service_prices").update({price:amount,currency:"INR",is_active:true}).eq("id",row.price.id):await sb.from("service_prices").insert({service_id:row.id,price:amount,currency:"INR",billing_type:"one_time",is_active:true});if(result.error)throw result.error;msg("pricingMsg","Service/tool price updated. New orders will use the new price.","ok");await loadPricingControls();}catch(e){console.error(e);msg("pricingMsg","Price update failed: "+(e?.message||"Administrator access required."),"err");}finally{btn.disabled=false;btn.textContent="Save";}}));
+}
+async function loadPricingControls(){
+ const pb=$("pricingBody"),fb=$("professionalFeeBody"),ab=$("pricingAuditBody");if(pb)pb.innerHTML='<tr><td colspan="6" style="text-align:center">Loading pricing…</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading fees…</td></tr>';
+ try{const [a,b,d,e]=await Promise.all([sb.from("services").select("id,slug,name,category,is_active").order("name"),sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false}),sb.from("professional_fee_catalog").select("id,professional_type,fee_code,fee_name,amount,currency,billing_type,is_active,notes,updated_at").order("professional_type").order("fee_name"),sb.from("ils_admin_pricing_audit").select("entity_type,entity_id,old_value,new_value,changed_at").order("changed_at",{ascending:false}).limit(20)]);for(const x of [a,b,d,e])if(x.error)throw x.error;const latest={};(b.data||[]).forEach(p=>{if(!latest[p.service_id])latest[p.service_id]=p;});pricingServiceRows=(a.data||[]).map(s=>({...s,price:latest[s.id]||null}));professionalFeeRows=d.data||[];renderPricingRows();renderProfessionalFees();ab.innerHTML=(e.data||[]).length?(e.data||[]).map(r=>'<tr><td>'+esc(r.entity_type)+'</td><td>'+esc(r.entity_id)+'</td><td>'+esc(String(r.old_value?.price??r.old_value?.amount??"—"))+'</td><td>'+esc(String(r.new_value?.price??r.new_value?.amount??"—"))+'</td><td>'+esc(r.changed_at?new Date(r.changed_at).toLocaleString("en-IN"):"—")+'</td></tr>').join(""):'<tr><td colspan="5" style="text-align:center">No pricing changes recorded yet.</td></tr>';}catch(e){console.error("Pricing controls:",e);if(pb)pb.innerHTML='<tr><td colspan="6" style="text-align:center">Pricing unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Fees unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';}}
+function renderProfessionalFees(){
+ const body=$("professionalFeeBody");if(!body)return;body.innerHTML=professionalFeeRows.length?professionalFeeRows.map(r=>'<tr><td>'+esc(r.professional_type)+'</td><td><strong>'+esc(r.fee_name)+'</strong><div class="queue-note">'+esc(r.fee_code)+'</div></td><td>₹'+Number(r.amount||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>'+esc(r.billing_type)+'</td><td>'+esc(r.is_active?"Active":"Inactive")+'</td><td>'+esc(r.notes||"")+'</td><td>'+esc(r.updated_at?new Date(r.updated_at).toLocaleString("en-IN"):"—")+'</td><td><button class="btnx secondary feeEditBtn" type="button" data-id="'+esc(r.id)+'">Edit</button> <button class="btnx secondary feeToggleBtn" type="button" data-id="'+esc(r.id)+'">'+(r.is_active?"Deactivate":"Activate")+'</button></td></tr>').join(""):'<tr><td colspan="8" style="text-align:center">No professional/associate fees configured. Admin can add them above.</td></tr>';
+ body.querySelectorAll(".feeEditBtn").forEach(btn=>btn.addEventListener("click",()=>{const r=professionalFeeRows.find(x=>String(x.id)===String(btn.dataset.id));if(!r)return;$("feeProfessionalType").value=r.professional_type;$("feeCode").value=r.fee_code;$("feeName").value=r.fee_name;$("feeAmount").value=r.amount;$("feeBillingType").value=r.billing_type;$("feeNotes").value=r.notes||"";$("professionalFeeForm").dataset.editId=r.id;$("saveProfessionalFeeBtn").textContent="Update Fee";window.scrollTo({top:$("professionalFeeForm").getBoundingClientRect().top+window.scrollY-80,behavior:"smooth"});}));
+ body.querySelectorAll(".feeToggleBtn").forEach(btn=>btn.addEventListener("click",async()=>{const r=professionalFeeRows.find(x=>String(x.id)===String(btn.dataset.id));if(!r)return;const next=!r.is_active;if(!confirm((next?"Activate ":"Deactivate ")+r.fee_name+"?"))return;const {error}=await sb.from("professional_fee_catalog").update({is_active:next}).eq("id",r.id);if(error){msg("pricingMsg","Fee status update failed: "+error.message,"err");return;}msg("pricingMsg","Professional fee status updated.","ok");await loadPricingControls();}));
+}
+async function saveProfessionalFee(e){e.preventDefault();const type=$("feeProfessionalType").value,code=$("feeCode").value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,"-"),name=$("feeName").value.trim(),amount=Number($("feeAmount").value),billing=$("feeBillingType").value,notes=$("feeNotes").value.trim(),editId=$("professionalFeeForm").dataset.editId||"";if(!code||!name||!Number.isFinite(amount)||amount<0){msg("pricingMsg","Professional type, fee code, fee name and a valid non-negative amount are required.","err");return;}if(!confirm((editId?"Update":"Create")+" fee '"+name+"' at ₹"+amount.toLocaleString("en-IN")+"?"))return;const btn=$("saveProfessionalFeeBtn");btn.disabled=true;try{const payload={professional_type:type,fee_code:code,fee_name:name,amount,currency:"INR",billing_type:billing,is_active:true,notes};const result=editId?await sb.from("professional_fee_catalog").update(payload).eq("id",editId):await sb.from("professional_fee_catalog").insert(payload);if(result.error)throw result.error;msg("pricingMsg","Professional/associate fee saved. Configuration is now admin-controlled.","ok");clearProfessionalFeeForm();await loadPricingControls();}catch(e){console.error(e);msg("pricingMsg","Fee save failed: "+(e?.message||"Administrator access required."),"err");}finally{btn.disabled=false;}}
 async function loadGovRouteVerification(){
  const body=$("govRouteVerificationBody");if(!body)return;
  body.innerHTML='<tr><td colspan="7" style="text-align:center">Loading…</td></tr>';
@@ -1323,7 +1361,7 @@ async function openApp(){
   $("appView").classList.remove("hidden");
   currentAdminUserId=check.session.user.id;
   $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
-  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);
+  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);
 }
 
 $("loginForm").addEventListener("submit",async e=>{
@@ -1344,7 +1382,7 @@ $("logoutBtn").addEventListener("click",async()=>{
   await sb.auth.signOut();
   location.href="admin.html";
 });
-$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
+$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
 
 $("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
 $("adminAdvocateSearch").addEventListener("input",renderAdvocateRows);
@@ -1378,6 +1416,10 @@ $("sendAdminChatBtn").addEventListener("click",sendAdminClientMessage);
 $("refreshAdminChatBtn").addEventListener("click",()=>loadAdminClientCommunication($("manageLeadId").value));
 $("addAdminProgressBtn").addEventListener("click",addAdminWorkProgress);
 $("refreshRevenueBtn").addEventListener("click",loadRevenue);
+$("refreshPricingBtn").addEventListener("click",loadPricingControls);
+$("pricingSearch").addEventListener("input",renderPricingRows);
+$("professionalFeeForm").addEventListener("submit",saveProfessionalFee);
+$("clearProfessionalFeeBtn").addEventListener("click",clearProfessionalFeeForm);
 $("refreshActionQueueBtn").addEventListener("click",loadActionAssistanceQueue);
 $("verifyGovRoutesBtn").addEventListener("click",verifyGovRoutes);
 $("refreshGovRoutesBtn").addEventListener("click",loadGovRouteVerification);
