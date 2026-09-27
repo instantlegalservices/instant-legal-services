@@ -89,6 +89,12 @@ jobs:
                 }
               });
             });
+            const paidTierChecks = [
+              { slug: 'professional-report-guided', amount: 85 },
+              { slug: 'professional-report-professional', amount: 125 }
+            ];
+            await page.locator('.tool-card .tool-open[data-tool="profit-loss-tool"]').click();
+            await page.locator('#toolStatus').waitFor({ state: 'attached' });
             try {
               for (const tier of paidTierChecks) {
                 const statusBox = page.locator('#toolStatus');
