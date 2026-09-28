@@ -1843,14 +1843,19 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
     if(role==="gst_practitioner"&&!$("ilsProfMembership").value.trim())throw new Error("GST Practitioner enrolment/registration number is required.");
     const client=ILS.ready(); if(!client)throw new Error("Service connection unavailable.");
 
-    let professionalPhotoPath="";
+    let professionalPhotoBase64="";
+    let professionalPhotoType="";
+    let professionalPhotoExtension="";
     if(selectedProfessionalPhoto){
-      const ext=selectedProfessionalPhoto.type==="image/png"?"png":selectedProfessionalPhoto.type==="image/webp"?"webp":"jpg";
-      professionalPhotoPath=`pending/professional-${role}/${crypto.randomUUID()}.${ext}`;
-      const upload=await client.storage.from("advocate-photo-pending").upload(professionalPhotoPath,selectedProfessionalPhoto,{
-        cacheControl:"3600",upsert:false,contentType:selectedProfessionalPhoto.type
-      });
-      if(upload.error)throw new Error("Profile photo upload failed: "+upload.error.message);
+      professionalPhotoType=selectedProfessionalPhoto.type;
+      professionalPhotoExtension=professionalPhotoType==="image/png"?"png":professionalPhotoType==="image/webp"?"webp":"jpg";
+      const bytes=new Uint8Array(await selectedProfessionalPhoto.arrayBuffer());
+      const chunkSize=0x8000;
+      let binary="";
+      for(let i=0;i<bytes.length;i+=chunkSize){
+        binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+chunkSize,bytes.length)));
+      }
+      professionalPhotoBase64=btoa(binary);
     }
 
     const r=await client.functions.invoke("register-professional",{body:{
@@ -1865,6 +1870,9 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
       years_of_experience:$("ilsProfYears").value,
       firm_or_organization:$("ilsProfFirm").value.trim(),
       extra_skills:role==="assistant_associate"?extraSkills:"",
+      photo_data_base64:professionalPhotoBase64,
+      photo_content_type:professionalPhotoType,
+      photo_extension:professionalPhotoExtension,
       password,
       undertaking_accepted:true,
       undertaking_signed_name:signature,
