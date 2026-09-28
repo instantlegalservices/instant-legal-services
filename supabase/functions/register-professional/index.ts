@@ -18,6 +18,20 @@ function json(body,status=200){
 function clean(v){return String(v??"").trim();}
 function selectedServiceCount(v){return clean(v).split("|").map(x=>x.trim()).filter(Boolean).length;}
 
+function decodeBase64Bytes(value){
+  const raw=clean(value);
+  if(!raw)return null;
+  const normalized=raw.replace(/^data:[^;]+;base64,/i,"");
+  try{
+    const binary=atob(normalized);
+    const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+    return bytes;
+  }catch(_){
+    return null;
+  }
+}
+
 function getAdminKey(){
   const raw=clean(Deno.env.get("SUPABASE_SECRET_KEYS"));
   if(raw){
@@ -51,7 +65,9 @@ Deno.serve(async(req)=>{
     const specialization=clean(b.specialization);
     const firm=clean(b.firm_or_organization);
     const extraSkills=clean(b.extra_skills);
-    const photoStoragePath=clean(b.photo_storage_path);
+    const photoDataBase64=clean(b.photo_data_base64);
+    const photoContentType=clean(b.photo_content_type).toLowerCase();
+    const photoExtension=clean(b.photo_extension).toLowerCase();
     const undertakingSignedName=clean(b.undertaking_signed_name);
     const password=String(b.password??"");
     const years=b.years_of_experience===""||b.years_of_experience==null?null:Number(b.years_of_experience);
@@ -103,6 +119,14 @@ Deno.serve(async(req)=>{
 
     admin=createClient(url,serviceRole,{auth:{persistSession:false,autoRefreshToken:false}});
 
+    const photoBytes=photoDataBase64?decodeBase64Bytes(photoDataBase64):null;
+    if(photoDataBase64 && (!photoBytes || photoBytes.byteLength<=0 || photoBytes.byteLength>2*1024*1024))
+      return json({ok:false,message:"Profile photo must be a valid JPG, PNG or WebP file no larger than 2 MB.",code:"INVALID_PHOTO"},400);
+    if(photoBytes && !["image/jpeg","image/png","image/webp"].includes(photoContentType))
+      return json({ok:false,message:"Profile photo must be JPG, PNG or WebP.",code:"INVALID_PHOTO_TYPE"},400);
+    if(photoBytes && !["jpg","jpeg","png","webp"].includes(photoExtension))
+      return json({ok:false,message:"Invalid profile photo format.",code:"INVALID_PHOTO_FORMAT"},400);
+
     const {data:existing,error:lookupError}=await admin
       .from("professional_join_requests")
       .select("id,status")
@@ -144,6 +168,25 @@ Deno.serve(async(req)=>{
 
     createdUserId=created.user.id;
 
+    let uploadedPhotoPath=null;
+    if(photoBytes){
+      const safeExt=photoExtension==="jpeg"?"jpg":photoExtension;
+      uploadedPhotoPath=`pending/professional-${professionalType}/${crypto.randomUUID()}.${safeExt}`;
+      const {error:photoError}=await admin.storage
+        .from("advocate-photo-pending")
+        .upload(uploadedPhotoPath,photoBytes,{
+          cacheControl:"3600",
+          upsert:false,
+          contentType:photoContentType
+        });
+      if(photoError){
+        console.error("register-professional photo upload",photoError);
+        await admin.auth.admin.deleteUser(createdUserId).catch(cleanup=>console.error("register-professional auth cleanup",cleanup));
+        createdUserId=null;
+        return json({ok:false,message:"Profile photo could not be uploaded. Please try again.",code:"PHOTO_UPLOAD_ERROR"},502);
+      }
+    }
+
     const {data:inserted,error:insertError}=await admin
       .from("professional_join_requests")
       .insert([{
@@ -159,7 +202,7 @@ Deno.serve(async(req)=>{
         specialization:specialization||null,
         years_of_experience:years,
         firm_or_organization:firm||null,
-        photo_storage_path:photoStoragePath||null,
+        photo_storage_path:uploadedPhotoPath,
         extra_skills:extraSkills||null,
         undertaking_accepted:true,
         undertaking_signed_name:undertakingSignedName,
@@ -175,6 +218,9 @@ Deno.serve(async(req)=>{
 
     if(insertError||!inserted?.id){
       console.error("register-professional insert",insertError);
+      if(uploadedPhotoPath){
+        await admin.storage.from("advocate-photo-pending").remove([uploadedPhotoPath]).catch(cleanup=>console.error("register-professional photo cleanup",cleanup));
+      }
       if(createdUserId){
         await admin.auth.admin.deleteUser(createdUserId).catch(cleanup=>console.error("register-professional auth cleanup",cleanup));
         createdUserId=null;
