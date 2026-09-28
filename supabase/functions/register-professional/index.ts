@@ -240,6 +240,9 @@ Deno.serve(async(req)=>{
     });
   }catch(error){
     console.error("register-professional unexpected",error);
+    if(admin&&uploadedPhotoPath){
+      await admin.storage.from("advocate-photo-pending").remove([uploadedPhotoPath]).catch(cleanup=>console.error("register-professional photo cleanup",cleanup));
+    }
     if(admin&&createdUserId){
       await admin.auth.admin.deleteUser(createdUserId).catch(cleanup=>console.error("register-professional unexpected cleanup",cleanup));
     }
