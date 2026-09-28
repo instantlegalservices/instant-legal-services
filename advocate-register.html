@@ -1851,7 +1851,7 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
     let professionalPhotoPath="";
     if(selectedProfessionalPhoto){
       const ext=selectedProfessionalPhoto.type==="image/png"?"png":selectedProfessionalPhoto.type==="image/webp"?"webp":"jpg";
-      professionalPhotoPath=`professional-pending/${role}/${crypto.randomUUID()}.${ext}`;
+      professionalPhotoPath=`pending/professional-${role}/${crypto.randomUUID()}.${ext}`;
       const upload=await client.storage.from("advocate-photo-pending").upload(professionalPhotoPath,selectedProfessionalPhoto,{
         cacheControl:"3600",upsert:false,contentType:selectedProfessionalPhoto.type
       });
@@ -1876,7 +1876,14 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
       undertaking_signed_name:signature,
       photo_storage_path:professionalPhotoPath
     }});
-    if(r.error)throw new Error(r.error.message||"Registration service failed.");
+    if(r.error){
+      let serverMessage="";
+      try{
+        const body=await r.error.context?.json();
+        serverMessage=body?.message||body?.error||"";
+      }catch(_){}
+      throw new Error(serverMessage||r.error.message||"Registration service failed.");
+    }
     if(!r.data?.ok)throw new Error(r.data?.message||"Registration failed.");
     s.className="status ok";s.textContent=r.data.message||"Secure login created and registration submitted for review.";
     e.target.reset();
