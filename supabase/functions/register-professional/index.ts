@@ -29,22 +29,6 @@ function getAdminKey(){
   return clean(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
 }
 
-async function hmacAadhaar(aadhaar, secret){
-  const key=await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    {name:"HMAC",hash:"SHA-256"},
-    false,
-    ["sign"]
-  );
-  const sig=await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(aadhaar)
-  );
-  return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,"0")).join("");
-}
-
 Deno.serve(async(req)=>{
   if(req.method==="OPTIONS") return new Response("ok",{status:200,headers:corsHeaders});
   if(req.method!=="POST") return json({ok:false,message:"Only POST requests are allowed.",code:"METHOD_NOT_ALLOWED"},405);
@@ -70,7 +54,6 @@ Deno.serve(async(req)=>{
     const photoStoragePath=clean(b.photo_storage_path);
     const undertakingSignedName=clean(b.undertaking_signed_name);
     const password=String(b.password??"");
-    const aadhaar=clean(b.aadhaar_number).replace(/\s|-/g,"");
     const years=b.years_of_experience===""||b.years_of_experience==null?null:Number(b.years_of_experience);
 
     if(!ALLOWED.has(professionalType))
@@ -111,18 +94,6 @@ Deno.serve(async(req)=>{
       if(!membershipNumber) return json({ok:false,message:"GST Practitioner enrolment / registration number is required.",code:"GSTP_NUMBER_REQUIRED"},400);
       if(!state||!city) return json({ok:false,message:"State and city are required for GST Practitioner review.",code:"LOCATION_REQUIRED"},400);
       if(selectedServiceCount(specialization)<3) return json({ok:false,message:"Please select at least 3 GST service / service-area options.",code:"SPECIALIZATION_MINIMUM"},400);
-    }
-
-    let aadhaarHash=null;
-    let aadhaarLast4=null;
-    if(professionalType==="assistant_associate"){
-      if(!/^[0-9]{12}$/.test(aadhaar))
-        return json({ok:false,message:"Enter a valid 12 digit Aadhaar number.",code:"INVALID_AADHAAR"},400);
-      const secret=clean(Deno.env.get("AADHAAR_HMAC_SECRET"))||getAdminKey();
-      if(!secret)
-        return json({ok:false,message:"Secure identity service is temporarily unavailable.",code:"IDENTITY_CONFIG_ERROR"},503);
-      aadhaarHash=await hmacAadhaar(aadhaar,secret);
-      aadhaarLast4=aadhaar.slice(-4);
     }
 
     const url=Deno.env.get("SUPABASE_URL");
@@ -190,8 +161,6 @@ Deno.serve(async(req)=>{
         firm_or_organization:firm||null,
         photo_storage_path:photoStoragePath||null,
         extra_skills:extraSkills||null,
-        aadhaar_hash:aadhaarHash,
-        aadhaar_last4:aadhaarLast4,
         undertaking_accepted:true,
         undertaking_signed_name:undertakingSignedName,
         undertaking_signed_at:new Date().toISOString(),
