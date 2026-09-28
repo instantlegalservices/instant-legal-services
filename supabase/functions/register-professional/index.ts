@@ -18,6 +18,17 @@ function json(body,status=200){
 function clean(v){return String(v??"").trim();}
 function selectedServiceCount(v){return clean(v).split("|").map(x=>x.trim()).filter(Boolean).length;}
 
+function getAdminKey(){
+  const raw=clean(Deno.env.get("SUPABASE_SECRET_KEYS"));
+  if(raw){
+    try{
+      const keys=JSON.parse(raw);
+      if(keys&&typeof keys.default==="string"&&keys.default.trim()) return keys.default.trim();
+    }catch(_){}
+  }
+  return clean(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
+}
+
 async function hmacAadhaar(aadhaar, secret){
   const key=await crypto.subtle.importKey(
     "raw",
@@ -107,7 +118,7 @@ Deno.serve(async(req)=>{
     if(professionalType==="assistant_associate"){
       if(!/^[0-9]{12}$/.test(aadhaar))
         return json({ok:false,message:"Enter a valid 12 digit Aadhaar number.",code:"INVALID_AADHAAR"},400);
-      const secret=Deno.env.get("AADHAAR_HMAC_SECRET")||Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      const secret=clean(Deno.env.get("AADHAAR_HMAC_SECRET"))||getAdminKey();
       if(!secret)
         return json({ok:false,message:"Secure identity service is temporarily unavailable.",code:"IDENTITY_CONFIG_ERROR"},503);
       aadhaarHash=await hmacAadhaar(aadhaar,secret);
@@ -115,7 +126,7 @@ Deno.serve(async(req)=>{
     }
 
     const url=Deno.env.get("SUPABASE_URL");
-    const serviceRole=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const serviceRole=getAdminKey();
     if(!url||!serviceRole)
       return json({ok:false,message:"Registration service is temporarily unavailable.",code:"SERVICE_CONFIG_ERROR"},503);
 
