@@ -49,6 +49,7 @@ Deno.serve(async(req)=>{
 
   let admin=null;
   let createdUserId=null;
+  let uploadedPhotoPath=null;
 
   try{
     const b=await req.json();
@@ -168,7 +169,6 @@ Deno.serve(async(req)=>{
 
     createdUserId=created.user.id;
 
-    let uploadedPhotoPath=null;
     if(photoBytes){
       const safeExt=photoExtension==="jpeg"?"jpg":photoExtension;
       uploadedPhotoPath=`pending/professional-${professionalType}/${crypto.randomUUID()}.${safeExt}`;
