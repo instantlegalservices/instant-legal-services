@@ -106,6 +106,72 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
   .menu{width:40px;height:40px;padding:0;font-size:18px;border-radius:11px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Safe homepage professional-card layout — display-only; existing query/data/link chain preserved */
+.adv-profile-card{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+.adv-profile-main{
+  display:grid;
+  grid-template-columns:82px minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+}
+.adv-profile-photo{
+  width:82px;
+  height:82px;
+  border-radius:18px;
+  object-fit:cover;
+  background:#19334a;
+  border:1px solid var(--line);
+}
+.adv-profile-name{
+  font-size:15px;
+  line-height:1.25;
+  font-weight:900;
+  overflow-wrap:anywhere;
+}
+.adv-profile-verified{
+  margin-top:4px;
+  color:#9df0c4;
+  font-size:10px;
+  font-weight:850;
+}
+.adv-profile-meta{
+  display:grid;
+  gap:4px;
+  margin-top:9px;
+}
+.adv-profile-meta span{
+  color:#a5b5c4;
+  font-size:9px;
+  line-height:1.4;
+}
+.adv-profile-meta b{
+  color:#dce6ee;
+  font-weight:750;
+}
+.adv-profile-field{
+  margin-top:12px!important;
+  min-height:2.8em;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+.adv-profile-card > .btn{
+  align-self:flex-start;
+  margin-top:14px;
+}
+@media(max-width:620px){
+  .adv-profile-main{grid-template-columns:86px minmax(0,1fr);gap:13px}
+  .adv-profile-photo{width:86px;height:86px;border-radius:19px}
+  .adv-profile-name{font-size:16px}
+  .adv-profile-meta span{font-size:9.5px}
+  .adv-profile-field{font-size:10px!important}
+}
 </style>
 </head>
 <body>
@@ -355,7 +421,7 @@ function loadDynamic(){
  }).catch(()=>{$("judgments").innerHTML='<div class="loading">Judgments could not be loaded right now.</div>'});
  ILS.advocates({limit:4,featured:true}).then(rows=>{
   const el=$("advocates");if(!rows?.length){el.innerHTML='<div class="loading">Featured profiles अभी उपलब्ध नहीं हैं.</div>';return}
-  el.innerHTML=rows.map(x=>'<article class="dcard"><div class="advtop"><img class="photo" src="'+ILS.esc(x.photo_url||x.profile_photo_url||"assets/ils-logo.jpg")+'" alt=""><div><div class="advname">'+ILS.esc(x.advocate_name||"Professional")+'</div><div class="verified">✓ '+ILS.esc(x.professional_type==="ca"?"Verified CA":x.professional_type==="cs"?"Verified CS":"Verified Advocate")+'</div></div></div><p>'+ILS.esc(x.primary_practice_area||"Legal practice")+' • '+ILS.esc(x.practice_state||"India")+'</p><a class="btn ghost" href="advocates.html">View profile →</a></article>').join("");
+  el.innerHTML=rows.map(x=>{const type=x.professional_type==="ca"?"Verified CA":x.professional_type==="cs"?"Verified CS":"Verified Advocate";const court=ILS.parseDistrictCourt?ILS.parseDistrictCourt(x.district_court):{district:"",court:x.district_court||""};const courtText=[court.district,court.court].filter(Boolean).join(" · ")||x.district_court||"Court not specified";const field=x.primary_practice_area||"Practice field not specified";const enrollment=x.enrollment_number||"";return '<article class="dcard adv-profile-card"><div class="adv-profile-main"><img class="adv-profile-photo" src="'+ILS.esc(x.photo_url||x.profile_photo_url||"assets/ils-logo.jpg")+'" alt=""><div><div class="adv-profile-name">'+ILS.esc(x.advocate_name||"Professional")+'</div><div class="adv-profile-verified">✓ '+ILS.esc(type)+'</div><div class="adv-profile-meta"><span><b>Practicing Court:</b> '+ILS.esc(courtText)+'</span>'+(enrollment?'<span><b>Enrollment:</b> '+ILS.esc(enrollment)+'</span>':'')+'</div></div></div><p class="adv-profile-field">'+ILS.esc(field)+'</p><a class="btn ghost" href="advocates.html">View profile →</a></article>';}).join("");
  }).catch(()=>{$("advocates").innerHTML='<div class="loading">Professional profiles could not be loaded right now.</div>'});
 }
 document.addEventListener("DOMContentLoaded",()=>{
