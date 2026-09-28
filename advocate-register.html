@@ -1797,18 +1797,62 @@ document.querySelectorAll("[data-prof-role]").forEach(btn=>btn.addEventListener(
 }));
 
 let selectedProfessionalPhoto=null;
+let selectedProfessionalPhotoBase64="";
+let selectedProfessionalPhotoType="";
+let selectedProfessionalPhotoExtension="";
 
 function bindProfessionalPhotoInput(inputId){
   const input=$(inputId); if(!input)return;
   input.addEventListener("change",()=>{
     const file=input.files?.[0]; if(!file)return;
-    if(!/^image\/(jpeg|png|webp)$/.test(file.type)){input.value="";throw new Error("Profile photo must be JPG, PNG or WebP.");}
-    if(file.size>2*1024*1024){input.value="";throw new Error("Profile photo must be 2 MB or smaller.");}
-    selectedProfessionalPhoto=file;
+    if(!/^image\/(jpeg|png|webp)$/.test(file.type)){
+      input.value="";
+      selectedProfessionalPhoto=null;
+      selectedProfessionalPhotoBase64="";
+      selectedProfessionalPhotoType="";
+      selectedProfessionalPhotoExtension="";
+      throw new Error("Profile photo must be JPG, PNG or WebP.");
+    }
+    if(file.size>2*1024*1024){
+      input.value="";
+      selectedProfessionalPhoto=null;
+      selectedProfessionalPhotoBase64="";
+      selectedProfessionalPhotoType="";
+      selectedProfessionalPhotoExtension="";
+      throw new Error("Profile photo must be 2 MB or smaller.");
+    }
+
+    selectedProfessionalPhoto=null;
+    selectedProfessionalPhotoBase64="";
+    selectedProfessionalPhotoType=file.type;
+    selectedProfessionalPhotoExtension=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
+
     const preview=$("ilsProfPhotoPreview");
     preview.src=URL.createObjectURL(file);
     preview.style.display="block";
-    $("ilsProfPhotoStatus").textContent=file.name+" · "+Math.round(file.size/1024)+" KB";
+    $("ilsProfPhotoStatus").textContent="Reading "+file.name+"…";
+
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const result=String(reader.result||"");
+      const comma=result.indexOf(",");
+      if(comma<0){
+        selectedProfessionalPhotoBase64="";
+        $("ilsProfPhotoStatus").textContent="Unable to read the selected photo. Please choose it again.";
+        return;
+      }
+      selectedProfessionalPhotoBase64=result.slice(comma+1);
+      selectedProfessionalPhoto=file.name;
+      $("ilsProfPhotoStatus").textContent=file.name+" · "+Math.round(file.size/1024)+" KB · Ready";
+    };
+    reader.onerror=()=>{
+      selectedProfessionalPhoto=null;
+      selectedProfessionalPhotoBase64="";
+      selectedProfessionalPhotoType="";
+      selectedProfessionalPhotoExtension="";
+      $("ilsProfPhotoStatus").textContent="Unable to read the selected photo. Please choose it again.";
+    };
+    reader.readAsDataURL(file);
   });
 }
 bindProfessionalPhotoInput("ilsProfCameraInput");
@@ -1843,19 +1887,11 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
     if(role==="gst_practitioner"&&!$("ilsProfMembership").value.trim())throw new Error("GST Practitioner enrolment/registration number is required.");
     const client=ILS.ready(); if(!client)throw new Error("Service connection unavailable.");
 
-    let professionalPhotoBase64="";
-    let professionalPhotoType="";
-    let professionalPhotoExtension="";
-    if(selectedProfessionalPhoto){
-      professionalPhotoType=selectedProfessionalPhoto.type;
-      professionalPhotoExtension=professionalPhotoType==="image/png"?"png":professionalPhotoType==="image/webp"?"webp":"jpg";
-      const bytes=new Uint8Array(await selectedProfessionalPhoto.arrayBuffer());
-      const chunkSize=0x8000;
-      let binary="";
-      for(let i=0;i<bytes.length;i+=chunkSize){
-        binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+chunkSize,bytes.length)));
-      }
-      professionalPhotoBase64=btoa(binary);
+    const professionalPhotoBase64=selectedProfessionalPhotoBase64;
+    const professionalPhotoType=selectedProfessionalPhotoType;
+    const professionalPhotoExtension=selectedProfessionalPhotoExtension;
+    if(selectedProfessionalPhoto && !professionalPhotoBase64){
+      throw new Error("Profile photo is still being read. Please wait a moment and try again.");
     }
 
     const r=await client.functions.invoke("register-professional",{body:{
@@ -1889,6 +1925,9 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
     s.className="status ok";s.textContent=r.data.message||"Secure login created and registration submitted for review.";
     e.target.reset();
     selectedProfessionalPhoto=null;
+    selectedProfessionalPhotoBase64="";
+    selectedProfessionalPhotoType="";
+    selectedProfessionalPhotoExtension="";
     $("ilsProfPhotoPreview").src="";
     $("ilsProfPhotoPreview").style.display="none";
     $("ilsProfPhotoStatus").textContent="JPG, PNG or WebP · Maximum 2 MB · Optional";
