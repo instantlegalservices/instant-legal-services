@@ -307,7 +307,11 @@ function understand(q){
  if(!q.trim()){toast("पहले अपनी problem लिखें या voice से बताएं.");$("problem").focus();return}
  currentRoute=enrichGovernmentRoute(classify(q)); renderResult(q,currentRoute);
 }
-function openOfficialRoute(url){\n if(!url){toast("Official route अभी उपलब्ध नहीं है.");return;}\n try{window.location.assign(url)}catch(e){window.open(url,"_self")}\n}\nfunction renderResult(q,r){
+function openOfficialRoute(url){
+ if(!url){toast("Official route अभी उपलब्ध नहीं है.");return;}
+ try{window.location.assign(url)}catch(e){window.open(url,"_self")}
+}
+function renderResult(q,r){
  const no=r.url===null;
  $("result").innerHTML='<div class="result"><div class="result-top"><div class="result-kicker">ILS '+(no?"NEEDS ONE MORE CLUE":"UNDERSTOOD YOUR PROBLEM")+'</div><h2>'+r.icon+" "+r.title+'</h2><p>'+r.desc+'. '+(no?"कृपया problem में department/service/country-level context बताएं.":"आपकी personal/sensitive details अभी ILS को देने की जरूरत नहीं है.")+'</p></div>'+
  (no?'<div class="routecard"><strong>🧭 अभी official route select नहीं किया गया</strong><small>Problem में “bank”, “cyber fraud”, “consumer”, “police/FIR”, “government complaint”, “challan” जैसे words बताएं या Legal Assistance चुनें.</small></div>':
