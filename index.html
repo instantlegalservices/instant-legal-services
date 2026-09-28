@@ -120,7 +120,7 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
 <a class="nav-quick-btn login" href="portal.html#login">Login</a>
 </div>
 <select id="language" class="lang" aria-label="Language"><option value="hi-IN">हिन्दी</option><option value="en-IN">English</option><option value="hinglish">Hinglish</option><option value="ur-IN">اردو</option><option value="bn-IN">বাংলা</option></select>
-<button class="menu" id="menu" aria-label="Menu">☰</button>
+<button class="menu" id="menu" aria-label="Menu" aria-expanded="false" type="button">☰</button><button class="btn btn-ghost btn-small" data-install-app hidden type="button">Install App</button>
 </div>
 </header>
 
@@ -356,13 +356,25 @@ function loadDynamic(){
 }
 document.addEventListener("DOMContentLoaded",()=>{
  const header=$(".header");
+ const menu=$("menu");
+ const navLinks=$("navLinks");
+ if(menu&&navLinks&&!menu.dataset.homeMenuBound){
+  menu.dataset.homeMenuBound="1";
+  menu.addEventListener("click",()=>{
+   const open=navLinks.classList.toggle("open");
+   menu.setAttribute("aria-expanded",String(open));
+  });
+  navLinks.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>{
+   navLinks.classList.remove("open");
+   menu.setAttribute("aria-expanded","false");
+  }));
+ }
  const syncHeaderOffset=()=>document.documentElement.style.setProperty("--ils-header-offset",`${header?.offsetHeight||72}px`);
  syncHeaderOffset();
  if(header&&"ResizeObserver" in window){new ResizeObserver(syncHeaderOffset).observe(header)}else{window.addEventListener("resize",syncHeaderOffset,{passive:true})}
  loadGovernmentCatalog();
  const saved=localStorage.getItem("ils-home-lang")||"hi-IN";$("language").value=saved;setLang(saved);
  $("language").addEventListener("change",e=>setLang(e.target.value));
- $("menu").onclick=()=>{$("navLinks").classList.toggle("open")};
  $("voice").onclick=startVoice;$("speak").onclick=speak;
  $("understand").onclick=()=>understand($("problem").value);
  document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{$("problem").value=b.getAttribute("data-q");$("problem").scrollIntoView({behavior:"smooth",block:"center"});$("hint").textContent="✓ Problem selected. अब “मेरी मदद शुरू करें” दबाएं."});
