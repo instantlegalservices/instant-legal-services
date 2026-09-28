@@ -707,9 +707,6 @@ Submit for Review
     </div>
   </div>
   <div class="ils-selection-summary">Only genuine skills should be selected. ILS may verify skills before assigning work.</div>
-  <label for="ilsProfAadhaar">Aadhaar Number</label>
-  <input id="ilsProfAadhaar" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="12 digit Aadhaar number">
-  <small style="display:block;opacity:.68;margin-top:6px">Used only for secure internal identity review. ILS does not publish Aadhaar. The server stores a cryptographic hash and last 4 digits only.</small>
 </div>
 
 <div class="form-row">
@@ -1766,7 +1763,6 @@ function configureProfessionalRole(role){
   $("ilsAssistantSection").classList.toggle("show",assistant);
   $("ilsProfessionalPhotoSection").classList.toggle("show",true);
   $("ilsProfessionalCredentials").classList.toggle("show",!assistant);
-  $("ilsProfAadhaar").required=assistant;
   if(assistant){
     $("ilsProfMembership").value="";
     $("ilsProfCop").value="";
@@ -1870,7 +1866,6 @@ $("ilsProfessionalForm").addEventListener("submit",async e=>{
       years_of_experience:$("ilsProfYears").value,
       firm_or_organization:$("ilsProfFirm").value.trim(),
       extra_skills:role==="assistant_associate"?extraSkills:"",
-      aadhaar_number:role==="assistant_associate"?$("ilsProfAadhaar").value.replace(/\s|-/g,""):"",
       password,
       undertaking_accepted:true,
       undertaking_signed_name:signature,
