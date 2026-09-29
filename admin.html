@@ -971,13 +971,15 @@ async function setAdvocateVerification(status){
 
       if(photoResult.error){
 
-        throw new Error(
-          "Pending photo fetch failed: "+
+        /* A missing pending object must not block advocate approval.
+           The profile can still be approved without a photo; if the
+           object exists, continue with the normal promotion flow. */
+        console.warn(
+          "Pending advocate photo unavailable; approving without photo:",
           photoResult.error.message
         );
 
-      }
-
+      }else{
 
       const ext =
         pendingPath.match(
@@ -1050,6 +1052,8 @@ async function setAdvocateVerification(status){
           "Pending photo cleanup warning:",
           removeResult.error.message
         );
+
+      }
 
       }
 
