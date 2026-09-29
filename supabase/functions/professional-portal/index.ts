@@ -65,7 +65,7 @@ Deno.serve(async(req)=>{
         approved_at:a.approved_at,
         undertaking_accepted:a.undertaking_accepted===true,
         capabilities:{
-          professional_tools:true,
+          professional_tools:String(a.status||"").toLowerCase()==="approved" && String(a.verification_status||"").toLowerCase()==="approved",
           research_ai:String(a.status||"").toLowerCase()==="approved" && String(a.verification_status||"").toLowerCase()==="approved"
         }
       });
@@ -100,7 +100,7 @@ Deno.serve(async(req)=>{
         approved_at:null,
         undertaking_accepted:p.undertaking_accepted===true,
         capabilities:{
-          professional_tools:true,
+          professional_tools:String(p.status||"").toLowerCase()==="approved" && String(p.verification_status||"").toLowerCase()==="approved",
           research_ai:false
         }
       });
