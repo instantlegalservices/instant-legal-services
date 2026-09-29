@@ -995,7 +995,7 @@ async function setAdvocateVerification(status){
           if(recovered?.name){
 
             const recoveredPath =
-              "approved/"+String(recovered.name).replace(/^\\/+/, "");
+              "approved/"+String(recovered.name).replace(/^\/+/, "");
 
             const recoveredResult =
               await sb.storage
