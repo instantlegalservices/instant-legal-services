@@ -948,6 +948,8 @@ async function setAdvocateVerification(status){
       a.photo_storage_path ||
       null;
 
+    let pendingPhotoMissing = false;
+
 
     /* =========================================
        PROMOTE PENDING PHOTO WHEN APPROVING
@@ -971,13 +973,17 @@ async function setAdvocateVerification(status){
 
       if(photoResult.error){
 
-        throw new Error(
-          "Pending photo fetch failed: "+
+        /* A missing pending object must not block advocate approval.
+           The profile can still be approved without a photo; if the
+           object exists, continue with the normal promotion flow. */
+        pendingPhotoMissing = true;
+        approvedPhotoPath = null;
+        console.warn(
+          "Pending advocate photo unavailable; approving without photo:",
           photoResult.error.message
         );
 
-      }
-
+      }else{
 
       const ext =
         pendingPath.match(
@@ -1053,6 +1059,8 @@ async function setAdvocateVerification(status){
 
       }
 
+      }
+
     }
 
 
@@ -1081,6 +1089,10 @@ async function setAdvocateVerification(status){
 
     };
 
+
+    if(status==="Approved" && pendingPhotoMissing && !photoUrl){
+      update.photo_storage_path = null;
+    }
 
     if(
       status==="Approved" &&
@@ -1118,7 +1130,9 @@ async function setAdvocateVerification(status){
     msg(
       "appMsg",
       status==="Approved"
-        ? "Advocate approved successfully. Photo published."
+        ? (pendingPhotoMissing && !photoUrl
+            ? "Advocate approved successfully. No pending profile photo was available."
+            : "Advocate approved successfully. Photo published.")
         : "Advocate application rejected.",
       "ok"
     );
