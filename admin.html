@@ -973,15 +973,78 @@ async function setAdvocateVerification(status){
 
       if(photoResult.error){
 
-        /* A missing pending object must not block advocate approval.
-           The profile can still be approved without a photo; if the
-           object exists, continue with the normal promotion flow. */
-        pendingPhotoMissing = true;
-        approvedPhotoPath = null;
-        console.warn(
-          "Pending advocate photo unavailable; approving without photo:",
-          photoResult.error.message
-        );
+        /* Recover an already-promoted photo when the pending object is
+           missing. This protects against a prior partial approval where
+           the storage upload succeeded but the DB link was not persisted. */
+        try{
+
+          const approvedList =
+            await sb.storage
+              .from("advocate-photo")
+              .list("approved",{
+                limit:100,
+                search:String(a.id)+"-",
+                sortBy:{column:"created_at",order:"desc"}
+              });
+
+          const recovered =
+            (approvedList?.data||[])
+              .filter(x=>x?.name && String(x.name).startsWith(String(a.id)+"-"))
+              [0];
+
+          if(recovered?.name){
+
+            const recoveredPath =
+              "approved/"+String(recovered.name).replace(/^\\/+/, "");
+
+            const recoveredResult =
+              await sb.storage
+                .from("advocate-photo")
+                .download(recoveredPath);
+
+            if(!recoveredResult.error && recoveredResult.data){
+
+              const recoveredPublic =
+                sb.storage
+                  .from("advocate-photo")
+                  .getPublicUrl(recoveredPath);
+
+              photoUrl =
+                recoveredPublic?.data?.publicUrl ||
+                null;
+
+              approvedPhotoPath =
+                recoveredPath;
+
+              console.warn(
+                "Recovered previously approved advocate photo:",
+                recoveredPath
+              );
+
+            }
+
+          }
+
+        }catch(recoveryError){
+
+          console.warn(
+            "Approved photo recovery warning:",
+            recoveryError?.message || recoveryError
+          );
+
+        }
+
+        if(!photoUrl){
+
+          pendingPhotoMissing = true;
+          approvedPhotoPath = null;
+
+          console.warn(
+            "Pending advocate photo unavailable; approving without photo:",
+            photoResult.error.message
+          );
+
+        }
 
       }else{
 
