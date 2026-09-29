@@ -1,5 +1,7 @@
 -- Release-gate security hardening: an authenticated customer must prove possession of the
 -- mobile number already attached to an existing client requirement before linking it.
+-- A requirement can be linked to only one customer profile, and an existing link cannot
+-- be silently replaced or cleared by a later RPC call.
 -- This file is intentionally staged on the release-gate branch only; do not apply to
 -- production until TEST E2E verification passes.
 
@@ -17,6 +19,8 @@ declare
   v_user uuid := (select auth.uid());
   v_id uuid;
   v_mobile text := nullif(trim(coalesce(p_mobile,'')),'');
+  v_existing_requirement_id bigint;
+  v_target_requirement_id bigint;
 begin
   if v_user is null then
     raise exception 'AUTH_REQUIRED';
@@ -25,6 +29,13 @@ begin
   if nullif(trim(coalesce(p_full_name,'')),'') is null then
     raise exception 'FULL_NAME_REQUIRED';
   end if;
+
+  select client_requirement_id
+    into v_existing_requirement_id
+  from public.customer_profiles
+  where user_id = v_user;
+
+  v_target_requirement_id := v_existing_requirement_id;
 
   if p_client_requirement_id is not null then
     if v_mobile is null then
@@ -43,6 +54,22 @@ begin
     ) then
       raise exception 'CLIENT_REQUIREMENT_NOT_FOUND_OR_MOBILE_MISMATCH';
     end if;
+
+    if v_existing_requirement_id is not null
+       and v_existing_requirement_id <> p_client_requirement_id then
+      raise exception 'CUSTOMER_REQUIREMENT_ALREADY_BOUND';
+    end if;
+
+    if exists (
+      select 1
+      from public.customer_profiles
+      where client_requirement_id = p_client_requirement_id
+        and user_id <> v_user
+    ) then
+      raise exception 'CLIENT_REQUIREMENT_ALREADY_LINKED';
+    end if;
+
+    v_target_requirement_id := p_client_requirement_id;
   end if;
 
   insert into public.customer_profiles(
@@ -53,7 +80,7 @@ begin
   )
   values(
     v_user,
-    p_client_requirement_id,
+    v_target_requirement_id,
     trim(p_full_name),
     v_mobile
   )
@@ -71,6 +98,12 @@ begin
   );
 end;
 $function$;
+
+-- Defense in depth: enforce one customer profile per client requirement at the
+-- database level. NULL remains allowed for profiles not yet linked to a requirement.
+drop index if exists public.customer_profiles_client_requirement_id_idx;
+create unique index customer_profiles_client_requirement_id_idx
+  on public.customer_profiles using btree (client_requirement_id);
 
 revoke execute on function public.provision_customer_profile(text,text,bigint) from anon, public;
 grant execute on function public.provision_customer_profile(text,text,bigint) to authenticated;
