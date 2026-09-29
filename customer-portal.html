@@ -82,7 +82,13 @@ $("signupBtn").onclick=async()=>{
      status("Customer account and profile provisioned successfully.\nProfile: "+p.customer_profile_id,true);
      show("login");
    }else{
-     status("Account created. Please complete the email confirmation if required, then sign in here.",true);
+     sessionStorage.setItem("ils_pending_customer_signup",JSON.stringify({
+       email,
+       name,
+       mobile,
+       lead
+     }));
+     status("Account created. Please complete the email confirmation if required, then sign in here. Your entered details will be retained for this browser session.",true);
    }
  }catch(e){status(e.message||"Unable to create account.");}
  finally{$("signupBtn").disabled=false;}
@@ -96,9 +102,16 @@ $("loginBtn").onclick=async()=>{
    const {data:profile,error:pe}=await sb.from("customer_profiles").select("id,full_name,status").eq("user_id",data.user.id).maybeSingle();
    if(pe) throw pe;
    if(!profile){
-     const name=data.user.user_metadata?.full_name||data.user.email?.split("@")[0]||"ILS Customer";
-     const {data:p,error:e}=await sb.rpc("provision_customer_profile",{p_full_name:name,p_mobile:null,p_client_requirement_id:null});
+     let pending={};
+     try{ pending=JSON.parse(sessionStorage.getItem("ils_pending_customer_signup")||"{}")||{}; }catch(_){}
+     const pendingEmail=String(pending.email||"").trim().toLowerCase();
+     const sameEmail=!pendingEmail||pendingEmail===email;
+     const name=sameEmail&&pending.name ? pending.name : (data.user.user_metadata?.full_name||data.user.email?.split("@")[0]||"ILS Customer");
+     const mobile=sameEmail&&pending.mobile ? pending.mobile : null;
+     const lead=sameEmail&&pending.lead ? Number(pending.lead) : null;
+     const {data:p,error:e}=await sb.rpc("provision_customer_profile",{p_full_name:name,p_mobile:mobile,p_client_requirement_id:lead});
      if(e||!p?.ok) throw new Error(e?.message||"CUSTOMER_PROFILE_PROVISION_FAILED");
+     sessionStorage.removeItem("ils_pending_customer_signup");
      status("Signed in. Missing customer profile was safely provisioned.\nProfile: "+p.customer_profile_id,true);
    }else{
      if(profile.status!=="active") throw new Error("CUSTOMER_ACCOUNT_SUSPENDED");
