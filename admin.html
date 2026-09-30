@@ -91,7 +91,18 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 .modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.modal-actions .btnx{flex:1;min-width:150px}
 @media(max-width:850px){.adv-toolbar{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}}
 
-.crm-comms{display:grid;gap:16px;margin-top:18px}.crm-box{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.crm-chat{max-height:260px;min-height:120px;overflow:auto}.crm-msg{padding:9px;border-bottom:1px solid #26354a}.crm-meta{font-size:11px;color:#8e9bad;margin-bottom:4px}.crm-progress{max-height:240px;overflow:auto}.crm-progress-item{background:#0d1927;border:1px solid #26354a;border-radius:8px;padding:9px;margin-bottom:8px}.crm-comms-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.action-queue-toolbar{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:15px}.action-queue-table{min-width:1250px}.queue-status{font-weight:700}.queue-actions{display:flex;gap:6px;flex-wrap:wrap}.queue-note{font-size:12px;color:#9ca7b6;margin-top:4px}@media(max-width:850px){.action-queue-toolbar{grid-template-columns:1fr}}.revenue-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.revenue-stat{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.revenue-stat small{color:#9ca7b6}.revenue-stat strong{display:block;font-size:24px;margin-top:4px}.revenue-status{font-weight:700}.status-paid{color:#8fe0a0}.status-pending{color:#ffd77a}.status-failed{color:#ff9b9b}@media(max-width:900px){.revenue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:500px){.revenue-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.revenue-stat{padding:10px 11px}.revenue-stat small{font-size:11px}.revenue-stat strong{font-size:22px}}</style>
+.crm-comms{display:grid;gap:16px;margin-top:18px}.crm-box{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.crm-chat{max-height:260px;min-height:120px;overflow:auto}.crm-msg{padding:9px;border-bottom:1px solid #26354a}.crm-meta{font-size:11px;color:#8e9bad;margin-bottom:4px}.crm-progress{max-height:240px;overflow:auto}.crm-progress-item{background:#0d1927;border:1px solid #26354a;border-radius:8px;padding:9px;margin-bottom:8px}.crm-comms-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.action-queue-toolbar{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:15px}.action-queue-table{min-width:1250px}.queue-status{font-weight:700}.queue-actions{display:flex;gap:6px;flex-wrap:wrap}.queue-note{font-size:12px;color:#9ca7b6;margin-top:4px}@media(max-width:850px){.action-queue-toolbar{grid-template-columns:1fr}}.revenue-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.revenue-stat{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.revenue-stat small{color:#9ca7b6}.revenue-stat strong{display:block;font-size:24px;margin-top:4px}.revenue-status{font-weight:700}.status-paid{color:#8fe0a0}.status-pending{color:#ffd77a}.status-failed{color:#ff9b9b}@media(max-width:900px){.revenue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:500px){.revenue-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.revenue-stat{padding:10px 11px}.revenue-stat small{font-size:11px}.revenue-stat strong{font-size:22px}}
+/* ILS ADMIN SMART WORKSPACE — UI ONLY */
+.admin-smartbar{position:sticky;top:12px;z-index:1200;background:rgba(12,22,36,.96);backdrop-filter:blur(12px);border:1px solid #2b3b52;border-radius:16px;padding:12px;margin:0 0 18px;box-shadow:0 12px 35px rgba(0,0,0,.22)}
+.admin-smartbar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.admin-smartbar-title{font-size:15px;font-weight:800;color:#fff}.admin-smartbar-sub{font-size:11px;color:#93a1b3;margin-top:2px}
+.admin-workspace-tabs{display:flex;gap:7px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+.admin-workspace-tab{flex:0 0 auto;border:1px solid #34455d;background:#172538;color:#dce5ef;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;transition:.16s ease}
+.admin-workspace-tab:hover{border-color:#60738e;background:#1c2d43}.admin-workspace-tab.active{background:#d7a84f;color:#10151c;border-color:#d7a84f}
+.admin-smart-tools{display:flex;gap:7px;flex:0 0 auto}.admin-smart-tool{border:1px solid #34455d;background:#0d1928;color:#dce5ef;border-radius:9px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}.admin-smart-tool:hover{background:#17283d}
+.admin-workspace-note{margin:8px 0 0;color:#8fa0b5;font-size:11px;line-height:1.4}.admin-workspace-panel{display:block}.admin-workspace-panel.workspace-hidden{display:none!important}
+@media(max-width:700px){.admin-smartbar{top:6px;border-radius:12px;padding:10px}.admin-smartbar-head{align-items:flex-start}.admin-smart-tools{display:none}.admin-workspace-tab{padding:8px 11px}}
+</style>
 </head>
 <body>
 <div id="loginView" class="login">
@@ -140,6 +151,14 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 
     <div id="appMsg" class="msg"></div>
 
+    <section class="admin-smartbar" aria-label="Admin workspace navigation">
+      <div class="admin-smartbar-head"><div><div class="admin-smartbar-title">Admin Control Center</div><div class="admin-smartbar-sub">Use one workspace at a time. Existing admin functions remain unchanged.</div></div><div class="admin-smart-tools"><button id="adminWorkspaceAllBtn" class="admin-smart-tool" type="button">Show all</button><button id="adminWorkspaceTopBtn" class="admin-smart-tool" type="button">Top</button></div></div>
+      <div id="adminWorkspaceTabs" class="admin-workspace-tabs" role="navigation" aria-label="Admin workspaces">
+        <button class="admin-workspace-tab active" type="button" data-admin-workspace="overview" aria-selected="true">Overview</button><button class="admin-workspace-tab" type="button" data-admin-workspace="clients" aria-selected="false">Clients & CRM</button><button class="admin-workspace-tab" type="button" data-admin-workspace="professionals" aria-selected="false">Professionals</button><button class="admin-workspace-tab" type="button" data-admin-workspace="payments" aria-selected="false">Orders & Payments</button><button class="admin-workspace-tab" type="button" data-admin-workspace="operations" aria-selected="false">Operations</button><button class="admin-workspace-tab" type="button" data-admin-workspace="pricing" aria-selected="false">Pricing</button><button class="admin-workspace-tab" type="button" data-admin-workspace="security" aria-selected="false">Security</button>
+      </div>
+      <div id="adminWorkspaceNote" class="admin-workspace-note">Overview is the starting view. Use the workspace tabs to reach the detailed tables without scrolling through the entire admin page.</div>
+    </section>
+
     <section class="admin-grid">
       <div class="admin-stat"><small>Client Requirements</small><strong id="countLeads">—</strong></div>
       <div class="admin-stat"><small>Advocate Registrations</small><strong id="countAdvocates">—</strong></div>
@@ -147,7 +166,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       <div class="admin-stat"><small>New Leads</small><strong id="countNew">—</strong></div>
     </section>
 
-    <section class="panel" id="revenueDashboardPanel">
+    <section class="panel admin-workspace-panel" id="revenueDashboardPanel" data-admin-workspace="overview">
       <h2>💰 Revenue & Service Management</h2>
       <div class="revenue-grid">
         <div class="revenue-stat"><small>Total Orders</small><strong id="revOrdersTotal">0</strong></div>
@@ -160,7 +179,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       <div class="table-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="9" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
     </section>
 
-<section class="panel" id="adminDeletionPanel" style="border:1px solid #7f1d1d">
+<section class="panel admin-workspace-panel" id="adminDeletionPanel" data-admin-workspace="security" style="border:1px solid #7f1d1d">
   <h2>⚠️ Permanent Data Deletion</h2>
   <div id="deletionMsg" class="msg" data-toast="1"></div>
   <div class="table-wrap deletion-table-wrap" style="margin-top:14px">
@@ -171,7 +190,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
   </div>
 </section>
 
-<section class="panel" id="pricingControlPanel">
+<section class="panel admin-workspace-panel" id="pricingControlPanel" data-admin-workspace="pricing">
 <h2>💰 Pricing & Professional Fee Control</h2>
 <p style="color:#9ca7b6;margin-top:-6px">Admin-only control. Service/tool prices are used by the existing order RPC at checkout. Professional/associate fees are configuration only until a service explicitly uses them. Every pricing change is recorded in the admin pricing audit.</p>
 <div id="pricingMsg" class="msg"></div>
@@ -192,7 +211,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 <div class="table-wrap" style="margin-top:14px"><table class="action-queue-table"><thead><tr><th>Recent pricing changes</th><th>Entity</th><th>Old</th><th>New</th><th>When</th></tr></thead><tbody id="pricingAuditBody"><tr><td colspan="5" style="text-align:center">Loading audit…</td></tr></tbody></table></div>
 </section>
 
-<section class="panel" id="govRouteVerificationPanel">
+<section class="panel admin-workspace-panel" id="govRouteVerificationPanel" data-admin-workspace="operations">
 <h2>🌐 Official Route Verification</h2>
 <p style="color:#9ca7b6;margin-top:-6px">Admin-only live verification of the 10 ILS official-route catalogue entries. Uses your current authenticated admin session; no customer signup or production payment flow is touched.</p>
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
@@ -203,14 +222,14 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 <div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Code</th><th>Official route</th><th>Status</th><th>HTTP</th><th>Final URL</th><th>Redirects</th><th>Error</th></tr></thead><tbody id="govRouteVerificationBody"><tr><td colspan="7" style="text-align:center">Loading route verification state…</td></tr></tbody></table></div>
 </section>
 
-    <section class="panel" id="actionAssistanceQueuePanel">
+    <section class="panel admin-workspace-panel" id="actionAssistanceQueuePanel" data-admin-workspace="operations">
 <h2>🧑‍💻 Action Assistance Queue</h2>
 <p style="color:#9ca7b6;margin-top:-6px">Paid associate requests only. Assign, work, QA-check and complete without changing the existing payment chain.</p>
 <div class="action-queue-toolbar"><input id="actionQueueSearch" placeholder="Search order, customer, mobile, problem or official route…"><select id="actionQueueStatusFilter"><option value="">All queue status</option><option value="pending_assignment">Pending assignment</option><option value="assigned">Assigned</option><option value="in_progress">In progress</option><option value="qa_hold">QA hold</option><option value="qa_pass">QA passed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><button id="refreshActionQueueBtn" class="btnx secondary" type="button">↻ Refresh Queue</button></div>
 <div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Order</th><th>Customer</th><th>Problem / Route</th><th>Status</th><th>Assigned</th><th>Created</th><th>Customer Note</th><th>Action</th></tr></thead><tbody id="actionQueueBody"><tr><td colspan="8" style="text-align:center">Loading associate queue…</td></tr></tbody></table></div>
 <div id="actionQueueMsg" class="msg" style="margin-top:12px"></div></section>
 
-    <section class="panel" id="upiProofPanel">
+    <section class="panel admin-workspace-panel" id="upiProofPanel" data-admin-workspace="payments">
       <h2>🔐 UPI Payment Proof Verification</h2>
       <p style="color:#9ca7b6;margin-top:-6px">
         QR payments remain pending until an administrator verifies the uploaded payment-success screenshot and transaction reference. The screenshot is kept in a private Storage bucket.
@@ -234,14 +253,14 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       </div>
     </section>
 
-    <section class="panel" id="upiProofInstructionsPanel">
+    <section class="panel admin-workspace-panel" id="upiProofInstructionsPanel" data-admin-workspace="payments">
       <h3 style="margin-top:0">Verification rule</h3>
       <p style="margin:0;color:#cbd5e1">
         Verify the screenshot against the actual received UPI transaction/account statement before approving. A screenshot alone is not treated as bank confirmation.
       </p>
     </section>
 
-    <section class="panel">
+    <section class="panel admin-workspace-panel" id="clientCrmPanel" data-admin-workspace="clients">
       <h2>Client Requirements / CRM</h2>
       <div class="toolbar">
         <input id="leadSearch" placeholder="Search name, mobile, city, matter…">
@@ -317,7 +336,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       </div>
     </div>
 
-    <section class="panel adv-panel">
+    <section class="panel adv-panel admin-workspace-panel" id="advocateManagementPanel" data-admin-workspace="professionals">
       <h2>Advocate Management</h2>
       <div class="adv-toolbar">
         <input id="adminAdvocateSearch" type="search" placeholder="Search advocate, mobile, email, enrollment, court or practice area…">
@@ -342,7 +361,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       </div>
     </section>
 
-    <section class="panel adv-panel">
+    <section class="panel adv-panel admin-workspace-panel" id="professionalNetworkPanel" data-admin-workspace="professionals">
       <h2>Professional Network Review</h2>
       <p style="opacity:.72">Review CA, CS, HR, GST Practitioner and Assistant / Associate registrations. Only CA/CS can ever be public; HR/GST/Assistant remain internal even when approved.</p>
       <div class="adv-toolbar">
@@ -1701,6 +1720,15 @@ window.addEventListener("scroll",()=>document.querySelectorAll(".smart-action-me
   else bind();
 })();
 
+
+/* ILS Smart Workspace navigation — presentation only. */
+(function bindAdminSmartWorkspace(){
+ const tabs=[...document.querySelectorAll(".admin-workspace-tab[data-admin-workspace]")],panels=[...document.querySelectorAll(".admin-workspace-panel[data-admin-workspace]")],note=document.getElementById("adminWorkspaceNote"),allBtn=document.getElementById("adminWorkspaceAllBtn"),topBtn=document.getElementById("adminWorkspaceTopBtn");
+ const labels={overview:"Overview — key dashboard and order snapshot.",clients:"Clients & CRM — requirements, assignments, client access, chat and progress.",professionals:"Professionals — advocate verification plus CA/CS/HR/GST/Assistant review.",payments:"Orders & Payments — UPI proof verification and payment controls.",operations:"Operations — official-route verification and action-assistance queue.",pricing:"Pricing — service/tool prices, professional fee matrix and pricing audit.",security:"Security — permanent deletion and high-risk verification guidance."};
+ function setWorkspace(name,scroll){tabs.forEach(t=>{const a=t.dataset.adminWorkspace===name;t.classList.toggle("active",a);t.setAttribute("aria-selected",String(a));});panels.forEach(p=>p.classList.toggle("workspace-hidden",p.dataset.adminWorkspace!==name));if(note)note.textContent=labels[name]||"Select a workspace to continue.";if(history.replaceState){try{history.replaceState(null,"","#admin-"+name)}catch(_e){}}if(scroll){const first=panels.find(p=>p.dataset.adminWorkspace===name);if(first)requestAnimationFrame(()=>first.scrollIntoView({behavior:"smooth",block:"start"}));}}
+ function showAll(){tabs.forEach(t=>{t.classList.remove("active");t.setAttribute("aria-selected","false")});panels.forEach(p=>p.classList.remove("workspace-hidden"));if(note)note.textContent="All admin workspaces are visible. Use the tabs again for the compact view."}
+ tabs.forEach(t=>t.addEventListener("click",()=>setWorkspace(t.dataset.adminWorkspace,true)));allBtn?.addEventListener("click",showAll);topBtn?.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));const hash=(location.hash||"").replace("#admin-","");setWorkspace(labels[hash]?hash:"overview",false);
+})();
 </script>
 </body>
 </html>
