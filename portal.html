@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ILS Professional Portal</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/ils.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/ils-core.js" defer></script>
+<style>
+.portal-wrap{max-width:980px;margin:auto}
+.portal-card{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:20px}
+.portal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.portal-grid .btn{width:100%}
+.portal-status{padding:12px 14px;border-radius:14px;background:rgba(244,195,91,.07);border:1px solid rgba(244,195,91,.2)}
+.portal-status.ok{background:rgba(76,175,80,.08);border-color:rgba(76,175,80,.25)}
+.portal-status.err{background:rgba(200,70,70,.1);border-color:rgba(200,70,70,.3)}
+.portal-hidden{display:none!important}
+.portal-kv{display:grid;grid-template-columns:180px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.portal-kv:last-child{border-bottom:0}
+.portal-note{opacity:.72;line-height:1.55}
+@media(max-width:760px){.portal-grid{grid-template-columns:1fr 1fr}.portal-kv{grid-template-columns:1fr}.portal-card{padding:15px}}
+@media(max-width:480px){.portal-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="site-header">
+<div class="wrap navbar">
+<a class="brand" href="index.html"><img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
+<nav class="navlinks">
+<a href="index.html">Home</a><a href="advocate-register.html?v=20260928">Join / Register</a><a href="tools.html">Legal Tools</a><a href="ai-assistant.html">AI Assistant</a>
+</nav>
+<button class="menu" data-menu aria-label="Open menu">☰</button>
+</div>
+</header>
+
+<main>
+<section class="page-hero"><div class="wrap portal-wrap">
+<span class="eyebrow">Private Professional Access</span>
+<h1>ILS Professional Portal</h1>
+<p>One secure login route for Advocates, CA, CS, HR Professionals, GST Practitioners and ILS Assistant / Associates.</p>
+</div></section>
+
+<section class="section alt"><div class="wrap portal-wrap">
+<div id="loginPanel" class="portal-card">
+<h2 style="margin-top:0">Professional Login</h2>
+<p class="portal-note">Use the email and password created during ILS Network registration. Pending registrations can sign in to view their review status; restricted capabilities remain locked until approval where required.</p>
+<form id="loginForm" class="form-card" style="padding:0;background:none;border:0" novalidate>
+<label for="loginEmail">Email</label><input id="loginEmail" type="email" autocomplete="username" required>
+<label for="loginPassword" style="margin-top:12px">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px">
+<button class="btn btn-primary" id="loginBtn" type="submit">Sign In</button>
+<button class="btn btn-ghost" id="forgotBtn" type="button">Forgot Password</button>
+<a class="btn btn-ghost" href="advocate-register.html?v=20260928">Join ILS Network</a>
+</div>
+<div id="loginStatus" class="status"></div>
+</form>
+</div>
+
+<div id="portalPanel" class="portal-card portal-hidden">
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+<div><span class="eyebrow">Authenticated</span><h2 id="welcome" style="margin:5px 0">Professional</h2><div id="roleBadge" class="verified"></div></div>
+<button class="btn btn-ghost btn-small" id="logoutBtn" type="button">Sign Out</button>
+</div>
+
+<div id="statusBox" class="portal-status" style="margin-top:15px"></div>
+<div id="usageBox" class="portal-status" style="margin-top:10px"></div>
+
+<div class="portal-card" style="margin-top:15px;background:rgba(0,0,0,.08)">
+<h3 style="margin-top:0">Profile &amp; verification</h3>
+<div id="profileDetails"></div>
+</div>
+
+<h3 style="margin-top:20px">Professional workspace</h3>
+<div class="portal-grid">
+<a class="btn btn-primary" href="tools.html">Legal Tools</a>
+<a class="btn btn-ghost" href="ai-assistant.html">AI Assistant</a>
+<a class="btn btn-ghost" href="judgments.html">Judgments</a>
+<a class="btn btn-ghost" href="law-guide.html">Law Guide</a>
+<a class="btn btn-ghost" href="assistance.html">Legal Assistance</a>
+<a class="btn btn-ghost" href="advocates.html">Professional Directory</a>
+</div>
+
+<div id="researchAiBox" class="portal-status portal-hidden" style="margin-top:15px">
+<strong>Advocate Research AI</strong>
+<p style="margin:6px 0">Available only after advocate verification and approval. This restriction is preserved from the existing ILS research-access chain.</p>
+<a class="btn btn-primary btn-small" href="ai-assistant.html">Open AI Assistant</a>
+</div>
+
+<p class="portal-note" style="margin-top:16px">Public profile visibility is controlled separately by ILS verification. HR, GST Practitioner and Assistant / Associate accounts remain internal and are not shown on the public homepage. CA/CS profiles are shown publicly only after verification, approval and public-profile enablement.</p>
+</div>
+</div></section>
+</main>
+
+<footer class="footer"><div class="wrap footer-grid">
+<div><strong>Instant Legal Services</strong><p>Private professional access and network coordination.</p></div>
+<div><strong>Explore</strong><a href="index.html">Home</a><a href="judgments.html">Judgments</a><a href="law-guide.html">Law Guide</a></div>
+<div><strong>Professional</strong><a href="advocate-register.html?v=20260928">Join / Register</a><a href="tools.html">Legal Tools</a><a href="ai-assistant.html">AI Assistant</a></div>
+<div><strong>Support</strong><a href="faq.html">FAQ</a><a href="assistance.html">Legal Assistance</a></div>
+</div></footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const roleNames={advocate:"Advocate",ca:"Chartered Accountant (CA)",cs:"Company Secretary (CS)",hr:"HR Professional",gst_practitioner:"GST Practitioner",assistant_associate:"Assistant / Associate"};
+
+async function clientReady(){return window.ILS?.ready?.()||null}
+function showStatus(id,msg,type){const e=$(id);e.textContent=msg||"";e.className="status "+(type||"");e.style.display=msg?"block":"none"}
+function roleName(r){return roleNames[r]||"ILS Professional"}
+
+async function loadPortal(){
+  const client=await clientReady();
+  if(!client)return;
+  const {data:{session}}=await client.auth.getSession();
+  if(!session){$("loginPanel").classList.remove("portal-hidden");$("portalPanel").classList.add("portal-hidden");return;}
+  const r=await client.functions.invoke("professional-portal");
+  if(r.error||!r.data?.ok){
+    await client.auth.signOut();
+    $("loginPanel").classList.remove("portal-hidden");
+    $("portalPanel").classList.add("portal-hidden");
+    showStatus("loginStatus",r.error?.message||r.data?.message||"Professional profile could not be loaded.","err");
+    return;
+  }
+  const p=r.data;
+  $("loginPanel").classList.add("portal-hidden");
+  $("portalPanel").classList.remove("portal-hidden");
+  $("welcome").textContent=p.profile?.name||"Professional";
+  $("roleBadge").textContent="✓ "+roleName(p.role);
+  const status=(p.status||"Pending"), verification=(p.verification_status||"Pending");
+  const approved=String(status).toLowerCase()==="approved"&&String(verification).toLowerCase()==="approved";
+  $("statusBox").className="portal-status "+(approved?"ok":"");
+  $("statusBox").innerHTML="<strong>Status:</strong> "+esc(status)+" · <strong>Verification:</strong> "+esc(verification)+(p.public_profile?" · <strong>Public profile:</strong> Enabled":" · <strong>Public profile:</strong> Private");
+  const usage=await client.rpc("ils_get_professional_tool_usage");
+  if(!usage.error&&usage.data?.eligible){
+    $("usageBox").innerHTML="<strong>Professional tool allowance:</strong> "+esc(usage.data.remaining)+" free use(s) remaining out of "+esc(usage.data.free_limit)+".";
+  }else{
+    $("usageBox").textContent="Professional tool allowance will appear after the secure member context is confirmed.";
+  }
+  const rows=[
+    ["Professional category",roleName(p.role)],
+    ["Email",p.profile?.email||"—"],
+    ["Mobile",p.profile?.mobile||"—"],
+    ["State / City",[p.profile?.state,p.profile?.city].filter(Boolean).join(" / ")||"—"],
+    ["Specialization",p.profile?.specialization||"—"],
+    ["Experience",p.profile?.experience!=null?p.profile.experience+" year(s)":"—"],
+    ["Firm / Organization",p.profile?.firm_or_organization||"—"]
+  ];
+  if(p.role==="advocate"){
+    rows.splice(3,0,["Enrollment",p.profile?.enrollment_number||"—"]);
+    rows.splice(4,0,["Jurisdiction",p.profile?.jurisdiction||"—"]);
+  }
+  $("profileDetails").innerHTML=rows.map(x=>'<div class="portal-kv"><strong>'+esc(x[0])+'</strong><span>'+esc(x[1])+'</span></div>').join("");
+  $("researchAiBox").classList.toggle("portal-hidden",p.role!=="advocate"||!p.capabilities?.research_ai);
+}
+
+$("loginForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const client=await clientReady();if(!client)return showStatus("loginStatus","Secure connection unavailable.","err");
+  const email=$("loginEmail").value.trim().toLowerCase(),password=$("loginPassword").value;
+  if(!email||!password)return showStatus("loginStatus","Enter email and password.","err");
+  $("loginBtn").disabled=true;showStatus("loginStatus","Signing in…","");
+  const r=await client.auth.signInWithPassword({email,password});
+  if(r.error){$("loginBtn").disabled=false;return showStatus("loginStatus",r.error.message||"Login failed.","err");}
+  showStatus("loginStatus","");
+  $("loginBtn").disabled=false;
+  await loadPortal();
+});
+
+$("forgotBtn").addEventListener("click",async()=>{
+  const client=await clientReady();if(!client)return;
+  const email=$("loginEmail").value.trim().toLowerCase();
+  if(!email)return showStatus("loginStatus","Enter your registered email first.","err");
+  const r=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname+"#reset"});
+  if(r.error)return showStatus("loginStatus",r.error.message||"Password reset could not be started.","err");
+  showStatus("loginStatus","If the email is registered, password-reset instructions will be sent to it.","ok");
+});
+
+$("logoutBtn").addEventListener("click",async()=>{const client=await clientReady();if(client)await client.auth.signOut();location.hash="login";location.reload()});
+document.addEventListener("DOMContentLoaded",async()=>{if(location.hash==="#admin"){location.replace("admin.html");return;}await loadPortal();});
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "Instant Legal Services",
+  "short_name": "ILS",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07101c",
+  "theme_color": "#07101c",
+  "description": "Instant Legal Services \u2014 legal information, judgment research, advocate network and client portals.",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Legal Information Assistant | Instant Legal Services</title>
+  <meta name="description" content="AI-enabled legal information and research interface for common Indian legal topics.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://instantlegalservices.in/ai-assistant.html">
+  <link rel="stylesheet" href="assets/ils.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- ILS Supabase bootstrap: AI Assistant must not depend on ils-core.js to create the auth client. -->
+  <script>
+    (function () {
+      const ILS_SUPABASE_URL = "https://odqebkdzkjfxzyzbrndt.supabase.co";
+      const ILS_SUPABASE_KEY = "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+
+      if (window.supabase && !window.supabaseClient) {
+        window.supabaseClient = window.supabase.createClient(
+          ILS_SUPABASE_URL,
+          ILS_SUPABASE_KEY,
+          {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: true
+            }
+          }
+        );
+      }
+    })();
+  </script>
+
+  <script src="assets/ils-core.js?v=2" defer></script>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#07101c">
+  <script src="assets/pwa.js" defer></script>
+</head>
+
+<body>
+<header class="site-header">
+  <div class="wrap navbar">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo">
+      <span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span>
+    </a>
+    <nav class="navlinks">
+      <a class="" href="index.html">Home</a>
+      <a class="" href="advocates.html">Find Advocate</a>
+      <a class="" href="judgments.html">Judgments</a>
+      <a class="" href="law-guide.html">Law Guide</a>
+      <a class="active" href="ai-assistant.html">AI Assistant</a>
+      <a class="" href="about.html">About</a>
+      <a class="" href="faq.html">FAQ</a>
+      <a class="btn btn-primary btn-small" href="assistance.html">Get Legal Help</a>
+    </nav>
+    <button class="menu" data-menu aria-label="Open menu">☰</button>
+    <button class="btn btn-ghost btn-small" data-install-app hidden>Install App</button>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero">
+    <div class="wrap">
+      <span class="eyebrow">AI Enabled</span>
+      <h1>ILS Legal Information Assistant</h1>
+      <p>Ask about a legal topic, procedure, judgment or practice area. When the AI service is configured, answers can be generated through the ILS backend; otherwise the interface safely explains that the service is unavailable rather than inventing an answer.</p>
+    </div>
+  </section>
+
+  <section class="section alt">
+    <div class="wrap">
+      <div class="grid two-grid ai-dual-grid">
+
+        <!-- PUBLIC AI — EXISTING WORKING FUNCTION KEPT INTACT -->
+        <div class="card ai-box">
+          <div class="eyebrow">PUBLIC / CLIENT</div>
+          <h2>Public Legal Information AI</h2>
+          <p>Indian-law information using verified/current sources. If a reliable primary source cannot be verified, the assistant will not guess.</p>
+          <div id="publicChat" class="chat">
+            <div class="msg ai">Ask a general Indian-law question. I will use verified sources and clearly flag anything that requires professional review.</div>
+          </div>
+          <form id="publicAiForm" class="chat-form">
+            <input id="publicQuestion" required maxlength="4000" placeholder="Ask about BNS, BNSS, NDPS, bail, cheque bounce…">
+            <button class="btn btn-primary">Ask</button>
+          </form>
+          <div class="ai-disclaimer">General information only. No case-specific advice, outcome guarantee or advocate-client relationship.</div>
+        </div>
+
+        <!-- ADVOCATE RESEARCH AI — NEW CONNECTION ONLY -->
+        <div class="card ai-box">
+          <div class="eyebrow">ADVOCATE RESEARCH</div>
+          <h2>Advocate Research AI</h2>
+          <p>Restricted to an authenticated and approved ILS advocate. Uses source-first research and refuses unverified legal assertions.</p>
+
+          <div id="advocateAiState" class="notice">
+            Login is required before Advocate Research AI can be used.
+          </div>
+
+          <div id="advocateLoginBox" style="margin-top:14px;">
+            <form id="advocateAiLoginForm" class="chat-form" autocomplete="on">
+              <input
+                id="advocateAiEmail"
+                type="email"
+                required
+                autocomplete="username"
+                placeholder="Advocate email"
+              >
+              <input
+                id="advocateAiPassword"
+                type="password"
+                required
+                autocomplete="current-password"
+                placeholder="Password"
+              >
+              <button id="advocateAiLoginBtn" class="btn btn-primary" type="submit">
+                Advocate Login
+              </button>
+            </form>
+          </div>
+
+          <div id="advocateSessionBox" hidden style="margin-top:12px;">
+            <div class="notice" id="advocateLoggedInAs"></div>
+            <button id="advocateAiLogoutBtn" class="btn btn-ghost btn-small" type="button">
+              Sign Out
+            </button>
+          </div>
+
+          <div id="researchDocumentBox" style="margin:14px 0;padding:12px;border:1px solid #26354a;border-radius:10px;">
+            <strong>Case Document (Optional)</strong>
+            <input id="researchDocument" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="display:block;margin-top:10px;">
+            <div id="researchDocumentStatus" class="ai-disclaimer" style="margin-top:8px;">
+              Upload PDF, DOCX or TXT. The document is read in your browser; only extracted text is sent to the secured Research AI.
+            </div>
+            <div id="researchDocumentPreview" class="notice" hidden style="margin-top:8px;max-height:160px;overflow:auto;white-space:pre-wrap;"></div>
+            <button id="clearResearchDocument" type="button" class="btn btn-ghost btn-small" style="margin-top:8px;">Clear Document</button>
+          </div>
+
+          <div id="advocateChat" class="chat">
+            <div class="msg ai">Approved advocates can sign in, upload a case document if required, and ask research questions.</div>
+          </div>
+
+          <form id="advocateAiForm" class="chat-form">
+            <input
+              id="advocateQuestion"
+              required
+              maxlength="6000"
+              disabled
+              placeholder="Advocate research question…"
+            >
+            <button id="advocateResearchBtn" class="btn btn-primary" type="submit" disabled>
+              Research
+            </button>
+          </form>
+
+          <div class="ai-disclaimer">
+            Research aid only. Verify the current statute/rules and original judgment before relying on the output.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-grid">
+    <div>
+      <strong>Instant Legal Services</strong>
+      <p>Legal information, research access and professional network coordination.</p>
+      <p>Public information only. No guarantee of outcome or professional ranking is intended.</p>
+    </div>
+    <div>
+      <strong>Explore</strong>
+      <a href="judgments.html">Judgments</a>
+      <a href="law-guide.html">Law Guide</a>
+      <a href="advocates.html">Advocates</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+    <div>
+      <strong>Services</strong>
+      <a href="assistance.html">Legal Assistance</a>
+      <a href="ai-assistant.html">AI Assistant</a>
+      <a href="https://services.ecourts.gov.in/ecourtindia_v6/" target="_blank" rel="noopener">eCourts</a>
+      <a href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">eChallan</a>
+    </div>
+    <div>
+      <strong>Professional Network</strong>
+      <a href="advocate-register.html">Join ILS Network</a>
+      <a href="admin.html">Admin / Existing CRM</a>
+      <p>© 2026 Instant Legal Services</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+function openLegalAssistanceForm() {
+  const modal = document.getElementById('legalAssistanceModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
+  } else {
+    window.location.href = '/#contact';
+  }
+}
+
+async function handleUserQuery(q) {
+  const publicChat = document.getElementById("publicChat");
+  if (!publicChat) return;
+
+  // Render User Message
+  const userMsg = document.createElement("div");
+  userMsg.className = "msg user";
+  userMsg.innerText = q;
+  publicChat.appendChild(userMsg);
+
+  // Loading Message
+  const loadingMsg = document.createElement("div");
+  loadingMsg.className = "msg ai";
+  loadingMsg.innerText = "Verifying Indian Legal Provisions...";
+  publicChat.appendChild(loadingMsg);
+  publicChat.scrollTop = publicChat.scrollHeight;
+
+  try {
+    let data = null;
+
+    // Direct REST Endpoint Call — EXISTING PUBLIC AI FLOW
+    const raw = await fetch("https://odqebkdzkjfxzyzbrndt.supabase.co/functions/v1/ai-assistant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: q })
+    });
+    data = await raw.json();
+
+    loadingMsg.remove();
+
+    const aiMsg = document.createElement("div");
+    aiMsg.className = "msg ai";
+    aiMsg.innerText = data?.reply || "No response received.";
+
+    if (data?.cta) {
+      const ctaBox = document.createElement("div");
+      ctaBox.innerHTML = data.cta;
+      aiMsg.appendChild(ctaBox);
+    }
+
+    publicChat.appendChild(aiMsg);
+    publicChat.scrollTop = publicChat.scrollHeight;
+
+  } catch (err) {
+    loadingMsg.innerText = "Connection failed. Please check network or API settings.";
+    console.error("AI Error:", err);
+  }
+}
+
+// Event Binder for Form Search — EXISTING PUBLIC AI FLOW
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("publicAiForm");
+  const input = document.getElementById("publicQuestion");
+
+  if (form && input) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = input.value ? input.value.trim() : "";
+      if (val) {
+        handleUserQuery(val);
+        input.value = "";
+      }
+    });
+  }
+});
+// HOME PAGE SEARCH → PUBLIC AI
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const homeQuestion = (params.get("q") || "").trim();
+
+  if (!homeQuestion) return;
+
+  const publicQuestion = document.getElementById("publicQuestion");
+
+  if (publicQuestion) {
+    publicQuestion.value = homeQuestion;
+
+    setTimeout(() => {
+      handleUserQuery(homeQuestion);
+      publicQuestion.value = "";
+    }, 300);
+  }
+});
+/* =========================================================
+   ADVOCATE RESEARCH AI — NECESSARY ADDITION ONLY
+   Uses the existing supabaseClient from ils-core.js.
+   Backend enforces approved-advocate access independently.
+   ========================================================= */
+
+(function initAdvocateResearchAI() {
+  const API_URL =
+    "https://odqebkdzkjfxzyzbrndt.supabase.co/functions/v1/ai-assistant";
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function setResearchEnabled(enabled) {
+    const input = $("advocateQuestion");
+    const btn = $("advocateResearchBtn");
+    if (input) input.disabled = !enabled;
+    if (btn) btn.disabled = !enabled;
+  }
+
+  function addAdvocateMessage(text, role) {
+    const chat = $("advocateChat");
+    if (!chat) return null;
+
+    const msg = document.createElement("div");
+    msg.className = "msg " + (role === "user" ? "user" : "ai");
+    msg.innerText = text;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+    return msg;
+  }
+
+  function renderSources(container, sources) {
+    if (!container || !Array.isArray(sources) || !sources.length) return;
+
+    const box = document.createElement("div");
+    box.style.marginTop = "12px";
+
+    const title = document.createElement("strong");
+    title.innerText = "Verified / Retrieved Official Sources";
+    box.appendChild(title);
+
+    const list = document.createElement("ul");
+    list.style.marginTop = "8px";
+
+    sources.forEach((source) => {
+      if (!source || !source.url) return;
+
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = source.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.innerText = source.title || source.url;
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+
+    if (list.children.length) {
+      box.appendChild(list);
+      container.appendChild(box);
+    }
+  }
+
+  async function refreshAdvocateState() {
+    const state = $("advocateAiState");
+    const loginBox = $("advocateLoginBox");
+    const sessionBox = $("advocateSessionBox");
+    const loggedInAs = $("advocateLoggedInAs");
+
+    setResearchEnabled(false);
+
+    if (!window.supabaseClient?.auth) {
+      if (state) state.innerText = "Authentication service is unavailable. Please refresh the page.";
+      return;
+    }
+
+    try {
+      const { data, error } = await window.supabaseClient.auth.getSession();
+      if (error) throw error;
+
+      const session = data?.session;
+
+      if (!session) {
+        if (state) state.innerText = "Login is required before Advocate Research AI can be used.";
+        if (loginBox) loginBox.hidden = false;
+        if (sessionBox) sessionBox.hidden = true;
+        return;
+      }
+
+      const email = session.user?.email || "authenticated advocate";
+
+      if (state) {
+        state.innerText =
+          "Authenticated session found. Access will be verified by ILS before research is processed.";
+      }
+
+      if (loginBox) loginBox.hidden = true;
+      if (sessionBox) sessionBox.hidden = false;
+      if (loggedInAs) loggedInAs.innerText = "Signed in as: " + email;
+
+      setResearchEnabled(true);
+
+    } catch (err) {
+      console.error("Advocate session check failed:", err);
+      if (state) state.innerText = "Unable to verify login session. Please sign in again.";
+      if (loginBox) loginBox.hidden = false;
+      if (sessionBox) sessionBox.hidden = true;
+    }
+  }
+
+  async function advocateLogin(email, password) {
+    const state = $("advocateAiState");
+    const btn = $("advocateAiLoginBtn");
+
+    if (!window.supabaseClient?.auth) {
+      if (state) state.innerText = "Authentication service is unavailable.";
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = "Signing in…";
+    }
+
+    try {
+      const { data, error } =
+        await window.supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+      if (error) throw error;
+
+      if (!data?.session) {
+        throw new Error("Login succeeded but no authenticated session was returned.");
+      }
+
+      if (state) {
+        state.innerText =
+          "Login successful. Checking approved ILS advocate access…";
+      }
+
+      await refreshAdvocateState();
+
+    } catch (err) {
+      console.error("Advocate login failed:", err);
+
+      if (state) {
+        state.innerText =
+          err?.message ||
+          "Login failed. Please check your advocate email and password.";
+      }
+
+      setResearchEnabled(false);
+
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = "Advocate Login";
+      }
+    }
+  }
+
+  async function advocateLogout() {
+    try {
+      if (window.supabaseClient?.auth) {
+        await window.supabaseClient.auth.signOut();
+      }
+    } catch (err) {
+      console.error("Advocate logout failed:", err);
+    }
+
+    const state = $("advocateAiState");
+    if (state) state.innerText = "Signed out. Login is required before Research AI can be used.";
+
+    const loginBox = $("advocateLoginBox");
+    const sessionBox = $("advocateSessionBox");
+
+    if (loginBox) loginBox.hidden = false;
+    if (sessionBox) sessionBox.hidden = true;
+
+    setResearchEnabled(false);
+  }
+
+
+  let researchDocumentText = "";
+  let researchDocumentName = "";
+
+  function loadExternalScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("Document reader could not be loaded."));
+      document.head.appendChild(script);
+    });
+  }
+
+  async function extractResearchDocument(file) {
+    const ext = file.name.toLowerCase().split(".").pop();
+
+    if (ext === "txt") {
+      return await file.text();
+    }
+
+    if (ext === "pdf") {
+      if (!window.pdfjsLib) {
+        await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+
+      const pdf = await window.pdfjsLib.getDocument({
+        data: await file.arrayBuffer()
+      }).promise;
+
+      let text = "";
+      for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+        const page = await pdf.getPage(pageNo);
+        const content = await page.getTextContent();
+        text += `\n[Page ${pageNo}]\n`;
+        text += content.items.map(item => item.str || "").join(" ");
+      }
+      return text;
+    }
+
+    if (ext === "docx") {
+      if (!window.mammoth) {
+        await loadExternalScript(
+          "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"
+        );
+      }
+
+      const result = await window.mammoth.extractRawText({
+        arrayBuffer: await file.arrayBuffer()
+      });
+      return result.value || "";
+    }
+
+    throw new Error("Only PDF, DOCX and TXT files are supported.");
+  }
+
+  async function handleAdvocateQuery(q) {
+    const chat = $("advocateChat");
+    if (!chat) return;
+
+    addAdvocateMessage(q, "user");
+
+    const loadingMsg = addAdvocateMessage(
+      "Checking approved advocate access and researching official authorities…",
+      "ai"
+    );
+
+    try {
+      const { data:sessionData, error:sessionError } =
+        await window.supabaseClient.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      const token = sessionData?.session?.access_token;
+
+      if (!token) {
+        throw new Error("Advocate login is required for Research AI.");
+      }
+
+      const raw = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          question: q,
+          mode: "advocate",
+          document_name: researchDocumentName,
+          document_text: researchDocumentText
+        })
+      });
+
+      const data = await raw.json().catch(() => ({}));
+
+      if (loadingMsg) loadingMsg.remove();
+
+      if (!raw.ok || !data?.ok) {
+        const errorMsg =
+          data?.reply ||
+          (raw.status === 403
+            ? "Advocate Research AI is available only to approved ILS Network advocates."
+            : raw.status === 401
+              ? "Advocate login is required for Research AI."
+              : "Research request failed.");
+
+        addAdvocateMessage(errorMsg, "ai");
+
+        if (raw.status === 401 || raw.status === 403) {
+          const state = $("advocateAiState");
+          if (state) state.innerText = errorMsg;
+          setResearchEnabled(false);
+        }
+
+        return;
+      }
+
+      const aiMsg = addAdvocateMessage(
+        data.reply || data.answer || "No research response received.",
+        "ai"
+      );
+
+      if (aiMsg && Array.isArray(data.sources)) {
+        renderSources(aiMsg, data.sources);
+      }
+
+      const state = $("advocateAiState");
+      if (state) {
+        state.innerText = data.verified
+          ? "Research completed with retrieved official-source references. Verify the original authority before relying on it."
+          : "Research completed, but no official-source citation was retrieved. Verify authorities manually before relying on the output.";
+      }
+
+    } catch (err) {
+      console.error("Advocate Research AI error:", err);
+
+      if (loadingMsg) {
+        loadingMsg.innerText =
+          err?.message ||
+          "Connection failed. Please check the network or advocate login.";
+      } else {
+        addAdvocateMessage(
+          err?.message || "Research request failed.",
+          "ai"
+        );
+      }
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const loginForm = $("advocateAiLoginForm");
+    const researchForm = $("advocateAiForm");
+    const logoutBtn = $("advocateAiLogoutBtn");
+
+    if (loginForm) {
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = ($("advocateAiEmail")?.value || "").trim().toLowerCase();
+        const password = $("advocateAiPassword")?.value || "";
+
+        if (!email || !password) return;
+
+        await advocateLogin(email, password);
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", advocateLogout);
+    }
+
+    const documentInput = $("researchDocument");
+    const documentStatus = $("researchDocumentStatus");
+    const documentPreview = $("researchDocumentPreview");
+    const clearDocument = $("clearResearchDocument");
+
+    if (documentInput) {
+      documentInput.addEventListener("change", async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+          documentStatus.innerText = "File is too large. Maximum allowed size is 10 MB.";
+          documentInput.value = "";
+          return;
+        }
+
+        documentStatus.innerText = "Reading document…";
+
+        try {
+          const extracted = await extractResearchDocument(file);
+          if (!extracted.trim()) {
+            throw new Error(
+              "No readable text found. Scanned/image-only PDFs require OCR and cannot be read yet."
+            );
+          }
+
+          researchDocumentName = file.name;
+          researchDocumentText = extracted.slice(0, 60000);
+
+          documentStatus.innerText =
+            `Read successfully: ${file.name} — ${researchDocumentText.length.toLocaleString()} characters extracted.`;
+
+          if (documentPreview) {
+            documentPreview.hidden = false;
+            documentPreview.innerText = researchDocumentText.slice(0, 5000);
+          }
+        } catch (err) {
+          researchDocumentName = "";
+          researchDocumentText = "";
+          documentInput.value = "";
+          documentStatus.innerText =
+            "Could not read document: " + (err?.message || "Unknown error.");
+          if (documentPreview) documentPreview.hidden = true;
+          console.error("Document extraction error:", err);
+        }
+      });
+    }
+
+    if (clearDocument) {
+      clearDocument.addEventListener("click", () => {
+        if (documentInput) documentInput.value = "";
+        researchDocumentName = "";
+        researchDocumentText = "";
+        if (documentPreview) {
+          documentPreview.hidden = true;
+          documentPreview.innerText = "";
+        }
+        if (documentStatus) {
+          documentStatus.innerText =
+            "Upload PDF, DOCX or TXT. The document is read in your browser.";
+        }
+      });
+    }
+
+    if (researchForm) {
+      researchForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const input = $("advocateQuestion");
+        const val = input?.value ? input.value.trim() : "";
+
+        if (!val || input?.disabled) return;
+
+        input.value = "";
+        await handleAdvocateQuery(val);
+      });
+    }
+
+    if (window.supabaseClient?.auth) {
+      window.supabaseClient.auth.onAuthStateChange((event) => {
+        if (
+          event === "SIGNED_IN" ||
+          event === "SIGNED_OUT" ||
+          event === "TOKEN_REFRESHED"
+        ) {
+          setTimeout(refreshAdvocateState, 0);
+        }
+      });
+    }
+
+    /*
+      ils-core.js is deferred. Therefore this DOMContentLoaded callback runs
+      after the existing Supabase client has been initialized.
+    */
+    refreshAdvocateState();
+  });
+})();
+</script>
+</body>
+</html>

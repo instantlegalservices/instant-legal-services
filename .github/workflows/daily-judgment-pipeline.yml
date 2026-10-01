@@ -1,0 +1,43 @@
+name: Daily Judgment Pipeline
+
+on:
+  schedule:
+    # 07:30 AM IST = 02:00 UTC
+    - cron: "0 2 * * *"
+
+  # Manual testing ke liye bhi available
+  workflow_dispatch:
+
+jobs:
+  run-daily-judgments:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run Daily Judgment Pipeline
+        env:
+          SUPABASE_URL: https://odqebkdzkjfxzyzbrndt.supabase.co
+          PIPELINE_URL: https://odqebkdzkjfxzyzbrndt.supabase.co/functions/v1/daily-judgment-pipeline
+        run: |
+          echo "Starting Daily Judgment Pipeline..."
+          echo "Time: $(date -u)"
+
+          HTTP_STATUS=$(curl \
+            --silent \
+            --show-error \
+            --output response.json \
+            --write-out "%{http_code}" \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --header "User-Agent: ILS-Daily-Judgment-Pipeline/1.0" \
+            "$PIPELINE_URL")
+
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "Pipeline Response:"
+          cat response.json
+
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "Daily Judgment Pipeline FAILED."
+            exit 1
+          fi
+
+          echo "Daily Judgment Pipeline completed successfully."

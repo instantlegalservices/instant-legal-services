@@ -1,0 +1,1734 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ILS Admin | Instant Legal Services</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="assets/ils.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{background:#07101c;color:#eef2f7}
+.admin-wrap{max-width:1250px;margin:auto;padding:30px 18px 60px}
+.admin-top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}
+.admin-top h1{margin:0}.admin-top p{margin:5px 0 0;color:#9ca7b6}
+.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:22px}
+.admin-stat{background:#111b2a;border:1px solid #26354a;border-radius:14px;padding:20px}
+.admin-stat small{color:#9ca7b6}.admin-stat strong{display:block;font-size:32px;margin-top:6px}
+.panel{background:#111b2a;border:1px solid #26354a;border-radius:14px;padding:20px;margin-bottom:20px}
+.panel h2{margin:0 0 15px;font-size:20px}
+.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-bottom:15px}
+.table-wrap{overflow:auto;border:1px solid #26354a;border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:1050px}
+th,td{padding:12px;border-bottom:1px solid #26354a;text-align:left;vertical-align:top;font-size:13px}
+th{background:#0c1522;color:#d7a84f;position:sticky;top:0}
+td{color:#dce3ec}
+select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;border-radius:8px;padding:10px}
+.btnx{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+.btnx.primary{background:#d7a84f;color:#10151c}.btnx.secondary{background:#1d2a3b;color:#fff;border:1px solid #34455d}
+.msg{display:none;padding:12px;border-radius:8px;margin-bottom:15px}.msg.ok{display:block;background:#173524;border:1px solid #356e49;color:#b9f1c8}.msg.err{display:block;background:#3b171b;border:1px solid #8c3d47;color:#ffc1c7}
+.login{max-width:460px;margin:10vh auto;padding:25px;background:#111b2a;border:1px solid #26354a;border-radius:16px}
+.login h1{color:#d7a84f}.login label{display:block;margin:14px 0 6px}
+.login button{width:100%;margin-top:18px}
+.hidden{display:none!important}
+.actions-cell{white-space:nowrap}
+.smart-action{position:relative;display:inline-block}
+.smart-action-btn{min-width:42px;padding:7px 10px}
+.smart-action-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:10020;min-width:190px;padding:6px;background:#0b1624;border:1px solid #34455d;border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.smart-action-menu.open{display:block}
+.smart-action-menu{position:fixed;right:auto;top:auto;left:auto;max-width:calc(100vw - 20px);max-height:60vh;overflow:auto}
+@media(max-width:700px){
+  .smart-action-btn{padding:7px 9px;font-size:12px}
+  .smart-action-menu{min-width:205px}
+}
+@media(max-width:500px){
+  .panel{padding:12px;margin-bottom:12px}
+  .panel h2{font-size:18px;margin-bottom:10px}
+  #revenueDashboardPanel .table-wrap{margin-top:8px}
+  #adminDeletionPanel .table-wrap{margin-top:8px!important}
+}
+.smart-action-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;color:#fff;padding:10px 11px;border-radius:7px;cursor:pointer;font-weight:700}
+.smart-action-menu button:hover{background:#17263a}
+.smart-action-menu .danger{color:#ff9b9b}
+.admin-toast{position:fixed!important;right:18px;bottom:18px;z-index:12000;width:min(420px,calc(100vw - 36px));margin:0!important;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+
+.deletion-table .actions-cell{min-width:110px}
+@media(max-width:850px){.admin-grid{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr}.admin-top{align-items:flex-start;flex-direction:column}}
+@media(max-width:500px){
+  .admin-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+  .admin-stat{border-radius:10px;padding:11px 12px}
+  .admin-stat small{font-size:11px;line-height:1.2}
+  .admin-stat strong{font-size:23px;margin-top:3px}
+  .revenue-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .revenue-stat{border-radius:10px;padding:10px 11px}
+  .revenue-stat small{font-size:11px;line-height:1.2}
+  .revenue-stat strong{font-size:22px;margin-top:3px}
+}
+.deletion-table-wrap{max-width:100%;overflow:auto}
+.deletion-table{min-width:860px}
+.deletion-table th:first-child,.deletion-table td:first-child{position:sticky;left:0;z-index:2;background:#111b2a}
+.deletion-table th:first-child{background:#0c1522}
+#adminDeletionPanel>h2{margin-bottom:8px}
+@media(max-width:700px){
+  .deletion-table{min-width:720px}
+  .deletion-table .actions-cell{min-width:190px}
+}
+@media(max-width:700px){.deletion-table{min-width:760px}.deletion-table .actions-cell{white-space:normal;min-width:300px}.deletion-table .actions-cell .btnx{margin:2px}}
+
+/* ILS Advocate Management - restored from working CRM */
+.adv-panel{margin-top:20px}
+.adv-toolbar{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:15px}
+.adv-table{min-width:1150px}
+.adv-photo{width:48px;height:48px;border-radius:8px;object-fit:cover;border:1px solid #d7a84f;background:#08111d}
+.verify-badge{display:inline-block;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.verify-pending{background:#40351b;color:#ffd77a}.verify-approved{background:#273e31;color:#9de0ad}.verify-rejected{background:#4b1d1d;color:#ffaaaa}
+.adv-action{padding:7px 10px;border:0;border-radius:7px;cursor:pointer;font-weight:700;margin:2px}
+.adv-view{background:#d7a84f;color:#10151c}.adv-approve{background:#4b9b61;color:#fff}.adv-reject{background:#9b4b4b;color:#fff}
+.modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,5,12,.84);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}.modal-box{width:min(1050px,96vw);max-height:92vh;overflow:auto;background:#0d1a2a;border:1px solid #26354a;border-radius:16px;padding:24px;position:relative;box-shadow:0 22px 70px rgba(0,0,0,.45)}
+.modal-close{position:absolute;right:15px;top:10px;background:transparent;border:0;color:#fff;font-size:30px;cursor:pointer}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-item{background:#08111d;border:1px solid #26354a;border-radius:9px;padding:11px}.detail-item strong{display:block;color:#9ca7b6;font-size:11px;margin-bottom:4px}.detail-item span{color:#fff}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.modal-actions .btnx{flex:1;min-width:150px}
+@media(max-width:850px){.adv-toolbar{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}}
+
+.crm-comms{display:grid;gap:16px;margin-top:18px}.crm-box{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.crm-chat{max-height:260px;min-height:120px;overflow:auto}.crm-msg{padding:9px;border-bottom:1px solid #26354a}.crm-meta{font-size:11px;color:#8e9bad;margin-bottom:4px}.crm-progress{max-height:240px;overflow:auto}.crm-progress-item{background:#0d1927;border:1px solid #26354a;border-radius:8px;padding:9px;margin-bottom:8px}.crm-comms-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.action-queue-toolbar{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:15px}.action-queue-table{min-width:1250px}.queue-status{font-weight:700}.queue-actions{display:flex;gap:6px;flex-wrap:wrap}.queue-note{font-size:12px;color:#9ca7b6;margin-top:4px}@media(max-width:850px){.action-queue-toolbar{grid-template-columns:1fr}}.revenue-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.revenue-stat{background:#08111d;border:1px solid #26354a;border-radius:10px;padding:12px}.revenue-stat small{color:#9ca7b6}.revenue-stat strong{display:block;font-size:24px;margin-top:4px}.revenue-status{font-weight:700}.status-paid{color:#8fe0a0}.status-pending{color:#ffd77a}.status-failed{color:#ff9b9b}@media(max-width:900px){.revenue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:500px){.revenue-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.revenue-stat{padding:10px 11px}.revenue-stat small{font-size:11px}.revenue-stat strong{font-size:22px}}
+/* ILS ADMIN SMART WORKSPACE — UI ONLY */
+.admin-smartbar{position:sticky;top:12px;z-index:1200;background:rgba(12,22,36,.96);backdrop-filter:blur(12px);border:1px solid #2b3b52;border-radius:16px;padding:12px;margin:0 0 18px;box-shadow:0 12px 35px rgba(0,0,0,.22)}
+.admin-smartbar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.admin-smartbar-title{font-size:15px;font-weight:800;color:#fff}.admin-smartbar-sub{font-size:11px;color:#93a1b3;margin-top:2px}
+.admin-workspace-tabs{display:flex;gap:7px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+.admin-workspace-tab{flex:0 0 auto;border:1px solid #34455d;background:#172538;color:#dce5ef;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;transition:.16s ease}
+.admin-workspace-tab:hover{border-color:#60738e;background:#1c2d43}.admin-workspace-tab.active{background:#d7a84f;color:#10151c;border-color:#d7a84f}
+.admin-smart-tools{display:flex;gap:7px;flex:0 0 auto}.admin-smart-tool{border:1px solid #34455d;background:#0d1928;color:#dce5ef;border-radius:9px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}.admin-smart-tool:hover{background:#17283d}
+.admin-workspace-note{margin:8px 0 0;color:#8fa0b5;font-size:11px;line-height:1.4}.admin-workspace-panel{display:block}.admin-workspace-panel.workspace-hidden{display:none!important}
+@media(max-width:700px){.admin-smartbar{top:6px;border-radius:12px;padding:10px}.admin-smartbar-head{align-items:flex-start}.admin-smart-tools{display:none}.admin-workspace-tab{padding:8px 11px}}
+</style>
+</head>
+<body>
+<div id="loginView" class="login">
+  <h1>ILS Admin</h1>
+  <p>Secure administration for Instant Legal Services.</p>
+  <div id="loginMsg" class="msg"></div>
+  <form id="loginForm">
+    <label>Email</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label>Password</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button class="btnx primary" type="submit">Sign in securely</button>
+  </form>
+  <p style="color:#8793a4;font-size:12px;margin-top:15px">
+    Access is controlled by the Supabase admin allow-list. A normal authenticated account is not automatically an administrator.
+  </p>
+</div>
+
+<div id="appView" class="hidden">
+  <header class="site-header">
+    <div class="wrap navbar">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="assets/ils-logo.jpg" alt="Instant Legal Services logo">
+        <span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span>
+      </a>
+      <nav class="navlinks">
+        <a href="index.html">Home</a>
+        <a href="legal-search.html">Legal Search</a>
+        <a href="judgments.html">Judgments</a>
+        <a href="advocates.html">Advocates</a>
+        <a href="admin.html" class="active">Admin</a>
+        <button id="logoutBtn" class="btn btn-primary btn-small" type="button">Logout</button>
+      </nav>
+      <button class="menu" data-menu aria-label="Open menu">☰</button>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <div class="admin-top">
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p id="adminUser">Checking administrator session…</p>
+      </div>
+      <button id="refreshBtn" class="btnx secondary" type="button">Refresh</button>
+    </div>
+
+    <div id="appMsg" class="msg"></div>
+
+    <section class="admin-smartbar" aria-label="Admin workspace navigation">
+      <div class="admin-smartbar-head"><div><div class="admin-smartbar-title">Admin Control Center</div><div class="admin-smartbar-sub">Use one workspace at a time. Existing admin functions remain unchanged.</div></div><div class="admin-smart-tools"><button id="adminWorkspaceAllBtn" class="admin-smart-tool" type="button">Show all</button><button id="adminWorkspaceTopBtn" class="admin-smart-tool" type="button">Top</button></div></div>
+      <div id="adminWorkspaceTabs" class="admin-workspace-tabs" role="navigation" aria-label="Admin workspaces">
+        <button class="admin-workspace-tab active" type="button" data-admin-workspace="overview" aria-selected="true">Overview</button><button class="admin-workspace-tab" type="button" data-admin-workspace="clients" aria-selected="false">Clients & CRM</button><button class="admin-workspace-tab" type="button" data-admin-workspace="professionals" aria-selected="false">Professionals</button><button class="admin-workspace-tab" type="button" data-admin-workspace="payments" aria-selected="false">Orders & Payments</button><button class="admin-workspace-tab" type="button" data-admin-workspace="operations" aria-selected="false">Operations</button><button class="admin-workspace-tab" type="button" data-admin-workspace="pricing" aria-selected="false">Pricing</button><button class="admin-workspace-tab" type="button" data-admin-workspace="security" aria-selected="false">Security</button>
+      </div>
+      <div id="adminWorkspaceNote" class="admin-workspace-note">Overview is the starting view. Use the workspace tabs to reach the detailed tables without scrolling through the entire admin page.</div>
+    </section>
+
+    <section class="admin-grid">
+      <div class="admin-stat"><small>Client Requirements</small><strong id="countLeads">—</strong></div>
+      <div class="admin-stat"><small>Advocate Registrations</small><strong id="countAdvocates">—</strong></div>
+      <div class="admin-stat"><small>Verified Judgments</small><strong id="countJudgments">—</strong></div>
+      <div class="admin-stat"><small>New Leads</small><strong id="countNew">—</strong></div>
+    </section>
+
+    <section class="panel admin-workspace-panel" id="revenueDashboardPanel" data-admin-workspace="overview">
+      <h2>💰 Revenue & Service Management</h2>
+      <div class="revenue-grid">
+        <div class="revenue-stat"><small>Total Orders</small><strong id="revOrdersTotal">0</strong></div>
+        <div class="revenue-stat"><small>Pending</small><strong id="revOrdersPending">0</strong></div>
+        <div class="revenue-stat"><small>Paid</small><strong id="revOrdersPaid">0</strong></div>
+        <div class="revenue-stat"><small>Failed</small><strong id="revOrdersFailed">0</strong></div>
+        <div class="revenue-stat"><small>Paid Revenue</small><strong id="revRevenuePaid">₹0</strong></div>
+      </div>
+      <div class="toolbar" style="margin-top:14px"><input id="revenueSearch" placeholder="Search order, service or tool…"><select id="revenueStatusFilter"><option value="">All order status</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option></select><select id="revenueServiceStatusFilter"><option value="">All service status</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="assigned">Assigned</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="refunded">Refunded</option></select><button class="btnx secondary" id="refreshRevenueBtn" type="button">↻ Refresh Revenue</button></div>
+      <div class="table-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Service</th><th>Amount</th><th>Order Status</th><th>Service Status</th><th>Source Tool</th><th>Date</th><th>Action</th></tr></thead><tbody id="revenueBody"><tr><td colspan="9" style="text-align:center">Loading revenue…</td></tr></tbody></table></div>
+    </section>
+
+<section class="panel admin-workspace-panel" id="adminDeletionPanel" data-admin-workspace="security" style="border:1px solid #7f1d1d">
+  <h2>⚠️ Permanent Data Deletion</h2>
+  <div id="deletionMsg" class="msg" data-toast="1"></div>
+  <div class="table-wrap deletion-table-wrap" style="margin-top:14px">
+    <table class="adv-table deletion-table">
+      <thead><tr><th>Client</th><th>Mobile</th><th>Location</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+      <tbody id="clientDeletionBody"><tr><td colspan="6" style="text-align:center">Loading clients…</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel admin-workspace-panel" id="pricingControlPanel" data-admin-workspace="pricing">
+<h2>💰 Pricing & Professional Fee Control</h2>
+<p style="color:#9ca7b6;margin-top:-6px">Admin-only control. Service/tool prices are used by the existing order RPC at checkout. Professional/associate fees are configuration only until a service explicitly uses them. Every pricing change is recorded in the admin pricing audit.</p>
+<div id="pricingMsg" class="msg"></div>
+<div class="toolbar" style="margin-top:14px"><input id="pricingSearch" placeholder="Search service, tool or category…"><button class="btnx secondary" id="refreshPricingBtn" type="button">↻ Refresh Pricing</button></div>
+<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Service / Tool</th><th>Slug</th><th>Category</th><th>Current Price</th><th>New Price (₹)</th><th>Action</th></tr></thead><tbody id="pricingBody"><tr><td colspan="6" style="text-align:center">Loading pricing…</td></tr></tbody></table></div>
+<h3 style="margin-top:24px">Associate & Professional Fee Matrix</h3>
+<p style="color:#9ca7b6">Admin decides the configured fee for each professional type. No public user can create, edit or publish these rows.</p>
+<form id="professionalFeeForm" class="toolbar" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;align-items:end">
+<div><label>Professional type</label><select id="feeProfessionalType"><option value="advocate">Advocate</option><option value="ca">CA</option><option value="cs">CS</option><option value="hr">HR</option><option value="gst_practitioner">GST Practitioner</option><option value="assistant_associate">Assistant / Associate</option></select></div>
+<div><label>Fee code</label><input id="feeCode" maxlength="60" placeholder="consultation"></div>
+<div><label>Fee name</label><input id="feeName" maxlength="120" placeholder="Initial consultation"></div>
+<div><label>Amount (₹)</label><input id="feeAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0"></div>
+<div><label>Billing</label><select id="feeBillingType"><option value="one_time">One time</option><option value="per_task">Per task</option><option value="per_hour">Per hour</option><option value="per_case">Per case</option></select></div>
+<div style="grid-column:1/-1"><label>Notes</label><input id="feeNotes" maxlength="500" placeholder="Internal admin note / scope"></div>
+<div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap"><button class="btnx primary" id="saveProfessionalFeeBtn" type="submit">Save Fee</button><button class="btnx secondary" id="clearProfessionalFeeBtn" type="button">Clear</button></div>
+</form>
+<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Type</th><th>Fee</th><th>Amount</th><th>Billing</th><th>Status</th><th>Notes</th><th>Updated</th><th>Action</th></tr></thead><tbody id="professionalFeeBody"><tr><td colspan="8" style="text-align:center">Loading fees…</td></tr></tbody></table></div>
+<div class="table-wrap" style="margin-top:14px"><table class="action-queue-table"><thead><tr><th>Recent pricing changes</th><th>Entity</th><th>Old</th><th>New</th><th>When</th></tr></thead><tbody id="pricingAuditBody"><tr><td colspan="5" style="text-align:center">Loading audit…</td></tr></tbody></table></div>
+</section>
+
+<section class="panel admin-workspace-panel" id="govRouteVerificationPanel" data-admin-workspace="operations">
+<h2>🌐 Official Route Verification</h2>
+<p style="color:#9ca7b6;margin-top:-6px">Admin-only live verification of the 10 ILS official-route catalogue entries. Uses your current authenticated admin session; no customer signup or production payment flow is touched.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+<button id="verifyGovRoutesBtn" class="btnx primary" type="button">Verify All Official Routes</button>
+<button id="refreshGovRoutesBtn" class="btnx secondary" type="button">Refresh Results</button>
+</div>
+<div id="govRouteVerificationMsg" class="msg"></div>
+<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Code</th><th>Official route</th><th>Status</th><th>HTTP</th><th>Final URL</th><th>Redirects</th><th>Error</th></tr></thead><tbody id="govRouteVerificationBody"><tr><td colspan="7" style="text-align:center">Loading route verification state…</td></tr></tbody></table></div>
+</section>
+
+    <section class="panel admin-workspace-panel" id="actionAssistanceQueuePanel" data-admin-workspace="operations">
+<h2>🧑‍💻 Action Assistance Queue</h2>
+<p style="color:#9ca7b6;margin-top:-6px">Paid associate requests only. Assign, work, QA-check and complete without changing the existing payment chain.</p>
+<div class="action-queue-toolbar"><input id="actionQueueSearch" placeholder="Search order, customer, mobile, problem or official route…"><select id="actionQueueStatusFilter"><option value="">All queue status</option><option value="pending_assignment">Pending assignment</option><option value="assigned">Assigned</option><option value="in_progress">In progress</option><option value="qa_hold">QA hold</option><option value="qa_pass">QA passed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><button id="refreshActionQueueBtn" class="btnx secondary" type="button">↻ Refresh Queue</button></div>
+<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Order</th><th>Customer</th><th>Problem / Route</th><th>Status</th><th>Assigned</th><th>Created</th><th>Customer Note</th><th>Action</th></tr></thead><tbody id="actionQueueBody"><tr><td colspan="8" style="text-align:center">Loading associate queue…</td></tr></tbody></table></div>
+<div id="actionQueueMsg" class="msg" style="margin-top:12px"></div></section>
+
+    <section class="panel admin-workspace-panel" id="upiProofPanel" data-admin-workspace="payments">
+      <h2>🔐 UPI Payment Proof Verification</h2>
+      <p style="color:#9ca7b6;margin-top:-6px">
+        QR payments remain pending until an administrator verifies the uploaded payment-success screenshot and transaction reference. The screenshot is kept in a private Storage bucket.
+      </p>
+      <div class="toolbar" style="margin-top:14px">
+        <select id="upiProofStatusFilter">
+          <option value="pending">Pending proofs</option>
+          <option value="">All proofs</option>
+          <option value="verified">Verified</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <button class="btnx secondary" id="refreshUpiProofsBtn" type="button">↻ Refresh Proofs</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Order</th><th>Service</th><th>Amount</th><th>UTR</th><th>Payee claimed</th><th>Status</th><th>Submitted</th><th>Screenshot</th><th>Action</th></tr>
+          </thead>
+          <tbody id="upiProofBody"><tr><td colspan="9" style="text-align:center">Loading payment proofs…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel admin-workspace-panel" id="upiProofInstructionsPanel" data-admin-workspace="payments">
+      <h3 style="margin-top:0">Verification rule</h3>
+      <p style="margin:0;color:#cbd5e1">
+        Verify the screenshot against the actual received UPI transaction/account statement before approving. A screenshot alone is not treated as bank confirmation.
+      </p>
+    </section>
+
+    <section class="panel admin-workspace-panel" id="clientCrmPanel" data-admin-workspace="clients">
+      <h2>Client Requirements / CRM</h2>
+      <div class="toolbar">
+        <input id="leadSearch" placeholder="Search name, mobile, city, matter…">
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="New">New</option>
+          <option value="Contacted">Contacted</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Closed">Closed</option>
+        </select>
+        <select id="priorityFilter">
+          <option value="">All priorities</option>
+          <option value="High">High</option>
+          <option value="Normal">Normal</option>
+          <option value="Low">Low</option>
+        </select>
+        <button id="loadLeadsBtn" class="btnx primary" type="button">Load</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Client</th><th>Mobile</th><th>Location</th>
+              <th>Matter</th><th>Requirement</th><th>Status</th><th>Priority</th><th>Payment</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="leadBody"><tr><td colspan="10" style="text-align:center">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <div class="modal" id="leadModal" aria-hidden="true">
+      <div class="modal-box" style="max-width:900px">
+        <button class="modal-close" id="closeLeadModal" type="button">×</button>
+        <h2 style="margin-top:0">Manage Client Requirement</h2>
+        <div id="leadManagerSummary" class="detail-grid" style="margin:15px 0"></div>
+        <input id="manageLeadId" type="hidden">
+        <div class="detail-grid">
+          <div><label>Status</label><select id="manageStatus"><option>New</option><option>Contacted</option><option>In Progress</option><option>Closed</option></select></div>
+          <div><label>Payment Status</label><select id="managePayment"><option>Pending</option><option>Paid</option><option>Partial</option><option>Not Applicable</option></select></div>
+          <div><label>Priority</label><select id="managePriority"><option>High</option><option>Normal</option><option>Low</option></select></div>
+          <div><label>Follow-up Date</label><input id="manageFollowUp" type="date"></div>
+        </div>
+        <label>Assigned Advocates</label>
+        <select id="manageAdvocates" multiple size="6"></select>
+        <label style="margin-top:14px">Internal Notes</label>
+        <textarea id="manageNotes" rows="5" placeholder="Internal CRM notes"></textarea>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:14px"><input id="manageRelease" type="checkbox" style="width:auto"> Release assigned advocate contact to this client</label>
+        <div id="manageReleaseStatus" class="note" style="text-align:left"></div>
+        <div class="client-access-manager" style="margin-top:16px;padding:14px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.03)">
+          <strong>Client Portal Login / Private Access</strong>
+          <div class="note" style="text-align:left;margin:6px 0 10px">Generate a private client access link for this client. The main website Client Matter Portal will open through this link.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="generateClientAccessBtn" class="btnx secondary" type="button">Generate Client Login Token</button>
+            <button id="copyClientAccessBtn" class="btnx secondary" type="button" style="display:none">Copy Client Portal Link</button>
+          </div>
+          <div id="clientAccessBox" style="display:none;margin-top:10px">
+            <label>Private Client Portal Link</label>
+            <input id="manageClientAccessLink" readonly type="text" style="width:100%">
+            <div class="note" id="clientAccessMeta" style="text-align:left"></div>
+          </div>
+        </div>
+        <div id="leadManagerError" class="msg err" style="margin-top:12px"></div>
+        <div class="crm-comms">
+          <div class="crm-box"><h3 style="margin:0 0 8px">💬 Client–Advocate Chat</h3><div id="adminChatThread" class="crm-chat">Loading communication…</div><textarea id="adminChatMessage" placeholder="Reply to client…" style="width:100%;min-height:70px;margin-top:8px;background:#08111d;color:#fff;border:1px solid #34455d;border-radius:8px;padding:10px"></textarea><div class="crm-comms-actions"><button id="sendAdminChatBtn" class="btnx primary" type="button">Send Reply</button><button id="refreshAdminChatBtn" class="btnx secondary" type="button">↻ Refresh Chat</button></div></div>
+          <div class="crm-box"><h3 style="margin:0 0 8px">📈 Work Progress</h3><div id="adminProgressTimeline" class="crm-progress">Loading progress…</div><select id="adminProgressStatus"><option>Received</option><option>Advocate Assigned</option><option>Consultation Scheduled</option><option>Documents Under Review</option><option>Drafting / Preparation</option><option>Filing / Proceedings</option><option>Awaiting Court / Authority</option><option>Completed</option></select><input id="adminProgressTitle" placeholder="Progress title" style="margin-top:8px"><textarea id="adminProgressNote" placeholder="Short progress note" style="width:100%;min-height:60px;margin-top:8px;background:#08111d;color:#fff;border:1px solid #34455d;border-radius:8px;padding:10px"></textarea><label style="display:flex;align-items:center;gap:8px;margin:8px 0"><input id="adminProgressVisible" type="checkbox" checked style="width:auto"> Show to client</label><button id="addAdminProgressBtn" class="btnx primary" type="button">Add Progress</button></div>
+        </div>
+        <div class="modal-actions">
+          <button id="saveLeadManagerBtn" class="btnx primary" type="button">Save Changes</button>
+          <button id="closeLeadManagerBtn" class="btnx secondary" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="panel adv-panel admin-workspace-panel" id="advocateManagementPanel" data-admin-workspace="professionals">
+      <h2>Advocate Management</h2>
+      <div class="adv-toolbar">
+        <input id="adminAdvocateSearch" type="search" placeholder="Search advocate, mobile, email, enrollment, court or practice area…">
+        <select id="adminAdvocateStatus">
+          <option value="">All Verification Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+        <button id="loadAdvocatesBtn" class="btnx primary" type="button">↻ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table class="adv-table">
+          <thead><tr>
+            <th>Photo</th><th>Advocate</th><th>Mobile</th><th>Location</th>
+            <th>Practice Area</th><th>Experience</th><th>Verification</th><th>Action</th>
+          </tr></thead>
+          <tbody id="advocateTableBody">
+            <tr><td colspan="8" style="text-align:center">Loading advocate applications…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel adv-panel admin-workspace-panel" id="professionalNetworkPanel" data-admin-workspace="professionals">
+      <h2>Professional Network Review</h2>
+      <p style="opacity:.72">Review CA, CS, HR, GST Practitioner and Assistant / Associate registrations. Only CA/CS can ever be public; HR/GST/Assistant remain internal even when approved.</p>
+      <div class="adv-toolbar">
+        <input id="adminProfessionalSearch" type="search" placeholder="Search name, email, mobile, category or city…">
+        <select id="adminProfessionalStatus">
+          <option value="">All Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+        <button id="loadProfessionalsBtn" class="btnx primary" type="button">↻ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table class="adv-table">
+          <thead><tr><th>Category</th><th>Name</th><th>Contact</th><th>Location</th><th>Credential / Services</th><th>Status</th><th>Public</th><th>Action</th></tr></thead>
+          <tbody id="professionalTableBody"><tr><td colspan="8" style="text-align:center">Loading professional applications…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="professionalAdminMsg" class="msg" style="margin-top:10px"></div>
+    </section>
+
+    <div class="modal" id="advocateModal" aria-hidden="true">
+      <div class="modal-box">
+        <button class="modal-close" id="closeAdvocateModal" type="button">×</button>
+        <h2 style="margin-top:0">Advocate Management</h2>
+        <div id="advocateDetails"></div>
+
+        <div class="panel" style="margin-top:16px">
+          <h3>Editable Profile</h3>
+          <div class="detail-grid">
+            <div><label>Advocate Name</label><input id="edit_advocate_name"></div>
+            <div><label>Mobile</label><input id="edit_advocate_mobile" maxlength="10"></div>
+            <div><label>Email</label><input id="edit_advocate_email" type="email"></div>
+            <div><label>Enrollment Number</label><input id="edit_advocate_enrollment"></div>
+            <div><label>State Bar Council</label><input id="edit_advocate_bar_council"></div>
+            <div><label>Practice State</label><input id="edit_advocate_state"></div>
+            <div><label>District / Court</label><input id="edit_advocate_district"></div>
+            <div><label>Primary Practice Area</label><input id="edit_advocate_area"></div>
+            <div><label>Years of Practice</label><input id="edit_advocate_years" type="number" min="0" max="70"></div>
+          </div>
+          <button id="saveAdvocateProfileBtn" class="btnx primary" type="button" style="margin-top:14px">Save Advocate Profile</button>
+          <div id="advocateProfileSaveResult" class="msg" style="margin-top:10px"></div>
+        </div>
+
+        <label>Admin Notes</label>
+        <textarea id="advocateAdminNotes" rows="4" placeholder="Internal verification notes"></textarea>
+
+        <div class="modal-actions">
+          <button id="approveAdvocateBtn" class="btnx" style="background:#4b9b61;color:#fff" type="button">Approve Advocate</button>
+          <button id="rejectAdvocateBtn" class="btnx" style="background:#9b4b4b;color:#fff" type="button">Reject</button>
+          <button id="saveAdvocateNotesBtn" class="btnx secondary" type="button">Save Notes</button>
+        </div>
+
+        <div style="margin-top:18px">
+          <label>Temporary Advocate Password</label>
+          <input id="advocate_temp_password" type="password" minlength="8" autocomplete="new-password" placeholder="Minimum 8 characters">
+          <button id="createAdvocateLoginBtn" class="btnx secondary" type="button" style="margin-top:10px">Create / Reset Advocate Login</button>
+          <div id="advocateLoginResult" class="msg" style="margin-top:10px"></div>
+        </div>
+        <div id="advocateUpdateError" class="msg err" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
+const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+const $=id=>document.getElementById(id);
+let currentAdminUserId=null;
+function msg(id,text,type){
+  const el=$(id); if(!el)return;
+  el.className=(el.dataset.toast==="1"?"msg admin-toast":"msg")+" "+(type||"");
+  el.textContent=text||"";
+  el.style.display=text?"block":"none";
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+async function isAdmin(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)return {ok:false,reason:"Please sign in."};
+  const {data,error}=await sb.rpc("ils_is_admin");
+  if(error)return {ok:false,reason:"Administrator verification failed: "+error.message};
+  if(data!==true)return {ok:false,reason:"This account is authenticated but is not on the ILS administrator allow-list."};
+  return {ok:true,session};
+}
+
+async function countTable(table,extra){
+  let q=sb.from(table).select("*",{count:"exact",head:true});
+  if(extra)q=extra(q);
+  const {count,error}=await q;
+  if(error)throw error;
+  return count||0;
+}
+
+async function loadStats(){
+  try{
+    const [leads,adv,jud,newLeads]=await Promise.all([
+      countTable("client_requirements"),
+      countTable("advocate_registrations"),
+      countTable("judgments",q=>q.eq("is_verified",true)),
+      countTable("client_requirements",q=>q.eq("status","New"))
+    ]);
+    $("countLeads").textContent=leads;
+    $("countAdvocates").textContent=adv;
+    $("countJudgments").textContent=jud;
+    $("countNew").textContent=newLeads;
+  }catch(e){
+    console.error(e);
+    msg("appMsg","Stats could not be loaded. Check the Supabase RLS/admin allow-list.","err");
+  }
+}
+
+function statusOptions(current){
+  const vals=["New","Contacted","In Progress","Closed"];
+  return vals.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("");
+}
+function priorityOptions(current){
+  const vals=["High","Normal","Low"];
+  return vals.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("");
+}
+
+let leadLoadSeq=0;
+async function loadLeads(){
+  const seq=++leadLoadSeq;
+  const body=$("leadBody");
+  body.innerHTML='<tr><td colspan="10" style="text-align:center">Loading…</td></tr>';
+
+  let query=sb.from("client_requirements").select("*").order("created_at",{ascending:false}).limit(100);
+
+  const sf=$("statusFilter").value;
+  const pf=$("priorityFilter").value;
+  const term=$("leadSearch").value.trim();
+
+  if(sf)query=query.eq("status",sf);
+  if(pf)query=query.eq("priority",pf);
+
+  if(term){
+    const s=term.replace(/[,%()]/g," ").trim();
+    query=query.or(
+      `client_name.ilike.%${s}%,mobile.ilike.%${s}%,district_city.ilike.%${s}%,legal_matter.ilike.%${s}%,brief_requirement.ilike.%${s}%`
+    );
+  }
+
+  let {data,error}=await query;
+  if(error && /JWT issued at future/i.test(error.message||"")){
+    const refreshed=await sb.auth.refreshSession();
+    if(!refreshed.error){
+      query=sb.from("client_requirements").select("*").order("created_at",{ascending:false}).limit(100);
+      if(sf)query=query.eq("status",sf);
+      if(pf)query=query.eq("priority",pf);
+      if(term){ const s2=term.replace(/[,%()]/g," ").trim(); query=query.or(`client_name.ilike.%${s2}%,mobile.ilike.%${s2}%,district_city.ilike.%${s2}%,legal_matter.ilike.%${s2}%,brief_requirement.ilike.%${s2}%`); }
+      ({data,error}=await query);
+    }
+  }
+  if(seq!==leadLoadSeq)return;
+  if(error){
+    body.innerHTML='<tr><td colspan="10" style="text-align:center">Unable to load records.</td></tr>';
+    msg("appMsg","CRM error: "+error.message,"err");
+    return;
+  }
+
+  window.__ilsLeads=data||[];
+  try{
+    const ar=await sb.from("advocate_assignments").select("lead_id,advocate_id,status");
+    window.__ilsAssignments=ar.data||[];
+  }catch(e){ window.__ilsAssignments=[]; }
+
+  if(!data?.length){
+    body.innerHTML='<tr><td colspan="10" style="text-align:center">No matching requirements.</td></tr>';
+    return;
+  }
+
+  body.innerHTML=data.map(r=>{
+    const date=r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—";
+    return `<tr>
+      <td>${esc(date)}</td>
+      <td><strong>${esc(r.client_name||"—")}</strong></td>
+      <td>${esc(r.mobile||"—")}</td>
+      <td>${esc([r.district_city,r.state].filter(Boolean).join(", ")||"—")}</td>
+      <td>${esc(r.legal_matter||"—")}</td>
+      <td style="min-width:260px">${esc(r.brief_requirement||"—")}</td>
+      <td><select data-status="${esc(r.id)}">${statusOptions(r.status||"New")}</select></td>
+      <td><select data-priority="${esc(r.id)}">${priorityOptions(r.priority||"Normal")}</select></td>
+      <td>${esc(r.payment_status||"Pending")}</td>
+      <td class="actions-cell"><button class="btnx primary manageLead" data-id="${esc(r.id)}">Manage</button></td>
+    </tr>`;
+  }).join("");
+
+  document.querySelectorAll(".manageLead").forEach(btn=>{
+    btn.addEventListener("click",()=>openLeadManager(btn.dataset.id));
+  });
+}
+
+async function saveLead(id,button){
+  const statusEl=document.querySelector(`[data-status="${CSS.escape(id)}"]`);
+  const priorityEl=document.querySelector(`[data-priority="${CSS.escape(id)}"]`);
+  if(!statusEl||!priorityEl)return;
+
+  button.disabled=true;
+  const {error}=await sb.from("client_requirements").update({
+    status:statusEl.value,
+    priority:priorityEl.value
+  }).eq("id",id);
+  button.disabled=false;
+
+  if(error){
+    msg("appMsg","Could not update lead: "+error.message,"err");
+    return;
+  }
+
+  msg("appMsg","Lead updated successfully.","ok");
+  await loadStats();
+}
+
+
+// Full Client Requirements / CRM management restored.
+async function openLeadManager(id){
+  const leadId=Number(id);
+  const lead=window.__ilsLeads?.find(x=>Number(x.id)===leadId);
+  if(!lead){ msg("appMsg","Client record is not available. Refresh CRM and try again.","err"); return; }
+  $("manageLeadId").value=leadId;
+  $("manageStatus").value=lead.status||"New";
+  $("managePayment").value=lead.payment_status||"Pending";
+  $("managePriority").value=lead.priority||"Normal";
+  $("manageFollowUp").value=lead.follow_up_date||"";
+  $("manageNotes").value=lead.internal_notes||"";
+  $("manageRelease").checked=Boolean(lead.release_advocate_contact);
+  const assigned=new Set((window.__ilsAssignments||[]).filter(a=>Number(a.lead_id)===leadId && ["Assigned","Active"].includes(a.status||"Assigned")).map(a=>Number(a.advocate_id)));
+  if(lead.assigned_advocate_id) assigned.add(Number(lead.assigned_advocate_id));
+  const sel=$("manageAdvocates");
+  const approved=(allAdvocates||[]).filter(a=>(a.verification_status||a.status||"Pending")==="Approved");
+  sel.innerHTML=approved.map(a=>`<option value="${Number(a.id)}" ${assigned.has(Number(a.id))?"selected":""}>${esc(a.advocate_name||"Unnamed")} — ${esc(a.district_court||"")}${a.primary_practice_area?" | "+esc(a.primary_practice_area):""}</option>`).join("");
+  $("leadManagerSummary").innerHTML=`<div class="detail-item"><strong>Client</strong><span>${esc(lead.client_name||"—")}</span></div><div class="detail-item"><strong>Mobile</strong><span>${esc(lead.mobile||"—")}</span></div><div class="detail-item"><strong>Location</strong><span>${esc([lead.district_city,lead.state].filter(Boolean).join(", ")||"—")}</span></div><div class="detail-item"><strong>Matter</strong><span>${esc(lead.legal_matter||"—")}</span></div><div class="detail-item" style="grid-column:1/-1"><strong>Requirement</strong><span>${esc(lead.brief_requirement||"—")}</span></div>`;
+  $("manageReleaseStatus").textContent=$("manageRelease").checked ? "Contact is RELEASED for this client." : "Contact is currently LOCKED.";
+  loadExistingClientAccess(lead);
+  $("leadManagerError").style.display="none";
+  $("leadModal").classList.add("open"); $("leadModal").setAttribute("aria-hidden","false");
+  loadAdminClientCommunication(leadId);
+}
+
+function buildClientAccessLink(token){
+  const url=new URL(window.location.href);
+  url.searchParams.set("access",token);
+  url.hash="client-access";
+  return url.toString();
+}
+
+async function generateClientAccess(){
+  const id=Number($("manageLeadId").value);
+  const lead=window.__ilsLeads?.find(x=>Number(x.id)===id);
+  if(!id || !lead){ msg("leadManagerError","Client record is not available.","err"); return; }
+  const btn=$("generateClientAccessBtn");
+  btn.disabled=true; btn.textContent="Generating…";
+  try{
+    const token=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replaceAll("-","");
+    const created=new Date();
+    const expires=new Date(created.getTime()+30*24*60*60*1000);
+    const {error}=await sb.from("client_requirements").update({
+      client_access_token:token,
+      client_access_created_at:created.toISOString(),
+      client_access_expires_at:expires.toISOString()
+    }).eq("id",id);
+    if(error) throw error;
+    $("manageClientAccessLink").value=buildClientAccessLink(token);
+    $("clientAccessBox").style.display="block";
+    $("copyClientAccessBtn").style.display="inline-flex";
+    $("clientAccessMeta").textContent="Token active for 30 days · Registered mobile: "+(lead.mobile||"—")+" · Expires: "+expires.toLocaleString("en-IN");
+    lead.client_access_token=token; lead.client_access_created_at=created.toISOString(); lead.client_access_expires_at=expires.toISOString();
+    msg("appMsg","Client portal login token generated successfully.","ok");
+  }catch(e){
+    console.error(e);
+    msg("leadManagerError","Unable to generate client login token: "+(e?.message||"Unknown error"),"err");
+  }finally{btn.disabled=false;btn.textContent="Generate Client Login Token";}
+}
+
+async function copyClientAccessLink(){
+  const input=$("manageClientAccessLink");
+  if(!input?.value)return;
+  try{await navigator.clipboard.writeText(input.value);}catch(e){input.select();document.execCommand("copy");}
+  msg("appMsg","Client portal link copied successfully.","ok");
+}
+
+function loadExistingClientAccess(lead){
+  const box=$("clientAccessBox"),input=$("manageClientAccessLink"),copy=$("copyClientAccessBtn"),meta=$("clientAccessMeta");
+  if(!box||!input||!copy||!meta)return;
+  if(lead?.client_access_token){
+    input.value=buildClientAccessLink(lead.client_access_token); box.style.display="block"; copy.style.display="inline-flex";
+    meta.textContent="Existing token · Expires: "+(lead.client_access_expires_at?new Date(lead.client_access_expires_at).toLocaleString("en-IN"):"Not specified");
+  }else{input.value="";box.style.display="none";copy.style.display="none";meta.textContent="";}
+}
+
+async function saveLeadManager(){
+  const id=Number($("manageLeadId").value);
+  const advocateIds=[...$("manageAdvocates").selectedOptions].map(o=>Number(o.value)).filter(Number.isFinite);
+  const payload={p_lead_id:id,p_status:$("manageStatus").value,p_payment_status:$("managePayment").value,p_priority:$("managePriority").value,p_assigned_advocate_ids:advocateIds,p_release_contact:Boolean($("manageRelease").checked),p_follow_up_date:$("manageFollowUp").value||null,p_internal_notes:$("manageNotes").value.trim()};
+  const btn=$("saveLeadManagerBtn"); btn.disabled=true; btn.textContent="Saving…";
+  try{
+    const {data,error}=await sb.rpc("ils_admin_save_lead_multi",payload);
+    if(error || !data?.ok) throw new Error(error?.message||data?.message||"Unable to save lead changes.");
+    $("leadModal").classList.remove("open"); $("leadModal").setAttribute("aria-hidden","true");
+    msg("appMsg","Client requirement updated successfully.","ok");
+    await loadLeads(); await loadStats();
+  }catch(e){
+    console.error(e); msg("leadManagerError","Update failed: "+(e?.message||"Unknown error"),"err");
+  }finally{ btn.disabled=false; btn.textContent="Save Changes"; }
+}
+
+function closeLeadManager(){ $("leadModal").classList.remove("open"); $("leadModal").setAttribute("aria-hidden","true"); }
+
+
+let allAdvocates = [];
+let selectedAdvocateId = null;
+
+function advocateStatus(a){
+  return a.verification_status || a.status || "Pending";
+}
+function renderAdvocateRows(){
+  const tbody=$("advocateTableBody"); if(!tbody)return;
+  const q=($("adminAdvocateSearch")?.value||"").toLowerCase().trim();
+  const sf=$("adminAdvocateStatus")?.value||"";
+  const rows=allAdvocates.filter(a=>{
+    const status=advocateStatus(a);
+    if(sf && status!==sf)return false;
+    const hay=[
+      a.advocate_name,a.mobile,a.email,a.enrollment_number,a.state_bar_council,
+      a.practice_state,a.district_court,a.primary_practice_area
+    ].filter(Boolean).join(" ").toLowerCase();
+    return !q || hay.includes(q);
+  });
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center">No matching advocate applications.</td></tr>';
+    return;
+  }
+  tbody.innerHTML=rows.map(a=>{
+    const st=advocateStatus(a);
+    const cls=st==="Approved"?"verify-approved":st==="Rejected"?"verify-rejected":"verify-pending";
+    const photo=a.photo_url||a.profile_photo_url||a.__pendingPhotoUrl||"";
+    const ph=photo?`<img class="adv-photo" src="${esc(photo)}" alt="Advocate photo">`:`<div class="adv-photo"></div>`;
+    return `<tr>
+      <td>${ph}</td>
+      <td><strong>${esc(a.advocate_name||"—")}</strong><br><small>${esc(a.enrollment_number||"")}</small></td>
+      <td>${esc(a.mobile||"—")}</td>
+      <td>${esc(a.district_court||"—")}<br><small>${esc(a.practice_state||"")}</small></td>
+      <td>${esc(a.primary_practice_area||"—")}</td>
+      <td>${esc(String(a.years_of_practice??"—"))} years</td>
+      <td><span class="verify-badge ${cls}">${esc(st)}</span></td>
+      <td class="actions-cell"><div class="smart-action"><button class="btnx secondary smart-action-btn" type="button" data-smart-toggle aria-expanded="false">⋮ Actions</button><div class="smart-action-menu"><button type="button" data-adv-view="${esc(a.id)}">Manage</button><button class="danger" type="button" data-delete-profile="advocate" data-delete-id="${esc(a.id)}">Delete profile</button></div></div></td>
+    </tr>`;
+  }).join("");
+  tbody.querySelectorAll("[data-adv-view]").forEach(b=>b.addEventListener("click",()=>openAdvocate(b.dataset.advView)));
+}
+let allProfessionals=[];
+
+const professionalLabels={ca:"CA",cs:"CS",hr:"HR",gst_practitioner:"GST Practitioner",assistant_associate:"Assistant / Associate"};
+
+async function loadProfessionals(){
+  const body=$("professionalTableBody");
+  body.innerHTML='<tr><td colspan="8" style="text-align:center">Loading…</td></tr>';
+  let q=sb.from("professional_join_requests").select("*").order("created_at",{ascending:false}).limit(250);
+  const status=$("adminProfessionalStatus")?.value||"";
+  const term=$("adminProfessionalSearch")?.value.trim()||"";
+  if(status)q=q.eq("status",status);
+  if(term){
+    const s=term.replace(/[,%()]/g," ").trim();
+    if(s)q=q.or("full_name.ilike.%"+s+"%,email.ilike.%"+s+"%,mobile.ilike.%"+s+"%,professional_type.ilike.%"+s+"%,city.ilike.%"+s+"%");
+  }
+  const {data,error}=await q;
+  if(error){body.innerHTML='<tr><td colspan="8" style="text-align:center">Unable to load professional applications.</td></tr>';msg("professionalAdminMsg","Professional queue error: "+error.message,"err");return;}
+  allProfessionals=data||[];
+  if(!allProfessionals.length){body.innerHTML='<tr><td colspan="8" style="text-align:center">No matching professional applications.</td></tr>';return;}
+  body.innerHTML=allProfessionals.map(p=>{
+    const label=professionalLabels[p.professional_type]||p.professional_type;
+    const cred=p.membership_number||p.specialization||"—";
+    const loc=[p.city,p.state].filter(Boolean).join(", ")||"—";
+    const canPublic=p.professional_type==="ca"||p.professional_type==="cs";
+    const publicText=canPublic&&p.public_profile?"Enabled":"Private";
+    const action='<div class="smart-action"><button class="btnx secondary smart-action-btn" type="button" data-smart-toggle aria-expanded="false">⋮ Actions</button><div class="smart-action-menu">'+
+      '<button type="button" class="profApprove" data-id="'+esc(p.id)+'">Approve</button>'+
+      '<button type="button" data-id="'+esc(p.id)+'" data-action="reject">Reject</button>'+
+      (canPublic?'<button type="button" class="profPublic" data-id="'+esc(p.id)+'">'+(p.public_profile?"Hide public profile":"Publish public profile")+'</button>':"")+
+      '<button type="button" class="danger" data-delete-profile="professional" data-delete-id="'+esc(p.id)+'">Delete profile</button></div></div>';
+    return '<tr><td><strong>'+esc(label)+'</strong></td>'+
+      '<td>'+esc(p.full_name||"—")+'</td>'+
+      '<td>'+esc(p.email||"—")+'<br>'+esc(p.mobile||"—")+'</td>'+
+      '<td>'+esc(loc)+'</td>'+
+      '<td>'+esc(cred)+'</td>'+
+      '<td>'+esc(p.status||"Pending")+' / '+esc(p.verification_status||"Pending")+'</td>'+
+      '<td>'+esc(publicText)+'</td>'+
+      '<td class="actions-cell">'+action+'</td></tr>';
+  }).join("");
+  document.querySelectorAll(".profApprove").forEach(b=>b.addEventListener("click",()=>updateProfessional(b.dataset.id,"Approved")));
+  document.querySelectorAll('[data-action="reject"]').forEach(b=>b.addEventListener("click",()=>updateProfessional(b.dataset.id,"Rejected")));
+  document.querySelectorAll(".profPublic").forEach(b=>b.addEventListener("click",()=>toggleProfessionalPublic(b.dataset.id)));
+}
+
+async function updateProfessional(id,status){
+  const p=allProfessionals.find(x=>String(x.id)===String(id));if(!p)return;
+  if(!confirm(status==="Approved"?"Approve this professional registration?":"Reject this professional registration?"))return;
+  const canPublic=p.professional_type==="ca"||p.professional_type==="cs";
+  const update={status,verification_status:status,public_profile:status==="Approved"&&canPublic};
+  const {error}=await sb.from("professional_join_requests").update(update).eq("id",id);
+  if(error){msg("professionalAdminMsg","Update failed: "+error.message,"err");return;}
+  msg("professionalAdminMsg",status==="Approved"?(canPublic?"Approved and public profile enabled for CA/CS.":"Approved; internal-only profile retained."):"Professional registration rejected.","ok");
+  await loadProfessionals();
+}
+
+async function toggleProfessionalPublic(id){
+  const p=allProfessionals.find(x=>String(x.id)===String(id));if(!p)return;
+  if(!["ca","cs"].includes(p.professional_type)){msg("professionalAdminMsg","Only CA/CS can be public.","err");return;}
+  if(String(p.status).toLowerCase()!=="approved"||String(p.verification_status).toLowerCase()!=="approved"){msg("professionalAdminMsg","Approve and verify the CA/CS profile before public listing.","err");return;}
+  const {error}=await sb.from("professional_join_requests").update({public_profile:!p.public_profile}).eq("id",id);
+  if(error){msg("professionalAdminMsg","Public visibility update failed: "+error.message,"err");return;}
+  await loadProfessionals();
+}
+
+async function loadAdvocates(){
+
+  const tbody=$("advocateTableBody");
+
+  if(!tbody)return;
+
+  tbody.innerHTML=
+    '<tr><td colspan="8" style="text-align:center">Loading advocate applications…</td></tr>';
+
+  let {data,error}=await sb
+    .from("advocate_registrations")
+    .select("*")
+    .order("created_at",{ascending:false})
+    .limit(250);
+
+  if(error){
+
+    tbody.innerHTML=
+      '<tr><td colspan="8" style="text-align:center">Unable to load advocate applications.</td></tr>';
+
+    msg(
+      "appMsg",
+      "Advocate Management error: "+error.message,
+      "err"
+    );
+
+    return;
+  }
+
+
+  allAdvocates=data||[];
+
+
+  /* ==========================================
+     RESOLVE PENDING PHOTOS FOR ADMIN ONLY
+  ========================================== */
+
+  await Promise.all(
+
+    allAdvocates.map(async function(a){
+
+      a.__pendingPhotoUrl="";
+
+      if(
+        a.photo_url ||
+        a.profile_photo_url ||
+        !a.photo_storage_path
+      ){
+
+        return;
+
+      }
+
+
+      const path=
+        String(a.photo_storage_path)
+          .replace(/^\/+/,"");
+
+
+      if(!path.startsWith("pending/")){
+
+        return;
+
+      }
+
+
+      try{
+
+        const {data:signed,error:signedError}=
+          await sb.storage
+            .from("advocate-photo-pending")
+            .createSignedUrl(
+              path,
+              3600
+            );
+
+
+        if(
+          !signedError &&
+          signed?.signedUrl
+        ){
+
+          a.__pendingPhotoUrl=
+            signed.signedUrl;
+
+        }
+
+      }catch(e){
+
+        console.warn(
+          "Pending advocate photo fetch failed:",
+          e
+        );
+
+      }
+
+    })
+
+  );
+
+
+  renderAdvocateRows();
+
+}
+function fillAdvocateEditFields(a){
+  $("edit_advocate_name").value=a.advocate_name||"";
+  $("edit_advocate_mobile").value=a.mobile||"";
+  $("edit_advocate_email").value=a.email||"";
+  $("edit_advocate_enrollment").value=a.enrollment_number||"";
+  $("edit_advocate_bar_council").value=a.state_bar_council||"";
+  $("edit_advocate_state").value=a.practice_state||"";
+  $("edit_advocate_district").value=a.district_court||"";
+  $("edit_advocate_area").value=a.primary_practice_area||"";
+  $("edit_advocate_years").value=a.years_of_practice??"";
+  $("advocateAdminNotes").value=a.admin_notes||"";
+}
+function openAdvocate(id){
+  const a=allAdvocates.find(x=>String(x.id)===String(id)); if(!a)return;
+  selectedAdvocateId=a.id; fillAdvocateEditFields(a);
+  const st=advocateStatus(a);
+  const photo=a.photo_url||a.profile_photo_url||"";
+  $("advocateDetails").innerHTML=`
+    ${photo?`<div style="text-align:center;margin-bottom:15px"><img src="${esc(photo)}" style="width:130px;height:130px;object-fit:cover;border-radius:12px;border:2px solid #d7a84f"></div>`:""}
+    <div class="detail-grid">
+      <div class="detail-item"><strong>Advocate</strong><span>${esc(a.advocate_name||"—")}</span></div>
+      <div class="detail-item"><strong>Verification</strong><span>${esc(st)}</span></div>
+      <div class="detail-item"><strong>Mobile</strong><span>${esc(a.mobile||"—")}</span></div>
+      <div class="detail-item"><strong>Email</strong><span>${esc(a.email||"—")}</span></div>
+      <div class="detail-item"><strong>Enrollment</strong><span>${esc(a.enrollment_number||"—")}</span></div>
+      <div class="detail-item"><strong>State Bar Council</strong><span>${esc(a.state_bar_council||"—")}</span></div>
+      <div class="detail-item"><strong>Practice State</strong><span>${esc(a.practice_state||"—")}</span></div>
+      <div class="detail-item"><strong>District / Court</strong><span>${esc(a.district_court||"—")}</span></div>
+      <div class="detail-item"><strong>Practice Area</strong><span>${esc(a.primary_practice_area||"—")}</span></div>
+      <div class="detail-item"><strong>Years</strong><span>${esc(String(a.years_of_practice??"—"))}</span></div>
+    </div>`;
+  $("advocateUpdateError").style.display="none";
+  $("advocateProfileSaveResult").style.display="none";
+  $("advocateLoginResult").style.display="none";
+  $("advocateModal").classList.add("open"); $("advocateModal").setAttribute("aria-hidden","false");
+}
+function closeAdvocate(){selectedAdvocateId=null;$("advocateModal").classList.remove("open");$("advocateModal").setAttribute("aria-hidden","true");}
+async function saveAdvocateProfile(){
+  if(!selectedAdvocateId)return;
+  const update={
+    advocate_name:$("edit_advocate_name").value.trim(),mobile:$("edit_advocate_mobile").value.trim(),
+    email:$("edit_advocate_email").value.trim(),enrollment_number:$("edit_advocate_enrollment").value.trim(),
+    state_bar_council:$("edit_advocate_bar_council").value.trim(),practice_state:$("edit_advocate_state").value.trim(),
+    district_court:$("edit_advocate_district").value.trim(),primary_practice_area:$("edit_advocate_area").value.trim(),
+    years_of_practice:Number($("edit_advocate_years").value||0)
+  };
+  const {error}=await sb.from("advocate_registrations").update(update).eq("id",selectedAdvocateId);
+  if(error){msg("advocateProfileSaveResult","Profile update failed: "+error.message,"err");return;}
+  msg("advocateProfileSaveResult","Advocate profile saved.","ok"); await loadAdvocates();
+}
+async function saveAdvocateNotes(){
+  if(!selectedAdvocateId)return;
+  const {error}=await sb.from("advocate_registrations").update({admin_notes:$("advocateAdminNotes").value.trim()}).eq("id",selectedAdvocateId);
+  if(error){msg("advocateUpdateError","Notes update failed: "+error.message,"err");return;}
+  msg("appMsg","Advocate notes saved.","ok"); await loadAdvocates();
+}
+async function setAdvocateVerification(status){
+
+  if(!selectedAdvocateId)return;
+
+  const a=allAdvocates.find(
+    x=>String(x.id)===String(selectedAdvocateId)
+  );
+
+  if(!a)return;
+
+  if(!confirm(
+    status==="Approved"
+      ? "Approve this advocate and make the profile public?"
+      : "Reject this advocate application?"
+  ))return;
+
+  try{
+
+    let photoUrl =
+      a.photo_url ||
+      a.profile_photo_url ||
+      null;
+
+    let approvedPhotoPath =
+      a.photo_storage_path ||
+      null;
+
+    let pendingPhotoMissing = false;
+
+
+    /* =========================================
+       PROMOTE PENDING PHOTO WHEN APPROVING
+    ========================================= */
+
+    if(
+      status==="Approved" &&
+      a.photo_storage_path
+    ){
+
+      const pendingPath =
+        String(a.photo_storage_path)
+          .replace(/^\/+/,"");
+
+
+      const photoResult =
+        await sb.storage
+          .from("advocate-photo-pending")
+          .download(pendingPath);
+
+
+      if(photoResult.error){
+
+        /* Recover an already-promoted photo when the pending object is
+           missing. This protects against a prior partial approval where
+           the storage upload succeeded but the DB link was not persisted. */
+        try{
+
+          const approvedList =
+            await sb.storage
+              .from("advocate-photo")
+              .list("approved",{
+                limit:100,
+                search:String(a.id)+"-",
+                sortBy:{column:"created_at",order:"desc"}
+              });
+
+          const recovered =
+            (approvedList?.data||[])
+              .filter(x=>x?.name && String(x.name).startsWith(String(a.id)+"-"))
+              [0];
+
+          if(recovered?.name){
+
+            const recoveredPath =
+              "approved/"+String(recovered.name).replace(/^\/+/, "");
+
+            const recoveredResult =
+              await sb.storage
+                .from("advocate-photo")
+                .download(recoveredPath);
+
+            if(!recoveredResult.error && recoveredResult.data){
+
+              const recoveredPublic =
+                sb.storage
+                  .from("advocate-photo")
+                  .getPublicUrl(recoveredPath);
+
+              photoUrl =
+                recoveredPublic?.data?.publicUrl ||
+                null;
+
+              approvedPhotoPath =
+                recoveredPath;
+
+              console.warn(
+                "Recovered previously approved advocate photo:",
+                recoveredPath
+              );
+
+            }
+
+          }
+
+        }catch(recoveryError){
+
+          console.warn(
+            "Approved photo recovery warning:",
+            recoveryError?.message || recoveryError
+          );
+
+        }
+
+        if(!photoUrl){
+
+          pendingPhotoMissing = true;
+          approvedPhotoPath = null;
+
+          console.warn(
+            "Pending advocate photo unavailable; approving without photo:",
+            photoResult.error.message
+          );
+
+        }
+
+      }else{
+
+      const ext =
+        pendingPath.match(
+          /\.(jpg|jpeg|png|webp)$/i
+        )?.[1] || "jpg";
+
+
+      const finalPath =
+        "approved/" +
+        String(a.id) +
+        "-" +
+        Date.now() +
+        "." +
+        ext;
+
+
+      const uploadResult =
+        await sb.storage
+          .from("advocate-photo")
+          .upload(
+            finalPath,
+            photoResult.data,
+            {
+              contentType:
+                photoResult.data.type ||
+                "image/jpeg",
+              cacheControl:"3600",
+              upsert:true
+            }
+          );
+
+
+      if(uploadResult.error){
+
+        throw new Error(
+          "Approved photo upload failed: "+
+          uploadResult.error.message
+        );
+
+      }
+
+
+      const publicResult =
+        sb.storage
+          .from("advocate-photo")
+          .getPublicUrl(finalPath);
+
+
+      photoUrl =
+        publicResult?.data?.publicUrl ||
+        null;
+
+
+      approvedPhotoPath =
+        finalPath;
+
+
+      /* Remove pending copy only after
+         approved upload succeeds */
+
+      const removeResult =
+        await sb.storage
+          .from("advocate-photo-pending")
+          .remove([pendingPath]);
+
+
+      if(removeResult.error){
+
+        console.warn(
+          "Pending photo cleanup warning:",
+          removeResult.error.message
+        );
+
+      }
+
+      }
+
+    }
+
+
+    /* =========================================
+       UPDATE ADVOCATE RECORD
+    ========================================= */
+
+    const update={
+
+      status:status,
+
+      verification_status:status,
+
+      admin_notes:
+        $("advocateAdminNotes")
+          ? $("advocateAdminNotes").value.trim()
+          : "",
+
+      public_profile:
+        status==="Approved",
+
+      approved_at:
+        status==="Approved"
+          ? new Date().toISOString()
+          : null
+
+    };
+
+
+    if(status==="Approved" && pendingPhotoMissing && !photoUrl){
+      update.photo_storage_path = null;
+    }
+
+    if(
+      status==="Approved" &&
+      photoUrl
+    ){
+
+      update.photo_url =
+        photoUrl;
+
+      update.profile_photo_url =
+        photoUrl;
+
+      update.photo_storage_path =
+        approvedPhotoPath;
+
+    }
+
+
+    const {error}=await sb
+      .from("advocate_registrations")
+      .update(update)
+      .eq("id",selectedAdvocateId);
+
+
+    if(error){
+
+      throw new Error(
+        "Verification update failed: "+
+        error.message
+      );
+
+    }
+
+
+    msg(
+      "appMsg",
+      status==="Approved"
+        ? (pendingPhotoMissing && !photoUrl
+            ? "Advocate approved successfully. No pending profile photo was available."
+            : "Advocate approved successfully. Photo published.")
+        : "Advocate application rejected.",
+      "ok"
+    );
+
+
+    await loadAdvocates();
+
+
+  }catch(err){
+
+    console.error(
+      "Advocate verification error:",
+      err
+    );
+
+    msg(
+      "advocateUpdateError",
+      err?.message ||
+      "Advocate verification failed.",
+      "err"
+    );
+
+  }
+
+}
+async function createAdvocateLogin(){
+  if(!selectedAdvocateId)return;
+  const a=allAdvocates.find(x=>String(x.id)===String(selectedAdvocateId));
+  if(!a||!a.email){msg("advocateLoginResult","Advocate email is required.","err");return;}
+  if(advocateStatus(a)!=="Approved"){msg("advocateLoginResult","Approve the advocate first.","err");return;}
+  const password=$("advocate_temp_password").value.trim();
+  if(password.length<8){msg("advocateLoginResult","Temporary password must be at least 8 characters.","err");return;}
+  msg("advocateLoginResult","Creating / resetting secure login…","");
+  const {data,error}=await sb.functions.invoke("create-advocate-user",{body:{advocate_id:Number(selectedAdvocateId),password}});
+  if(error||!data?.ok){msg("advocateLoginResult",error?.message||data?.message||"Unable to create advocate login.","err");return;}
+  msg("advocateLoginResult","Login created/reset successfully for "+a.email+". Share the temporary password securely.","ok");
+  $("advocate_temp_password").value="";
+}
+
+async function loadAdminClientCommunication(clientId){
+  if(!clientId)return; const chat=$("adminChatThread"),progress=$("adminProgressTimeline"); if(chat)chat.textContent="Loading chat…"; if(progress)progress.textContent="Loading progress…";
+  const {data,error}=await sb.rpc("get_admin_client_portal",{p_client_id:Number(clientId)});
+  if(error){console.error(error);if(chat)chat.textContent="Unable to load communication.";if(progress)progress.textContent="Unable to load progress.";return;}
+  const messages=Array.isArray(data?.messages)?data.messages:[], updates=Array.isArray(data?.progress)?data.progress:[];
+  if(chat)chat.innerHTML=messages.length?messages.map(m=>`<div class="crm-msg"><div class="crm-meta">${esc(m.sender_name||m.sender_role||"User")} · ${esc(m.created_at?new Date(m.created_at).toLocaleString("en-IN"):"")}</div><div>${esc(m.message||"")}</div></div>`).join(""):"<div class=\"crm-meta\">No messages yet.</div>";
+  if(progress)progress.innerHTML=updates.length?updates.map(p=>`<div class="crm-progress-item"><div class="crm-meta">${esc(p.created_at?new Date(p.created_at).toLocaleString("en-IN"):"")} · ${esc(p.created_by_name||p.created_by_role||"Admin")}</div><strong>${esc(p.title||"Progress update")}</strong><div>${esc(p.status||"Update")}</div>${p.note?`<div class="crm-meta">${esc(p.note)}</div>`:""}<div class="crm-meta">Client visibility: ${p.visible_to_client?"ON":"OFF"}</div></div>`).join(""):"<div class=\"crm-meta\">No progress updates yet.</div>";
+}
+async function sendAdminClientMessage(){const id=$("manageLeadId")?.value,input=$("adminChatMessage"),message=(input?.value||"").trim();if(!id||!message)return;const {data,error}=await sb.rpc("admin_send_client_message",{p_client_id:Number(id),p_message:message});if(error||!data?.ok){alert(error?.message||data?.message||"Unable to send reply.");return;}input.value="";await loadAdminClientCommunication(id);}
+async function addAdminWorkProgress(){const id=$("manageLeadId")?.value,title=$("adminProgressTitle")?.value.trim();if(!id||!title){alert("Please enter a progress title.");return;}const {data,error}=await sb.rpc("admin_add_work_progress",{p_client_id:Number(id),p_status:$("adminProgressStatus").value,p_title:title,p_note:$("adminProgressNote").value.trim(),p_visible_to_client:$("adminProgressVisible").checked,p_previous_fixed_date:null,p_next_fixed_date:null,p_work_done_date:null});if(error||!data?.ok){alert(error?.message||data?.message||"Unable to add progress.");return;}$("adminProgressTitle").value="";$("adminProgressNote").value="";await loadAdminClientCommunication(id);}
+
+let upiProofRows=[];
+
+async function loadUpiProofs(){
+  const body=$("upiProofBody");
+  if(body)body.innerHTML='<tr><td colspan="9" style="text-align:center">Loading payment proofs…</td></tr>';
+  try{
+    const {data,error}=await sb.rpc("ils_admin_upi_payment_proofs",{p_limit:250});
+    if(error)throw error;
+    upiProofRows=Array.isArray(data)?data:[];
+    renderUpiProofs();
+  }catch(e){
+    console.error("UPI proof dashboard:",e);
+    if(body)body.innerHTML='<tr><td colspan="9" style="text-align:center">Payment proofs unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';
+  }
+}
+
+function renderUpiProofs(){
+  const body=$("upiProofBody");
+  if(!body)return;
+  const filter=($("upiProofStatusFilter")?.value||"").toLowerCase();
+  const rows=upiProofRows.filter(r=>!filter||String(r.status||"").toLowerCase()===filter);
+
+  body.innerHTML=rows.length?rows.map(r=>{
+    const pending=String(r.status||"").toLowerCase()==="pending";
+    return `<tr>
+      <td><strong>${esc(r.order_number||r.order_id||"—")}</strong></td>
+      <td>${esc(r.service_name||r.service_slug||"—")}</td>
+      <td>${esc(r.currency||"INR")} ₹${Number(r.amount||0).toLocaleString("en-IN")}</td>
+      <td><strong>${esc(r.transaction_ref||"—")}</strong></td>
+      <td>${esc(r.payee_name_claimed||"—")}</td>
+      <td class="revenue-status status-${esc(String(r.status||"").toLowerCase())}">${esc(r.status||"—")}</td>
+      <td>${esc(r.submitted_at?new Date(r.submitted_at).toLocaleString("en-IN"):"—")}</td>
+      <td><button class="btnx secondary upiProofView" type="button" data-proof-path="${esc(r.screenshot_path||"")}">View</button></td>
+      <td>${pending
+        ? `<button class="btnx primary upiProofVerify" type="button" data-proof-id="${esc(r.id)}" data-decision="verified">Verify</button>
+           <button class="btnx secondary upiProofVerify" type="button" data-proof-id="${esc(r.id)}" data-decision="rejected">Reject</button>`
+        : esc(r.verification_notes||"—")
+      }</td>
+    </tr>`;
+  }).join(""):'<tr><td colspan="9" style="text-align:center">No matching payment proofs.</td></tr>';
+
+  body.querySelectorAll(".upiProofView").forEach(btn=>{
+    btn.addEventListener("click",async()=>{
+      const path=btn.dataset.proofPath;
+      if(!path)return;
+      btn.disabled=true;btn.textContent="Opening…";
+      try{
+        const {data,error}=await sb.storage.from("payment-proofs").createSignedUrl(path,300);
+        if(error||!data?.signedUrl)throw new Error(error?.message||"Unable to open screenshot.");
+        window.open(data.signedUrl,"_blank","noopener,noreferrer");
+      }catch(e){
+        msg("appMsg","Screenshot access failed: "+(e?.message||"Unknown error"),"err");
+      }finally{btn.disabled=false;btn.textContent="View";}
+    });
+  });
+
+  body.querySelectorAll(".upiProofVerify").forEach(btn=>{
+    btn.addEventListener("click",async()=>{
+      const id=btn.dataset.proofId, decision=btn.dataset.decision;
+      if(!id)return;
+      const proof=upiProofRows.find(x=>String(x.id)===String(id));
+      if(!proof)return;
+
+      if(decision==="verified"){
+        const confirmed=confirm(
+          "Verify payment for "+(proof.order_number||"this order")+" for ₹"+Number(proof.amount||0).toLocaleString("en-IN")+"?\n\nConfirm that the actual UPI receipt/account transaction was checked."
+        );
+        if(!confirmed)return;
+      }
+
+      const notes=decision==="rejected"
+        ? (prompt("Reason for rejecting this payment proof:","Screenshot/transaction could not be verified.")||"")
+        : (prompt("Optional verification note:","Actual UPI transaction checked and amount/payee matched.")||"");
+
+      btn.disabled=true;btn.textContent="Saving…";
+      try{
+        const {data,error}=await sb.rpc("ils_admin_verify_upi_payment_proof",{
+          p_proof_id:id,
+          p_decision:decision,
+          p_notes:notes
+        });
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||"Unable to update payment proof.");
+        msg("appMsg",
+          decision==="verified"
+            ? "Payment proof verified. Order access has been unlocked."
+            : "Payment proof rejected. The order remains locked.",
+          "ok"
+        );
+        await Promise.all([loadUpiProofs(),loadRevenue()]);
+      }catch(e){
+        console.error(e);
+        msg("appMsg","Payment proof update failed: "+(e?.message||"Unknown error"),"err");
+      }finally{btn.disabled=false;btn.textContent=decision==="verified"?"Verify":"Reject";}
+    });
+  });
+}
+
+let revenueRows=[];
+async function loadRevenue(){
+  const body=$("revenueBody");
+  if(body)body.innerHTML='<tr><td colspan="8" style="text-align:center">Loading revenue…</td></tr>';
+  try{
+    const {data,error}=await sb.rpc("ils_admin_revenue_dashboard",{p_limit:250});
+    if(error)throw error;
+    const st=data?.stats||{};
+    revenueRows=Array.isArray(data?.orders)?data.orders:[];
+    $("revOrdersTotal").textContent=st.orders_total??0;
+    $("revOrdersPending").textContent=st.orders_pending??0;
+    $("revOrdersPaid").textContent=st.orders_paid??0;
+    $("revOrdersFailed").textContent=st.orders_failed??0;
+    $("revRevenuePaid").textContent="₹"+Number(st.revenue_paid||0).toLocaleString("en-IN");
+    renderRevenue();
+  }catch(e){
+    console.error("Revenue dashboard:",e);
+    if(body)body.innerHTML='<tr><td colspan="8" style="text-align:center">Revenue unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';
+  }
+}
+function renderRevenue(){
+  const body=$("revenueBody");if(!body)return;
+  const q=($("revenueSearch")?.value||"").toLowerCase().trim();
+  const st=($("revenueStatusFilter")?.value||"").toLowerCase();
+  const ss=($("revenueServiceStatusFilter")?.value||"").toLowerCase();
+  const rows=revenueRows.filter(r=>{
+    const os=String(r.status||"").toLowerCase(),vs=String(r.service_status||"").toLowerCase();
+    return (!st||os===st)&&(!ss||vs===ss)&&(!q||[r.order_number,r.customer_name,r.customer_mobile,r.details?.name,r.service_name,r.service_slug,r.source_tool_name,r.source_tool_slug,r.status,r.service_status].filter(Boolean).join(" ").toLowerCase().includes(q));
+  });
+  body.innerHTML=rows.length?rows.map(r=>{
+    const current=String(r.service_status||"pending").toLowerCase();
+    const options=["pending","paid","assigned","in_progress","completed","cancelled","refunded"];
+    const opts=options.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v==="in_progress"?"In Progress":v.replace("_"," ").replace(/\b\w/g,c=>c.toUpperCase())}</option>`).join("");
+    return `<tr>
+      <td><strong>${esc(r.order_number||r.id||"—")}</strong></td>
+      <td><strong>${esc(r.customer_name||r.details?.name||"—")}</strong>${r.customer_mobile?`<div class="queue-note">${esc(r.customer_mobile)}</div>`:""}</td>
+      <td>${esc(r.service_name||r.service_slug||"—")}</td>
+      <td>${esc(r.currency||"INR")} ₹${Number(r.total||0).toLocaleString("en-IN")}</td>
+      <td class="revenue-status status-${esc(String(r.status||"").toLowerCase())}">${esc(r.status||"—")}</td>
+      <td><select class="revenueServiceStatus" data-service-request-id="${esc(r.service_request_id||"")}" ${r.service_request_id?"":"disabled"}>${opts}</select></td>
+      <td>${esc(r.source_tool_name||r.source_tool_slug||"Direct")}</td>
+      <td>${esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")}</td>
+      <td><div class="smart-action"><button class="btnx secondary smart-action-btn" type="button" data-smart-toggle aria-expanded="false">⋮ Actions</button><div class="smart-action-menu">${r.service_request_id?`<button class="revenueSaveStatus" type="button" data-service-request-id="${esc(r.service_request_id)}">Save status</button>`:""}<button class="danger" type="button" data-delete-order="${esc(r.id||"")}">Delete order</button></div></div></td>
+    </tr>`;
+  }).join(""):'<tr><td colspan="8" style="text-align:center">No matching orders.</td></tr>';
+
+  body.querySelectorAll(".revenueSaveStatus").forEach(btn=>{
+    btn.addEventListener("click",async()=>{
+      const id=btn.dataset.serviceRequestId;
+      const sel=body.querySelector(`.revenueServiceStatus[data-service-request-id="${CSS.escape(id)}"]`);
+      if(!id||!sel)return;
+      btn.disabled=true;btn.textContent="Saving…";
+      try{
+        const {data,error}=await sb.rpc("ils_admin_update_service_status",{p_service_request_id:id,p_status:sel.value});
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||"Unable to update service status.");
+        msg("appMsg","Service status updated.","ok");
+        await loadRevenue();
+      }catch(e){
+        console.error(e);
+        msg("appMsg","Service status update failed: "+(e?.message||"Unknown error"),"err");
+      }finally{btn.disabled=false;btn.textContent="Save";}
+    });
+  });
+}
+let actionQueueRows=[];
+function queueStatusLabel(v){return String(v||"").replace(/_/g," ").replace(/\b\w/g,m=>m.toUpperCase());}
+async function loadActionAssistanceQueue(){
+ const body=$("actionQueueBody");if(body)body.innerHTML='<tr><td colspan="8" style="text-align:center">Loading associate queue…</td></tr>';
+ try{const {data,error}=await sb.from("ils_action_assistance_queue").select("id,order_id,service_request_id,user_id,problem,official_route,official_url,customer_name,customer_mobile,customer_state,customer_city,status,assigned_to,assigned_at,customer_visible_note,internal_note,qa_checked_at,qa_checked_by,completed_at,created_at,updated_at").order("created_at",{ascending:false}).limit(250);if(error)throw error;actionQueueRows=Array.isArray(data)?data:[];renderActionAssistanceQueue();}
+ catch(e){console.error("Action assistance queue:",e);if(body)body.innerHTML='<tr><td colspan="8" style="text-align:center">Queue unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';}}
+function renderActionAssistanceQueue(){
+ const body=$("actionQueueBody");if(!body)return;const q=($("actionQueueSearch")?.value||"").toLowerCase().trim();const st=($("actionQueueStatusFilter")?.value||"").toLowerCase();
+ const rows=actionQueueRows.filter(r=>{const hay=[r.order_id,r.service_request_id,r.customer_name,r.customer_mobile,r.customer_state,r.customer_city,r.problem,r.official_route,r.status].filter(Boolean).join(" ").toLowerCase();return(!st||String(r.status||"").toLowerCase()===st)&&(!q||hay.includes(q));});
+ body.innerHTML=rows.length?rows.map(r=>{
+  const status=String(r.status||"pending_assignment");const assigned=r.assigned_to?'<span>'+esc(r.assigned_to===currentAdminUserId?"Me":"Assigned")+'</span><div class="queue-note">'+esc(r.assigned_at?new Date(r.assigned_at).toLocaleString("en-IN"):"")+'</div>':"—";const actions=[];
+  if((status==="pending_assignment"||status==="assigned")&&r.assigned_to!==currentAdminUserId)actions.push('<button class="btnx secondary queueAction" data-id="'+esc(r.id)+'" data-action="assign">Assign to me</button>');
+  if((status==="assigned"||status==="pending_assignment")&&r.assigned_to===currentAdminUserId)actions.push('<button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="start">Start work</button>');
+  if(status==="in_progress")actions.push('<button class="btnx secondary queueAction" data-id="'+esc(r.id)+'" data-action="hold">QA hold</button><button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="pass">QA pass</button>');
+  if(status==="qa_hold")actions.push('<button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="resume">Resume</button><button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="pass">QA pass</button>');
+  if(status==="qa_pass")actions.push('<button class="btnx primary queueAction" data-id="'+esc(r.id)+'" data-action="complete">Complete</button>');
+  if(!["completed","cancelled"].includes(status))actions.push('<button class="btnx secondary queueAction" data-id="'+esc(r.id)+'" data-action="note">Note</button>');
+  return '<tr><td><strong>'+esc(r.order_id||"—")+'</strong><div class="queue-note">Request '+esc(r.service_request_id||"—")+'</div></td><td>'+esc(r.customer_name||"—")+'<div class="queue-note">'+esc(r.customer_mobile||"")+' · '+esc([r.customer_city,r.customer_state].filter(Boolean).join(", "))+'</div></td><td>'+esc(r.problem||"—")+'<div class="queue-note">'+esc(r.official_route||"—")+(r.official_url?' · <a href="'+esc(r.official_url)+'" target="_blank" rel="noopener">Official route</a>':"")+'</div></td><td class="queue-status">'+esc(queueStatusLabel(status))+'</td><td>'+assigned+'</td><td>'+esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")+'</td><td>'+esc(r.customer_visible_note||"—")+(r.internal_note?'<div class="queue-note">Internal: '+esc(r.internal_note)+'</div>':"")+'</td><td class="queue-actions">'+(actions.join("")||"—")+'</td></tr>';
+ }).join(""):'<tr><td colspan="8" style="text-align:center">No associate requests match the filter.</td></tr>';
+ body.querySelectorAll(".queueAction").forEach(btn=>btn.addEventListener("click",()=>handleActionQueueAction(btn.dataset.id,btn.dataset.action)));
+}
+async function handleActionQueueAction(id,action){
+ const row=actionQueueRows.find(x=>String(x.id)===String(id));if(!row)return;let patch={};
+ if(action==="assign")patch={status:"assigned",assigned_to:currentAdminUserId,assigned_at:new Date().toISOString()};
+ else if(action==="start"){if(row.assigned_to!==currentAdminUserId){msg("actionQueueMsg","Assign this request to yourself before starting work.","err");return;}patch={status:"in_progress"};}
+ else if(action==="hold")patch={status:"qa_hold",qa_checked_at:new Date().toISOString(),qa_checked_by:currentAdminUserId};
+ else if(action==="pass")patch={status:"qa_pass",qa_checked_at:new Date().toISOString(),qa_checked_by:currentAdminUserId};
+ else if(action==="resume")patch={status:"in_progress"};
+ else if(action==="complete"){if(row.status!=="qa_pass"){msg("actionQueueMsg","Completion requires QA pass first.","err");return;}patch={status:"completed",completed_at:new Date().toISOString()};}
+ else if(action==="note"){const note=prompt("Customer-visible note:",row.customer_visible_note||"");if(note===null)return;const internal=prompt("Internal note (optional):",row.internal_note||"");if(internal===null)return;patch={customer_visible_note:note.trim(),internal_note:internal.trim()};}
+ else return;
+ try{const {error}=await sb.from("ils_action_assistance_queue").update(patch).eq("id",id);if(error)throw error;msg("actionQueueMsg",action==="complete"?"Associate request completed.":"Associate queue updated.","ok");await loadActionAssistanceQueue();}
+ catch(e){console.error("Action queue update:",e);msg("actionQueueMsg","Queue update failed: "+(e?.message||"Unknown error"),"err");}}
+let pricingServiceRows=[], professionalFeeRows=[];
+function clearProfessionalFeeForm(){["feeCode","feeName","feeAmount","feeNotes"].forEach(id=>$(id).value="");$("feeProfessionalType").value="advocate";$("feeBillingType").value="one_time";$("professionalFeeForm").dataset.editId="";$("saveProfessionalFeeBtn").textContent="Save Fee";}
+function renderPricingRows(){
+ const body=$("pricingBody");if(!body)return;const q=($("pricingSearch")?.value||"").toLowerCase().trim();
+ const rows=pricingServiceRows.filter(r=>!q||[r.name,r.slug,r.category].filter(Boolean).join(" ").toLowerCase().includes(q));
+ body.innerHTML=rows.length?rows.map(r=>{const p=Number(r.price?.price||0);return '<tr><td><strong>'+esc(r.name||"—")+'</strong></td><td>'+esc(r.slug||"—")+'</td><td>'+esc(r.category||"—")+'</td><td>₹'+p.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td><input class="pricingNewValue" data-service-id="'+esc(r.id)+'" type="number" min="0" step="0.01" value="'+esc(p)+'"></td><td><button class="btnx primary pricingSaveBtn" type="button" data-service-id="'+esc(r.id)+'">Save</button></td></tr>';}).join(""):'<tr><td colspan="6" style="text-align:center">No services/tools found.</td></tr>';
+ body.querySelectorAll(".pricingSaveBtn").forEach(btn=>btn.addEventListener("click",async()=>{const id=btn.dataset.serviceId,row=pricingServiceRows.find(x=>String(x.id)===String(id)),input=body.querySelector('.pricingNewValue[data-service-id="'+CSS.escape(id)+'"]'),amount=Number(input?.value),old=Number(row?.price?.price||0);if(!row||!Number.isFinite(amount)||amount<0){msg("pricingMsg","Enter a valid non-negative price.","err");return;}if(amount===old){msg("pricingMsg","No price change detected.","err");return;}if(!confirm("Change "+(row.name||row.slug)+" from ₹"+old.toLocaleString("en-IN")+" to ₹"+amount.toLocaleString("en-IN")+"?\n\nExisting paid orders will not be repriced."))return;btn.disabled=true;btn.textContent="Saving…";try{const result=row.price?.id?await sb.from("service_prices").update({price:amount,currency:"INR",is_active:true}).eq("id",row.price.id):await sb.from("service_prices").insert({service_id:row.id,price:amount,currency:"INR",billing_type:"one_time",is_active:true});if(result.error)throw result.error;msg("pricingMsg","Service/tool price updated. New orders will use the new price.","ok");await loadPricingControls();}catch(e){console.error(e);msg("pricingMsg","Price update failed: "+(e?.message||"Administrator access required."),"err");}finally{btn.disabled=false;btn.textContent="Save";}}));
+}
+async function loadPricingControls(){
+ const pb=$("pricingBody"),fb=$("professionalFeeBody"),ab=$("pricingAuditBody");if(pb)pb.innerHTML='<tr><td colspan="6" style="text-align:center">Loading pricing…</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading fees…</td></tr>';
+ try{const [a,b,d,e]=await Promise.all([sb.from("services").select("id,slug,name,category,is_active").order("name"),sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false}),sb.from("professional_fee_catalog").select("id,professional_type,fee_code,fee_name,amount,currency,billing_type,is_active,notes,updated_at").order("professional_type").order("fee_name"),sb.from("ils_admin_pricing_audit").select("entity_type,entity_id,old_value,new_value,changed_at").order("changed_at",{ascending:false}).limit(20)]);for(const x of [a,b,d,e])if(x.error)throw x.error;const latest={};(b.data||[]).forEach(p=>{if(!latest[p.service_id])latest[p.service_id]=p;});pricingServiceRows=(a.data||[]).map(s=>({...s,price:latest[s.id]||null}));professionalFeeRows=d.data||[];renderPricingRows();renderProfessionalFees();ab.innerHTML=(e.data||[]).length?(e.data||[]).map(r=>'<tr><td>'+esc(r.entity_type)+'</td><td>'+esc(r.entity_id)+'</td><td>'+esc(String(r.old_value?.price??r.old_value?.amount??"—"))+'</td><td>'+esc(String(r.new_value?.price??r.new_value?.amount??"—"))+'</td><td>'+esc(r.changed_at?new Date(r.changed_at).toLocaleString("en-IN"):"—")+'</td></tr>').join(""):'<tr><td colspan="5" style="text-align:center">No pricing changes recorded yet.</td></tr>';}catch(e){console.error("Pricing controls:",e);if(pb)pb.innerHTML='<tr><td colspan="6" style="text-align:center">Pricing unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Fees unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';}}
+function renderProfessionalFees(){
+ const body=$("professionalFeeBody");if(!body)return;body.innerHTML=professionalFeeRows.length?professionalFeeRows.map(r=>'<tr><td>'+esc(r.professional_type)+'</td><td><strong>'+esc(r.fee_name)+'</strong><div class="queue-note">'+esc(r.fee_code)+'</div></td><td>₹'+Number(r.amount||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>'+esc(r.billing_type)+'</td><td>'+esc(r.is_active?"Active":"Inactive")+'</td><td>'+esc(r.notes||"")+'</td><td>'+esc(r.updated_at?new Date(r.updated_at).toLocaleString("en-IN"):"—")+'</td><td><button class="btnx secondary feeEditBtn" type="button" data-id="'+esc(r.id)+'">Edit</button> <button class="btnx secondary feeToggleBtn" type="button" data-id="'+esc(r.id)+'">'+(r.is_active?"Deactivate":"Activate")+'</button></td></tr>').join(""):'<tr><td colspan="8" style="text-align:center">No professional/associate fees configured. Admin can add them above.</td></tr>';
+ body.querySelectorAll(".feeEditBtn").forEach(btn=>btn.addEventListener("click",()=>{const r=professionalFeeRows.find(x=>String(x.id)===String(btn.dataset.id));if(!r)return;$("feeProfessionalType").value=r.professional_type;$("feeCode").value=r.fee_code;$("feeName").value=r.fee_name;$("feeAmount").value=r.amount;$("feeBillingType").value=r.billing_type;$("feeNotes").value=r.notes||"";$("professionalFeeForm").dataset.editId=r.id;$("saveProfessionalFeeBtn").textContent="Update Fee";window.scrollTo({top:$("professionalFeeForm").getBoundingClientRect().top+window.scrollY-80,behavior:"smooth"});}));
+ body.querySelectorAll(".feeToggleBtn").forEach(btn=>btn.addEventListener("click",async()=>{const r=professionalFeeRows.find(x=>String(x.id)===String(btn.dataset.id));if(!r)return;const next=!r.is_active;if(!confirm((next?"Activate ":"Deactivate ")+r.fee_name+"?"))return;const {error}=await sb.from("professional_fee_catalog").update({is_active:next}).eq("id",r.id);if(error){msg("pricingMsg","Fee status update failed: "+error.message,"err");return;}msg("pricingMsg","Professional fee status updated.","ok");await loadPricingControls();}));
+}
+async function saveProfessionalFee(e){e.preventDefault();const type=$("feeProfessionalType").value,code=$("feeCode").value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,"-"),name=$("feeName").value.trim(),amount=Number($("feeAmount").value),billing=$("feeBillingType").value,notes=$("feeNotes").value.trim(),editId=$("professionalFeeForm").dataset.editId||"";if(!code||!name||!Number.isFinite(amount)||amount<0){msg("pricingMsg","Professional type, fee code, fee name and a valid non-negative amount are required.","err");return;}if(!confirm((editId?"Update":"Create")+" fee '"+name+"' at ₹"+amount.toLocaleString("en-IN")+"?"))return;const btn=$("saveProfessionalFeeBtn");btn.disabled=true;try{const payload={professional_type:type,fee_code:code,fee_name:name,amount,currency:"INR",billing_type:billing,is_active:true,notes};const result=editId?await sb.from("professional_fee_catalog").update(payload).eq("id",editId):await sb.from("professional_fee_catalog").insert(payload);if(result.error)throw result.error;msg("pricingMsg","Professional/associate fee saved. Configuration is now admin-controlled.","ok");clearProfessionalFeeForm();await loadPricingControls();}catch(e){console.error(e);msg("pricingMsg","Fee save failed: "+(e?.message||"Administrator access required."),"err");}finally{btn.disabled=false;}}
+async function loadGovRouteVerification(){
+ const body=$("govRouteVerificationBody");if(!body)return;
+ body.innerHTML='<tr><td colspan="7" style="text-align:center">Loading…</td></tr>';
+ try{
+  const {data,error}=await sb.from("ils_government_route_catalog").select("service_code,title,official_url,verification_status,last_http_status,last_final_url,last_redirect_count,verification_error").eq("active",true).order("service_code");
+  if(error)throw error;
+  body.innerHTML=(data||[]).map(r=>'<tr><td>'+esc(r.service_code)+'</td><td><a href="'+esc(r.official_url||"")+'" target="_blank" rel="noopener">'+esc(r.title||"—")+'</a></td><td>'+esc(r.verification_status||"—")+'</td><td>'+esc(r.last_http_status??"—")+'</td><td style="max-width:360px;word-break:break-all">'+esc(r.last_final_url||"—")+'</td><td>'+esc(r.last_redirect_count??"—")+'</td><td>'+esc(r.verification_error||"—")+'</td></tr>').join("")||'<tr><td colspan="7" style="text-align:center">No active routes.</td></tr>';
+ }catch(e){body.innerHTML='<tr><td colspan="7" style="text-align:center">Unable to load route state: '+esc(e?.message||"Unknown error")+'</td></tr>';}
+}
+async function verifyGovRoutes(){
+ const btn=$("verifyGovRoutesBtn");if(btn)btn.disabled=true;
+ msg("govRouteVerificationMsg","Running authenticated official-route verification…","");
+ try{
+  const {data,error}=await sb.functions.invoke("ils-government-route-verifier",{body:{service_codes:[]},headers:{}});
+  if(error)throw error;
+  const passed=(data?.results||[]).filter(x=>x.result==="PASS").length;
+  const held=(data?.results||[]).filter(x=>x.result!=="PASS").length;
+  msg("govRouteVerificationMsg","Verification completed: "+passed+" PASS, "+held+" HOLD.","ok");
+  await loadGovRouteVerification();
+ }catch(e){console.error("Government route verification:",e);msg("govRouteVerificationMsg","Verification failed or was blocked: "+(e?.message||"Unknown error"),"err");}
+ finally{if(btn)btn.disabled=false;}
+}
+let clientDeletionRows=[];
+
+async function loadClientDeletionRows(){
+  const body=$("clientDeletionBody"); if(!body)return;
+  body.innerHTML='<tr><td colspan="6" style="text-align:center">Loading clients…</td></tr>';
+  try{
+    const {data,error}=await sb.from("client_requirements")
+      .select("id,client_name,mobile,state,district_city,status,created_at")
+      .order("created_at",{ascending:false}).limit(250);
+    if(error)throw error;
+    clientDeletionRows=Array.isArray(data)?data:[];
+    renderClientDeletionRows();
+  }catch(e){
+    console.error("Client deletion list:",e);
+    body.innerHTML='<tr><td colspan="6" style="text-align:center">Unable to load clients.</td></tr>';
+    msg("deletionMsg","Client list unavailable: "+(e?.message||"Administrator access required."),"err");
+  }
+}
+
+function renderClientDeletionRows(){
+  const body=$("clientDeletionBody");if(!body)return;
+  body.innerHTML=clientDeletionRows.length?clientDeletionRows.map(r=>'<tr>'+
+    '<td><strong>'+esc(r.client_name||"—")+'</strong><br><small>ID '+esc(r.id)+'</small></td>'+
+    '<td>'+esc(r.mobile||"—")+'</td>'+
+    '<td>'+esc([r.district_city,r.state].filter(Boolean).join(", ")||"—")+'</td>'+
+    '<td>'+esc(r.status||"New")+'</td>'+
+    '<td>'+esc(r.created_at?new Date(r.created_at).toLocaleString("en-IN"):"—")+'</td>'+
+    '<td class="actions-cell"><div class="smart-action"><button class="btnx secondary smart-action-btn" type="button" data-smart-toggle aria-expanded="false">⋮ Actions</button><div class="smart-action-menu"><button type="button" data-client-manage="'+esc(r.id)+'">Manage / Assign</button><button class="danger" type="button" data-delete-client="'+esc(r.id)+'">Delete complete client data</button></div></div></td>'+
+    '</tr>').join(""):'<tr><td colspan="6" style="text-align:center">No clients found.</td></tr>';
+}
+
+async function adminPermanentDelete(entityType,entityId){
+  const labels={advocate:"advocate profile",professional:"professional profile",client:"client and all related data",order:"order and related payment data"};
+  const label=labels[entityType]||entityType;
+  if(!entityId)return;
+  if(!confirm("WARNING: This will permanently delete the "+label+". This cannot be undone. Continue?"))return;
+  const typed=prompt('Type exactly DELETE PERMANENTLY to confirm permanent deletion of this '+label+'.');
+  if(typed!=="DELETE PERMANENTLY"){
+    msg("deletionMsg","Deletion cancelled. Exact confirmation was not entered.","");
+    return;
+  }
+  msg("deletionMsg","Deleting "+label+" safely…","");
+  try{
+    const {data,error}=await sb.functions.invoke("admin-delete-data",{body:{entity_type:entityType,entity_id:String(entityId),confirm:"DELETE PERMANENTLY"}});
+    if(error)throw error;
+    if(!data?.ok)throw new Error(data?.message||"Deletion failed.");
+    const cleanup=[];
+    if(data.auth_deleted)cleanup.push("login removed");
+    if(data.auth_delete_skipped)cleanup.push("login retained for safety");
+    const storageFailures=(data.storage||[]).filter(x=>!x.ok);
+    if(storageFailures.length)cleanup.push(storageFailures.length+" stored file cleanup(s) need review");
+    msg("deletionMsg",data.message+(cleanup.length?" ("+cleanup.join("; ")+")":""),"ok");
+    await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows()]);
+  }catch(e){
+    console.error("Permanent deletion:",e);
+    msg("deletionMsg","Deletion failed: "+(e?.message||"Unknown error"),"err");
+  }
+}
+
+async function openApp(){
+  const check=await isAdmin();
+  if(!check.ok){
+    $("loginView").classList.remove("hidden");
+    $("appView").classList.add("hidden");
+    msg("loginMsg",check.reason,"err");
+    return;
+  }
+
+  $("loginView").classList.add("hidden");
+  $("appView").classList.remove("hidden");
+  currentAdminUserId=check.session.user.id;
+  $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
+  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);
+}
+
+$("loginForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  msg("loginMsg","Signing in…","");
+  const {error}=await sb.auth.signInWithPassword({
+    email:$("email").value.trim(),
+    password:$("password").value
+  });
+  if(error){
+    msg("loginMsg",error.message,"err");
+    return;
+  }
+  await openApp();
+});
+
+$("logoutBtn").addEventListener("click",async()=>{
+  await sb.auth.signOut();
+  location.href="admin.html";
+});
+$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
+
+$("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
+function positionSmartMenu(toggle,menu){
+  if(!toggle||!menu)return;
+  const rect=toggle.getBoundingClientRect();
+  const gap=6, pad=10;
+  const menuWidth=Math.min(Math.max(menu.offsetWidth||205,190),window.innerWidth-pad*2);
+  const menuHeight=menu.offsetHeight||120;
+  let left=rect.right-menuWidth;
+  if(left<pad)left=pad;
+  if(left+menuWidth>window.innerWidth-pad)left=window.innerWidth-pad-menuWidth;
+  let top=rect.bottom+gap;
+  if(top+menuHeight>window.innerHeight-pad)top=rect.top-menuHeight-gap;
+  if(top<pad)top=pad;
+  menu.style.left=Math.round(left)+"px";
+  menu.style.top=Math.round(top)+"px";
+}
+document.addEventListener("click",e=>{
+  const toggle=e.target.closest("[data-smart-toggle]");
+  if(toggle){
+    document.querySelectorAll(".smart-action-menu.open").forEach(m=>{if(m!==toggle.nextElementSibling){m.classList.remove("open");m.style.left="";m.style.top="";}});
+    const menu=toggle.nextElementSibling;
+    if(menu){
+      const open=menu.classList.toggle("open");
+      toggle.setAttribute("aria-expanded",String(open));
+      if(open){
+        requestAnimationFrame(()=>positionSmartMenu(toggle,menu));
+      }else{
+        menu.style.left="";menu.style.top="";
+      }
+    }
+    return;
+  }
+  if(!e.target.closest(".smart-action"))document.querySelectorAll(".smart-action-menu.open").forEach(m=>m.classList.remove("open"));
+  const p=e.target.closest("[data-delete-profile]");
+  if(p)adminPermanentDelete(p.dataset.deleteProfile,p.dataset.deleteId);
+  const o=e.target.closest("[data-delete-order]");
+  if(o)adminPermanentDelete("order",o.dataset.deleteOrder);
+  const d=e.target.closest("[data-delete-client]");
+  if(d)adminPermanentDelete("client",d.dataset.deleteClient);
+  const m=e.target.closest("[data-client-manage]");
+  if(m)openLeadManager(m.dataset.clientManage);
+});
+$("adminAdvocateSearch").addEventListener("input",renderAdvocateRows);
+$("adminAdvocateStatus").addEventListener("change",renderAdvocateRows);
+$("closeAdvocateModal").addEventListener("click",closeAdvocate);
+$("advocateModal").addEventListener("click",e=>{if(e.target===$("advocateModal"))closeAdvocate()});
+$("saveAdvocateProfileBtn").addEventListener("click",saveAdvocateProfile);
+$("saveAdvocateNotesBtn").addEventListener("click",saveAdvocateNotes);
+$("approveAdvocateBtn").addEventListener("click",()=>setAdvocateVerification("Approved"));
+$("rejectAdvocateBtn").addEventListener("click",()=>setAdvocateVerification("Rejected"));
+$("createAdvocateLoginBtn").addEventListener("click",createAdvocateLogin);
+
+$("loadProfessionalsBtn").addEventListener("click",loadProfessionals);
+$("adminProfessionalSearch").addEventListener("input",()=>loadProfessionals());
+$("adminProfessionalStatus").addEventListener("change",()=>loadProfessionals());
+$("loadLeadsBtn").addEventListener("click",loadLeads);
+$("leadSearch").addEventListener("input",()=>loadLeads());
+$("leadSearch").addEventListener("keydown",e=>{if(e.key==="Enter")loadLeads()});
+sb.auth.onAuthStateChange(()=>{});
+
+openApp();
+
+$("closeLeadModal").addEventListener("click",closeLeadManager);
+$("closeLeadManagerBtn").addEventListener("click",closeLeadManager);
+$("saveLeadManagerBtn").addEventListener("click",saveLeadManager);
+$("generateClientAccessBtn").addEventListener("click",generateClientAccess);
+$("copyClientAccessBtn").addEventListener("click",copyClientAccessLink);
+$("manageRelease").addEventListener("change",()=>$("manageReleaseStatus").textContent=$("manageRelease").checked?"Contact is RELEASED for this client.":"Contact is currently LOCKED.");
+$("leadModal").addEventListener("click",e=>{if(e.target.id==="leadModal")closeLeadManager();});
+$("sendAdminChatBtn").addEventListener("click",sendAdminClientMessage);
+$("refreshAdminChatBtn").addEventListener("click",()=>loadAdminClientCommunication($("manageLeadId").value));
+$("addAdminProgressBtn").addEventListener("click",addAdminWorkProgress);
+$("refreshRevenueBtn").addEventListener("click",loadRevenue);
+$("refreshPricingBtn").addEventListener("click",loadPricingControls);
+$("pricingSearch").addEventListener("input",renderPricingRows);
+$("professionalFeeForm").addEventListener("submit",saveProfessionalFee);
+$("clearProfessionalFeeBtn").addEventListener("click",clearProfessionalFeeForm);
+$("refreshActionQueueBtn").addEventListener("click",loadActionAssistanceQueue);
+$("verifyGovRoutesBtn").addEventListener("click",verifyGovRoutes);
+$("refreshGovRoutesBtn").addEventListener("click",loadGovRouteVerification);
+$("actionQueueSearch").addEventListener("input",renderActionAssistanceQueue);
+$("actionQueueStatusFilter").addEventListener("change",renderActionAssistanceQueue);
+$("refreshUpiProofsBtn").addEventListener("click",loadUpiProofs);
+$("upiProofStatusFilter").addEventListener("change",renderUpiProofs);
+$("revenueSearch").addEventListener("input",renderRevenue);
+$("revenueStatusFilter").addEventListener("change",renderRevenue);
+$("revenueServiceStatusFilter").addEventListener("change",renderRevenue);
+window.addEventListener("resize",()=>document.querySelectorAll(".smart-action-menu.open").forEach(m=>m.classList.remove("open")));
+window.addEventListener("scroll",()=>document.querySelectorAll(".smart-action-menu.open").forEach(m=>m.classList.remove("open")),true);
+
+/* Mobile admin navigation: self-contained binding so the admin page does not
+   depend on the shared ILS runtime merely to open the hamburger menu. */
+(function bindAdminMobileMenu(){
+  function bind(){
+    const buttons=document.querySelectorAll("[data-menu]");
+    const nav=document.querySelector(".navlinks");
+    if(!buttons.length||!nav)return;
+    buttons.forEach(button=>{
+      if(button.dataset.adminMenuBound==="1")return;
+      button.dataset.adminMenuBound="1";
+      button.setAttribute("aria-expanded","false");
+      button.addEventListener("click",event=>{
+        event.preventDefault();
+        event.stopPropagation();
+        const open=nav.classList.toggle("open");
+        button.setAttribute("aria-expanded",String(open));
+      });
+    });
+    nav.querySelectorAll("a").forEach(link=>{
+      if(link.dataset.adminNavBound==="1")return;
+      link.dataset.adminNavBound="1";
+      link.addEventListener("click",()=>{
+        nav.classList.remove("open");
+        buttons.forEach(button=>button.setAttribute("aria-expanded","false"));
+      });
+    });
+    document.addEventListener("click",event=>{
+      if(!event.target.closest(".navbar")){
+        nav.classList.remove("open");
+        buttons.forEach(button=>button.setAttribute("aria-expanded","false"));
+      }
+    },{passive:true});
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind,{once:true});
+  else bind();
+})();
+
+
+/* ILS Smart Workspace navigation — presentation only. */
+(function bindAdminSmartWorkspace(){
+ const tabs=[...document.querySelectorAll(".admin-workspace-tab[data-admin-workspace]")],panels=[...document.querySelectorAll(".admin-workspace-panel[data-admin-workspace]")],note=document.getElementById("adminWorkspaceNote"),allBtn=document.getElementById("adminWorkspaceAllBtn"),topBtn=document.getElementById("adminWorkspaceTopBtn");
+ const labels={overview:"Overview — key dashboard and order snapshot.",clients:"Clients & CRM — requirements, assignments, client access, chat and progress.",professionals:"Professionals — advocate verification plus CA/CS/HR/GST/Assistant review.",payments:"Orders & Payments — UPI proof verification and payment controls.",operations:"Operations — official-route verification and action-assistance queue.",pricing:"Pricing — service/tool prices, professional fee matrix and pricing audit.",security:"Security — permanent deletion and high-risk verification guidance."};
+ function setWorkspace(name,scroll){tabs.forEach(t=>{const a=t.dataset.adminWorkspace===name;t.classList.toggle("active",a);t.setAttribute("aria-selected",String(a));});panels.forEach(p=>p.classList.toggle("workspace-hidden",p.dataset.adminWorkspace!==name));if(note)note.textContent=labels[name]||"Select a workspace to continue.";if(history.replaceState){try{history.replaceState(null,"","#admin-"+name)}catch(_e){}}if(scroll){const first=panels.find(p=>p.dataset.adminWorkspace===name);if(first)requestAnimationFrame(()=>first.scrollIntoView({behavior:"smooth",block:"start"}));}}
+ function showAll(){tabs.forEach(t=>{t.classList.remove("active");t.setAttribute("aria-selected","false")});panels.forEach(p=>p.classList.remove("workspace-hidden"));if(note)note.textContent="All admin workspaces are visible. Use the tabs again for the compact view."}
+ tabs.forEach(t=>t.addEventListener("click",()=>setWorkspace(t.dataset.adminWorkspace,true)));allBtn?.addEventListener("click",showAll);topBtn?.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));const hash=(location.hash||"").replace("#admin-","");setWorkspace(labels[hash]?hash:"overview",false);
+})();
+</script>
+</body>
+</html>

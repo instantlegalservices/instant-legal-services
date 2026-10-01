@@ -1,0 +1,47 @@
+name: Generate Dynamic SEO Pages
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/generate-seo-pages.js"
+      - ".github/workflows/generate-seo-pages.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  generate-seo-pages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate SEO pages
+        env:
+          ADVOCATES_API_URL: ${{ secrets.ADVOCATES_API_URL }}
+          ADVOCATES_API_KEY: ${{ secrets.ADVOCATES_API_KEY }}
+        run: node scripts/generate-seo-pages.js
+
+      - name: Commit generated SEO pages
+        run: |
+          git config user.name "Instant Legal Services SEO Bot"
+          git config user.email "seo-bot@instantlegalservices.in"
+
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "No SEO changes to commit."
+          else
+            git commit -m "Auto-generate dynamic SEO pages"
+            git push
+          fi

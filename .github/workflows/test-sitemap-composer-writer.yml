@@ -1,0 +1,36 @@
+name: Test Sitemap Composer Writer
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - v9-final-test
+    paths:
+      - "scripts/sitemap-composer-writer.js"
+      - "scripts/test-sitemap-composer-writer.js"
+      - "scripts/sitemap-composer.js"
+      - "scripts/location-registry-feed.js"
+      - "scripts/location-sitemap.js"
+      - ".github/workflows/test-sitemap-composer-writer.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-sitemap-composer-writer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Node.js version
+        run: node --version
+
+      - name: Run adversarial composer writer tests
+        run: node scripts/test-sitemap-composer-writer.js

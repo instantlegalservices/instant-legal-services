@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ILS TEST — Customer Auth E2E</title>
+<style>
+body{margin:0;background:#08101f;color:#eef3ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;display:grid;place-items:center;padding:20px}
+.card{width:min(620px,100%);background:#121b31;border:1px solid #263452;border-radius:22px;padding:28px}
+h1{margin:0 0 8px}.sub{color:#aeb9d1;line-height:1.45;margin-bottom:18px}
+.warn{color:#ffd98a;background:#302611;border:1px solid #6b5424;padding:12px;border-radius:12px;margin-bottom:18px}
+label{display:block;margin:12px 0 6px}input,select{width:100%;box-sizing:border-box;padding:13px;border-radius:12px;border:1px solid #3b4968;background:#0b1325;color:#fff;font-size:16px}
+button{width:100%;padding:14px;border:0;border-radius:12px;background:#2f6df6;color:#fff;font-size:16px;font-weight:700;margin-top:14px}button:disabled{opacity:.55}
+#status{margin-top:16px;padding:14px;border-radius:12px;background:#070c17;white-space:pre-wrap;line-height:1.45;overflow:auto}.ok{border:1px solid #2d8a57}.err{border:1px solid #9b3d45}
+.small{font-size:12px;color:#8e9ab5;margin-top:10px}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>ILS — TEST Customer Auth E2E</h1>
+<div class="sub">TEST ONLY · genuine Auth session → canonical customer onboarding → service request bridge</div>
+<div class="warn">Use only a TEST account. No production URL, service-role key, JWT secret, password, or customer data is embedded or displayed.</div>
+<label for="email">TEST customer email</label>
+<input id="email" type="email" autocomplete="username" required>
+<label for="password">TEST customer password</label>
+<input id="password" type="password" autocomplete="current-password" required>
+<label for="service">Active TEST service slug</label>
+<input id="service" value="legal_assistance" required>
+<label for="token">Complaint token</label>
+<input id="token" value="TEST-CUSTOMER-E2E-20260927-1136" required>
+<label for="summary">Synthetic test complaint summary</label>
+<input id="summary" value="TEST-only customer onboarding verification" required>
+<button id="run" type="button">Sign in and run canonical onboarding</button>
+<div id="status">Ready. Enter TEST Auth credentials.</div>
+<div class="small">This page is intentionally not linked from the public website.</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const BASE="https://bgsbuepolooybdqrzmoa.supabase.co";
+const KEY="sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2";
+const sb=supabase.createClient(BASE,KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+const $=id=>document.getElementById(id);
+function show(v,ok=false){$("status").textContent=typeof v==="string"?v:JSON.stringify(v,null,2);$("status").className=ok?"ok":"err";}
+$("run").onclick=async()=>{
+ $("run").disabled=true;
+ try{
+  const email=$("email").value.trim(), password=$("password").value;
+  if(!email||!password) throw new Error("EMAIL_AND_PASSWORD_REQUIRED");
+  show("Creating genuine TEST Auth session…");
+  const auth=await sb.auth.signInWithPassword({email,password});
+  if(auth.error||!auth.data?.session) throw new Error(auth.error?.message||"TEST_AUTH_SESSION_NOT_CREATED");
+  show("Authenticated. Calling canonical TEST onboarding…");
+  const {data,error}=await sb.rpc("ils_customer_onboarding_v1",{
+    p_complaint_token:$("token").value.trim(),
+    p_complaint_summary:$("summary").value.trim(),
+    p_service_code:$("service").value.trim(),
+    p_language_code:"en-IN",
+    p_urgency:"NORMAL",
+    p_required_documents:[],
+    p_official_route_url:null,
+    p_assistance_tier:"SELF_FREE"
+  });
+  if(error) throw new Error("ONBOARDING_RPC_ERROR\n"+JSON.stringify(error,null,2));
+  show({ok:true,proof_scope:"TEST_ONLY",authenticated:true,onboarding:data,message:"Now re-run the canonical customer E2E gate and verify the evidence binding separately."},true);
+ }catch(e){show(String(e?.message||e));}
+ finally{try{await sb.auth.signOut();}catch(_){ } $("run").disabled=false;}
+};
+</script>
+</body>
+</html>

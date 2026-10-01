@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ILS — TEST Synthetic Provisioning</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:#08101f;
+color:#eef3ff;
+font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+min-height:100vh;
+display:grid;
+place-items:center;
+padding:20px
+}
+
+.card{
+width:min(620px,100%);
+background:#121b31;
+border:1px solid #263452;
+border-radius:22px;
+padding:28px
+}
+
+h1{
+font-size:28px;
+margin:0 0 8px
+}
+
+.sub{
+color:#aeb9d1;
+line-height:1.45;
+margin-bottom:18px
+}
+
+.warn{
+color:#ffd98a;
+background:#302611;
+border:1px solid #6b5424;
+padding:12px;
+border-radius:12px;
+margin-bottom:18px
+}
+
+.step{
+margin-top:18px;
+padding:16px;
+background:#070c17;
+border-radius:12px;
+border:1px solid #263452
+}
+
+label{
+display:block;
+margin:12px 0 6px
+}
+
+input{
+width:100%;
+padding:14px;
+border-radius:12px;
+border:1px solid #3b4968;
+background:#0b1325;
+color:#fff;
+font-size:16px
+}
+
+button{
+width:100%;
+padding:14px;
+border:0;
+border-radius:12px;
+background:#2f6df6;
+color:#fff;
+font-size:16px;
+font-weight:700;
+margin-top:14px
+}
+
+button:disabled{
+opacity:.55
+}
+
+#status{
+white-space:pre-wrap;
+overflow:auto;
+line-height:1.45
+}
+
+.ok{
+border-color:#2d8a57
+}
+
+.err{
+border-color:#9b3d45
+}
+
+.small{
+font-size:12px;
+color:#8e9ab5;
+margin-top:10px
+}
+</style>
+</head>
+
+<body>
+
+<main class="card">
+
+<h1>ILS — TEST Synthetic Provisioning</h1>
+
+<div class="sub">
+TEST ONLY · synthetic identity · no production/customer data
+</div>
+
+<div class="warn">
+No bootstrap secret, service-role key, synthetic password,
+or JWT is displayed or requested. Synthetic credentials are
+generated server-side and never returned.
+</div>
+
+
+<div class="step">
+
+<b>Step 1 — Authenticate TEST Operator</b>
+
+<label for="email">TEST Auth email</label>
+
+<input
+id="email"
+type="email"
+autocomplete="username"
+required
+>
+
+<label for="password">TEST Auth password</label>
+
+<input
+id="password"
+type="password"
+autocomplete="current-password"
+required
+>
+
+<button id="login" type="button">
+Sign in
+</button>
+
+</div>
+
+
+<div class="step">
+
+<b>Step 2 — Prepare + Bind</b>
+
+<button id="prepare" type="button" disabled>
+Prepare 1085 Request
+</button>
+
+</div>
+
+
+<div class="step">
+
+<b>Step 3 — Explicit Operator Approval</b>
+
+<button id="approve" type="button" disabled>
+Approve This Synthetic Request
+</button>
+
+</div>
+
+
+<div class="step">
+
+<b>Step 4 — Canonical Provisioning</b>
+
+<button id="provision" type="button" disabled>
+Run Canonical Provisioning
+</button>
+
+</div>
+
+
+<div id="status" class="step">
+Ready — enter the legitimate TEST Auth credentials.
+</div>
+
+<div class="small">
+This page is for controlled TEST validation only.
+</div>
+
+</main>
+
+
+<script>
+
+"use strict";
+
+
+const BASE =
+"https://bgsbuepolooybdqrzmoa.supabase.co";
+
+
+const KEY =
+"sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2";
+
+
+const PREP =
+BASE +
+"/functions/v1/ils-test-synthetic-provision-prep-v2";
+
+
+const PROVISION =
+BASE +
+"/functions/v1/ils-test-synthetic-auth-provision-v7";
+
+
+const RPC =
+BASE +
+"/rest/v1/rpc/ils_record_synthetic_operator_approval_v1";
+
+
+let token = "";
+
+let requestId = "";
+
+let bindingId = "";
+
+let nonce = "";
+
+let snapshot = "";
+
+
+const $ =
+id =>
+document.getElementById(id);
+
+
+const status =
+$("status");
+
+
+function show(value,ok=false){
+
+status.textContent =
+typeof value === "string"
+? value
+: JSON.stringify(value,null,2);
+
+status.className =
+"step " +
+(ok ? "ok" : "err");
+
+}
+
+
+function authHeaders(){
+
+return {
+
+"apikey":
+KEY,
+
+"Authorization":
+"Bearer " + token,
+
+"Content-Type":
+"application/json",
+
+"Accept":
+"application/json"
+
+};
+
+}
+
+
+async function readJson(response){
+
+const text =
+await response.text();
+
+let data;
+
+try{
+
+data =
+JSON.parse(text);
+
+}
+
+catch{
+
+data = {
+raw_response:text
+};
+
+}
+
+return {
+response,
+data
+};
+
+}
+
+
+
+/* ==========================================
+   STEP 1 — TEST AUTH LOGIN
+========================================== */
+
+
+$("login").onclick =
+async function(){
+
+try{
+
+$("login").disabled =
+true;
+
+
+const email =
+$("email").value.trim();
+
+
+const password =
+$("password").value;
+
+
+if(!email || !password){
+
+throw new Error(
+"EMAIL_AND_PASSWORD_REQUIRED"
+);
+
+}
+
+
+show(
+"Authenticating TEST operator…"
+);
+
+
+const response =
+await fetch(
+
+BASE +
+"/auth/v1/token?grant_type=password",
+
+{
+
+method:
+"POST",
+
+headers:{
+
+"apikey":
+KEY,
+
+"Content-Type":
+"application/json",
+
+"Accept":
+"application/json"
+
+},
+
+cache:
+"no-store",
+
+body:
+JSON.stringify({
+
+email:
+email,
+
+password:
+password
+
+})
+
+});
+
+
+const result =
+await readJson(response);
+
+
+const x =
+result.data;
+
+
+if(
+!response.ok ||
+!x.access_token
+){
+
+throw new Error(
+
+"AUTH HTTP " +
+response.status +
+"\n\n" +
+JSON.stringify(
+x,
+null,
+2
+)
+
+);
+
+}
+
+
+token =
+x.access_token;
+
+
+$("email").disabled =
+true;
+
+
+$("password").disabled =
+true;
+
+
+$("prepare").disabled =
+false;
+
+
+$("login").textContent =
+"Authenticated";
+
+
+show(
+
+"TEST Auth authentication successful.\n\n" +
+"Step 1 complete.\n" +
+"Continue with Prepare 1085 Request.",
+
+true
+
+);
+
+
+}
+
+catch(error){
+
+show(
+
+"AUTH ERROR\n\n" +
+(error.message || error)
+
+);
+
+
+$("login").disabled =
+false;
+
+}
+
+};
+
+
+
+/* ==========================================
+   STEP 2 — PREPARE + BIND
+========================================== */
+
+
+$("prepare").onclick =
+async function(){
+
+try{
+
+$("prepare").disabled =
+true;
+
+
+show(
+"Preparing TEST synthetic request…"
+);
+
+
+if(!token){
+
+throw new Error(
+"AUTH_TOKEN_NOT_AVAILABLE"
+);
+
+}
+
+
+const response =
+await fetch(
+
+PREP,
+
+{
+
+method:
+"POST",
+
+headers:
+authHeaders(),
+
+cache:
+"no-store",
+
+body:
+JSON.stringify({
+
+action:
+"PREPARE_SYNTHETIC_PROVISION"
+
+})
+
+}
+
+);
+
+
+const result =
+await readJson(response);
+
+
+const x =
+result.data;
+
+
+if(
+!response.ok ||
+!x.ok
+){
+
+throw new Error(
+
+"PREP HTTP " +
+response.status +
+"\n\n" +
+JSON.stringify(
+x,
+null,
+2
+)
+
+);
+
+}
+
+
+requestId =
+x.request_id;
+
+
+bindingId =
+x.binding_id;
+
+
+nonce =
+x.approval_nonce;
+
+
+snapshot =
+x.request_snapshot_hash;
+
+
+$("approve").disabled =
+false;
+
+
+show({
+
+ok:
+true,
+
+step:
+"2",
+
+request_id:
+requestId,
+
+binding_id:
+bindingId,
+
+approval_expiry:
+x.expires_at,
+
+message:
+"Request prepared and approval binding created. Continue to explicit operator approval."
+
+},true);
+
+
+}
+
+catch(error){
+
+show(
+
+"PREPARE ERROR\n\n" +
+(error.message || error)
+
+);
+
+
+$("prepare").disabled =
+false;
+
+}
+
+};
+
+
+
+/* ==========================================
+   STEP 3 — EXPLICIT OPERATOR APPROVAL
+========================================== */
+
+
+$("approve").onclick =
+async function(){
+
+try{
+
+$("approve").disabled =
+true;
+
+
+show(
+"Recording explicit operator approval…"
+);
+
+
+if(
+!token ||
+!requestId ||
+!bindingId ||
+!nonce ||
+!snapshot
+){
+
+throw new Error(
+"APPROVAL_CONTEXT_INCOMPLETE"
+);
+
+}
+
+
+const response =
+await fetch(
+
+RPC,
+
+{
+
+method:
+"POST",
+
+headers:
+authHeaders(),
+
+cache:
+"no-store",
+
+body:
+JSON.stringify({
+
+p_request_id:
+requestId,
+
+p_binding_id:
+bindingId,
+
+p_approval_nonce:
+nonce,
+
+p_request_snapshot_hash:
+snapshot
+
+})
+
+}
+
+);
+
+
+const result =
+await readJson(response);
+
+
+const x =
+result.data;
+
+
+if(!response.ok){
+
+throw new Error(
+
+"APPROVAL HTTP " +
+response.status +
+"\n\n" +
+JSON.stringify(
+x,
+null,
+2
+)
+
+);
+
+}
+
+
+$("provision").disabled =
+false;
+
+
+show({
+
+ok:
+true,
+
+step:
+"3",
+
+approval:
+x,
+
+message:
+"Explicit operator approval recorded. Continue to canonical provisioning."
+
+},true);
+
+
+}
+
+catch(error){
+
+show(
+
+"APPROVAL ERROR\n\n" +
+(error.message || error)
+
+);
+
+
+$("approve").disabled =
+false;
+
+}
+
+};
+
+
+
+/* ==========================================
+   STEP 4 — CANONICAL PROVISIONING
+========================================== */
+
+
+$("provision").onclick =
+async function(){
+
+try{
+
+$("provision").disabled =
+true;
+
+
+show(
+"Running canonical TEST synthetic provisioning…"
+);
+
+
+const response =
+await fetch(
+
+PROVISION,
+
+{
+
+method:
+"POST",
+
+headers:
+authHeaders(),
+
+cache:
+"no-store",
+
+body:
+JSON.stringify({
+
+action:
+"CREATE_APPROVED_SYNTHETIC_IDENTITY",
+
+request_id:
+requestId,
+
+binding_id:
+bindingId,
+
+approval_nonce:
+nonce,
+
+request_snapshot_hash:
+snapshot
+
+})
+
+}
+
+);
+
+
+const result =
+await readJson(response);
+
+
+const x =
+result.data;
+
+
+if(
+!response.ok ||
+!x.ok
+){
+
+throw new Error(
+
+"PROVISION HTTP " +
+response.status +
+"\n\n" +
+JSON.stringify(
+x,
+null,
+2
+)
+
+);
+
+}
+
+
+show({
+
+ok:
+true,
+
+step:
+"4",
+
+result:
+x,
+
+security:
+"No password/JWT returned; TEST synthetic path only."
+
+},true);
+
+
+}
+
+catch(error){
+
+show(
+
+"PROVISION ERROR\n\n" +
+(error.message || error)
+
+);
+
+
+$("provision").disabled =
+false;
+
+}
+
+};
+
+</script>
+
+</body>
+</html>
