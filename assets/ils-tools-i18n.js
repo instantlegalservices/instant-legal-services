@@ -192,6 +192,14 @@
 
   function translateStatic(){
     const p=pack();
+    document.querySelectorAll("body *:not(script):not(style):not(option):not(input):not(textarea):not(select)").forEach(el=>{
+      if(el.children.length!==0)return;
+      const original=el.getAttribute("data-ils-tools-original")||el.textContent.trim();
+      if(!original)return;
+      if(!el.hasAttribute("data-ils-tools-original"))el.setAttribute("data-ils-tools-original",original);
+      const value=p.shell[original]||p.nav[original]||p.generic[original];
+      if(value)el.textContent=value;
+    });
     document.querySelectorAll("[data-ils-tools-text]").forEach(el=>{
       const key=el.getAttribute("data-ils-tools-text");
       if(p.shell[key])el.textContent=p.shell[key];
