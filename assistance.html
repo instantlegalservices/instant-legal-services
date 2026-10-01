@@ -64,6 +64,32 @@ if(window.supabase && !window.supabaseClient){window.supabaseClient=window.supab
 <div id="loginNote" class="login-note">Paid options require an authenticated ILS customer session. The official free route remains available without paying ILS.</div>
 <div id="paymentStatus" class="statusline"></div>
 <div id="toolStatus" class="status" style="margin-top:12px"></div>
+<div id="submissionBox" class="pack hide" style="margin-top:12px">
+<h3>✓ Official submission checkpoint</h3>
+<p style="margin:0;color:#b9c6d1;font-size:10px;line-height:1.5">
+Complete the filing on the official government portal first. Then enter the official acknowledgement / application / grievance reference below.
+ILS cannot independently verify a submission completed on another government domain.
+</p>
+<label style="display:block;margin-top:10px;font-size:10px;color:#b9c6d1">Official reference number</label>
+<input id="submissionRef" maxlength="120" style="margin-top:5px;width:100%;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.12);background:#071521;color:#fff">
+<button id="submissionDoneBtn" class="btn btn-primary" type="button" style="margin-top:10px;width:100%">Mark my submission complete</button>
+<div id="earnBox" class="hide" style="margin-top:12px;padding:12px;border-radius:12px;background:rgba(215,168,79,.06);border:1px solid rgba(215,168,79,.22)">
+<strong>Want to earn with ILS?</strong>
+<p style="margin:6px 0;color:#b9c6d1;font-size:10px;line-height:1.5">
+If you are comfortable helping others with digital/form-filling work, you can convert this same ILS client account into an Assistant / Associate application. You do not need a second login.
+</p>
+<button id="earnBtn" class="btn btn-primary" type="button" style="width:100%">Join ILS as Assistant &amp; Earn</button>
+<div id="assistantForm" class="hide" style="margin-top:10px">
+<label style="display:block;font-size:10px;color:#b9c6d1">Full name</label><input id="assistantName" maxlength="100" style="margin-top:5px;width:100%;padding:10px;border-radius:10px;background:#071521;color:#fff;border:1px solid rgba(255,255,255,.12)">
+<label style="display:block;margin-top:8px;font-size:10px;color:#b9c6d1">Mobile</label><input id="assistantMobile" maxlength="10" inputmode="numeric" style="margin-top:5px;width:100%;padding:10px;border-radius:10px;background:#071521;color:#fff;border:1px solid rgba(255,255,255,.12)">
+<label style="display:block;margin-top:8px;font-size:10px;color:#b9c6d1">Address</label><input id="assistantAddress" maxlength="500" style="margin-top:5px;width:100%;padding:10px;border-radius:10px;background:#071521;color:#fff;border:1px solid rgba(255,255,255,.12)">
+<label style="display:block;margin-top:8px;font-size:10px;color:#b9c6d1">Useful skills (comma separated)</label><input id="assistantSkills" maxlength="300" placeholder="Typing, video editing, coding..." style="margin-top:5px;width:100%;padding:10px;border-radius:10px;background:#071521;color:#fff;border:1px solid rgba(255,255,255,.12)">
+<label class="check"><input id="assistantConsent" type="checkbox"><span>I agree to follow Indian law, ILS rules and the disclosed scope of assistant work. This is an application for review, not an automatic earning guarantee.</span></label>
+<button id="assistantSubmitBtn" class="btn btn-primary" type="button" style="width:100%">Submit Assistant Application</button>
+<div id="assistantStatus" class="status" style="margin-top:8px"></div>
+</div>
+</div>
+</div>
 </div>
 </div></div></div></section>
 
@@ -142,8 +168,18 @@ async function applyConfiguredAssistancePrice(serviceSlug,fallback){
  if(btn)btn.textContent=(mode==="guided"?"Pay ₹":"Pay ₹")+amount.toLocaleString("en-IN",{maximumFractionDigits:2})+(mode==="guided"?" & unlock guidance":" & request assistance");
 }
 
-function showMode(){
+async function showMode(){
  if(mode!=="guided"&&mode!=="associate")return;
+ const sb=window.ILS?.ready?.() || await window.ILS?.init?.();
+ if(!sb){
+   location.href="customer-portal.html?return="+encodeURIComponent(location.href);
+   return;
+ }
+ const {data:{session}}=await sb.auth.getSession();
+ if(!session){
+   location.href="customer-portal.html?return="+encodeURIComponent(location.href);
+   return;
+ }
  const rd=detectRoute();
  document.getElementById("routeMode").classList.remove("hide");
  document.getElementById("standardHelp").classList.add("hide");
@@ -172,7 +208,64 @@ function showMode(){
  applyConfiguredAssistancePrice(configuredServiceSlug,configuredFallback);
  document.getElementById("loginBtn").onclick=()=>{};
 }
-async function pay(guided,rd){
+function escapeHtml(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+function buildGuidancePack(rd,userProblem,userRoute){
+ const title=rd?.title||userRoute||"Official government route";
+ const items=rd?.items||["Confirm the authority/portal","Keep relevant reference numbers and dates ready","Use only the official portal for submission","Never share OTP, password or payment credentials"];
+ const summary=String(userProblem||"").trim().slice(0,1000)||"No additional problem text was supplied.";
+ const steps=[
+  "Read the route and confirm that it matches your requirement before entering personal data.",
+  "Keep the listed documents/reference numbers ready and complete only the fields that apply to your case.",
+  "Review names, dates, numbers, amounts and uploaded documents before the final submit action.",
+  "Complete the final filing on the official government portal and retain its acknowledgement/reference."
+ ];
+ return {html:
+  "<h3>✓ Paid guidance pack unlocked</h3>"+
+  "<p style='margin:0 0 10px;color:#dbe5ee;font-size:10px;line-height:1.5'><strong>Problem summary:</strong> "+escapeHtml(summary)+"</p>"+
+  "<p style='margin:0 0 6px;color:#b9c6d1;font-size:10px'><strong>Official route:</strong> "+escapeHtml(title)+"</p>"+
+  "<h4 style='margin:12px 0 4px;font-size:11px'>Prepare before filling</h4><ul>"+items.map(x=>"<li>"+escapeHtml(x)+"</li>").join("")+"</ul>"+
+  "<h4 style='margin:12px 0 4px;font-size:11px'>Filling sequence</h4><ol style='margin:8px 0;padding-left:18px;color:#b9c6d1;font-size:10px;line-height:1.7'>"+steps.map(x=>"<li>"+escapeHtml(x)+"</li>").join("")+"</ol>"+
+  "<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px;line-height:1.5'>This is summarized digital guidance, not legal advice. Official portal rules, mandatory fields, authentication and government processing control the final filing.</p>"
+ };
+}
+function wireSubmissionAndAssistant(orderKey){
+ const done=document.getElementById("submissionDoneBtn");
+ const ref=document.getElementById("submissionRef");
+ const earn=document.getElementById("earnBox");
+ const earnBtn=document.getElementById("earnBtn");
+ const form=document.getElementById("assistantForm");
+ const saved=localStorage.getItem("ils_submission_"+orderKey);
+ if(saved){earn.classList.remove("hide");}
+ done.onclick=()=>{
+   const value=ref.value.trim();
+   if(!value){ref.focus();status("Enter the official acknowledgement/application/reference number after you have submitted on the government portal.","err");return;}
+   localStorage.setItem("ils_submission_"+orderKey,JSON.stringify({reference:value,marked_at:new Date().toISOString()}));
+   earn.classList.remove("hide");
+   status("Submission checkpoint recorded in this browser. The reference was supplied by you; ILS has not independently verified the government submission.","ok");
+ };
+ earnBtn.onclick=async()=>{
+   const sb=window.ILS?.ready?.() || await window.ILS?.init?.();
+   if(!sb){return;}
+   const {data:{session}}=await sb.auth.getSession();
+   if(!session){location.href="customer-portal.html?return="+encodeURIComponent(location.href);return;}
+   const {data:profile}=await sb.from("customer_profiles").select("full_name,mobile").eq("user_id",session.user.id).maybeSingle();
+   document.getElementById("assistantName").value=profile?.full_name||session.user.user_metadata?.full_name||"";
+   document.getElementById("assistantMobile").value=profile?.mobile||"";
+   form.classList.remove("hide");
+ };
+ document.getElementById("assistantSubmitBtn").onclick=async()=>{
+   const sb=window.ILS?.ready?.() || await window.ILS?.init?.();
+   const s=document.getElementById("assistantStatus");
+   const name=document.getElementById("assistantName").value.trim(), mobile=document.getElementById("assistantMobile").value.trim(), address=document.getElementById("assistantAddress").value.trim(), skills=document.getElementById("assistantSkills").value.trim();
+   if(!/^\d{10}$/.test(mobile)||!name||!address||!skills||!document.getElementById("assistantConsent").checked){s.className="status err";s.textContent="Complete name, 10-digit mobile, address, skills and undertaking.";return;}
+   const {data,error}=await sb.functions.invoke("convert-client-to-assistant",{body:{full_name:name,mobile,address,extra_skills:skills,undertaking_accepted:true,undertaking_signed_name:name}});
+   if(error||!data?.ok){s.className="status err";s.textContent=error?.message||data?.message||"Assistant application could not be submitted.";return;}
+   s.className="status ok";s.textContent="Assistant application submitted using your existing ILS login. Your profile remains subject to ILS review; earning is not guaranteed.";
+   document.getElementById("assistantSubmitBtn").disabled=true;
+ };
+}\nasync function pay(guided,rd){
  const btn=document.getElementById("payBtn");btn.disabled=true;
  try{
   if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
@@ -236,7 +329,10 @@ async function pay(guided,rd){
   btn.classList.add("hide");
   document.getElementById("loginBtn").classList.add("hide");
   if(guided){
-    document.getElementById("guidancePack").innerHTML="<h3>✓ Guidance pack unlocked</h3><ul>"+(rd?.items||["Confirm official route","Keep reference numbers and dates ready","Do not share OTP/password/PIN","Verify the official form before submitting"]).map(x=>"<li>"+x+"</li>").join("")+"</ul><p style='margin:10px 0 0;color:#b9c6d1;font-size:10px;line-height:1.5'>Use the official portal button above to complete the filing yourself. ILS does not submit government filings in this guided option.</p>";
+    const guidance=buildGuidancePack(rd,problem,route);
+    document.getElementById("guidancePack").innerHTML=guidance.html;
+    document.getElementById("submissionBox").classList.remove("hide");
+    wireSubmissionAndAssistant(paid.order_id||orderNumber);
   }else{
     document.getElementById("guidancePack").innerHTML="<h3>✓ Assistance request created</h3><p style='margin:0;color:#b9c6d1;font-size:10px;line-height:1.5'>Keep your order number. The request contains only the scope you supplied for digital/form assistance. An associate workflow can continue from the paid service request.</p>";
   }
