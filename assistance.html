@@ -94,6 +94,9 @@ const params=new URLSearchParams(location.search);
 const mode=params.get("mode");
 const problem=params.get("problem")||"";
 const route=params.get("route")||"";
+const AUTH_RETURN_KEY="ils_auth_return_v1";
+function saveAuthReturn(){try{const u=new URL(location.href);if(u.origin===location.origin&&u.pathname.endsWith("/assistance.html"))sessionStorage.setItem(AUTH_RETURN_KEY,u.href)}catch(e){console.warn("Unable to preserve assistance return context.",e)}}
+function goToCustomerLogin(){saveAuthReturn();location.href="customer-portal.html";}
 const routeData={
  cyber:{url:"https://cybercrime.gov.in/Webform/Accept.aspx",title:"National Cyber Crime Reporting Portal",items:["Transaction/reference ID, date and amount","Bank/UPI/payment screenshots and statements","Chronology of what happened","Any complaint/reference already received","Never share OTP, password, PIN or payment credentials"]},
  consumer:{url:"https://consumerhelpline.gov.in/",title:"National Consumer Helpline",items:["Invoice/order ID and purchase date","Product/service details","Warranty/terms where relevant","Communication with seller/service provider","Specific remedy requested"]},
@@ -170,12 +173,17 @@ function showMode(){
  pack.innerHTML="<h3>What you will receive</h3><ul>"+items.map(x=>"<li>"+x+"</li>").join("")+"</ul>"+(guided?"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, this checklist and route-specific field guidance will be shown again in a clean copy-ready format.</p>":"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, the request enters the existing service-order workflow. An associate can then coordinate the stated non-legal digital task.</p>");
  document.getElementById("payBtn").onclick=()=>pay(guided,rd);
  applyConfiguredAssistancePrice(configuredServiceSlug,configuredFallback);
- document.getElementById("loginBtn").onclick=()=>{};
+ document.getElementById("loginBtn").onclick=e=>{e.preventDefault();goToCustomerLogin()};
 }
 async function pay(guided,rd){
  const btn=document.getElementById("payBtn");btn.disabled=true;
  try{
   if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
+  const authClient=window.supabaseClient||window.ILS?.ready?.();
+  if(authClient){
+   const {data:{session}}=await authClient.auth.getSession();
+   if(!session?.user){goToCustomerLogin();return;}
+  }
   if(!guided){
    const mobile=document.getElementById("assistMobile").value.trim();
    if(!/^[0-9]{10}$/.test(mobile))throw new Error("Enter a valid 10-digit mobile number.");

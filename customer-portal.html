@@ -52,7 +52,27 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 const SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
 const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const AUTH_RETURN_KEY="ils_auth_return_v1";
 const $=id=>document.getElementById(id);
+function getSafeAuthReturn(){
+ try{
+  const raw=sessionStorage.getItem(AUTH_RETURN_KEY);
+  sessionStorage.removeItem(AUTH_RETURN_KEY);
+  if(!raw)return null;
+  const u=new URL(raw,location.origin);
+  if(u.origin!==location.origin||(u.protocol!=="https:"&&u.protocol!=="http:")||!u.pathname.endsWith("/assistance.html"))return null;
+  const mode=u.searchParams.get("mode");
+  if(mode!=="guided"&&mode!=="associate")return null;
+  const out=new URL("assistance.html",location.origin);
+  out.searchParams.set("mode",mode);
+  const problem=u.searchParams.get("problem");
+  const route=u.searchParams.get("route");
+  if(problem)out.searchParams.set("problem",problem.slice(0,3000));
+  if(route)out.searchParams.set("route",route.slice(0,200));
+  return out.href;
+ }catch(e){sessionStorage.removeItem(AUTH_RETURN_KEY);return null;}
+}
+function returnAfterAuth(){const target=getSafeAuthReturn();if(target){location.assign(target);return true}return false;}
 function status(msg,ok=false){$("status").textContent=msg;$("status").className="status "+(ok?"ok":"err");}
 function show(mode){
  const login=mode==="login"; $("loginPanel").classList.toggle("hidden",!login);$("signupPanel").classList.toggle("hidden",login);
@@ -77,10 +97,9 @@ $("signupBtn").onclick=async()=>{
    if(!data.user) throw new Error("AUTH_USER_NOT_CREATED");
    if(data.session){
      const p=await provision(data.user);
-     status("Customer account and profile provisioned successfully.\nProfile: "+p.customer_profile_id,true);
-     show("login");
+     if(!returnAfterAuth())status("Customer account and profile provisioned successfully.\nProfile: "+p.customer_profile_id,true);
    }else{
-     status("Account created. Please complete the email confirmation if required, then sign in here.",true);
+     status("Account created. Please complete the email confirmation if required, then sign in here. Your pending assistance request will be restored after sign-in.",true);
    }
  }catch(e){status(e.message||"Unable to create account.");}
  finally{$("signupBtn").disabled=false;}
@@ -97,14 +116,15 @@ $("loginBtn").onclick=async()=>{
      const name=data.user.user_metadata?.full_name||data.user.email?.split("@")[0]||"ILS Customer";
      const {data:p,error:e}=await sb.rpc("provision_customer_profile",{p_full_name:name,p_mobile:null,p_client_requirement_id:null});
      if(e||!p?.ok) throw new Error(e?.message||"CUSTOMER_PROFILE_PROVISION_FAILED");
-     status("Signed in. Missing customer profile was safely provisioned.\nProfile: "+p.customer_profile_id,true);
+     if(!returnAfterAuth())status("Signed in. Missing customer profile was safely provisioned.\nProfile: "+p.customer_profile_id,true);
    }else{
      if(profile.status!=="active") throw new Error("CUSTOMER_ACCOUNT_SUSPENDED");
-     status("Signed in successfully.\nWelcome, "+profile.full_name+".",true);
+     if(!returnAfterAuth())status("Signed in successfully.\nWelcome, "+profile.full_name+".",true);
    }
  }catch(e){status(e.message||"Unable to sign in.");}
  finally{$("loginBtn").disabled=false;}
 };
 </script>
+<script id="ils-contact-widget-script" src="assets/ils-contact.js?v=1" defer></script>
 </body>
 </html>
