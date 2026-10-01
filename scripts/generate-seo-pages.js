@@ -507,6 +507,12 @@ function governmentPageContent(service) {
   </div>
 
   <p>
+    <a href="${SITE_URL}/?ils_gov=${encodeURIComponent(service.slug)}">
+      ← Tell ILS what you need
+    </a>
+  </p>
+
+  <p>
     <a href="${SITE_URL}/government/">
       ← Government Services Navigator
     </a>
