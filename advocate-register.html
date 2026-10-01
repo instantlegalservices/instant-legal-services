@@ -1836,7 +1836,7 @@ let selectedProfessionalPhotoExtension="";
 
 async function bindProfessionalPhotoInput(inputId){
   const input=$(inputId); if(!input)return;
-  input.addEventListener("change",()=>{
+  input.addEventListener("change",async()=>{
     const file=input.files?.[0]; if(!file)return;
     if(!/^image\/(jpeg|png|webp)$/.test(file.type)){
       input.value="";
