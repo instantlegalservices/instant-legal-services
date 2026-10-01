@@ -522,17 +522,46 @@ function openOfficialRoute(url){
  try{window.location.assign(url)}catch(e){window.open(url,"_self")}
 }
 function renderResult(q,r){
+ const lang=$("language").value||"hi-IN";
+ const U={
+  "hi-IN":{kicker:"समस्या समझी गई",more:"एक और जानकारी चाहिए",need:"अभी आधिकारिक मार्ग तय नहीं हुआ",prompt:"कृपया department/service/country का संदर्भ थोड़ा और स्पष्ट करें.",route:"आधिकारिक मार्ग",checked:"स्रोत सत्यापित",official:"आधिकारिक पोर्टल खोलें ↗",guide:"ILS सीमित मार्गदर्शन",free:"मैं खुद भरूँ",freeSub:"आधिकारिक पोर्टल पर स्वयं form/शिकायत भरें। ILS का सीमित मूल मार्गदर्शन निःशुल्क रहेगा.",freeTag:"निःशुल्क स्वयं सेवा",guided:"मैं खुद भरूँ + मार्गदर्शन",guidedSub:"सशुल्क सारांश, दस्तावेज़ सूची और field-by-field मार्गदर्शन.",guidedTag:"सशुल्क मार्गदर्शन",associate:"सहयोगी से भरवाएँ",associateSub:"सशुल्क सहायता का अनुरोध करें। काम शुरू होने से पहले कार्य-क्षेत्र और शुल्क स्पष्ट होंगे.",associateTag:"सशुल्क सहायता",more:"अधिक जानकारी दें",words:"जैसे “बैंक”, “साइबर धोखाधड़ी”, “उपभोक्ता”, “पुलिस/FIR”, “सरकारी शिकायत” या “चालान”."},
+  "en-IN":{kicker:"UNDERSTOOD YOUR PROBLEM",more:"ONE MORE DETAIL NEEDED",need:"No official route selected yet",prompt:"Please provide a little more department, service or country-level context.",route:"Official route",checked:"Source checked",official:"Open official portal ↗",guide:"ILS limited guidance",free:"I will do it myself",freeSub:"Complete the form/complaint yourself on the official portal. Limited basic ILS guidance remains free.",freeTag:"FREE SELF-SERVICE",guided:"I will do it + Guided",guidedSub:"Paid summary, document checklist and field-by-field guidance.",guidedTag:"PAID GUIDANCE",associate:"Have an associate assist",associateSub:"Request paid assistance. Scope and applicable fee will be clarified before work begins.",associateTag:"PAID ASSISTANCE",more:"Add more detail",words:"For example: “bank”, “cyber fraud”, “consumer”, “police/FIR”, “government complaint” or “challan”."},
+  "hinglish":{kicker:"PROBLEM SAMJH LI",more:"EK AUR DETAIL CHAHIYE",need:"Abhi official route select nahi hua",prompt:"Department, service ya country-level context thoda aur clear batayein.",route:"Official route",checked:"Source checked",official:"Official portal kholen ↗",guide:"ILS limited guidance",free:"Main khud bharunga",freeSub:"Official portal par form/complaint khud complete karein. ILS ka limited basic guidance free rahega.",freeTag:"FREE SELF-SERVICE",guided:"Main khud bharunga + Guided",guidedSub:"Paid summary, document checklist aur field-by-field guidance.",guidedTag:"PAID GUIDANCE",associate:"Associate se bharwaunga",associateSub:"Paid assistance request karein. Work start hone se pehle scope aur applicable fee clear hogi.",associateTag:"PAID ASSISTANCE",more:"Thodi aur detail dein",words:"Jaise “bank”, “cyber fraud”, “consumer”, “police/FIR”, “government complaint” ya “challan”."},
+  "ur-IN":{kicker:"مسئلہ سمجھ لیا گیا",more:"مزید ایک معلومات درکار ہے",need:"ابھی سرکاری راستہ منتخب نہیں ہوا",prompt:"براہِ کرم محکمہ، خدمت یا ملک کا سیاق کچھ مزید واضح کریں۔",route:"سرکاری راستہ",checked:"ماخذ کی تصدیق شدہ",official:"سرکاری پورٹل کھولیں ↗",guide:"ILS محدود رہنمائی",free:"میں خود مکمل کروں گا",freeSub:"سرکاری پورٹل پر فارم/شکایت خود مکمل کریں۔ ILS کی محدود بنیادی رہنمائی مفت رہے گی۔",freeTag:"مفت خود خدمت",guided:"میں خود مکمل کروں گا + رہنمائی",guidedSub:"فیس والی خلاصہ معلومات، دستاویزات کی فہرست اور ہر فیلڈ کی رہنمائی۔",guidedTag:"فیس والی رہنمائی",associate:"معاون سے مکمل کروائیں",associateSub:"فیس والی معاونت کی درخواست کریں۔ کام شروع ہونے سے پہلے دائرۂ کار اور فیس واضح کی جائے گی۔",associateTag:"فیس والی معاونت",more:"مزید تفصیل دیں",words:"مثلاً “بینک”، “سائبر فراڈ”، “صارف”، “پولیس/FIR”، “سرکاری شکایت” یا “چالان”۔"},
+  "bn-IN":{kicker:"আপনার সমস্যা বোঝা হয়েছে",more:"আরও একটি তথ্য প্রয়োজন",need:"এখনও সরকারি পথ নির্বাচন করা হয়নি",prompt:"দপ্তর, পরিষেবা বা দেশের প্রেক্ষাপট একটু আরও পরিষ্কার করুন।",route:"সরকারি পথ",checked:"উৎস যাচাই করা হয়েছে",official:"সরকারি পোর্টাল খুলুন ↗",guide:"ILS-এর সীমিত নির্দেশনা",free:"আমি নিজেই করব",freeSub:"সরকারি পোর্টালে ফর্ম/অভিযোগ নিজে সম্পূর্ণ করুন। ILS-এর সীমিত মৌলিক নির্দেশনা বিনামূল্যে থাকবে।",freeTag:"বিনামূল্যে নিজে করুন",guided:"আমি নিজেই করব + নির্দেশনা",guidedSub:"অর্থপ্রদানের সারাংশ, নথির তালিকা এবং প্রতিটি ক্ষেত্রের নির্দেশনা।",guidedTag:"অর্থপ্রদানের নির্দেশনা",associate:"সহযোগীর সাহায্য নেব",associateSub:"অর্থপ্রদানের সহায়তার অনুরোধ করুন। কাজ শুরুর আগে পরিধি ও প্রযোজ্য ফি স্পষ্ট করা হবে।",associateTag:"অর্থপ্রদানের সহায়তা",more:"আরও তথ্য দিন",words:"যেমন “ব্যাংক”, “সাইবার জালিয়াতি”, “ভোক্তা”, “পুলিশ/FIR”, “সরকারি অভিযোগ” বা “চালান”।"}
+ }[lang]||U["hi-IN"];
+ const routeMap={
+  "hi-IN":{
+   "Cyber / Online Financial Fraud":["साइबर / ऑनलाइन वित्तीय धोखाधड़ी","ऑनलाइन साइबर अपराध या वित्तीय धोखाधड़ी की शिकायत का आधिकारिक मार्ग।"],
+   "Police / Crime Complaint":["पुलिस / अपराध शिकायत","पुलिस शिकायत, अपराध या प्राथमिकी से संबंधित आधिकारिक नागरिक सेवा मार्ग।"],
+   "Consumer Grievance":["उपभोक्ता शिकायत","उपभोक्ता शिकायत, धनवापसी, उत्पाद या सेवा से संबंधित आधिकारिक मार्ग।"],
+   "Banking / RBI Complaint":["बैंकिंग / आरबीआई शिकायत","आरबीआई द्वारा विनियमित संस्थाओं से संबंधित शिकायत का आधिकारिक मार्ग।"],
+   "Government Department Grievance":["सरकारी विभाग की शिकायत","सरकारी विभाग से संबंधित सार्वजनिक शिकायत का आधिकारिक मार्ग।"],
+   "UP Jansunwai – Samadhan":["यूपी जनसुनवाई – समाधान","उत्तर प्रदेश में सरकारी शिकायत दर्ज करने और उसकी स्थिति देखने का आधिकारिक मार्ग।"],
+   "UP Property Registration – IGRSUP":["यूपी संपत्ति पंजीकरण – आईजीआरएसयूपी","उत्तर प्रदेश में संपत्ति पंजीकरण और संबंधित स्टाम्प एवं पंजीकरण सेवाओं का आधिकारिक मार्ग।"],
+   "Traffic / eChallan":["यातायात / ई-चालान","यातायात चालान की जाँच और संबंधित आधिकारिक सेवा का मार्ग।"],
+   "GST / Tax Portal Issue":["जीएसटी / कर पोर्टल समस्या","जीएसटी पंजीकरण, कर पोर्टल और संबंधित सहायता का आधिकारिक मार्ग।"],
+   "Income Tax / e-Filing":["आयकर / ई-फाइलिंग","आयकर रिटर्न और संबंधित आधिकारिक ई-फाइलिंग सेवाओं का मार्ग।"]
+  },
+  "en-IN":{},
+  "hinglish":{},
+  "ur-IN":{},
+  "bn-IN":{}
+ };
+ const base=routeMap["hi-IN"];
+ const routeText=routeMap[lang]?.[r.title]||base[r.title]||[r.title,r.desc];
+ const title=routeText[0], desc=routeText[1];
  const no=r.url===null;
- $("result").innerHTML='<div class="result"><div class="result-top"><div class="result-kicker">ILS '+(no?"NEEDS ONE MORE CLUE":"UNDERSTOOD YOUR PROBLEM")+'</div><h2>'+r.icon+" "+r.title+'</h2><p>'+r.desc+'. '+(no?"कृपया problem में department/service/country-level context बताएं.":"आपकी personal/sensitive details अभी ILS को देने की जरूरत नहीं है.")+'</p></div>'+
- (no?'<div class="routecard"><strong>🧭 अभी official route select नहीं किया गया</strong><small>Problem में “bank”, “cyber fraud”, “consumer”, “police/FIR”, “government complaint”, “challan” जैसे words बताएं या Legal Assistance चुनें.</small></div>':
- '<div class="routecard"><strong>'+r.official+'</strong><small>Official route • source checked — '+r.desc+'</small><div class="intake-actions"><a class="btn primary" href="'+r.url+'" target="_blank" rel="noopener">🏛️ Official portal खोलें ↗</a><a class="btn ghost" href="'+r.local+'">ILS limited guidance</a></div></div>')+
+ $("result").innerHTML='<div class="result"><div class="result-top"><div class="result-kicker">ILS '+(no?U.more:U.kicker)+'</div><h2>'+r.icon+" "+title+'</h2><p>'+desc+(no?" "+U.prompt:"")+'</p></div>'+
+ (no?'<div class="routecard"><strong>🧭 '+U.need+'</strong><small>'+U.more+": "+U.words+'</small></div>':
+ '<div class="routecard"><strong>'+r.official+'</strong><small>'+U.route+' • '+U.checked+' — '+desc+'</small><div class="intake-actions"><a class="btn primary" href="'+r.url+'" target="_blank" rel="noopener">🏛️ '+U.official+'</a><a class="btn ghost" href="'+r.local+'">'+U.guide+'</a></div></div>')+
  '<div class="three">'+
- '<button id="rFree" type="button"><b>🆓 1. मैं खुद भरूँ</b><small>Official portal पर खुद form/complaint भरें. ILS की limited basic guidance free रहेगी.</small><span class="tag free">FREE SELF-SERVICE</span></button>'+
- '<button id="rGuided" type="button"><b>📝 2. मैं खुद भरूँ + Guided</b><small>Paid summarized guidance: problem summary, documents और field-by-field checklist.</small><span class="tag paid">PAID GUIDANCE</span></button>'+
- '<button id="rAssociate" type="button"><b>🧑‍💼 3. Associate से भरवाएँ</b><small>Paid assistance request. Scope और applicable fee work शुरू होने से पहले स्पष्ट होगी.</small><span class="tag paid">PAID ASSISTANCE</span></button>'+
+ '<button id="rFree" type="button"><b>🆓 1. '+U.free+'</b><small>'+U.freeSub+'</small><span class="tag free">'+U.freeTag+'</span></button>'+
+ '<button id="rGuided" type="button"><b>📝 2. '+U.guided+'</b><small>'+U.guidedSub+'</small><span class="tag paid">'+U.guidedTag+'</span></button>'+
+ '<button id="rAssociate" type="button"><b>🧑‍💼 3. '+U.associate+'</b><small>'+U.associateSub+'</small><span class="tag paid">'+U.associateTag+'</span></button>'+
  '</div></div>';
  $("modal").classList.add("open");$("modal").setAttribute("aria-hidden","false");
- $("rFree").onclick=()=>{if(r.url)openOfficialRoute(r.url);else toast("पहले problem में थोड़ा और detail दें.");};
+ $("rFree").onclick=()=>{if(r.url)openOfficialRoute(r.url);else toast(U.more);};
  $("rGuided").onclick=()=>location.href="assistance.html?mode=guided&problem="+encodeURIComponent(q)+"&route="+encodeURIComponent(r.title);
  $("rAssociate").onclick=()=>location.href="assistance.html?mode=associate&problem="+encodeURIComponent(q)+"&route="+encodeURIComponent(r.title);
 }
