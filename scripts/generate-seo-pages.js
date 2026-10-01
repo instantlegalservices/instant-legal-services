@@ -337,7 +337,7 @@ const GOVERNMENT_SERVICES = [
     description:
       "Official Uttar Pradesh Stamp and Registration Department route for property registration and related services.",
     officialUrl:
-      "https://igrsup.gov.in/"
+      "https://igrsup.gov.in/igrsupPropertyRegistration/propertyRegistrationHome?request_locale=en"
   },
   {
     slug: "ecourts-case-status",
