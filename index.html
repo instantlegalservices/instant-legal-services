@@ -369,6 +369,7 @@ function enrichGovernmentRoute(route){
 function classify(q){
  const n=q.toLowerCase();
  const rules=[
+  {keys:["igrsup","ig rsup","up property registration"],title:"UP Property Registration – IGRSUP",desc:"Official Uttar Pradesh Stamp and Registration Department route for property registration and related services.",url:"https://igrsup.gov.in/igrsupPropertyRegistration/propertyRegistrationHome?request_locale=en",official:"UP Property Registration – IGRSUP",icon:"🏛️",local:"government/up-property-registration/"},
   {keys:["cyber","online fraud","upi","otp","hack","phishing","account se","फ्रॉड","साइबर","ऑनलाइन ठगी","ठगी","فراڈ"],title:"Cyber / Online Financial Fraud",desc:"Online/cyber complaint route",url:"https://cybercrime.gov.in/Webform/Accept.aspx",official:"National Cyber Crime Reporting Portal",icon:"📱",emergency:"Financial cyber fraud: official portal also provides 1930 helpline.",local:"government/cyber-crime-reporting/"},
   {keys:["consumer","refund","defective","product","service complaint","कंज्यूमर","रिफंड","उत्पाद","उपभोक्ता"],title:"Consumer Grievance",desc:"Consumer complaint / grievance route",url:"https://consumerhelpline.gov.in/",official:"National Consumer Helpline",icon:"🛒",local:"government/consumer-helpline/"},
   {keys:["bank","rbi","loan","credit card","debit card","bank complaint","बैंक","आरबीआई","बैंक ने"],title:"Banking / RBI Complaint",desc:"Complaint route for RBI-regulated entities",url:"https://cms.rbi.org.in/",official:"RBI Complaint Management System",icon:"🏦",local:"government/rbi-complaint-management/"},
