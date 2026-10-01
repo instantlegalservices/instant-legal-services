@@ -326,6 +326,18 @@ function setLang(v){
  localStorage.setItem("ils-home-lang",v);
 }
 let governmentCatalog = [];
+let governmentContextActive = null;
+const GOVERNMENT_CONTEXT_ROUTES = {
+ "up-property-registration": {
+  seed: "IGRSUP",
+  title: "UP Property Registration – IGRSUP",
+  desc: "Official Uttar Pradesh Stamp and Registration Department route for property registration and related services.",
+  url: "https://igrsup.gov.in/igrsupPropertyRegistration/propertyRegistrationHome?request_locale=en",
+  official: "UP Property Registration – IGRSUP",
+  icon: "🏛️",
+  local: "government/up-property-registration/"
+ }
+};
 const GOVERNMENT_SUPABASE_URL = "https://odqebkdzkjfxzyzbrndt.supabase.co";
 const GOVERNMENT_SUPABASE_KEY = "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 const governmentCodeByTitle = {
@@ -372,7 +384,14 @@ function classify(q){
 }
 function understand(q){
  if(!q.trim()){toast("पहले अपनी problem लिखें या voice से बताएं.");$("problem").focus();return}
- currentRoute=enrichGovernmentRoute(classify(q)); renderResult(q,currentRoute);
+ const context=governmentContextActive;
+ if(context && q.trim()===context.seed){
+  currentRoute=GOVERNMENT_CONTEXT_ROUTES[context.slug];
+ }else{
+  governmentContextActive=null;
+  currentRoute=enrichGovernmentRoute(classify(q));
+ }
+ renderResult(q,currentRoute);
 }
 function openOfficialRoute(url){
  if(!url){toast("Official route अभी उपलब्ध नहीं है.");return;}
@@ -444,6 +463,13 @@ document.addEventListener("DOMContentLoaded",()=>{
  syncHeaderOffset();
  if(header&&"ResizeObserver" in window){new ResizeObserver(syncHeaderOffset).observe(header)}else{window.addEventListener("resize",syncHeaderOffset,{passive:true})}
  loadGovernmentCatalog();
+ const governmentSlug=new URLSearchParams(window.location.search).get("ils_gov");
+ const governmentContext=GOVERNMENT_CONTEXT_ROUTES[governmentSlug];
+ if(governmentContext){
+  governmentContextActive={slug:governmentSlug,seed:governmentContext.seed};
+  $("problem").value=governmentContext.seed;
+  $("hint").textContent="✓ Official government service selected. अब “मेरी मदद शुरू करें” दबाएं.";
+ }
  const saved=localStorage.getItem("ils-home-lang")||"hi-IN";$("language").value=saved;setLang(saved);
  $("language").addEventListener("change",e=>setLang(e.target.value));
  $("voice").onclick=startVoice;$("speak").onclick=speak;
@@ -452,6 +478,9 @@ document.addEventListener("DOMContentLoaded",()=>{
  $("close").onclick=()=>{$("modal").classList.remove("open");$("modal").setAttribute("aria-hidden","true")};
  $("modal").addEventListener("click",e=>{if(e.target===$("modal"))$("close").click()});
  $("freeChoice").onclick=()=>routeChoice("free");$("guidedChoice").onclick=()=>routeChoice("guided");$("associateChoice").onclick=()=>routeChoice("associate");
+ $("problem").addEventListener("input",()=>{
+  if(governmentContextActive && $("problem").value.trim()!==governmentContextActive.seed) governmentContextActive=null;
+ });
  $("problem").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")understand(e.target.value)});
  loadDynamic();
 });
