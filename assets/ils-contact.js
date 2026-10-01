@@ -30,7 +30,7 @@ root.innerHTML=`<button id="ils-contact-fab" type="button" aria-expanded="false"
 <div id="ils-contact-panel" role="dialog" aria-label="Contact Instant Legal Services">
 <button class="ils-close" type="button" aria-label="Close">×</button>
 <h3>How can we help?</h3>
-<p>Choose the reason, briefly tell us the issue, then send it by WhatsApp or Email.</p>
+<p>Please select the nature of your enquiry and provide a brief description. We will receive it through WhatsApp or Email.</p>
 <span class="ils-label">What do you need?</span>
 <div class="ils-categories">
 <button class="ils-category" type="button" data-type="Suggestion">💡 Suggestion</button>
@@ -38,8 +38,8 @@ root.innerHTML=`<button id="ils-contact-fab" type="button" aria-expanded="false"
 <button class="ils-category" type="button" data-type="Client Help">🧑‍⚖️ Client Help</button>
 <button class="ils-category" type="button" data-type="General Enquiry">ℹ️ General Enquiry</button>
 </div>
-<label class="ils-label" for="ils-contact-message">Briefly tell us</label>
-<textarea id="ils-contact-message" maxlength="600" placeholder="Write your message briefly..."></textarea>
+<label class="ils-label" for="ils-contact-message">Your message</label>
+<textarea id="ils-contact-message" maxlength="600" placeholder="Please describe your enquiry or concern in a few words..."></textarea>
 <div class="ils-actions">
 <button class="ils-send" id="ils-whatsapp" type="button" disabled>💬 WhatsApp</button>
 <button class="ils-send" id="ils-email" type="button" disabled>✉️ Email</button>
@@ -55,7 +55,7 @@ const close=()=>{panel.classList.remove("open");fab.setAttribute("aria-expanded"
 const update=()=>{const ready=Boolean(selected&&message.value.trim());wa.disabled=!ready;email.disabled=!ready};
 categories.forEach(btn=>btn.addEventListener("click",()=>{categories.forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");selected=btn.dataset.type||"";message.focus();update()}));
 message.addEventListener("input",update);
-const build=()=>{const text=message.value.trim().slice(0,600);return "Hello Instant Legal Services,\n\nSubject: "+selected+"\n\nMessage: "+text+"\n\nWebsite: Instant Legal Services\nPage: "+label+"\n\nThank you.";};
+const build=()=>{const text=message.value.trim().slice(0,600);return "Hello Instant Legal Services Team,\n\nI would like to contact you regarding a website enquiry.\n\nEnquiry Type: "+selected+"\n\nMessage: "+text+"\n\nPage: "+label+"\n\nKindly review my enquiry and assist me accordingly.\n\nRegards";};
 wa.addEventListener("click",()=>{if(wa.disabled)return;window.open("https://wa.me/"+WA+"?text="+encodeURIComponent(build()),"_blank","noopener,noreferrer")});
 email.addEventListener("click",()=>{if(email.disabled)return;location.href="mailto:"+EMAIL+"?subject="+encodeURIComponent("ILS Website - "+selected)+"&body="+encodeURIComponent(build())});
 fab.addEventListener("click",()=>{const open=panel.classList.toggle("open");fab.setAttribute("aria-expanded",String(open));if(open)message.focus()});
