@@ -260,7 +260,8 @@ function wireSubmissionAndAssistant(orderKey){
    const s=document.getElementById("assistantStatus");
    const name=document.getElementById("assistantName").value.trim(), mobile=document.getElementById("assistantMobile").value.trim(), address=document.getElementById("assistantAddress").value.trim(), skills=document.getElementById("assistantSkills").value.trim();
    if(!/^\d{10}$/.test(mobile)||!name||!address||!skills||!document.getElementById("assistantConsent").checked){s.className="status err";s.textContent="Complete name, 10-digit mobile, address, skills and undertaking.";return;}
-   const {data,error}=await sb.functions.invoke("convert-client-to-assistant",{body:{full_name:name,mobile,address,extra_skills:skills,undertaking_accepted:true,undertaking_signed_name:name}});
+   const submission=JSON.parse(localStorage.getItem("ils_submission_"+orderKey)||"null")||{};
+   const {data,error}=await sb.functions.invoke("convert-client-to-assistant",{body:{full_name:name,mobile,address,extra_skills:skills,undertaking_accepted:true,undertaking_signed_name:name,submission_reference:submission.reference||"",order_id:orderKey}});
    if(error||!data?.ok){s.className="status err";s.textContent=error?.message||data?.message||"Assistant application could not be submitted.";return;}
    s.className="status ok";s.textContent="Assistant application submitted using your existing ILS login. Your profile remains subject to ILS review; earning is not guaranteed.";
    document.getElementById("assistantSubmitBtn").disabled=true;
