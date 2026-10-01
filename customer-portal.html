@@ -52,6 +52,8 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 const SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
 const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const returnTo=new URLSearchParams(location.search).get("return");
+function continueReturn(){if(returnTo){try{const u=new URL(returnTo,location.origin);if(u.origin===location.origin)location.href=u.href;}catch(_){}}}
 const $=id=>document.getElementById(id);
 function status(msg,ok=false){$("status").textContent=msg;$("status").className="status "+(ok?"ok":"err");}
 function show(mode){
@@ -97,10 +99,10 @@ $("loginBtn").onclick=async()=>{
      const name=data.user.user_metadata?.full_name||data.user.email?.split("@")[0]||"ILS Customer";
      const {data:p,error:e}=await sb.rpc("provision_customer_profile",{p_full_name:name,p_mobile:null,p_client_requirement_id:null});
      if(e||!p?.ok) throw new Error(e?.message||"CUSTOMER_PROFILE_PROVISION_FAILED");
-     status("Signed in. Missing customer profile was safely provisioned.\nProfile: "+p.customer_profile_id,true);
+     status("Signed in. Missing customer profile was safely provisioned.\nProfile: "+p.customer_profile_id,true); continueReturn();
    }else{
      if(profile.status!=="active") throw new Error("CUSTOMER_ACCOUNT_SUSPENDED");
-     status("Signed in successfully.\nWelcome, "+profile.full_name+".",true);
+     status("Signed in successfully.\nWelcome, "+profile.full_name+".",true); continueReturn();
    }
  }catch(e){status(e.message||"Unable to sign in.");}
  finally{$("loginBtn").disabled=false;}
