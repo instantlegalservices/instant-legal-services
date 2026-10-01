@@ -161,18 +161,18 @@
       const slug=card.querySelector(".tool-open")?.dataset.tool;
       const tool=(window.ILS_TOOL_CATALOG||[]).find(x=>x.slug===slug);
       if(!tool)return;
-      const h=card.querySelector("h3"); if(h)h.textContent=toolName(tool.name);
-      const d=card.querySelector("p"); if(d)d.textContent=toolDescription(tool.mode);
-      const mode=card.querySelector(".tool-mode"); if(mode)mode.textContent=(p.cats[tool.category]||tool.category)+" • "+(p.modes[tool.mode]||tool.mode);
-      const open=card.querySelector(".tool-open"); if(open)open.textContent=lang()==="en-IN"?"Open Tool":lang()==="hi-IN"?"टूल खोलें":lang()==="hinglish"?"Tool kholein":lang()==="ur-IN"?"ٹول کھولیں":"টুল খুলুন";
-      const pop=card.querySelector(".tool-popular"); if(pop)pop.textContent=lang()==="en-IN"?"MOST USED":lang()==="hi-IN"?"अधिक उपयोग":lang()==="hinglish"?"MOST USED":lang()==="ur-IN"?"زیادہ استعمال":"বেশি ব্যবহৃত";
+      const h=card.querySelector("h3"); if(h){const v=toolName(tool.name);if(h.textContent!==v)h.textContent=v;}
+      const d=card.querySelector("p"); if(d){const v=toolDescription(tool.mode);if(d.textContent!==v)d.textContent=v;}
+      const mode=card.querySelector(".tool-mode"); if(mode){const v=(p.cats[tool.category]||tool.category)+" • "+(p.modes[tool.mode]||tool.mode);if(mode.textContent!==v)mode.textContent=v;}
+      const open=card.querySelector(".tool-open"); if(open){const v=lang()==="en-IN"?"Open Tool":lang()==="hi-IN"?"टूल खोलें":lang()==="hinglish"?"Tool kholein":lang()==="ur-IN"?"ٹول کھولیں":"টুল খুলুন";if(open.textContent!==v)open.textContent=v;}
+      const pop=card.querySelector(".tool-popular"); if(pop){const v=lang()==="en-IN"?"MOST USED":lang()==="hi-IN"?"अधिक उपयोग":lang()==="hinglish"?"MOST USED":lang()==="ur-IN"?"زیادہ استعمال":"বেশি ব্যবহৃত";if(pop.textContent!==v)pop.textContent=v;}
       const price=card.querySelector(".tool-price"); if(price&&tool.price)price.textContent="₹"+tool.price;
-      const free=card.querySelector(".tool-badge"); if(free)free.textContent=lang()==="en-IN"?"FREE":lang()==="hi-IN"?"निःशुल्क":lang()==="hinglish"?"FREE":lang()==="ur-IN"?"مفت":"বিনামূল্যে";
+      const free=card.querySelector(".tool-badge"); if(free){const v=lang()==="en-IN"?"FREE":lang()==="hi-IN"?"निःशुल्क":lang()==="hinglish"?"FREE":lang()==="ur-IN"?"مفت":"বিনামূল্যে";if(free.textContent!==v)free.textContent=v;}
     });
     document.querySelectorAll("[data-ils-tools-shell]").forEach(el=>{
       const original=el.getAttribute("data-ils-tools-shell");
       const value=p.shell[original];
-      if(value)el.textContent=value;
+      if(value && el.textContent!==value)el.textContent=value;
     });
     const labels={advocate:p.shell["Legal & Court"],ca:p.shell["Tax & Accounts"],gst:"GST",cs:p.shell["Company / MCA"],common:p.shell["Office & Documents"],ai:p.shell["AI Legal"],compliance:p.shell["Compliance"],finance:p.shell["Finance"]};
     document.querySelectorAll(".tool-category-card").forEach(card=>{
