@@ -39,15 +39,35 @@ Deno.serve(async(req)=>{
     const address=clean(b.address);
     const extraSkills=clean(b.extra_skills);
     const signedName=clean(b.undertaking_signed_name);
+    const submissionReference=clean(b.submission_reference);
+    const orderId=clean(b.order_id);
 
     if(!fullName||!email||!mobile||!address||!extraSkills||!signedName)
       return json({ok:false,message:"Name, email, mobile, address, skills and undertaking signature are required.",code:"VALIDATION_ERROR"},400);
     if(!/^\d{10}$/.test(mobile))
       return json({ok:false,message:"Enter a valid 10 digit mobile number.",code:"INVALID_MOBILE"},400);
+    if(!submissionReference||submissionReference.length>120)
+      return json({ok:false,message:"Official submission acknowledgement/reference is required.",code:"SUBMISSION_REFERENCE_REQUIRED"},400);
+    if(!orderId)
+      return json({ok:false,message:"Paid guided order reference is required.",code:"ORDER_REQUIRED"},400);
     if(b.undertaking_accepted!==true)
       return json({ok:false,message:"Please accept the ILS undertaking.",code:"UNDERTAKING_REQUIRED"},400);
     if(signedName.toLowerCase()!==fullName.toLowerCase())
       return json({ok:false,message:"Undertaking signature must match the full name.",code:"SIGNATURE_MISMATCH"},400);
+
+    const {data:order,error:orderError}=await admin
+      .from("orders")
+      .select("id,order_number,status,user_id,service_request_id,service_requests!inner(id,status,details,service_id,services!inner(slug))")
+      .eq("id",orderId)
+      .eq("user_id",uid)
+      .maybeSingle();
+
+    if(orderError) return json({ok:false,message:"Unable to verify the guided service order.",code:"ORDER_LOOKUP_ERROR"},500);
+    const serviceRequest=order?.service_requests;
+    const service=Array.isArray(serviceRequest?.services)?serviceRequest.services[0]:serviceRequest?.services;
+    const mode=String(serviceRequest?.details?.mode||"").toLowerCase();
+    if(!order||order.status!=="paid"||service?.slug!=="official-route-guidance"||mode!=="guided")
+      return json({ok:false,message:"A paid ILS Guided Guidance order is required before Assistant conversion.",code:"GUIDED_ORDER_NOT_VERIFIED"},403);
 
     const {data:customer,error:customerError}=await admin
       .from("customer_profiles")
@@ -99,7 +119,7 @@ Deno.serve(async(req)=>{
         verification_status:"Pending",
         status:"Pending",
         public_profile:false,
-        admin_notes:"Converted from authenticated ILS customer account after official-form submission checkpoint. Same auth_user_id retained.",
+        admin_notes:"Converted from authenticated ILS customer account after self-attested official-form submission checkpoint. Same auth_user_id retained. Guided order: "+order.order_number+"; official submission reference: "+submissionReference,
         auth_user_id:uid
       }])
       .select("id")
