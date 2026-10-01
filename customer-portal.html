@@ -80,7 +80,7 @@ $("signupBtn").onclick=async()=>{
    if(data.session){
      const p=await provision(data.user);
      status("Customer account and profile provisioned successfully.\nProfile: "+p.customer_profile_id,true);
-     show("login");
+     continueReturn();
    }else{
      status("Account created. Please complete the email confirmation if required, then sign in here.",true);
    }
