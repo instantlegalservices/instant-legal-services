@@ -157,18 +157,33 @@ function normalizeAdvocate(advocate) {
 
   const parsedDistrictCourt = parseDistrictCourt(districtCourt);
 
-  const district =
+  let district =
     getValue(advocate, [
       "district",
       "district_name",
       "city"
     ]) || parsedDistrictCourt.district;
 
-  const court =
+  let court =
     getValue(advocate, [
       "court",
       "court_name"
     ]) || parsedDistrictCourt.court;
+
+  // Presentation-only cleanup for known malformed public-profile values.
+  // Do not mutate the underlying advocate record.
+  if (String(district).trim().toLowerCase() === "barielly") {
+    district = "Bareilly";
+  }
+
+  const highCourtDistrictMatch = String(district || "")
+    .trim()
+    .match(/^High Court\s*:\s*(.+)$/i);
+
+  if (highCourtDistrictMatch && !String(court || "").trim()) {
+    district = "";
+    court = highCourtDistrictMatch[1].trim();
+  }
 
   const practiceAreas = uniqueStrings(
     arrayValue(
