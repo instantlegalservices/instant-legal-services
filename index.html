@@ -324,6 +324,8 @@ function setLang(v){
  const a={"hi-IN":["अपनी आवश्यकता बताएं","आवाज़ से बताएं","मेनू"],"en-IN":["Describe your need","Voice input","Menu"],"hinglish":["Apni need batao","Voice input","Menu"],"ur-IN":["اپنی ضرورت بتائیں","آواز سے بتائیں","مینو"],"bn-IN":["আপনার প্রয়োজন বলুন","কণ্ঠে বলুন","মেনু"]}[v]||["अपनी आवश्यकता बताएं","आواز سے بتائیں","مینو"];
  $("problem").setAttribute("aria-label",a[0]);$("voice").setAttribute("aria-label",a[1]);$("menu").setAttribute("aria-label",a[2]);
  localStorage.setItem("ils-home-lang",v);
+ if(typeof loadDynamic==="function") loadDynamic();
+ if(typeof currentRoute!=="undefined" && currentRoute && $("modal")?.classList.contains("open")) renderResult($("problem").value,currentRoute);
 }
 let governmentCatalog = [];
 let governmentContextActive = null;
