@@ -148,6 +148,14 @@ window.ILS = (() => {
       window.supabaseClient = client;
     }
 
+    if (!document.querySelector("#ils-contact-widget-script")) {
+      const contact = document.createElement("script");
+      contact.id = "ils-contact-widget-script";
+      contact.src = "/assets/ils-contact.js?v=1";
+      contact.defer = true;
+      document.head.appendChild(contact);
+    }
+
     document.querySelectorAll("[data-menu]").forEach((b) => {
 
       if (b.dataset.ilsBound) return;
