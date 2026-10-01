@@ -178,7 +178,7 @@ function normalizeAdvocate(advocate) {
 
   const highCourtDistrictMatch = String(district || "")
     .trim()
-    .match(/^High Court\\s*:\\s*(.+)$/i);
+    .match(/^High Court\s*:\s*(.+)$/i);
 
   if (highCourtDistrictMatch && !String(court || "").trim()) {
     district = "";
