@@ -720,7 +720,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   const canonical=b.getAttribute("data-q");
   selectedChipRoute=classify(canonical);
   const lang=$("language").value;
-  const localizedTitle=(b.textContent||selectedChipRoute.title).replace(/^[^\\p{L}\\p{N}]+/u,"").trim()||selectedChipRoute.title;
+  const localizedTitle=(b.textContent||selectedChipRoute.title).replace(/^(📱|🚔|🛒|🏦|🏛️|🏠|🚦|🧾|💰|👷|🏢|🧑‍💼|⚖️)\s*/u,"").trim()||selectedChipRoute.title;
   const templates={
    "hi-IN":`मुझे ${localizedTitle} के बारे में जानकारी चाहिए।`,
    "en-IN":`I need help with ${localizedTitle}.`,
