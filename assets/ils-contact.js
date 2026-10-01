@@ -23,7 +23,7 @@ const css=`
 `;
 const s=document.createElement("style");s.id="ils-contact-widget-style";s.textContent=css;document.head.appendChild(s);
 const path=location.pathname||"/";
-const label=path.replace(/\/+$/,"").split("/").filter(Boolean).pop()||"home";
+const rawLabel=path.replace(/\/+$/,"").split("/").filter(Boolean).pop()||"";const label=(!rawLabel||rawLabel==="index.html"||rawLabel==="index")?"Homepage":rawLabel.replace(/\.html?$/i,"").replace(/[-_]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 const title=(document.title||"ILS website").replace(/[<>]/g,"").slice(0,90);
 const root=document.createElement("div");
 root.innerHTML=`<button id="ils-contact-fab" type="button" aria-expanded="false" aria-controls="ils-contact-panel"><span class="ils-ci">💬</span><span>Contact ILS</span></button>
@@ -55,7 +55,7 @@ const close=()=>{panel.classList.remove("open");fab.setAttribute("aria-expanded"
 const update=()=>{const ready=Boolean(selected&&message.value.trim());wa.disabled=!ready;email.disabled=!ready};
 categories.forEach(btn=>btn.addEventListener("click",()=>{categories.forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");selected=btn.dataset.type||"";message.focus();update()}));
 message.addEventListener("input",update);
-const build=()=>{const text=message.value.trim().slice(0,600);return "Hello Instant Legal Services,\\n\\nType: "+selected+"\\nMessage: "+text+"\\n\\nWebsite page: "+label};
+const build=()=>{const text=message.value.trim().slice(0,600);return "Hello Instant Legal Services,\n\nSubject: "+selected+"\n\nMessage: "+text+"\n\nWebsite: Instant Legal Services\nPage: "+label+"\n\nThank you.";};
 wa.addEventListener("click",()=>{if(wa.disabled)return;window.open("https://wa.me/"+WA+"?text="+encodeURIComponent(build()),"_blank","noopener,noreferrer")});
 email.addEventListener("click",()=>{if(email.disabled)return;location.href="mailto:"+EMAIL+"?subject="+encodeURIComponent("ILS Website - "+selected)+"&body="+encodeURIComponent(build())});
 fab.addEventListener("click",()=>{const open=panel.classList.toggle("open");fab.setAttribute("aria-expanded",String(open));if(open)message.focus()});
