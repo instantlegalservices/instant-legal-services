@@ -58,7 +58,8 @@ message.addEventListener("input",update);
 const build=()=>{const text=message.value.trim().slice(0,600);return "Hello Instant Legal Services Team,\n\nI would like to contact you regarding a website enquiry.\n\nEnquiry Type: "+selected+"\n\nMessage: "+text+"\n\nPage: "+label+"\n\nKindly review my enquiry and assist me accordingly.\n\nRegards";};
 wa.addEventListener("click",()=>{if(wa.disabled)return;window.open("https://wa.me/"+WA+"?text="+encodeURIComponent(build()),"_blank","noopener,noreferrer")});
 email.addEventListener("click",()=>{if(email.disabled)return;location.href="mailto:"+EMAIL+"?subject="+encodeURIComponent("ILS Website - "+selected)+"&body="+encodeURIComponent(build())});
-fab.addEventListener("click",()=>{const open=panel.classList.toggle("open");fab.setAttribute("aria-expanded",String(open));if(open)message.focus()});\nif(location.hash==="#contact-ils"){requestAnimationFrame(()=>{panel.classList.add("open");fab.setAttribute("aria-expanded","true");message.focus()})}
+fab.addEventListener("click",()=>{const open=panel.classList.toggle("open");fab.setAttribute("aria-expanded",String(open));if(open)message.focus()});
+if(location.hash==="#contact-ils"){requestAnimationFrame(()=>{panel.classList.add("open");fab.setAttribute("aria-expanded","true");message.focus()})}
 root.querySelector(".ils-close").addEventListener("click",close);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
 document.addEventListener("click",e=>{if(panel.classList.contains("open")&&!root.contains(e.target))close()});
