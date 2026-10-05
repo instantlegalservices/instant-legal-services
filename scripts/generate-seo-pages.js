@@ -1223,11 +1223,17 @@ async function main() {
     "Starting Dynamic SEO Page Generator..."
   );
 
-  const advocates =
-    await fetchAdvocates();
+  const professionalsOnly = process.env.PROFESSIONALS_ONLY === "1";
 
-  const professionals =
-    await fetchPublicProfessionals();
+  if (professionalsOnly) {
+    const professionals = await fetchPublicProfessionals();
+    writeProfessionalPages(professionals);
+    console.log("Professional-only SEO generation complete.");
+    return;
+  }
+
+  const advocates = await fetchAdvocates();
+  const professionals = await fetchPublicProfessionals();
 
   if (!Array.isArray(advocates)) {
     throw new Error(
