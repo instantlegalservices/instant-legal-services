@@ -3,12 +3,16 @@ name: Generate Dynamic SEO Pages
 on:
   workflow_dispatch:
 
+  schedule:
+    - cron: "17 18 * * *"
+
   push:
     branches:
       - main
     paths:
       - "scripts/generate-seo-pages.js"
       - ".github/workflows/generate-seo-pages.yml"
+      - "supabase/migrations/**"
 
 permissions:
   contents: write
@@ -30,6 +34,8 @@ jobs:
         env:
           ADVOCATES_API_URL: ${{ secrets.ADVOCATES_API_URL }}
           ADVOCATES_API_KEY: ${{ secrets.ADVOCATES_API_KEY }}
+          PROFESSIONALS_API_URL: ${{ secrets.PROFESSIONALS_API_URL }}
+          PROFESSIONALS_API_KEY: ${{ secrets.PROFESSIONALS_API_KEY }}
         run: node scripts/generate-seo-pages.js
 
       - name: Commit generated SEO pages
