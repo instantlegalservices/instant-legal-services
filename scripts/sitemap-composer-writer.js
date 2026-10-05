@@ -305,12 +305,18 @@ async function writeComposedSitemap(
       ? options.additionalUrls
       : [];
 
+  const managedPrefixes =
+    Array.isArray(options.managedPrefixes)
+      ? options.managedPrefixes
+      : [];
+
   const result =
     composeSitemap(
       existingXml,
       currentRows,
       redirectRows,
-      additionalUrls
+      additionalUrls,
+      managedPrefixes
     );
 
   if (
