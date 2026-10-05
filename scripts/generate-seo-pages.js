@@ -1233,7 +1233,6 @@ async function main() {
   }
 
   const advocates = await fetchAdvocates();
-  const professionals = await fetchPublicProfessionals();
 
   if (!Array.isArray(advocates)) {
     throw new Error(
@@ -1273,8 +1272,6 @@ async function main() {
   console.log(
     `Approved public advocates: ${approvedAdvocates.length}`
   );
-
-  writeProfessionalPages(professionals);
 
   const states = new Map();
   const districts = new Map();
