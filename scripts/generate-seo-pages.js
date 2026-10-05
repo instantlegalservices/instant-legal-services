@@ -1508,6 +1508,24 @@ async function main() {
 
 <div class="card">
 
+  <h2>Explore This Advocate's Legal Context</h2>
+
+  <p>
+    Explore the relevant state, district, court or practice-area pages
+    connected to this approved public advocate profile.
+  </p>
+
+  <div class="profile-grid">
+    ${state ? `<div class="profile-item"><strong>State</strong><br><a href="/state/${slugify(state)}/">${escapeHtml(state)}</a></div>` : ""}
+    ${district ? `<div class="profile-item"><strong>District</strong><br><a href="/district/${slugify(district)}/">${escapeHtml(district)}</a></div>` : ""}
+    ${court ? `<div class="profile-item"><strong>Court / Jurisdiction</strong><br><a href="/court/${slugify(court)}/">${escapeHtml(court)}</a></div>` : ""}
+    ${practiceAreas.map(area => `<div class="profile-item"><strong>Practice Area</strong><br><a href="/practice/${slugify(area)}/">${escapeHtml(area)}</a></div>`).join("")}
+  </div>
+
+</div>
+
+<div class="card">
+
   <h2>Legal Assistance</h2>
 
   <p>
