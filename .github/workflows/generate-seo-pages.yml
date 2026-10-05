@@ -3,6 +3,9 @@ name: Generate Dynamic SEO Pages
 on:
   workflow_dispatch:
 
+  schedule:
+    - cron: "17 18 * * *"
+
   push:
     branches:
       - main
