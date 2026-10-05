@@ -3,11 +3,15 @@ name: Generate Dynamic SEO Pages
 on:
   workflow_dispatch:
 
+  schedule:
+    - cron: "17 18 * * *"
+
   push:
     branches:
       - main
     paths:
       - "scripts/generate-seo-pages.js"
+      - "scripts/sync-advocate-sitemap.js"
       - ".github/workflows/generate-seo-pages.yml"
 
 permissions:
@@ -31,6 +35,10 @@ jobs:
           ADVOCATES_API_URL: ${{ secrets.ADVOCATES_API_URL }}
           ADVOCATES_API_KEY: ${{ secrets.ADVOCATES_API_KEY }}
         run: node scripts/generate-seo-pages.js
+
+
+      - name: Sync advocate sitemap
+        run: node scripts/sync-advocate-sitemap.js
 
       - name: Commit generated SEO pages
         run: |

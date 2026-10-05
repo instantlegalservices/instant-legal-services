@@ -1,0 +1,96 @@
+name: Validate Advocate SEO Lifecycle
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - advocate-seo-lifecycle-fix
+    paths:
+      - "scripts/generate-seo-pages.js"
+      - "scripts/sync-advocate-sitemap.js"
+      - "scripts/sitemap-composer.js"
+      - ".github/workflows/generate-seo-pages.yml"
+      - ".github/workflows/validate-advocate-seo-lifecycle.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Syntax checks
+        run: |
+          node --check scripts/generate-seo-pages.js
+          node --check scripts/sync-advocate-sitemap.js
+          node --check scripts/sitemap-composer.js
+
+      - name: Generate advocate profile from isolated fake feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          TMP="$(mktemp -d)"
+          mkdir -p "$TMP/advocate"
+          cat > "$TMP/feed.json" <<'JSON'
+          [{"id":"ci-adv-001","advocate_name":"CI Advocate One","practice_state":"Uttar Pradesh","district_court":"Bareilly | District and Sessions Court","primary_practice_area":"Criminal Law, Bail & Anticipatory Bail","verification_status":"Approved","public_profile":true},{"id":"ci-adv-002","advocate_name":"CI Advocate Two","practice_state":"Delhi","district":"New Delhi","court":"District Courts Delhi","practice_areas":["Civil Law"],"verification_status":"Approved","public_profile":true},{"id":"ci-private","advocate_name":"CI Private Advocate","practice_state":"Uttar Pradesh","verification_status":"Approved","public_profile":false}]
+          JSON
+          python3 -m http.server 8765 --directory "$TMP" >/tmp/ils-http.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          sleep 1
+          cd "$TMP"
+          ADVOCATES_API_URL="http://127.0.0.1:8765/feed.json" ADVOCATES_API_KEY="ci-only" node "$GITHUB_WORKSPACE/scripts/generate-seo-pages.js"
+          test -f "$TMP/advocate/ci-advocate-one/index.html"
+          test -f "$TMP/advocate/ci-advocate-two/index.html"
+          test -f "$TMP/.generated-advocate-routes.json"
+          grep -q 'advocate/ci-advocate-one/' "$TMP/.generated-advocate-routes.json"
+          test ! -e "$TMP/advocate/ci-private-advocate/index.html"
+          grep -q 'href="/state/uttar-pradesh/"' "$TMP/advocate/ci-advocate-one/index.html"
+          grep -q 'href="/district/bareilly/"' "$TMP/advocate/ci-advocate-one/index.html"
+          grep -q 'href="/court/district-and-sessions-court/"' "$TMP/advocate/ci-advocate-one/index.html"
+          grep -q 'href="/practice/criminal-law/"' "$TMP/advocate/ci-advocate-one/index.html"
+
+      - name: Validate advocate sitemap lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          TMP="$(mktemp -d)"
+          mkdir -p "$TMP/advocate/current-advocate"
+          mkdir -p "$TMP/advocate/new-advocate"
+          mkdir -p "$TMP/advocate/stale-advocate"
+          cat > "$TMP/sitemap.xml" <<'XML'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+            <url><loc>https://instantlegalservices.in/</loc></url>
+            <url><loc>https://instantlegalservices.in/advocate/stale-advocate/</loc></url>
+            <url><loc>https://instantlegalservices.in/government/igrsup/</loc></url>
+          </urlset>
+          XML
+          printf '<!doctype html><title>Current</title>' > "$TMP/advocate/current-advocate/index.html"
+          printf '<!doctype html><title>Stale</title>' > "$TMP/advocate/stale-advocate/index.html"
+          cat > "$TMP/.generated-advocate-routes.json" <<'JSON'
+          {"version":1,"routes":["advocate/current-advocate/","advocate/stale-advocate/"]}
+          JSON
+          printf '<!doctype html><title>New</title>' > "$TMP/advocate/new-advocate/index.html"
+          cd "$TMP"
+          node "$GITHUB_WORKSPACE/scripts/sync-advocate-sitemap.js"
+          grep -q 'https://instantlegalservices.in/advocate/current-advocate/' sitemap.xml
+          # Unmanaged new HTML is intentionally excluded; the generator must first claim it in the ownership manifest.
+          ! grep -q 'https://instantlegalservices.in/advocate/new-advocate/' sitemap.xml
+          # Sitemap sync removes stale advocate URLs from the sitemap; HTML ownership cleanup is tested by the generator lifecycle.
+          test -e "$TMP/advocate/stale-advocate/index.html"
+          ! grep -q 'https://instantlegalservices.in/advocate/stale-advocate/' sitemap.xml
+          grep -q 'https://instantlegalservices.in/government/igrsup/' sitemap.xml
+          node -e 'const fs=require("fs"); const x=fs.readFileSync("sitemap.xml","utf8"); const {validateComposedSitemap}=require(process.env.GITHUB_WORKSPACE+"/scripts/sitemap-composer.js"); validateComposedSitemap(x); console.log("PASS: final sitemap valid");'
