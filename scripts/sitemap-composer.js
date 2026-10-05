@@ -825,7 +825,8 @@ function validateComposedSitemap(
 function composeSitemap(
   existingXml,
   currentRows,
-  redirectRows
+  redirectRows,
+  additionalUrls = []
 ) {
   const existingEntries =
     parseSitemap(
@@ -840,6 +841,16 @@ function composeSitemap(
       currentRows,
       redirectRows
     );
+
+  if (!Array.isArray(additionalUrls)) {
+    throw new Error("additionalUrls must be an array");
+  }
+
+  const additionalUrlSet = new Set(
+    additionalUrls.map((url, index) =>
+      assertCanonicalSitemapLoc(url, `additionalUrls[${index}]`)
+    )
+  );
 
   const currentUrls =
     new Set(
@@ -911,6 +922,13 @@ function composeSitemap(
       entry.loc,
       entry
     );
+  }
+
+  for (const additionalUrl of additionalUrlSet) {
+    if (historicalUrls.has(additionalUrl)) {
+      throw new Error(`Additional URL is a historical route: ${additionalUrl}`);
+    }
+    byUrl.set(additionalUrl, { loc: additionalUrl });
   }
 
   /*
