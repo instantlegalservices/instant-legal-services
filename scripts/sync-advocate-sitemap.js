@@ -41,10 +41,13 @@ function toAbsolute(route) {
 }
 
 function assertManagedRoute(route) {
-  if (!route.startsWith(MANAGED_PREFIX) || !route.endsWith("/")) {
+  const normalizedRoute = route.startsWith("/") ? route : "/" + route;
+
+  if (!normalizedRoute.startsWith(MANAGED_PREFIX) || !normalizedRoute.endsWith("/")) {
     throw new Error(`Invalid advocate route: ${route}`);
   }
-  return toAbsolute(route);
+
+  return toAbsolute(normalizedRoute);
 }
 
 function main() {
