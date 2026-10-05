@@ -11,6 +11,8 @@ on:
       - main
     paths:
       - "scripts/generate-seo-pages.js"
+      - "scripts/sitemap-composer.js"
+      - "scripts/sitemap-composer-writer.js"
       - ".github/workflows/generate-seo-pages.yml"
       - "supabase/migrations/**"
 
@@ -38,7 +40,50 @@ jobs:
           PROFESSIONALS_API_KEY: ${{ secrets.PROFESSIONALS_API_KEY }}
         run: node scripts/generate-seo-pages.js
 
-      - name: Commit generated SEO pages
+      - name: Compose sitemap with generated professional routes
+        env:
+          LOCATION_REGISTRY_SUPABASE_URL: ${{ secrets.LOCATION_REGISTRY_SUPABASE_URL }}
+          LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.LOCATION_REGISTRY_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const path = require("path");
+          const { writeComposedSitemap } = require("./scripts/sitemap-composer-writer");
+
+          const root = path.join(process.cwd(), "professional");
+          const additionalUrls = [];
+
+          for (const type of ["ca", "cs"]) {
+            const typeDir = path.join(root, type);
+            if (!fs.existsSync(typeDir)) continue;
+
+            for (const entry of fs.readdirSync(typeDir, { withFileTypes: true })) {
+              if (!entry.isDirectory()) continue;
+
+              const indexPath = path.join(typeDir, entry.name, "index.html");
+              if (!fs.existsSync(indexPath)) continue;
+
+              additionalUrls.push(
+                `https://instantlegalservices.in/professional/${type}/${entry.name}/`
+              );
+            }
+          }
+
+          additionalUrls.sort();
+
+          console.log(`Professional sitemap URLs: ${additionalUrls.length}`);
+
+          writeComposedSitemap({ additionalUrls })
+            .then(result => {
+              console.log(`Sitemap composition PASS: ${result.finalCount} URLs`);
+            })
+            .catch(error => {
+              console.error(error);
+              process.exit(1);
+            });
+          NODE
+
+      - name: Commit generated SEO pages and sitemap
         run: |
           git config user.name "Instant Legal Services SEO Bot"
           git config user.email "seo-bot@instantlegalservices.in"
