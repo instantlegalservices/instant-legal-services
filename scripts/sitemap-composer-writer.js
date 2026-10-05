@@ -300,11 +300,17 @@ async function writeComposedSitemap(
    * - sorts deterministically
    * - validates URL and sitemap limits
    */
+  const additionalUrls =
+    Array.isArray(options.additionalUrls)
+      ? options.additionalUrls
+      : [];
+
   const result =
     composeSitemap(
       existingXml,
       currentRows,
-      redirectRows
+      redirectRows,
+      additionalUrls
     );
 
   if (
