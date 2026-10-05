@@ -4,6 +4,8 @@ const path = require("path");
 const SITE_URL = "https://instantlegalservices.in";
 const API_URL = process.env.ADVOCATES_API_URL;
 const API_KEY = process.env.ADVOCATES_API_KEY;
+const PROFESSIONALS_API_URL = process.env.PROFESSIONALS_API_URL;
+const PROFESSIONALS_API_KEY = process.env.PROFESSIONALS_API_KEY;
 
 function slugify(value = "") {
   return String(value)
@@ -647,6 +649,98 @@ ${cards}
   }
 }
 
+async function fetchPublicProfessionals() {
+  if (!PROFESSIONALS_API_URL || !PROFESSIONALS_API_KEY) {
+    throw new Error("Missing public professional SEO feed configuration");
+  }
+  const response = await fetch(PROFESSIONALS_API_URL, {
+    headers: {
+      apikey: PROFESSIONALS_API_KEY,
+      Authorization: `Bearer ${PROFESSIONALS_API_KEY}`
+    }
+  });
+  if (!response.ok) throw new Error(`Public professional SEO feed failed: HTTP ${response.status}`);
+  const data = await response.json();
+  if (!Array.isArray(data)) throw new Error("Public professional SEO feed must return an array");
+  return data;
+}
+
+function normalizeProfessional(professional) {
+  return {
+    id: String(getValue(professional, ["id"]) || "").trim(),
+    type: String(getValue(professional, ["professional_type"]) || "").trim().toLowerCase(),
+    name: String(getValue(professional, ["full_name", "name"]) || "").trim(),
+    state: String(getValue(professional, ["state"]) || "").trim(),
+    city: String(getValue(professional, ["city"]) || "").trim(),
+    specializations: uniqueStrings(arrayValue(getValue(professional, ["specialization", "specializations"]))),
+    yearsOfExperience: getValue(professional, ["years_of_experience"]),
+    firm: String(getValue(professional, ["firm_or_organization"]) || "").trim()
+  };
+}
+
+function buildProfessionalRoutes(professionals) {
+  const used = new Map();
+  const routes = new Map();
+  const sorted = [...professionals].sort((a,b) =>
+    String(getValue(a, ["professional_type"]) || "").localeCompare(String(getValue(b, ["professional_type"]) || "")) ||
+    String(getValue(a, ["id"]) || "").localeCompare(String(getValue(b, ["id"]) || ""))
+  );
+  for (const professional of sorted) {
+    const p = normalizeProfessional(professional);
+    const type = p.type || "professional";
+    const base = slugify(p.name) || "professional";
+    const key = `${type}/${base}`;
+    const n = (used.get(key) || 0) + 1;
+    used.set(key, n);
+    routes.set(professional, `professional/${type}/${base}${n > 1 ? `-${n}` : ""}`);
+  }
+  return routes;
+}
+
+function writeProfessionalPages(professionals) {
+  const routes = buildProfessionalRoutes(professionals);
+  for (const professional of professionals) {
+    const p = normalizeProfessional(professional);
+    if (!p.name || !["ca", "cs"].includes(p.type)) continue;
+    const route = routes.get(professional);
+    if (!route) throw new Error(`Unable to assign professional route for: ${p.name}`);
+    const canonical = `${SITE_URL}/${route}/`;
+    const typeLabel = p.type === "ca" ? "Chartered Accountant" : "Company Secretary";
+    const location = uniqueStrings([p.city, p.state]).join(", ");
+    const description = [
+      `${p.name} - ${typeLabel} profile on Instant Legal Services`,
+      location ? `Location: ${location}` : "",
+      p.specializations.length ? `Services: ${p.specializations.slice(0, 4).join(", ")}` : ""
+    ].filter(Boolean).join(". ") + ".";
+    const content = `
+<div class="card">
+  <p><strong>Professional Profile:</strong> Approved public ${escapeHtml(typeLabel)} profile.</p>
+  ${location ? `<p><strong>Location:</strong> ${escapeHtml(location)}</p>` : ""}
+  ${p.firm ? `<p><strong>Firm / Organization:</strong> ${escapeHtml(p.firm)}</p>` : ""}
+  ${p.yearsOfExperience !== "" ? `<p><strong>Experience:</strong> ${escapeHtml(p.yearsOfExperience)} years</p>` : ""}
+  ${p.specializations.length ? `<h2>Services / Specializations</h2><p>${p.specializations.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join("")}</p>` : ""}
+</div>
+<div class="card"><p>This public professional profile is informational and is not a ranking, guarantee of result, or government endorsement.</p></div>`;
+    writePage(route, pageTemplate({
+      title: `${p.name} | ${typeLabel} | Instant Legal Services`,
+      description,
+      canonical,
+      heading: `${p.name} - ${typeLabel}`,
+      content,
+      schema: {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": p.name,
+        "jobTitle": typeLabel,
+        "url": canonical,
+        ...(p.specializations.length ? { knowsAbout: p.specializations } : {}),
+        ...(p.city || p.state ? {"address":{"@type":"PostalAddress", ...(p.city ? {addressLocality:p.city}:{}), ...(p.state ? {addressRegion:p.state}:{}), addressCountry:"IN"}} : {})
+      }
+    }));
+  }
+  console.log(`Public professional SEO pages generated: ${professionals.length}`);
+}
+
 function pageTemplate({
   title,
   description,
@@ -1132,6 +1226,9 @@ async function main() {
   const advocates =
     await fetchAdvocates();
 
+  const professionals =
+    await fetchPublicProfessionals();
+
   if (!Array.isArray(advocates)) {
     throw new Error(
       "API must return an array of advocates"
@@ -1170,6 +1267,8 @@ async function main() {
   console.log(
     `Approved public advocates: ${approvedAdvocates.length}`
   );
+
+  writeProfessionalPages(professionals);
 
   const states = new Map();
   const districts = new Map();
