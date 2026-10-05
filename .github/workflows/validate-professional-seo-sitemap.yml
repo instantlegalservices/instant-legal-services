@@ -48,7 +48,6 @@ jobs:
 
       - name: Verify sitemap composer modules
         run: node -e "require('./scripts/sitemap-composer.js'); require('./scripts/sitemap-composer-writer.js'); console.log('SITEMAP_MODULES=PASS')"
-        run: node -e "require('./scripts/sitemap-composer.js'); require('./scripts/sitemap-composer-writer.js'); console.log('SITEMAP_MODULES=PASS')"
       - name: Validate professional routes with existing sitemap composer
         run: |
           node <<'NODE'
