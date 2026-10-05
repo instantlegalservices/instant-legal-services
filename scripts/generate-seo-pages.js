@@ -1574,7 +1574,9 @@ async function main() {
       })
     );
 
-    generatedAdvocateRoutes.push(route);
+    generatedAdvocateRoutes.push(
+      route.replace(/^\/+|\/+$/g, "") + "/"
+    );
   }
 
   /*
