@@ -23,7 +23,7 @@ function collectAdvocateRoutes(root = path.join(process.cwd(), "advocate")) {
       const rel = relative ? path.join(relative, entry.name) : entry.name;
       if (entry.isDirectory()) walk(abs, rel);
       else if (entry.isFile() && entry.name === "index.html") {
-        const route = "/" + rel.slice(0, -"/index.html".length).replace(/\\/g, "/") + "/";
+        const route = "/advocate/" + rel.slice(0, -"/index.html".length).replace(/\\/g, "/") + "/";
         routes.push(route);
       }
     }
