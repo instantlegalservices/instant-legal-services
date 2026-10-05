@@ -91,19 +91,35 @@ jobs:
             "https://instantlegalservices.in/professional/ca/example-ca/",
             "https://instantlegalservices.in/professional/cs/example-cs/"
           ];
-          const result = composeSitemap(existing, [], [], professionalUrls);
+          const result = composeSitemap(existing, [], [], professionalUrls, ["/professional/ca/", "/professional/cs/"]);
           validateComposedSitemap(result.xml);
           for (const url of professionalUrls) {
             if (!result.xml.includes("<loc>" + url + "</loc>")) {
               throw new Error("Missing professional URL: " + url);
             }
           }
+          const staleProfessional = "https://instantlegalservices.in/professional/ca/stale-profile/";
+          const staleInput = existing.replace(
+            "</urlset>",
+            "  <url>\\n    <loc>" + staleProfessional + "</loc>\\n  </url>\\n</urlset>"
+          );
+          const staleResult = composeSitemap(
+            staleInput,
+            [],
+            [],
+            professionalUrls,
+            ["/professional/ca/", "/professional/cs/"]
+          );
+          if (staleResult.xml.includes("<loc>" + staleProfessional + "</loc>")) {
+            throw new Error("Stale managed professional URL survived");
+          }
           const existingLocCount = (existing.match(/<loc>/g) || []).length;
           const finalLocCount = (result.xml.match(/<loc>/g) || []).length;
-          if (finalLocCount !== existingLocCount + professionalUrls.length) {
+          if (finalLocCount !== existingLocCount - 0 + professionalUrls.length) {
             throw new Error("Unexpected sitemap count: existing=" + existingLocCount + ", final=" + finalLocCount);
           }
           console.log("PROFESSIONAL_SITEMAP_COMPOSER=PASS");
+          console.log("PROFESSIONAL_STALE_ROUTE_REMOVAL=PASS");
           console.log("Existing URLs: " + existingLocCount);
           console.log("Final URLs: " + finalLocCount);
           NODE
