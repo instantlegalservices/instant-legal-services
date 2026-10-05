@@ -76,7 +76,15 @@ jobs:
           test -f professional/ca/ci-test-chartered-accountant/index.html
           test -f professional/cs/ci-test-company-secretary/index.html
           grep -q "CI Test Chartered Accountant" professional/ca/ci-test-chartered-accountant/index.html
-          grep -q "CI Test Company Secretary" professional/cs/ci-test-company-secretary/index.html
+          test -f professional/ca/index.html
+          test -f professional/cs/index.html
+          grep -q "CI Test Chartered Accountant" professional/ca/index.html
+          grep -q "CI Test Company Secretary" professional/cs/index.html
+          grep -q '/professional/ca/ci-test-chartered-accountant/' professional/ca/index.html
+          grep -q '/professional/cs/ci-test-company-secretary/' professional/cs/index.html
+          grep -q '/professional/ca/' professional/ca/ci-test-chartered-accountant/index.html
+          grep -q '/professional/cs/' professional/cs/ci-test-company-secretary/index.html
+          echo "PROFESSIONAL_DIRECTORY_GRAPH=PASS"
           echo "PROFESSIONAL_PAGE_GENERATION=PASS"
 
       - name: Verify sitemap composer modules
