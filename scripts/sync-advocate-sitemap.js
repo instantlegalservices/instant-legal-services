@@ -14,22 +14,26 @@ const {
 const SITEMAP_PATH = path.join(process.cwd(), "sitemap.xml");
 const MANAGED_PREFIX = "/advocate/";
 
-function collectAdvocateRoutes(root = path.join(process.cwd(), "advocate")) {
-  if (!fs.existsSync(root)) return [];
-  const routes = [];
-  function walk(dir, relative) {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const abs = path.join(dir, entry.name);
-      const rel = relative ? path.join(relative, entry.name) : entry.name;
-      if (entry.isDirectory()) walk(abs, rel);
-      else if (entry.isFile() && entry.name === "index.html") {
-        const route = "/advocate/" + rel.slice(0, -"/index.html".length).replace(/\\/g, "/") + "/";
-        routes.push(route);
-      }
-    }
+function collectAdvocateRoutes(root = process.cwd()) {
+  const manifestPath = path.join(root, ".generated-advocate-routes.json");
+  if (!fs.existsSync(manifestPath)) return [];
+
+  const parsed = JSON.parse(
+    fs.readFileSync(manifestPath, "utf8")
+  );
+
+  if (!Array.isArray(parsed.routes)) {
+    throw new Error("Invalid advocate SEO ownership manifest.");
   }
-  walk(root, "");
-  return [...new Set(routes)].sort();
+
+  return [...new Set(
+    parsed.routes.filter(
+      route =>
+        typeof route === "string" &&
+        route.startsWith("advocate/") &&
+        route.endsWith("/")
+    )
+  )].sort();
 }
 
 function toAbsolute(route) {
