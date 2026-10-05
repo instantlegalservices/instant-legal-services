@@ -83,7 +83,17 @@ jobs:
           grep -q '/professional/ca/ci-test-chartered-accountant/' professional/ca/index.html
           grep -q '/professional/cs/ci-test-company-secretary/' professional/cs/index.html
           grep -q '/professional/ca/' professional/ca/ci-test-chartered-accountant/index.html
-          grep -q '/professional/cs/' professional/cs/ci-test-company-secretary/index.html
+          test -f professional/ca/state/uttar-pradesh/index.html
+          test -f professional/ca/city/bareilly/index.html
+          test -f professional/ca/specialization/gst/index.html
+          test -f professional/ca/specialization/income-tax/index.html
+          test -f professional/cs/specialization/corporate-compliance/index.html
+          grep -q '/professional/ca/state/uttar-pradesh/' professional/ca/ci-test-chartered-accountant/index.html
+          grep -q '/professional/ca/city/bareilly/' professional/ca/ci-test-chartered-accountant/index.html
+          grep -q '/professional/ca/specialization/gst/' professional/ca/ci-test-chartered-accountant/index.html
+          grep -q '/professional/ca/ci-test-chartered-accountant/' professional/ca/state/uttar-pradesh/index.html
+          grep -q '/professional/cs/ci-test-company-secretary/' professional/cs/specialization/corporate-compliance/index.html
+          echo "PROFESSIONAL_LOCATION_SPECIALIZATION_GRAPH=PASS"
           echo "PROFESSIONAL_DIRECTORY_GRAPH=PASS"
           echo "PROFESSIONAL_PAGE_GENERATION=PASS"
 
