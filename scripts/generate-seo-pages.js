@@ -1017,7 +1017,8 @@ function buildLocationContent({
   name,
   state,
   advocates,
-  advocateRoutes
+  advocateRoutes,
+  relatedRoutes = {}
 }) {
   const normalizedAdvocates =
     advocates
@@ -1041,6 +1042,77 @@ function buildLocationContent({
       normalizedAdvocates
         .map(a => a.district)
     );
+
+  /*
+   * Contextual SEO graph:
+   * State ↔ District ↔ Court ↔ Practice ↔ Advocate.
+   * Links are derived only from the same approved-public advocate set
+   * already used to build these pages.
+   */
+  const relatedGroups = [
+    {
+      label: "States",
+      values: uniqueStrings(normalizedAdvocates.map(a => a.state)),
+      routes: relatedRoutes.states || new Map(),
+      slugger: slugify
+    },
+    {
+      label: "Districts",
+      values: districts,
+      routes: relatedRoutes.districts || new Map(),
+      slugger: slugify
+    },
+    {
+      label: "Courts / Jurisdictions",
+      values: courts,
+      routes: relatedRoutes.courts || new Map(),
+      slugger: slugify
+    },
+    {
+      label: "Practice Areas",
+      values: practices,
+      routes: relatedRoutes.practices || new Map(),
+      slugger: slugify
+    }
+  ];
+
+  const currentRoute = relatedRoutes.currentRoute || "";
+
+  const relatedLinkGroups = relatedGroups
+    .map(group => {
+      const links = group.values
+        .map(value => {
+          const route = group.routes.get(group.slugger(value));
+          if (!route || route === currentRoute) {
+            return "";
+          }
+          return `<a href="/${escapeHtml(route)}/">${escapeHtml(value)}</a>`;
+        })
+        .filter(Boolean);
+
+      if (!links.length) {
+        return "";
+      }
+
+      return `
+<div class="profile-item">
+  <strong>${escapeHtml(group.label)}</strong>
+  <br>
+  ${links.join(" · ")}
+</div>`;
+    })
+    .filter(Boolean)
+    .join("");
+
+  const relatedGraphCard = relatedLinkGroups
+    ? `
+<div class="card">
+  <h2>Related Legal Service Pages</h2>
+  <div class="profile-grid">
+    ${relatedLinkGroups}
+  </div>
+</div>`
+    : "";
 
   const advocateCards =
     normalizedAdvocates
@@ -1120,6 +1192,8 @@ function buildLocationContent({
   };
 
   return `
+${relatedGraphCard}
+
 <div class="card">
 
   <p>
@@ -1678,7 +1752,14 @@ async function main() {
         name: data.name,
         state: data.name,
         advocates: data.advocates,
-        advocateRoutes
+        advocateRoutes,
+        relatedRoutes: {
+          states,
+          districts,
+          courts,
+          practices,
+          currentRoute: route
+        }
       });
 
     writePage(
@@ -1725,7 +1806,14 @@ async function main() {
         name: data.name,
         state: data.state,
         advocates: data.advocates,
-        advocateRoutes
+        advocateRoutes,
+        relatedRoutes: {
+          states,
+          districts,
+          courts,
+          practices,
+          currentRoute: route
+        }
       });
 
     writePage(
@@ -1772,7 +1860,14 @@ async function main() {
         name: data.name,
         state: data.state,
         advocates: data.advocates,
-        advocateRoutes
+        advocateRoutes,
+        relatedRoutes: {
+          states,
+          districts,
+          courts,
+          practices,
+          currentRoute: route
+        }
       });
 
     writePage(
@@ -1818,7 +1913,14 @@ async function main() {
         type: "practice",
         name: data.name,
         advocates: data.advocates,
-        advocateRoutes
+        advocateRoutes,
+        relatedRoutes: {
+          states,
+          districts,
+          courts,
+          practices,
+          currentRoute: route
+        }
       });
 
     writePage(
