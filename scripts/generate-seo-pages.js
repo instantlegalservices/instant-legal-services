@@ -45,6 +45,17 @@ function normalizePracticeName(value = "") {
   return PRACTICE_CANONICAL_NAMES[route] || String(value || "").trim();
 }
 
+const DISTRICT_NAME_ALIASES = {
+  "barielly": "Bareilly",
+  "bareilly": "Bareilly"
+};
+
+function normalizeDistrictName(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return DISTRICT_NAME_ALIASES[text.toLowerCase()] || text;
+}
+
 function escapeHtml(value = "") {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -188,12 +199,15 @@ function normalizeAdvocate(advocate) {
 
   const parsedDistrictCourt = parseDistrictCourt(districtCourt);
 
-  const district =
+  const rawDistrict =
     getValue(advocate, [
       "district",
       "district_name",
       "city"
     ]) || parsedDistrictCourt.district;
+
+  const district =
+    normalizeDistrictName(rawDistrict);
 
   const court =
     getValue(advocate, [
