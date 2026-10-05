@@ -43,8 +43,9 @@ jobs:
           set -euo pipefail
           TMP="$(mktemp -d)"
           mkdir -p "$TMP/advocate"
-          printf '%s
-' '[{"id":"ci-adv-001","advocate_name":"CI Advocate One","practice_state":"Uttar Pradesh","district_court":"Bareilly | District and Sessions Court","primary_practice_area":"Criminal Law, Bail & Anticipatory Bail","verification_status":"Approved","public_profile":true},{"id":"ci-adv-002","advocate_name":"CI Advocate Two","practice_state":"Delhi","district":"New Delhi","court":"District Courts Delhi","practice_areas":["Civil Law"],"verification_status":"Approved","public_profile":true},{"id":"ci-private","advocate_name":"CI Private Advocate","practice_state":"Uttar Pradesh","verification_status":"Approved","public_profile":false}]' > "$TMP/feed.json"
+          cat > "$TMP/feed.json" <<'JSON'
+          [{"id":"ci-adv-001","advocate_name":"CI Advocate One","practice_state":"Uttar Pradesh","district_court":"Bareilly | District and Sessions Court","primary_practice_area":"Criminal Law, Bail & Anticipatory Bail","verification_status":"Approved","public_profile":true},{"id":"ci-adv-002","advocate_name":"CI Advocate Two","practice_state":"Delhi","district":"New Delhi","court":"District Courts Delhi","practice_areas":["Civil Law"],"verification_status":"Approved","public_profile":true},{"id":"ci-private","advocate_name":"CI Private Advocate","practice_state":"Uttar Pradesh","verification_status":"Approved","public_profile":false}]
+          JSON
           python3 -m http.server 8765 --directory "$TMP" >/tmp/ils-http.log 2>&1 &
           PID=$!
           trap 'kill "$PID" || true' EXIT
