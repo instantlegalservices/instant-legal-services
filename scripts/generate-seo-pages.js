@@ -1630,6 +1630,9 @@ async function main() {
     }
   }
 
+  console.log("Advocate SEO ownership manifest: " + advocateManifestPath);
+  console.log("Advocate SEO owned routes: " + JSON.stringify([...new Set(generatedAdvocateRoutes)].sort()));
+
   fs.writeFileSync(
     advocateManifestPath,
     JSON.stringify(
