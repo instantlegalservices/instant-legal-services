@@ -8,6 +8,7 @@ on:
       - main
     paths:
       - "scripts/generate-seo-pages.js"
+      - "scripts/sync-advocate-sitemap.js"
       - ".github/workflows/generate-seo-pages.yml"
 
 permissions:
