@@ -87,7 +87,8 @@ jobs:
           cd "$TMP"
           node "$GITHUB_WORKSPACE/scripts/sync-advocate-sitemap.js"
           grep -q 'https://instantlegalservices.in/advocate/current-advocate/' sitemap.xml
-          grep -q 'https://instantlegalservices.in/advocate/new-advocate/' sitemap.xml
+          # Unmanaged new HTML is intentionally excluded; the generator must first claim it in the ownership manifest.
+          ! grep -q 'https://instantlegalservices.in/advocate/new-advocate/' sitemap.xml
           # Sitemap sync removes stale advocate URLs from the sitemap; HTML ownership cleanup is tested by the generator lifecycle.
           test -e "$TMP/advocate/stale-advocate/index.html"
           ! grep -q 'https://instantlegalservices.in/advocate/stale-advocate/' sitemap.xml
