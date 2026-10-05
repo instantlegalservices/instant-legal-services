@@ -105,6 +105,33 @@ jobs:
           node --check scripts/sync-professional-sitemap.js
           node -e "const m=require('./scripts/sync-professional-sitemap.js'); if(m.MANAGED_PREFIXES.length!==2) throw new Error('managed prefix count'); console.log('PROFESSIONAL_SITEMAP_SYNC_MODULE=PASS')"
 
+      - name: Validate professional stale-route lifecycle
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const { composeSitemap, validateComposedSitemap } = require("./scripts/sitemap-composer");
+          const base = fs.readFileSync("sitemap.xml", "utf8");
+          const stale = "https://instantlegalservices.in/professional/ca/old-state-profile/";
+          const unrelated = "https://instantlegalservices.in/government/up-jansunwai/";
+          const input = base.replace("</urlset>", "  <url>\n    <loc>" + stale + "</loc>\n  </url>\n</urlset>");
+          const current = [
+            "https://instantlegalservices.in/professional/ca/new-state-profile/",
+            "https://instantlegalservices.in/professional/ca/state/uttar-pradesh/",
+            "https://instantlegalservices.in/professional/ca/city/bareilly/",
+            "https://instantlegalservices.in/professional/ca/specialization/gst/",
+            "https://instantlegalservices.in/professional/cs/new-cs-profile/"
+          ];
+          const result = composeSitemap(input, [], [], current, ["/professional/ca/", "/professional/cs/"]);
+          validateComposedSitemap(result.xml);
+          if (result.xml.includes(stale)) throw new Error("stale professional route survived");
+          for (const url of current) {
+            if (!result.xml.includes("<loc>" + url + "</loc>")) throw new Error("current professional route missing: " + url);
+          }
+          if (!result.xml.includes("<loc>" + unrelated + "</loc>")) throw new Error("unrelated sitemap URL was removed");
+          console.log("PROFESSIONAL_STALE_ROUTE_LIFECYCLE=PASS");
+          console.log("UNRELATED_SITEMAP_URL_PRESERVED=PASS");
+          NODE
+
       - name: Validate professional routes with existing sitemap composer
         run: |
           node <<'NODE'
