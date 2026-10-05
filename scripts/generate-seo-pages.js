@@ -699,6 +699,72 @@ function buildProfessionalRoutes(professionals) {
 
 function writeProfessionalPages(professionals) {
   const routes = buildProfessionalRoutes(professionals);
+
+  const eligibleProfessionals = professionals
+    .map(normalizeProfessional)
+    .filter(p => p.name && ["ca", "cs"].includes(p.type));
+
+  const professionalSourceById = new Map(
+    professionals
+      .map(item => [normalizeProfessional(item).id, item])
+      .filter(([id]) => id)
+  );
+
+  const professionalGroups = new Map();
+
+  const addProfessionalGroup = (type, kind, value, professional) => {
+    const slug = slugify(value);
+    if (!slug) return;
+    const key = type + "|" + kind + "|" + slug;
+    if (!professionalGroups.has(key)) professionalGroups.set(key, []);
+    professionalGroups.get(key).push(professional);
+  };
+
+  for (const p of eligibleProfessionals) {
+    addProfessionalGroup(p.type, "state", p.state, p);
+    addProfessionalGroup(p.type, "city", p.city, p);
+    for (const specialization of p.specializations) {
+      addProfessionalGroup(p.type, "specialization", specialization, p);
+    }
+  }
+
+  for (const [key, members] of professionalGroups) {
+    const parts = key.split("|");
+    const type = parts[0];
+    const kind = parts[1];
+    const slug = parts[2];
+    const typeLabel = type === "ca" ? "Chartered Accountant" : "Company Secretary";
+    const first = members[0];
+    const label = kind === "state"
+      ? first.state
+      : kind === "city"
+        ? first.city
+        : (first.specializations.find(s => slugify(s) === slug) || slug);
+
+    const route = "professional/" + type + "/" + kind + "/" + slug;
+    const canonical = SITE_URL + "/" + route + "/";
+    const cards = members.map(p => {
+      const source = professionalSourceById.get(p.id) || p.original;
+      const profileRoute = routes.get(source);
+      if (!profileRoute) return "";
+      return '<div class="profile-item"><a href="/' + escapeHtml(profileRoute) + '/">' +
+        escapeHtml(p.name) + '</a></div>';
+    }).filter(Boolean).join("");
+
+    writePage(route, pageTemplate({
+      title: typeLabel + " " + label + " | Instant Legal Services",
+      description: "Approved public " + typeLabel.toLowerCase() + " profiles associated with " + label + ".",
+      canonical,
+      heading: typeLabel + " — " + label,
+      content: '<div class="profile-grid">' + cards + "</div>",
+      schema: {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": typeLabel + " " + label,
+        "url": canonical
+      }
+    }));
+  }
   const professionalTypes = ["ca", "cs"];
   for (const type of professionalTypes) {
     const members = professionals.map(normalizeProfessional).filter(p => p.name && p.type === type);
@@ -743,9 +809,11 @@ function writeProfessionalPages(professionals) {
   <p><a href="/${escapeHtml(typeDirectoryRoute)}/">← ${escapeHtml(typeLabel)} Directory</a></p>
 
   ${location ? `<p><strong>Location:</strong> ${escapeHtml(location)}</p>` : ""}
+  ${p.state ? `<p><strong>State:</strong> <a href="/professional/${p.type}/state/${slugify(p.state)}/">${escapeHtml(p.state)}</a></p>` : ""}
+  ${p.city ? `<p><strong>City:</strong> <a href="/professional/${p.type}/city/${slugify(p.city)}/">${escapeHtml(p.city)}</a></p>` : ""}
   ${p.firm ? `<p><strong>Firm / Organization:</strong> ${escapeHtml(p.firm)}</p>` : ""}
   ${p.yearsOfExperience !== "" ? `<p><strong>Experience:</strong> ${escapeHtml(p.yearsOfExperience)} years</p>` : ""}
-  ${p.specializations.length ? `<h2>Services / Specializations</h2><p>${p.specializations.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join("")}</p>` : ""}
+  ${p.specializations.length ? `<h2>Services / Specializations</h2><p>${p.specializations.map(s => `<a class="tag" href="/professional/${p.type}/specialization/${slugify(s)}/">${escapeHtml(s)}</a>`).join(" ")}</p>` : ""}
 </div>
 <div class="card"><p>This public professional profile is informational and is not a ranking, guarantee of result, or government endorsement.</p></div>`;
     writePage(route, pageTemplate({
