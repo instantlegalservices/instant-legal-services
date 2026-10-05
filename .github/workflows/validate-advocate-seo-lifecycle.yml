@@ -54,6 +54,8 @@ jobs:
           ADVOCATES_API_URL="http://127.0.0.1:8765/feed.json" ADVOCATES_API_KEY="ci-only" node "$GITHUB_WORKSPACE/scripts/generate-seo-pages.js"
           test -f "$TMP/advocate/ci-advocate-one/index.html"
           test -f "$TMP/advocate/ci-advocate-two/index.html"
+          test -f "$TMP/.generated-advocate-routes.json"
+          grep -q 'advocate/ci-advocate-one/' "$TMP/.generated-advocate-routes.json"
           test ! -e "$TMP/advocate/ci-private-advocate/index.html"
           grep -q 'href="/state/uttar-pradesh/"' "$TMP/advocate/ci-advocate-one/index.html"
           grep -q 'href="/district/bareilly/"' "$TMP/advocate/ci-advocate-one/index.html"
@@ -67,6 +69,7 @@ jobs:
           TMP="$(mktemp -d)"
           mkdir -p "$TMP/advocate/current-advocate"
           mkdir -p "$TMP/advocate/new-advocate"
+          mkdir -p "$TMP/advocate/stale-advocate"
           cat > "$TMP/sitemap.xml" <<'XML'
           <?xml version="1.0" encoding="UTF-8"?>
           <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -76,11 +79,16 @@ jobs:
           </urlset>
           XML
           printf '<!doctype html><title>Current</title>' > "$TMP/advocate/current-advocate/index.html"
+          printf '<!doctype html><title>Stale</title>' > "$TMP/advocate/stale-advocate/index.html"
+          cat > "$TMP/.generated-advocate-routes.json" <<'JSON'
+          {"version":1,"routes":["advocate/current-advocate/","advocate/stale-advocate/"]}
+          JSON
           printf '<!doctype html><title>New</title>' > "$TMP/advocate/new-advocate/index.html"
           cd "$TMP"
           node "$GITHUB_WORKSPACE/scripts/sync-advocate-sitemap.js"
           grep -q 'https://instantlegalservices.in/advocate/current-advocate/' sitemap.xml
           grep -q 'https://instantlegalservices.in/advocate/new-advocate/' sitemap.xml
+          test ! -e "$TMP/advocate/stale-advocate/index.html"
           ! grep -q 'https://instantlegalservices.in/advocate/stale-advocate/' sitemap.xml
           grep -q 'https://instantlegalservices.in/government/igrsup/' sitemap.xml
           node -e 'const fs=require("fs"); const x=fs.readFileSync("sitemap.xml","utf8"); const {validateComposedSitemap}=require(process.env.GITHUB_WORKSPACE+"/scripts/sitemap-composer.js"); validateComposedSitemap(x); console.log("PASS: final sitemap valid");'
