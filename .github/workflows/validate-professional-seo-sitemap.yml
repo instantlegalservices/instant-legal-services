@@ -44,8 +44,23 @@ jobs:
           sleep 1
           (cd "$TMP_DIR" && node scripts/generate-seo-pages.js)
           test -f "$TMP_DIR/advocate/ci-test-advocate/index.html"
+          test -f "$TMP_DIR/state/uttar-pradesh/index.html"
+          test -f "$TMP_DIR/district/bareilly/index.html"
+          test -f "$TMP_DIR/court/district-and-sessions-court/index.html"
+          test -f "$TMP_DIR/practice/criminal-law/index.html"
           grep -q "CI Test Advocate" "$TMP_DIR/advocate/ci-test-advocate/index.html"
+          grep -q 'href="/district/bareilly/"' "$TMP_DIR/state/uttar-pradesh/index.html"
+          grep -q 'href="/court/district-and-sessions-court/"' "$TMP_DIR/state/uttar-pradesh/index.html"
+          grep -q 'href="/practice/criminal-law/"' "$TMP_DIR/state/uttar-pradesh/index.html"
+          grep -q 'href="/state/uttar-pradesh/"' "$TMP_DIR/district/bareilly/index.html"
+          grep -q 'href="/practice/criminal-law/"' "$TMP_DIR/district/bareilly/index.html"
+          grep -q 'href="/state/uttar-pradesh/"' "$TMP_DIR/court/district-and-sessions-court/index.html"
+          grep -q 'href="/district/bareilly/"' "$TMP_DIR/court/district-and-sessions-court/index.html"
+          grep -q 'href="/state/uttar-pradesh/"' "$TMP_DIR/practice/criminal-law/index.html"
+          grep -q 'href="/district/bareilly/"' "$TMP_DIR/practice/criminal-law/index.html"
+          grep -q 'href="/court/district-and-sessions-court/"' "$TMP_DIR/practice/criminal-law/index.html"
           echo "ADVOCATE_GENERATION_WITHOUT_PROFESSIONAL_FEED=PASS"
+          echo "CONTEXTUAL_LOCATION_GRAPH=PASS"
 
       - name: Generate professional pages in isolation
         env:
