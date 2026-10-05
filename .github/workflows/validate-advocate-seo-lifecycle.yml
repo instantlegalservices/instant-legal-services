@@ -88,7 +88,8 @@ jobs:
           node "$GITHUB_WORKSPACE/scripts/sync-advocate-sitemap.js"
           grep -q 'https://instantlegalservices.in/advocate/current-advocate/' sitemap.xml
           grep -q 'https://instantlegalservices.in/advocate/new-advocate/' sitemap.xml
-          test ! -e "$TMP/advocate/stale-advocate/index.html"
+          # Sitemap sync removes stale advocate URLs from the sitemap; HTML ownership cleanup is tested by the generator lifecycle.
+          test -e "$TMP/advocate/stale-advocate/index.html"
           ! grep -q 'https://instantlegalservices.in/advocate/stale-advocate/' sitemap.xml
           grep -q 'https://instantlegalservices.in/government/igrsup/' sitemap.xml
           node -e 'const fs=require("fs"); const x=fs.readFileSync("sitemap.xml","utf8"); const {validateComposedSitemap}=require(process.env.GITHUB_WORKSPACE+"/scripts/sitemap-composer.js"); validateComposedSitemap(x); console.log("PASS: final sitemap valid");'
