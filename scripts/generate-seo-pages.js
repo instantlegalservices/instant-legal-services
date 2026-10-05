@@ -712,9 +712,12 @@ function writeProfessionalPages(professionals) {
       location ? `Location: ${location}` : "",
       p.specializations.length ? `Services: ${p.specializations.slice(0, 4).join(", ")}` : ""
     ].filter(Boolean).join(". ") + ".";
+    const typeDirectoryRoute = "professional/" + p.type;
     const content = `
 <div class="card">
   <p><strong>Professional Profile:</strong> Approved public ${escapeHtml(typeLabel)} profile.</p>
+  <p><a href="/${escapeHtml(typeDirectoryRoute)}/">← ${escapeHtml(typeLabel)} Directory</a></p>
+
   ${location ? `<p><strong>Location:</strong> ${escapeHtml(location)}</p>` : ""}
   ${p.firm ? `<p><strong>Firm / Organization:</strong> ${escapeHtml(p.firm)}</p>` : ""}
   ${p.yearsOfExperience !== "" ? `<p><strong>Experience:</strong> ${escapeHtml(p.yearsOfExperience)} years</p>` : ""}
