@@ -26,7 +26,28 @@ jobs:
           node-version: "20"
       - name: Verify Node.js
         run: node --version
+      - name: Verify SEO generator syntax
+        run: node --check scripts/generate-seo-pages.js
+
+      - name: Generate professional pages in isolation
+        env:
+          PROFESSIONALS_ONLY: "1"
+          PROFESSIONALS_API_URL: "http://127.0.0.1:8787/feed"
+          PROFESSIONALS_API_KEY: "ci-test-key"
+        run: |
+          node -e 'const http=require("http"); const data=JSON.stringify([{id:"ci-test-ca-001",professional_type:"ca",full_name:"CI Test Chartered Accountant",state:"Uttar Pradesh",city:"Bareilly",specialization:"GST, Income Tax",years_of_experience:5,firm_or_organization:"CI Test Firm"},{id:"ci-test-cs-001",professional_type:"cs",full_name:"CI Test Company Secretary",state:"Uttar Pradesh",city:"Bareilly",specialization:"Corporate Compliance",years_of_experience:4,firm_or_organization:"CI Test Firm"}]); http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"application/json"});res.end(data)}).listen(8787,"127.0.0.1")' &
+          SERVER_PID=$!
+          trap "kill $SERVER_PID 2>/dev/null || true; rm -rf professional/ca/ci-test-chartered-accountant professional/cs/ci-test-company-secretary" EXIT
+          sleep 1
+          node scripts/generate-seo-pages.js
+          test -f professional/ca/ci-test-chartered-accountant/index.html
+          test -f professional/cs/ci-test-company-secretary/index.html
+          grep -q "CI Test Chartered Accountant" professional/ca/ci-test-chartered-accountant/index.html
+          grep -q "CI Test Company Secretary" professional/cs/ci-test-company-secretary/index.html
+          echo "PROFESSIONAL_PAGE_GENERATION=PASS"
+
       - name: Verify sitemap composer modules
+        run: node -e "require('./scripts/sitemap-composer.js'); require('./scripts/sitemap-composer-writer.js'); console.log('SITEMAP_MODULES=PASS')"
         run: node -e "require('./scripts/sitemap-composer.js'); require('./scripts/sitemap-composer-writer.js'); console.log('SITEMAP_MODULES=PASS')"
       - name: Validate professional routes with existing sitemap composer
         run: |
