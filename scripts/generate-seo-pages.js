@@ -56,6 +56,19 @@ function normalizeDistrictName(value = "") {
   return DISTRICT_NAME_ALIASES[text.toLowerCase()] || text;
 }
 
+function normalizeCourtName(value = "", district = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const normalized = text.toLowerCase();
+  if (normalized.includes("couret") || normalized.includes("disctrict couret")) {
+    const normalizedDistrict = normalizeDistrictName(district);
+    if (normalizedDistrict.toLowerCase() === "jhansi") {
+      return "District & Sessions Court Jhansi";
+    }
+  }
+  return text;
+}
+
 function escapeHtml(value = "") {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -209,11 +222,14 @@ function normalizeAdvocate(advocate) {
   const district =
     normalizeDistrictName(rawDistrict);
 
-  const court =
+  const rawCourt =
     getValue(advocate, [
       "court",
       "court_name"
     ]) || parsedDistrictCourt.court;
+
+  const court =
+    normalizeCourtName(rawCourt, district);
 
   const practiceAreas = uniqueStrings(
     arrayValue(
