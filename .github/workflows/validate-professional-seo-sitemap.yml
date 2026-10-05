@@ -9,6 +9,7 @@ on:
       - "scripts/generate-seo-pages.js"
       - "scripts/sitemap-composer.js"
       - "scripts/sitemap-composer-writer.js"
+      - "scripts/sync-professional-sitemap.js"
       - ".github/workflows/validate-professional-seo-sitemap.yml"
 
 permissions:
@@ -99,6 +100,11 @@ jobs:
 
       - name: Verify sitemap composer modules
         run: node -e "require('./scripts/sitemap-composer.js'); require('./scripts/sitemap-composer-writer.js'); console.log('SITEMAP_MODULES=PASS')"
+      - name: Verify isolated professional sitemap synchronizer
+        run: |
+          node --check scripts/sync-professional-sitemap.js
+          node -e "const m=require('./scripts/sync-professional-sitemap.js'); if(m.MANAGED_PREFIXES.length!==2) throw new Error('managed prefix count'); console.log('PROFESSIONAL_SITEMAP_SYNC_MODULE=PASS')"
+
       - name: Validate professional routes with existing sitemap composer
         run: |
           node <<'NODE'
