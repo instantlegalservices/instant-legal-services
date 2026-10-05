@@ -699,6 +699,30 @@ function buildProfessionalRoutes(professionals) {
 
 function writeProfessionalPages(professionals) {
   const routes = buildProfessionalRoutes(professionals);
+  const professionalTypes = ["ca", "cs"];
+  for (const type of professionalTypes) {
+    const members = professionals.map(normalizeProfessional).filter(p => p.name && p.type === type);
+    if (!members.length) continue;
+    const typeLabel = type === "ca" ? "Chartered Accountant" : "Company Secretary";
+    const route = "professional/" + type;
+    const canonical = SITE_URL + "/" + route + "/";
+    const cards = members.map(p => {
+      const source = professionals.find(item => normalizeProfessional(item).id === p.id) || p.original;
+      const profileRoute = routes.get(source);
+      if (!profileRoute) return "";
+      const location = uniqueStrings([p.city, p.state]).join(", ");
+      return '<div class="profile-item"><a href="/' + escapeHtml(profileRoute) + '/">' + escapeHtml(p.name) + (location ? '<br><small>' + escapeHtml(location) + '</small>' : "") + "</a></div>";
+    }).filter(Boolean).join("");
+    writePage(route, pageTemplate({
+      title: typeLabel + " Directory | Instant Legal Services",
+      description: "Approved public " + typeLabel.toLowerCase() + " profiles on Instant Legal Services.",
+      canonical,
+      heading: typeLabel + " Directory",
+      content: '<div class="profile-grid">' + cards + "</div>",
+      schema: {"@context":"https://schema.org","@type":"CollectionPage","name":typeLabel + " Directory","url":canonical}
+    }));
+  }
+
   for (const professional of professionals) {
     const p = normalizeProfessional(professional);
     if (!p.name || !["ca", "cs"].includes(p.type)) continue;
