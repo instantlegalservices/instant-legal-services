@@ -826,7 +826,8 @@ function composeSitemap(
   existingXml,
   currentRows,
   redirectRows,
-  additionalUrls = []
+  additionalUrls = [],
+  managedPrefixes = []
 ) {
   const existingEntries =
     parseSitemap(
@@ -851,6 +852,29 @@ function composeSitemap(
       assertCanonicalSitemapLoc(url, `additionalUrls[${index}]`)
     )
   );
+
+  if (!Array.isArray(managedPrefixes)) {
+    throw new Error("managedPrefixes must be an array");
+  }
+
+  const managedPrefixSet = new Set(
+    managedPrefixes.map((prefix, index) => {
+      if (typeof prefix !== "string" || !prefix.trim()) {
+        throw new Error(`managedPrefixes[${index}] must be a non-empty string`);
+      }
+      const normalized = prefix.trim();
+      if (!normalized.startsWith("/") || !normalized.endsWith("/")) {
+        throw new Error(`managedPrefixes[${index}] must be a canonical path prefix: ${prefix}`);
+      }
+      return normalized;
+    })
+  );
+
+  const isManagedUrl = url => {
+    if (!managedPrefixSet.size) return false;
+    const pathname = new URL(url).pathname;
+    return [...managedPrefixSet].some(prefix => pathname.startsWith(prefix));
+  };
 
   const currentUrls =
     new Set(
@@ -906,6 +930,10 @@ function composeSitemap(
       )
     ) {
       historicalRoutesExcluded++;
+      continue;
+    }
+
+    if (isManagedUrl(entry.loc)) {
       continue;
     }
 
