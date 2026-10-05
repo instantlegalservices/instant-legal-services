@@ -1,0 +1,63 @@
+name: Validate Professional SEO Sitemap Integration
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - seo-professional-indexability-fix
+    paths:
+      - "scripts/generate-seo-pages.js"
+      - "scripts/sitemap-composer.js"
+      - "scripts/sitemap-composer-writer.js"
+      - ".github/workflows/validate-professional-seo-sitemap.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout isolated SEO branch
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Verify Node.js
+        run: node --version
+      - name: Verify sitemap composer modules
+        run: node -e "require('./scripts/sitemap-composer.js'); require('./scripts/sitemap-composer-writer.js'); console.log('SITEMAP_MODULES=PASS')"
+      - name: Validate professional routes with existing sitemap composer
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const { composeSitemap, validateComposedSitemap } = require("./scripts/sitemap-composer");
+          const existing = fs.readFileSync("sitemap.xml", "utf8");
+          const professionalUrls = [
+            "https://instantlegalservices.in/professional/ca/example-ca/",
+            "https://instantlegalservices.in/professional/cs/example-cs/"
+          ];
+          const result = composeSitemap(existing, [], [], professionalUrls);
+          validateComposedSitemap(result.xml);
+          for (const url of professionalUrls) {
+            if (!result.xml.includes("<loc>" + url + "</loc>")) {
+              throw new Error("Missing professional URL: " + url);
+            }
+          }
+          const existingLocCount = (existing.match(/<loc>/g) || []).length;
+          const finalLocCount = (result.xml.match(/<loc>/g) || []).length;
+          if (finalLocCount !== existingLocCount + professionalUrls.length) {
+            throw new Error("Unexpected sitemap count: existing=" + existingLocCount + ", final=" + finalLocCount);
+          }
+          console.log("PROFESSIONAL_SITEMAP_COMPOSER=PASS");
+          console.log("Existing URLs: " + existingLocCount);
+          console.log("Final URLs: " + finalLocCount);
+          NODE
+      - name: Verify sitemap was not written
+        run: |
+          if ! git diff --quiet -- sitemap.xml; then
+            echo "sitemap.xml was modified unexpectedly."
+            exit 1
+          fi
+          echo "NO_SITEMAP_WRITE=PASS"
