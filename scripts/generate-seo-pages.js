@@ -67,6 +67,23 @@ function parseDistrictCourt(value) {
     };
   }
 
+  /*
+   * High Court selections are courts, not districts.
+   * Older records may be stored as "High Court: <court name>".
+   * Preserve the source value but classify it correctly so the
+   * SEO generator does not create false /district/... routes.
+   */
+  const highCourtMatch = raw.match(
+    /(?:^|\\|)\\s*High Court\\s*:\\s*([^|]+)/i
+  );
+
+  if (highCourtMatch) {
+    return {
+      district: "",
+      court: highCourtMatch[1].trim()
+    };
+  }
+
   const districtMatch = raw.match(
     /(?:^|\|)\s*District\s*:\s*([^|]+)/i
   );
