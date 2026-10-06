@@ -74,7 +74,7 @@ function parseDistrictCourt(value) {
    * SEO generator does not create false /district/... routes.
    */
   const highCourtMatch = raw.match(
-    /(?:^|\\|)\\s*High Court\\s*:\\s*([^|]+)/i
+    /(?:^|\|)\s*High Court\s*:\s*([^|]+)/i
   );
 
   if (highCourtMatch) {
