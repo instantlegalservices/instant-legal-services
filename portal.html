@@ -22,7 +22,7 @@
 .portal-note{opacity:.72;line-height:1.55}
 @media(max-width:760px){.portal-grid{grid-template-columns:1fr 1fr}.portal-kv{grid-template-columns:1fr}.portal-card{padding:15px}}
 @media(max-width:480px){.portal-grid{grid-template-columns:1fr}}
-</style>
+.matter-workspace{margin-top:14px;display:grid;gap:14px}.matter-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.matter-chat,.matter-progress,.matter-docs{max-height:360px;overflow:auto;display:grid;gap:9px}.matter-msg,.matter-progress-item,.matter-doc{padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025)}.matter-meta{font-size:11px;opacity:.65;margin-bottom:5px}.matter-form{display:grid;gap:8px}.matter-form textarea,.matter-form input,.matter-form select{width:100%;box-sizing:border-box}.matter-actions{display:flex;gap:8px;flex-wrap:wrap}.matter-actions .btn{flex:0 0 auto}.client-portal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:760px){.matter-two,.client-portal-grid{grid-template-columns:1fr}}</style>
 </head>
 <body>
 <header class="site-header">
@@ -86,6 +86,11 @@
 <a class="btn btn-ghost" href="assistance.html">Legal Assistance</a>
 <a class="btn btn-ghost" href="advocates.html">Professional Directory</a>
 </div>
+
+<div id="clientPanel" class="portal-card portal-hidden">
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><span class="eyebrow">Private Client Access</span><h2 id="clientWelcome" style="margin:5px 0">Client Matter Portal</h2></div><a class="btn btn-ghost btn-small" href="index.html">Back to ILS</a></div>
+<div id="clientAccessFormBox"><p class="portal-note">Enter the mobile number registered for your ILS matter. Your private access link and mobile number are required to open the matter.</p><label for="clientMobile">Registered Mobile Number</label><input id="clientMobile" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel"><button class="btn btn-primary" id="clientOpenBtn" type="button" style="margin-top:12px">Open My Matter</button><div id="clientAccessStatus" class="status"></div></div>
+<div id="clientMatterBox" class="portal-hidden"><div id="clientMatterSummary" class="portal-status"></div><div class="matter-two" style="margin-top:14px"><div class="portal-card"><h3 style="margin-top:0">💬 Chat</h3><div id="clientChatThread" class="matter-chat"></div><div class="matter-form" style="margin-top:10px"><textarea id="clientChatInput" rows="3" maxlength="5000" placeholder="Write a message to ILS / your assigned advocate…"></textarea><button class="btn btn-primary" id="clientSendChatBtn" type="button">Send Message</button></div></div><div class="portal-card"><h3 style="margin-top:0">📈 Work Progress</h3><div id="clientProgressTimeline" class="matter-progress"></div></div></div><div class="portal-card" style="margin-top:14px"><h3 style="margin-top:0">📄 Documents</h3><div class="matter-actions" style="margin-bottom:10px"><input id="clientDocumentInput" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="max-width:100%"><button class="btn btn-primary" id="clientUploadDocumentBtn" type="button">Upload Document</button></div><div id="clientDocuments" class="matter-docs"></div><p class="portal-note">Maximum document size: 15 MB.</p></div></div></div>
 
 <div id="researchAiBox" class="portal-status portal-hidden" style="margin-top:15px">
 <strong>Advocate Research AI</strong>
@@ -165,17 +170,50 @@ async function loadPortal(){
       list.innerHTML=assignments.map(x=>{
         const c=x.client||{};
         const assigned=x.assigned_at?new Date(x.assigned_at).toLocaleString("en-IN"):"—";
-        return '<article style="padding:14px 0;border-top:1px solid rgba(255,255,255,.08)">'+
+        return '<article data-matter-id="'+esc(x.lead_id)+'" style="padding:14px 0;border-top:1px solid rgba(255,255,255,.08)">'+
           '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong>'+esc(c.client_name||"Client")+'</strong><span class="verified">'+esc(x.status||"Assigned")+'</span></div>'+
           '<div style="margin-top:7px;color:#c7d1dc"><strong>Matter:</strong> '+esc(c.legal_matter||"Not specified")+'</div>'+
           '<div style="margin-top:5px;color:#aab6c6"><strong>Location:</strong> '+esc([c.state,c.district_city].filter(Boolean).join(" / ")||"Not specified")+'</div>'+
           '<div style="margin-top:5px;color:#aab6c6"><strong>Assigned:</strong> '+esc(assigned)+'</div>'+
           (c.brief_requirement?'<div style="margin-top:8px;color:#aab6c6"><strong>Requirement:</strong> '+esc(c.brief_requirement)+'</div>':"")+
+          '<button class="btn btn-primary matter-open-btn" type="button" style="margin-top:10px">Open Matter Workspace</button><div class="matter-workspace"></div>'+
           '</article>';
       }).join("");
     }
   }
   $("researchAiBox").classList.toggle("portal-hidden",p.role!=="advocate"||!p.capabilities?.research_ai);
+}
+
+async function invokeMatterDocuments(body){
+  const client=await clientReady(); if(!client) throw new Error("Secure connection unavailable.");
+  const r=await client.functions.invoke("client-matter-documents",{body});
+  if(r.error) throw new Error(r.error.message||"Document service unavailable.");
+  if(!r.data?.ok) throw new Error(r.data?.message||"Document operation failed.");
+  return r.data;
+}
+function matterMessagesHtml(messages){return messages?.length?messages.map(m=>'<div class="matter-msg"><div class="matter-meta">'+esc(m.sender_name||m.sender_role||"User")+' · '+esc(m.created_at?new Date(m.created_at).toLocaleString("en-IN"):"")+'</div><div>'+esc(m.message||"")+'</div></div>').join(""):'<div class="portal-note">No messages yet.</div>';}
+function matterProgressHtml(items){return items?.length?items.map(p=>'<div class="matter-progress-item"><div class="matter-meta">'+esc(p.created_at?new Date(p.created_at).toLocaleString("en-IN"):"")+' · '+esc(p.created_by_name||p.created_by_role||"")+'</div><strong>'+esc(p.title||"Progress update")+'</strong><div>'+esc(p.status||"Update")+'</div>'+(p.note?'<div style="margin-top:5px">'+esc(p.note)+'</div>':"")+'<div class="matter-meta" style="margin-top:6px">Previous fixed date: '+esc(p.previous_fixed_date||"—")+' · Next fixed date: '+esc(p.next_fixed_date||"—")+' · Work done on: '+esc(p.work_done_date||"—")+'</div></div>').join(""):'<div class="portal-note">No progress updates yet.</div>';}
+async function loadMatterDocuments(targetId,clientMode){
+  try{const data=await invokeMatterDocuments({action:"list",client_id:Number(targetId)});const docs=Array.isArray(data.documents)?data.documents:[];const el=$(clientMode?"clientDocuments":"advDocs-"+targetId);if(!el)return;el.innerHTML=docs.length?docs.map(d=>'<div class="matter-doc"><strong>'+esc(d.file_name)+'</strong><div class="matter-meta">'+esc(d.uploaded_by_name||d.uploaded_by_role||"")+' · '+esc(d.created_at?new Date(d.created_at).toLocaleString("en-IN"):"")+'</div><button class="btn btn-ghost btn-small matter-download" type="button" data-doc-id="'+esc(d.id)+'">Open / Download</button></div>').join(""):'<div class="portal-note">No documents uploaded yet.</div>';el.querySelectorAll(".matter-download").forEach(b=>b.addEventListener("click",async()=>{try{const d=await invokeMatterDocuments({action:"download",client_id:Number(targetId),document_id:Number(b.dataset.docId)});if(d.signed_url)window.open(d.signed_url,"_blank","noopener,noreferrer");}catch(e){alert(e.message||"Unable to open document.");}}));}catch(e){const el=$(clientMode?"clientDocuments":"advDocs-"+targetId);if(el)el.innerHTML='<div class="portal-note">'+esc(e.message||"Documents unavailable.")+'</div>';}}
+async function loadAdvocateMatter(targetId,container){
+  const client=await clientReady();if(!client)return;container.innerHTML='<div class="portal-note">Loading matter workspace…</div>';
+  const {data,error}=await client.rpc("get_advocate_client_portal",{p_client_id:Number(targetId)});
+  if(error||!data?.ok){container.innerHTML='<div class="portal-note">Unable to load this matter: '+esc(error?.message||data?.message||"Access denied.")+'</div>';return;}
+  const cl=data.client||{};
+  container.innerHTML='<div class="matter-two"><div class="portal-card"><h4 style="margin-top:0">Client / Matter</h4><div><strong>'+esc(cl.name||"Client")+'</strong></div><div class="matter-meta">'+esc(cl.matter||"Matter not specified")+' · Status: '+esc(cl.status||"—")+'</div><div class="matter-meta">'+(cl.mobile?"Mobile: "+esc(cl.mobile):"Client contact remains hidden until released by admin.")+'</div></div><div class="portal-card"><h4 style="margin-top:0">💬 Chat</h4><div id="advChat-'+targetId+'" class="matter-chat">'+matterMessagesHtml(data.messages||[])+'</div><div class="matter-form" style="margin-top:8px"><textarea id="advChatInput-'+targetId+'" rows="3" maxlength="5000" placeholder="Message client / ILS admin…"></textarea><button class="btn btn-primary" id="advChatSend-'+targetId+'" type="button">Send Message</button></div></div></div><div class="matter-two" style="margin-top:14px"><div class="portal-card"><h4 style="margin-top:0">📈 Work Progress</h4><div id="advProgress-'+targetId+'" class="matter-progress">'+matterProgressHtml(data.progress||[])+'</div><div class="matter-form" style="margin-top:10px"><select id="advStatus-'+targetId+'"><option>Received</option><option>Advocate Assigned</option><option>Consultation Scheduled</option><option>Documents Under Review</option><option>Drafting / Preparation</option><option>Filing / Proceedings</option><option>Awaiting Court / Authority</option><option>Completed</option></select><input id="advTitle-'+targetId+'" placeholder="Progress title"><textarea id="advNote-'+targetId+'" rows="2" placeholder="Work note"></textarea><div class="matter-two"><label>Previous fixed date<input id="advPrev-'+targetId+'" type="date"></label><label>Next fixed date<input id="advNext-'+targetId+'" type="date"></label></div><label>Work done on date<input id="advDone-'+targetId+'" type="date"></label><label style="display:flex;gap:8px;align-items:center"><input id="advVisible-'+targetId+'" type="checkbox" checked style="width:auto"> Show progress to client</label><button class="btn btn-primary" id="advProgressSend-'+targetId+'" type="button">Save Progress</button></div></div><div class="portal-card"><h4 style="margin-top:0">📄 Documents</h4><div class="matter-actions"><input id="advDoc-'+targetId+'" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"><button class="btn btn-primary" id="advUpload-'+targetId+'" type="button">Upload Document</button></div><div id="advDocs-'+targetId+'" class="matter-docs" style="margin-top:10px"></div><p class="portal-note">Maximum 15 MB. Uploaded documents are stored privately.</p></div></div>';
+  $(`advChatSend-${targetId}`).addEventListener("click",async()=>{const input=$(`advChatInput-${targetId}`),msg=(input.value||"").trim();if(!msg)return;const r=await client.rpc("advocate_send_client_message",{p_client_id:Number(targetId),p_message:msg});if(r.error||!r.data?.ok){alert(r.error?.message||r.data?.message||"Unable to send message.");return;}input.value="";await loadAdvocateMatter(targetId,container);});
+  $(`advProgressSend-${targetId}`).addEventListener("click",async()=>{const title=$(`advTitle-${targetId}`).value.trim();if(!title){alert("Enter a progress title.");return;}const r=await client.rpc("advocate_add_work_progress",{p_client_id:Number(targetId),p_status:$(`advStatus-${targetId}`).value,p_title:title,p_note:$(`advNote-${targetId}`).value.trim(),p_visible_to_client:$(`advVisible-${targetId}`).checked,p_previous_fixed_date:$(`advPrev-${targetId}`).value||null,p_next_fixed_date:$(`advNext-${targetId}`).value||null,p_work_done_date:$(`advDone-${targetId}`).value||null});if(r.error||!r.data?.ok){alert(r.error?.message||r.data?.message||"Unable to save progress.");return;}await loadAdvocateMatter(targetId,container);});
+  $(`advUpload-${targetId}`).addEventListener("click",async()=>{const file=$(`advDoc-${targetId}`).files?.[0];if(!file)return alert("Select a document first.");const fd=new FormData();fd.append("action","upload");fd.append("client_id",String(targetId));fd.append("file",file);try{await invokeMatterDocuments(fd);await loadMatterDocuments(targetId,false);}catch(e){alert(e.message||"Document upload failed.");}});
+  await loadMatterDocuments(targetId,false);
+}
+function renderAdvocateMatterCards(assignments){
+  const list=$("assignmentsList");if(!list)return;assignments.forEach(x=>{const article=list.querySelector(`[data-matter-id="${Number(x.lead_id)}"]`);if(!article)return;const workspace=article.querySelector(".matter-workspace"),button=article.querySelector(".matter-open-btn");if(!workspace||!button)return;button.addEventListener("click",()=>{button.disabled=true;button.textContent="Loading…";loadAdvocateMatter(Number(x.lead_id),workspace).finally(()=>{button.disabled=false;button.textContent="Refresh Matter Workspace";});},{once:true});});}
+async function loadClientPortal(){
+  const client=await clientReady();if(!client)return;$("loginPanel").classList.add("portal-hidden");$("portalPanel").classList.add("portal-hidden");$("clientPanel").classList.remove("portal-hidden");
+  const token=new URLSearchParams(location.search).get("access")||"";if(!token)return showStatus("clientAccessStatus","This private client link is incomplete.","err");
+  $("clientOpenBtn").onclick=async()=>{const mobile=$("clientMobile").value.trim();if(!/^\d{10}$/.test(mobile))return showStatus("clientAccessStatus","Enter the registered 10-digit mobile number.","err");$("clientOpenBtn").disabled=true;showStatus("clientAccessStatus","Opening secure matter…","");const {data,error}=await client.rpc("get_client_portal",{p_access_token:token,p_mobile:mobile});if(error||!data?.ok){$("clientOpenBtn").disabled=false;return showStatus("clientAccessStatus",error?.message||"Invalid or expired private access.","err");}$("clientAccessFormBox").classList.add("portal-hidden");$("clientMatterBox").classList.remove("portal-hidden");$("clientWelcome").textContent="Welcome, "+(data.client?.name||"Client");$("clientMatterSummary").innerHTML="<strong>Matter:</strong> "+esc(data.client?.matter||"Not specified")+" · <strong>Status:</strong> "+esc(data.client?.status||"New");$("clientChatThread").innerHTML=matterMessagesHtml(data.messages||[]);$("clientProgressTimeline").innerHTML=matterProgressHtml(data.progress||[]);await loadMatterDocuments(data.client?.id,true);};
+  $("clientSendChatBtn").onclick=async()=>{const msg=($("clientChatInput").value||"").trim();if(!msg)return;const r=await client.rpc("send_client_portal_message",{p_access_token:token,p_mobile:$("clientMobile").value.trim(),p_message:msg});if(r.error||!r.data?.ok){alert(r.error?.message||r.data?.message||"Unable to send message.");return;}$("clientChatInput").value="";$("clientOpenBtn").click();};
+  $("clientUploadDocumentBtn").onclick=async()=>{const file=$("clientDocumentInput").files?.[0];if(!file)return alert("Select a document first.");const fd=new FormData();fd.append("action","upload");fd.append("access_token",token);fd.append("mobile",$("clientMobile").value.trim());fd.append("file",file);try{await invokeMatterDocuments(fd);$("clientDocumentInput").value="";$("clientOpenBtn").click();}catch(e){alert(e.message||"Document upload failed.");}};
 }
 
 $("loginForm").addEventListener("submit",async e=>{
@@ -201,7 +239,7 @@ $("forgotBtn").addEventListener("click",async()=>{
 });
 
 $("logoutBtn").addEventListener("click",async()=>{const client=await clientReady();if(client)await client.auth.signOut();location.hash="login";location.reload()});
-document.addEventListener("DOMContentLoaded",async()=>{if(location.hash==="#admin"){location.replace("admin.html");return;}await loadPortal();});
+document.addEventListener("DOMContentLoaded",async()=>{if(location.hash==="#admin"){location.replace("admin.html");return;}if(location.hash==="#client-access"){await loadClientPortal();return;}await loadPortal();});
 </script>
 </body>
 </html>
