@@ -87,11 +87,6 @@
 <a class="btn btn-ghost" href="advocates.html">Professional Directory</a>
 </div>
 
-<div id="clientPanel" class="portal-card portal-hidden">
-<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><span class="eyebrow">Private Client Access</span><h2 id="clientWelcome" style="margin:5px 0">Client Matter Portal</h2></div><a class="btn btn-ghost btn-small" href="index.html">Back to ILS</a></div>
-<div id="clientAccessFormBox"><p class="portal-note">Enter the mobile number registered for your ILS matter. Your private access link and mobile number are required to open the matter.</p><label for="clientMobile">Registered Mobile Number</label><input id="clientMobile" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel"><button class="btn btn-primary" id="clientOpenBtn" type="button" style="margin-top:12px">Open My Matter</button><div id="clientAccessStatus" class="status"></div></div>
-<div id="clientMatterBox" class="portal-hidden"><div id="clientMatterSummary" class="portal-status"></div><div class="matter-two" style="margin-top:14px"><div class="portal-card"><h3 style="margin-top:0">💬 Chat</h3><div id="clientChatThread" class="matter-chat"></div><div class="matter-form" style="margin-top:10px"><textarea id="clientChatInput" rows="3" maxlength="5000" placeholder="Write a message to ILS / your assigned advocate…"></textarea><button class="btn btn-primary" id="clientSendChatBtn" type="button">Send Message</button></div></div><div class="portal-card"><h3 style="margin-top:0">📈 Work Progress</h3><div id="clientProgressTimeline" class="matter-progress"></div></div></div><div class="portal-card" style="margin-top:14px"><h3 style="margin-top:0">📄 Documents</h3><div class="matter-actions" style="margin-bottom:10px"><input id="clientDocumentInput" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="max-width:100%"><button class="btn btn-primary" id="clientUploadDocumentBtn" type="button">Upload Document</button></div><div id="clientDocuments" class="matter-docs"></div><p class="portal-note">Maximum document size: 15 MB.</p></div></div></div>
-
 <div id="researchAiBox" class="portal-status portal-hidden" style="margin-top:15px">
 <strong>Advocate Research AI</strong>
 <p style="margin:6px 0">Available only after advocate verification and approval. This restriction is preserved from the existing ILS research-access chain.</p>
@@ -100,6 +95,12 @@
 
 <p class="portal-note" style="margin-top:16px">Public profile visibility is controlled separately by ILS verification. HR, GST Practitioner and Assistant / Associate accounts remain internal and are not shown on the public homepage. CA/CS profiles are shown publicly only after verification, approval and public-profile enablement.</p>
 </div>
+
+<div id="clientPanel" class="portal-card portal-hidden">
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><span class="eyebrow">Private Client Access</span><h2 id="clientWelcome" style="margin:5px 0">Client Matter Portal</h2></div><a class="btn btn-ghost btn-small" href="index.html">Back to ILS</a></div>
+<div id="clientAccessFormBox"><p class="portal-note">Enter the mobile number registered for your ILS matter. Your private access link and mobile number are required to open the matter.</p><label for="clientMobile">Registered Mobile Number</label><input id="clientMobile" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel"><button class="btn btn-primary" id="clientOpenBtn" type="button" style="margin-top:12px">Open My Matter</button><div id="clientAccessStatus" class="status"></div></div>
+<div id="clientMatterBox" class="portal-hidden"><div id="clientMatterSummary" class="portal-status"></div><div class="matter-two" style="margin-top:14px"><div class="portal-card"><h3 style="margin-top:0">💬 Chat</h3><div id="clientChatThread" class="matter-chat"></div><div class="matter-form" style="margin-top:10px"><textarea id="clientChatInput" rows="3" maxlength="5000" placeholder="Write a message to ILS / your assigned advocate…"></textarea><button class="btn btn-primary" id="clientSendChatBtn" type="button">Send Message</button></div></div><div class="portal-card"><h3 style="margin-top:0">📈 Work Progress</h3><div id="clientProgressTimeline" class="matter-progress"></div></div></div><div class="portal-card" style="margin-top:14px"><h3 style="margin-top:0">📄 Documents</h3><div class="matter-actions" style="margin-bottom:10px"><input id="clientDocumentInput" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="max-width:100%"><button class="btn btn-primary" id="clientUploadDocumentBtn" type="button">Upload Document</button></div><div id="clientDocuments" class="matter-docs"></div><p class="portal-note">Maximum document size: 15 MB.</p></div></div></div>
+
 </div></section>
 </main>
 
