@@ -180,12 +180,8 @@
   <url>
     <loc>https://instantlegalservices.in/district/hathras/</loc>
   </url>
-  <url>
-    <loc>https://instantlegalservices.in/district/high-court-delhi-high-court/</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/district/high-court-high-court/</loc>
-  </url>
+  
+  
   <url>
     <loc>https://instantlegalservices.in/district/jhansi/</loc>
   </url>
@@ -428,5 +424,8 @@
   </url>
   <url>
     <loc>https://instantlegalservices.in/tools.html</loc>
+  </url>
+  <url>
+    <loc>https://instantlegalservices.in/court/delhi-high-court/</loc>
   </url>
 </urlset>
