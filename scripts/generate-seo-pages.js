@@ -53,7 +53,21 @@ const DISTRICT_NAME_ALIASES = {
 function normalizeDistrictName(value = "") {
   const text = String(value || "").trim();
   if (!text) return "";
-  return DISTRICT_NAME_ALIASES[text.toLowerCase()] || text;
+
+  /*
+   * Some legacy advocate records stored the court name inside the
+   * district field (for example, "Bareilly — District & Sessions Court").
+   * Court is already represented separately, so keep the district entity
+   * clean and prevent duplicate district routes.
+   */
+  const cleanDistrict = text
+    .replace(/\s*[—–-]\s*District\s*&\s*Sessions\s*Court\s*$/i, "")
+    .trim();
+
+  return (
+    DISTRICT_NAME_ALIASES[cleanDistrict.toLowerCase()] ||
+    cleanDistrict
+  );
 }
 
 function normalizeCourtName(value = "", district = "") {
