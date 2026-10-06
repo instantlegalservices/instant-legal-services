@@ -116,7 +116,7 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const roleNames={advocate:"Advocate",ca:"Chartered Accountant (CA)",cs:"Company Secretary (CS)",hr:"HR Professional",gst_practitioner:"GST Practitioner",assistant_associate:"Assistant / Associate"};
 
-async function clientReady(){return window.ILS?.ready?.()||null}
+async function clientReady(){return window.ILS?.ready?.()||await window.ILS?.init?.()||null}
 function showStatus(id,msg,type){const e=$(id);e.textContent=msg||"";e.className="status "+(type||"");e.style.display=msg?"block":"none"}
 function roleName(r){return roleNames[r]||"ILS Professional"}
 
