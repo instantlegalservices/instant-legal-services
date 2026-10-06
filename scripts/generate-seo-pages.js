@@ -99,6 +99,21 @@ function parseDistrictCourt(value) {
     };
   }
 
+  /*
+   * Some legacy records use an em dash instead of "District:" / "Court:".
+   * Treat the text before the first em dash as the district and the
+   * remaining text as the court/jurisdiction, preventing court names
+   * from becoming part of /district/... slugs.
+   */
+  const dashMatch = raw.match(/^(.+?)\s*[—–]\s*(.+)$/);
+
+  if (dashMatch) {
+    return {
+      district: dashMatch[1].trim(),
+      court: dashMatch[2].trim()
+    };
+  }
+
   const parts = raw
     .split(/\s*\|\s*/)
     .map(v => v.trim())
