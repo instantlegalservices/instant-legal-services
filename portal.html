@@ -72,6 +72,11 @@
 <div id="profileDetails"></div>
 </div>
 
+<div id="assignmentsCard" class="portal-card" style="margin-top:20px;background:rgba(0,0,0,.08)">
+<h3 style="margin-top:0">Assigned Client Matters</h3>
+<div id="assignmentsList" class="portal-note">Loading assigned matters…</div>
+</div>
+
 <h3 style="margin-top:20px">Professional workspace</h3>
 <div class="portal-grid">
 <a class="btn btn-primary" href="tools.html">Legal Tools</a>
@@ -151,6 +156,25 @@ async function loadPortal(){
     rows.splice(4,0,["Jurisdiction",p.profile?.jurisdiction||"—"]);
   }
   $("profileDetails").innerHTML=rows.map(x=>'<div class="portal-kv"><strong>'+esc(x[0])+'</strong><span>'+esc(x[1])+'</span></div>').join("");
+  const assignments=Array.isArray(p.assignments)?p.assignments:[];
+  const list=$("assignmentsList");
+  if(list){
+    if(!assignments.length){
+      list.innerHTML="<div class=\"portal-note\">No active client matters are currently assigned to this professional.</div>";
+    }else{
+      list.innerHTML=assignments.map(x=>{
+        const c=x.client||{};
+        const assigned=x.assigned_at?new Date(x.assigned_at).toLocaleString("en-IN"):"—";
+        return '<article style="padding:14px 0;border-top:1px solid rgba(255,255,255,.08)">'+
+          '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong>'+esc(c.client_name||"Client")+'</strong><span class="verified">'+esc(x.status||"Assigned")+'</span></div>'+
+          '<div style="margin-top:7px;color:#c7d1dc"><strong>Matter:</strong> '+esc(c.legal_matter||"Not specified")+'</div>'+
+          '<div style="margin-top:5px;color:#aab6c6"><strong>Location:</strong> '+esc([c.state,c.district_city].filter(Boolean).join(" / ")||"Not specified")+'</div>'+
+          '<div style="margin-top:5px;color:#aab6c6"><strong>Assigned:</strong> '+esc(assigned)+'</div>'+
+          (c.brief_requirement?'<div style="margin-top:8px;color:#aab6c6"><strong>Requirement:</strong> '+esc(c.brief_requirement)+'</div>':"")+
+          '</article>';
+      }).join("");
+    }
+  }
   $("researchAiBox").classList.toggle("portal-hidden",p.role!=="advocate"||!p.capabilities?.research_ai);
 }
 
