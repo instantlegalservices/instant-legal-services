@@ -181,6 +181,7 @@ async function loadPortal(){
       }).join("");
     }
   }
+  if(p.role==="advocate") renderAdvocateMatterCards(assignments);
   $("researchAiBox").classList.toggle("portal-hidden",p.role!=="advocate"||!p.capabilities?.research_ai);
 }
 
