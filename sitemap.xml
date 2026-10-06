@@ -136,13 +136,16 @@
     <loc>https://instantlegalservices.in/court/bareilly/</loc>
   </url>
   <url>
-    <loc>https://instantlegalservices.in/court/district-and-sessions-court-jhansi/</loc>
+    <loc>https://instantlegalservices.in/court/delhi-high-court/</loc>
   </url>
   <url>
     <loc>https://instantlegalservices.in/court/district-and-sessions-court-bareilly/</loc>
   </url>
   <url>
     <loc>https://instantlegalservices.in/court/district-and-sessions-court-chhindwara/</loc>
+  </url>
+  <url>
+    <loc>https://instantlegalservices.in/court/district-and-sessions-court-jhansi/</loc>
   </url>
   <url>
     <loc>https://instantlegalservices.in/court/district-and-sessions-court-pilibhit/</loc>
@@ -168,7 +171,6 @@
   <url>
     <loc>https://instantlegalservices.in/district/bareilly/</loc>
   </url>
-  
   <url>
     <loc>https://instantlegalservices.in/district/chhindwara/</loc>
   </url>
@@ -178,8 +180,6 @@
   <url>
     <loc>https://instantlegalservices.in/district/hathras/</loc>
   </url>
-  
-  
   <url>
     <loc>https://instantlegalservices.in/district/jhansi/</loc>
   </url>
@@ -422,8 +422,5 @@
   </url>
   <url>
     <loc>https://instantlegalservices.in/tools.html</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/court/delhi-high-court/</loc>
   </url>
 </urlset>
