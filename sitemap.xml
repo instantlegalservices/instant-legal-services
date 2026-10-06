@@ -136,7 +136,7 @@
     <loc>https://instantlegalservices.in/court/bareilly/</loc>
   </url>
   <url>
-    <loc>https://instantlegalservices.in/court/couret/</loc>
+    <loc>https://instantlegalservices.in/court/district-and-sessions-court-jhansi/</loc>
   </url>
   <url>
     <loc>https://instantlegalservices.in/court/district-and-sessions-court-bareilly/</loc>
@@ -161,15 +161,8 @@
   </url>
   <url>
     <loc>https://instantlegalservices.in/district/azamgarh/</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/district/bareilly-district-and-sessions-court/</loc>
-  </url>
-  <url>
+  </url><url>
     <loc>https://instantlegalservices.in/district/bareilly/</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/district/barielly/</loc>
   </url>
   <url>
     <loc>https://instantlegalservices.in/district/chhindwara/</loc>
@@ -295,9 +288,6 @@
     <loc>https://instantlegalservices.in/practice/cheque-bounce-ni-act/</loc>
   </url>
   <url>
-    <loc>https://instantlegalservices.in/practice/civil-law/</loc>
-  </url>
-  <url>
     <loc>https://instantlegalservices.in/practice/civil-property-law/</loc>
   </url>
   <url>
@@ -322,9 +312,6 @@
     <loc>https://instantlegalservices.in/practice/cyber-crime-law/</loc>
   </url>
   <url>
-    <loc>https://instantlegalservices.in/practice/cyber-crime/</loc>
-  </url>
-  <url>
     <loc>https://instantlegalservices.in/practice/family-matrimonial-law/</loc>
   </url>
   <url>
@@ -340,19 +327,10 @@
     <loc>https://instantlegalservices.in/practice/legal-drafting-and-documentation/</loc>
   </url>
   <url>
-    <loc>https://instantlegalservices.in/practice/legal-drafting/</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/practice/matrimonial-family-law/</loc>
-  </url>
-  <url>
     <loc>https://instantlegalservices.in/practice/motor-vehicle-and-accident-claims/</loc>
   </url>
   <url>
     <loc>https://instantlegalservices.in/practice/ndps-law/</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/practice/ni-act-cheque-bounce/</loc>
   </url>
   <url>
     <loc>https://instantlegalservices.in/practice/other/</loc>

@@ -14,6 +14,75 @@ function slugify(value = "") {
     .replace(/^-+|-+$/g, "");
 }
 
+const PRACTICE_ROUTE_ALIASES = {
+  "cyber-crime": "cyber-crime-law",
+  "cyber-crime-law": "cyber-crime-law",
+  "family-matrimonial-law": "family-matrimonial-law",
+  "matrimonial-family-law": "family-matrimonial-law",
+  "legal-drafting": "legal-drafting-and-documentation",
+  "legal-drafting-and-documentation": "legal-drafting-and-documentation",
+  "ni-act-cheque-bounce": "cheque-bounce-ni-act",
+  "cheque-bounce-ni-act": "cheque-bounce-ni-act",
+  "civil-law": "civil-property-law",
+  "civil-property-law": "civil-property-law"
+};
+
+const PRACTICE_CANONICAL_NAMES = {
+  "cyber-crime-law": "Cyber Crime Law",
+  "family-matrimonial-law": "Family / Matrimonial Law",
+  "legal-drafting-and-documentation": "Legal Drafting & Documentation",
+  "cheque-bounce-ni-act": "Cheque Bounce / NI Act",
+  "civil-property-law": "Civil / Property Law"
+};
+
+function normalizePracticeRoute(value = "") {
+  const slug = slugify(value);
+  return PRACTICE_ROUTE_ALIASES[slug] || slug;
+}
+
+function normalizePracticeName(value = "") {
+  const route = normalizePracticeRoute(value);
+  return PRACTICE_CANONICAL_NAMES[route] || String(value || "").trim();
+}
+
+const DISTRICT_NAME_ALIASES = {
+  "barielly": "Bareilly",
+  "bareilly": "Bareilly"
+};
+
+function normalizeDistrictName(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+
+  /*
+   * Some legacy advocate records stored the court name inside the
+   * district field (for example, "Bareilly — District & Sessions Court").
+   * Court is already represented separately, so keep the district entity
+   * clean and prevent duplicate district routes.
+   */
+  const cleanDistrict = text
+    .replace(/\s*[—–-]\s*District\s*&\s*Sessions\s*Court\s*$/i, "")
+    .trim();
+
+  return (
+    DISTRICT_NAME_ALIASES[cleanDistrict.toLowerCase()] ||
+    cleanDistrict
+  );
+}
+
+function normalizeCourtName(value = "", district = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const normalized = text.toLowerCase();
+  if (normalized.includes("couret") || normalized.includes("disctrict couret")) {
+    const normalizedDistrict = normalizeDistrictName(district);
+    if (normalizedDistrict.toLowerCase() === "jhansi") {
+      return "District & Sessions Court Jhansi";
+    }
+  }
+  return text;
+}
+
 function escapeHtml(value = "") {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -157,18 +226,24 @@ function normalizeAdvocate(advocate) {
 
   const parsedDistrictCourt = parseDistrictCourt(districtCourt);
 
-  const district =
+  const rawDistrict =
     getValue(advocate, [
       "district",
       "district_name",
       "city"
     ]) || parsedDistrictCourt.district;
 
-  const court =
+  const district =
+    normalizeDistrictName(rawDistrict);
+
+  const rawCourt =
     getValue(advocate, [
       "court",
       "court_name"
     ]) || parsedDistrictCourt.court;
+
+  const court =
+    normalizeCourtName(rawCourt, district);
 
   const practiceAreas = uniqueStrings(
     arrayValue(
@@ -1278,7 +1353,7 @@ async function main() {
      */
     for (const area of practiceAreas) {
       const slug =
-        slugify(area);
+        normalizePracticeRoute(area);
 
       if (!slug) {
         continue;
@@ -1286,7 +1361,7 @@ async function main() {
 
       if (!practices.has(slug)) {
         practices.set(slug, {
-          name: area,
+          name: normalizePracticeName(area),
           advocates: []
         });
       }
@@ -1521,7 +1596,7 @@ async function main() {
     ${state ? `<div class="profile-item"><strong>State</strong><br><a href="/state/${slugify(state)}/">${escapeHtml(state)}</a></div>` : ""}
     ${district ? `<div class="profile-item"><strong>District</strong><br><a href="/district/${slugify(district)}/">${escapeHtml(district)}</a></div>` : ""}
     ${court ? `<div class="profile-item"><strong>Court / Jurisdiction</strong><br><a href="/court/${slugify(court)}/">${escapeHtml(court)}</a></div>` : ""}
-    ${practiceAreas.map(area => `<div class="profile-item"><strong>Practice Area</strong><br><a href="/practice/${slugify(area)}/">${escapeHtml(area)}</a></div>`).join("")}
+    ${practiceAreas.map(area => { const practiceRoute = normalizePracticeRoute(area); return `<div class="profile-item"><strong>Practice Area</strong><br><a href="/practice/${practiceRoute}/">${escapeHtml(normalizePracticeName(area))}</a></div>`; }).join("")}
   </div>
 
 </div>
