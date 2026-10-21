@@ -35,6 +35,8 @@ jobs:
           assert.match(tools, /customer-portal\.html\?return_to=/, 'Unauthenticated paid tools must use customer login with a return destination');
           assert.doesNotMatch(tools, /window\.location\.href\s*=\s*['"]portal\.html#login['"]/, 'Paid customer flow must not redirect to professional portal');
           assert.match(tools, /onPaid\(\s*\{[\s\S]*?order_id:\s*data\.order_id[\s\S]*?order_number:\s*result\.order_number\s*\|\|\s*data\.order_number/, 'Verified payment callback must include the correct order identity');
+          assert.equal((tools.match(/onPaid\(\s*\{/g) || []).length, 2, 'Both UPI-proof and Razorpay verified paths must pass order details');
+          assert.doesNotMatch(tools, /onPaid\(\s*\)/, 'No verified-payment path may call the callback without order details');
           assert.match(assistance, /loginBtn\.href\s*=\s*["']customer-portal\.html\?return_to=["']\s*\+\s*encodeURIComponent/, 'Assistance login link must preserve the selected route');
           assert.match(assistance, /paid\?\.order_id/, 'Assistance must build the Passport link from the returned order ID');
           assert.match(portal, /function getSafeReturnTo\(\)/, 'Customer portal must validate return destinations');
