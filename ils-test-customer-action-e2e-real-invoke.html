@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ILS — TEST Real-Auth Evidence Capture</title>
+<style>
+body{margin:0;background:#08101f;color:#eef3ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;display:grid;place-items:center;padding:20px;box-sizing:border-box}
+.card{width:min(640px,100%);background:#121b31;border:1px solid #263452;border-radius:22px;padding:28px;box-sizing:border-box}
+h1{font-size:26px;margin:0 0 8px}
+.sub{color:#aeb9d1;margin-bottom:18px;line-height:1.45}
+.warn{font-size:13px;color:#ffd98a;background:#302611;border:1px solid #6b5424;padding:12px;border-radius:12px;margin-bottom:18px}
+label{display:block;margin:12px 0 6px;color:#cdd7ea}
+input{width:100%;box-sizing:border-box;padding:14px 15px;border-radius:12px;border:1px solid #3b4968;background:#0b1325;color:#fff;font-size:16px}
+button{width:100%;padding:14px;border:0;border-radius:12px;background:#2f6df6;color:white;font-size:16px;font-weight:700;margin-top:16px}
+button:disabled{opacity:.55}
+#status{margin-top:16px;padding:14px;border-radius:12px;background:#070c17;white-space:pre-wrap;line-height:1.45;min-height:20px;overflow:auto}
+.ok{border:1px solid #2d8a57}
+.err{border:1px solid #9b3d45}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>ILS — TEST Real-Auth Evidence Capture</h1>
+<div class="sub">TEST ONLY · authenticated capture · no promotion</div>
+<div class="warn">
+Uses the existing TEST Auth account only. The browser never sends a function slug, version, SHA, URL, or service-role key. Evidence is not promoted.
+</div>
+<form id="f">
+<label for="email">TEST Auth email</label>
+<input id="email" type="email" autocomplete="username" required>
+<label for="password">TEST Auth password</label>
+<input id="password" type="password" autocomplete="current-password" required>
+<button id="go" type="submit" disabled>Capture real-auth evidence</button>
+</form>
+<div id="status">Loading TEST public configuration…</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const CONFIG_URL = "https://bgsbuepolooybdqrzmoa.supabase.co/functions/v1/ils-test-operator-bootstrap-public-config";
+const BRIDGE_URL = "https://bgsbuepolooybdqrzmoa.supabase.co/functions/v1/ils-test-customer-action-e2e-real-invoke-ui-bridge";
+const ALLOWED_ACTION = "CAPTURE_REAL_CUSTOMER_ACTION_EVIDENCE";
+let sb = null;
+let publishableKey = "";
+const go = document.getElementById("go");
+const status = document.getElementById("status");
+function setStatus(text, ok) {
+  status.textContent = text;
+  status.className = ok ? "ok" : "err";
+}
+async function loadConfig() {
+  try {
+    const response = await fetch(CONFIG_URL, { method: "GET", cache: "no-store", headers: { "Accept": "application/json" } });
+    const config = JSON.parse(await response.text());
+    if (!response.ok || !config.ok || !config.supabaseUrl || !config.publishableKey) {
+      throw new Error(config.error || "PUBLIC_CONFIG_UNAVAILABLE");
+    }
+    if (String(config.supabaseUrl).indexOf("bgsbuepolooybdqrzmoa") === -1) {
+      throw new Error("TEST_PROJECT_REQUIRED");
+    }
+    publishableKey = config.publishableKey;
+    sb = supabase.createClient(config.supabaseUrl, publishableKey, {
+      auth: { persistSession: false, autoRefreshToken: true, detectSessionInUrl: false }
+    });
+    go.disabled = false;
+    setStatus("Ready. Sign in with the existing TEST Auth user.", true);
+  } catch (error) {
+    go.disabled = true;
+    setStatus("CONFIG ERROR\n" + String(error && error.message || error));
+  }
+}
+document.getElementById("f").addEventListener("submit", async function (event) {
+  event.preventDefault();
+  if (!sb || !publishableKey) return setStatus("CONFIG_NOT_READY");
+  go.disabled = true;
+  setStatus("Authenticating TEST Auth user…");
+  try {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const authResult = await sb.auth.signInWithPassword({ email: email, password: password });
+    const session = authResult && authResult.data && authResult.data.session;
+    if (authResult.error || !session || !session.access_token) {
+      throw new Error((authResult.error && authResult.error.message) || "TEST_AUTH_SESSION_NOT_CREATED");
+    }
+    setStatus("Authenticated. Running one TEST capture…");
+    const response = await fetch(BRIDGE_URL, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": "Bearer " + session.access_token,
+        "apikey": publishableKey
+      },
+      body: JSON.stringify({ action: ALLOWED_ACTION })
+    });
+    const responseText = await response.text();
+    let result;
+    try { result = JSON.parse(responseText); } catch { result = { raw_response: responseText }; }
+    setStatus("HTTP " + response.status + "\n\n" + JSON.stringify(result, null, 2), !!(response.ok && result && result.ok));
+  } catch (error) {
+    setStatus("CLIENT ERROR\n\n" + String(error && error.message || error));
+  } finally {
+    try { if (sb) await sb.auth.signOut(); } catch (_) {}
+    go.disabled = false;
+  }
+});
+loadConfig();
+</script>
+</body>
+</html>
