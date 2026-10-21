@@ -6,7 +6,7 @@ async function user(req:Request){const h=req.headers.get("Authorization")||"";if
 async function approved(id:string){const u=Deno.env.get("SUPABASE_URL"),k=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");if(!u||!k)return null;const r=await fetch(`${u}/rest/v1/advocate_registrations?select=id,advocate_name&auth_user_id=eq.${encodeURIComponent(id)}&status=eq.Approved&verification_status=eq.Approved&limit=1`,{headers:{apikey:k,Authorization:`Bearer ${k}`}});if(!r.ok)return null;const a=await r.json();return Array.isArray(a)&&a[0]?a[0]:null;}
 async function checkAiRateLimit(clientKey:string, limit:number, windowSeconds:60|3600){
  const url=Deno.env.get("SUPABASE_URL"),serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
- if(!url||!serviceKey){console.error("AI_RATE_LIMIT_UNAVAILABLE: service configuration missing");return {allowed:true,degraded:true,retry_after_seconds:60};}
+ if(!url||!serviceKey){console.error("AI_RATE_LIMIT_UNAVAILABLE: service configuration missing");return {allowed:false,degraded:true,retry_after_seconds:60};}
  try{
   const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(clientKey));
   const keyHash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");
@@ -15,7 +15,7 @@ async function checkAiRateLimit(clientKey:string, limit:number, windowSeconds:60
   const data=await response.json();
   if(typeof data?.allowed!=="boolean")throw new Error("rate-limit RPC returned an invalid result");
   return data;
- }catch(e){console.error("AI_RATE_LIMIT_UNAVAILABLE",e);return {allowed:true,degraded:true,retry_after_seconds:60};}
+ }catch(e){console.error("AI_RATE_LIMIT_UNAVAILABLE",e);return {allowed:false,degraded:true,retry_after_seconds:60};}
 }
 function clientIp(req:Request){
  const trusted=(req.headers.get("cf-connecting-ip")||req.headers.get("x-real-ip")||"").trim();
@@ -28,12 +28,15 @@ Deno.serve(async req=>{if(req.method==="OPTIONS")return json({ok:true});if(req.m
 const q=str(b?.question||b?.prompt);if(!q)return json({ok:false,reply:"Question is required."},400);if(q.length>12000)return json({ok:false,reply:"Question is too long."},400);const key=Deno.env.get("OPENROUTER_API_KEY");if(!key)return json({ok:false,code:"AI_NOT_CONFIGURED",reply:"AI service is not configured."},503);const isAdv=mode==="advocate"||mode==="research";
 const ip=clientIp(req);
 const rateKey=isAdv?`advocate:${authUserId}`:(ip?`public:${ip}`:"");
-if(rateKey){
+if(!rateKey)return json({ok:false,code:"AI_RATE_LIMIT_IDENTITY_UNAVAILABLE",reply:"AI service is temporarily unavailable. Please try again shortly."},503);
+{
  const minute=await checkAiRateLimit(rateKey,isAdv?20:10,60);
+ if(minute.degraded)return json({ok:false,code:"AI_RATE_LIMIT_UNAVAILABLE",reply:"AI service is temporarily unavailable. Please try again shortly."},503);
  if(minute.allowed===false)return new Response(JSON.stringify({ok:false,code:"AI_RATE_LIMITED",reply:"Too many AI requests. Please wait before trying again."}),{status:429,headers:{...CORS,"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Retry-After":String(minute.retry_after_seconds||60)}});
  const hour=await checkAiRateLimit(rateKey,isAdv?200:60,3600);
+ if(hour.degraded)return json({ok:false,code:"AI_RATE_LIMIT_UNAVAILABLE",reply:"AI service is temporarily unavailable. Please try again shortly."},503);
  if(hour.allowed===false)return new Response(JSON.stringify({ok:false,code:"AI_RATE_LIMITED",reply:"AI request limit reached for this hour. Please try again later."}),{status:429,headers:{...CORS,"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","Retry-After":String(hour.retry_after_seconds||3600)}});
-}else{console.error("AI_RATE_LIMIT_SKIPPED: no client IP header was supplied");}
+}
 const system=isAdv?`You are Instant Legal Services Advocate Research AI for approved Indian advocates. Give structured, careful Indian legal research. Never invent cases, citations, sections, dates or quotations. Distinguish verified law from matters requiring verification. Cover Issues, Applicable Law, Authorities, Application to Facts, Opponent/Prosecution Position, Best Supported Defence/Counter-Arguments, Procedure, Risks/Adverse Authorities and Verification Checklist. Never guarantee an outcome.`:`You are Instant Legal Services Public Legal Information AI for Indian law. Give concise, accurate general legal information. Never invent cases, citations, sections, dates or quotations. Distinguish BNS/BNSS/BSA from IPC/CrPC/IEA where relevant. Say when current primary-source verification is needed. Never guarantee an outcome.`;let prompt=isAdv?`Advocate research question:\n${q}`:`Indian legal information question:\n${q}`;const doc=str(b?.document_text);if(isAdv&&doc)prompt+=`\n\nCASE DOCUMENT (${str(b?.document_name)||"uploaded document"}):\n${doc.slice(0,50000)}\nTreat allegations as allegations unless the document records an admission or finding.`;const messages=[{role:"system",content:system},{role:"user",content:prompt}];
 // First try OpenRouter's managed free router. It automatically selects an available free endpoint.
 // Then use explicit free models as deterministic fallbacks. This avoids depending on one provider/model.
