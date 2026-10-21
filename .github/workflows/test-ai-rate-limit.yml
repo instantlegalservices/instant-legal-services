@@ -1,0 +1,25 @@
+name: Test AI Rate Limit Contract
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/ai-assistant/index.ts"
+      - "supabase/migrations/20261021110000_ai_endpoint_rate_limit.sql"
+      - "scripts/test-ai-rate-limit.mjs"
+      - ".github/workflows/test-ai-rate-limit.yml"
+  push:
+    branches:
+      - "security/ai-rate-limit-isolated-2026-10-21"
+    paths:
+      - "supabase/functions/ai-assistant/index.ts"
+      - "supabase/migrations/20261021110000_ai_endpoint_rate_limit.sql"
+      - "scripts/test-ai-rate-limit.mjs"
+      - ".github/workflows/test-ai-rate-limit.yml"
+jobs:
+  static-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node scripts/test-ai-rate-limit.mjs
