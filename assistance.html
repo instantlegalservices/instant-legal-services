@@ -108,11 +108,12 @@ const routeData={
 };
 function detectRoute(){
  const n=(problem+" "+route).toLowerCase();
+ // Prefer explicit police/FIR signals before broad "online" cyber matching.
+ if(/police|fir|thana|पुलिस|थाना|एफआईआर|پولیس/.test(n))return routeData.police;
  if(/cyber|fraud|upi|online/.test(n))return routeData.cyber;
  if(/consumer|refund|product/.test(n))return routeData.consumer;
  if(/bank|rbi|credit card|debit/.test(n))return routeData.bank;
  if(/government|cpgrams|grievance|department/.test(n))return routeData.government;
- if(/police|fir|crime/.test(n))return routeData.police;
  if(/challan|traffic|echallan/.test(n))return routeData.challan;
  if(/gst/.test(n))return routeData.gst;
  if(/income tax|itr/.test(n))return routeData.income;
