@@ -55,7 +55,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 function getSafeReturnTo(){
  const raw=new URLSearchParams(window.location.search).get("return_to");
- if(!raw||!raw.startsWith("/")||raw.startsWith("//"))return "";
+ if(!raw||!raw.startsWith("/")||raw.startsWith("//")||raw.includes("\\")||/%5c/i.test(raw))return "";
  try{
   const target=new URL(raw,window.location.origin);
   if(target.origin!==window.location.origin)return "";
