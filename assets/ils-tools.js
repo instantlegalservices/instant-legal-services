@@ -131,7 +131,8 @@ window.ILS_TOOLS = (() => {
 
     if(!user){
       status('Please sign in to start this paid service.');
-      setTimeout(()=>{ window.location.href='portal.html#login'; },700);
+      const returnTo=window.location.pathname+window.location.search+window.location.hash;
+      setTimeout(()=>{ window.location.href='customer-portal.html?return_to='+encodeURIComponent(returnTo); },700);
       return;
     }
 
@@ -341,7 +342,12 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
             '</strong> is paid. Your requested access/report is now unlocked.',
             'ok'
           );
-          if (typeof onPaid === 'function') onPaid();
+          if (typeof onPaid === 'function') onPaid({
+            ok: true,
+            order_id: data.order_id,
+            order_number: result.order_number || data.order_number || null,
+            amount: Number(data.amount || 0)
+          });
           return;
         }
 
