@@ -1615,10 +1615,51 @@ updatePracticeCounter();
    PHOTO
 ===================================================== */
 
+async function compressProfilePhoto(file,statusElement){
+  const maxDimension=1280;
+  const maxTargetBytes=700*1024;
+  const imageUrl=URL.createObjectURL(file);
+  try{
+    const image=await new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>resolve(img);
+      img.onerror=()=>reject(new Error("Unable to read the selected photo. Please choose it again."));
+      img.src=imageUrl;
+    });
+    const scale=Math.min(1,maxDimension/Math.max(image.naturalWidth||image.width,image.naturalHeight||image.height));
+    const width=Math.max(1,Math.round((image.naturalWidth||image.width)*scale));
+    const height=Math.max(1,Math.round((image.naturalHeight||image.height)*scale));
+    const canvas=document.createElement("canvas");
+    canvas.width=width; canvas.height=height;
+    const ctx=canvas.getContext("2d",{alpha:false});
+    if(!ctx)throw new Error("Photo processing is not supported on this device.");
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,width,height); ctx.drawImage(image,0,0,width,height);
+    const qualities=[0.82,0.76,0.70,0.64,0.58];
+    let best=null;
+    for(const quality of qualities){
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));
+      if(!blob)throw new Error("Unable to compress the selected photo.");
+      best=blob;
+      if(blob.size<=maxTargetBytes)break;
+    }
+    if(best && best.size>maxTargetBytes && Math.max(width,height)>1024){
+      const scale2=1024/Math.max(width,height);
+      const w2=Math.max(1,Math.round(width*scale2)), h2=Math.max(1,Math.round(height*scale2));
+      canvas.width=w2; canvas.height=h2;
+      ctx.fillStyle="#fff"; ctx.fillRect(0,0,w2,h2); ctx.drawImage(image,0,0,w2,h2);
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.58));
+      if(blob)best=blob;
+    }
+    if(!best || best.size<=0)throw new Error("Unable to prepare the selected photo.");
+    if(statusElement)statusElement.textContent="Photo optimized · "+Math.round(file.size/1024)+" KB → "+Math.round(best.size/1024)+" KB";
+    return best;
+  }finally{ URL.revokeObjectURL(imageUrl); }
+}
+
 let selectedPhoto=null;
 
 
-function processPhoto(file){
+async function processPhoto(file){
 
     if(!file){
         return;
@@ -1654,27 +1695,19 @@ function processPhoto(file){
     }
 
 
-    selectedPhoto=file;
-
-
-    const reader=new FileReader();
-
-
-    reader.onload=function(event){
-
-        $("photoPreview").src=
-          event.target.result;
-
-        $("photoPreview").style.display=
-          "block";
-
-        $("photoStatus").textContent=
-          "Photo selected successfully.";
-
-    };
-
-
-    reader.readAsDataURL(file);
+    const previewUrl=URL.createObjectURL(file);
+    $("photoPreview").src=previewUrl;
+    $("photoPreview").style.display="block";
+    $("photoStatus").textContent="Optimizing photo…";
+    try{
+      selectedPhoto=await compressProfilePhoto(file,$("photoStatus"));
+    }catch(error){
+      selectedPhoto=null;
+      $("photoStatus").textContent=error?.message||"Unable to process the selected photo.";
+      return;
+    }finally{
+      URL.revokeObjectURL(previewUrl);
+    }
 
 }
 
@@ -1801,9 +1834,9 @@ let selectedProfessionalPhotoBase64="";
 let selectedProfessionalPhotoType="";
 let selectedProfessionalPhotoExtension="";
 
-function bindProfessionalPhotoInput(inputId){
+async function bindProfessionalPhotoInput(inputId){
   const input=$(inputId); if(!input)return;
-  input.addEventListener("change",()=>{
+  input.addEventListener("change",async()=>{
     const file=input.files?.[0]; if(!file)return;
     if(!/^image\/(jpeg|png|webp)$/.test(file.type)){
       input.value="";
@@ -1824,35 +1857,47 @@ function bindProfessionalPhotoInput(inputId){
 
     selectedProfessionalPhoto=null;
     selectedProfessionalPhotoBase64="";
-    selectedProfessionalPhotoType=file.type;
-    selectedProfessionalPhotoExtension=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
-
+    selectedProfessionalPhotoType="";
+    selectedProfessionalPhotoExtension="";
     const preview=$("ilsProfPhotoPreview");
-    preview.src=URL.createObjectURL(file);
+    const previewUrl=URL.createObjectURL(file);
+    preview.src=previewUrl;
     preview.style.display="block";
-    $("ilsProfPhotoStatus").textContent="Reading "+file.name+"…";
-
-    const reader=new FileReader();
-    reader.onload=()=>{
-      const result=String(reader.result||"");
-      const comma=result.indexOf(",");
-      if(comma<0){
+    $("ilsProfPhotoStatus").textContent="Optimizing photo…";
+    try{
+      const compressed=await compressProfilePhoto(file,$("ilsProfPhotoStatus"));
+      selectedProfessionalPhoto=compressed;
+      selectedProfessionalPhotoType="image/jpeg";
+      selectedProfessionalPhotoExtension="jpg";
+      const reader=new FileReader();
+      reader.onload=()=>{
+        const result=String(reader.result||"");
+        const comma=result.indexOf(",");
+        if(comma<0){
+          selectedProfessionalPhotoBase64="";
+          $("ilsProfPhotoStatus").textContent="Unable to read the optimized photo. Please choose it again.";
+          return;
+        }
+        selectedProfessionalPhotoBase64=result.slice(comma+1);
+        $("ilsProfPhotoStatus").textContent="Photo optimized · "+Math.round(file.size/1024)+" KB → "+Math.round(compressed.size/1024)+" KB · Ready";
+      };
+      reader.onerror=()=>{
+        selectedProfessionalPhoto=null;
         selectedProfessionalPhotoBase64="";
-        $("ilsProfPhotoStatus").textContent="Unable to read the selected photo. Please choose it again.";
-        return;
-      }
-      selectedProfessionalPhotoBase64=result.slice(comma+1);
-      selectedProfessionalPhoto=file.name;
-      $("ilsProfPhotoStatus").textContent=file.name+" · "+Math.round(file.size/1024)+" KB · Ready";
-    };
-    reader.onerror=()=>{
+        selectedProfessionalPhotoType="";
+        selectedProfessionalPhotoExtension="";
+        $("ilsProfPhotoStatus").textContent="Unable to read the optimized photo. Please choose it again.";
+      };
+      reader.readAsDataURL(compressed);
+    }catch(error){
       selectedProfessionalPhoto=null;
       selectedProfessionalPhotoBase64="";
       selectedProfessionalPhotoType="";
       selectedProfessionalPhotoExtension="";
-      $("ilsProfPhotoStatus").textContent="Unable to read the selected photo. Please choose it again.";
-    };
-    reader.readAsDataURL(file);
+      $("ilsProfPhotoStatus").textContent=error?.message||"Unable to process the selected photo.";
+    }finally{
+      URL.revokeObjectURL(previewUrl);
+    }
   });
 }
 bindProfessionalPhotoInput("ilsProfCameraInput");
