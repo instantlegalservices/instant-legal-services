@@ -46,7 +46,7 @@ jobs:
           assert(helperStart >= 0 && helperEnd > helperStart, 'Could not isolate safe return URL validator');
           const helper = portal.slice(helperStart, helperEnd);
           function validate(search) {
-            return new Function('window', 'URLSearchParams', 'URL', helper + '\\nreturn getSafeReturnTo();')(
+            return new Function('window', 'URLSearchParams', 'URL', helper + '\nreturn getSafeReturnTo();')(
               { location: { origin: 'https://instantlegalservices.in', search } },
               URLSearchParams,
               URL
