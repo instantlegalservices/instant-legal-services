@@ -53,6 +53,19 @@ const SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
 const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
+function getSafeReturnTo(){
+ const raw=new URLSearchParams(window.location.search).get("return_to");
+ if(!raw||!raw.startsWith("/")||raw.startsWith("//")||raw.includes("\\")||/%5c/i.test(raw))return "";
+ try{
+  const target=new URL(raw,window.location.origin);
+  if(target.origin!==window.location.origin)return "";
+  return target.pathname+target.search+target.hash;
+ }catch(_){return ""}
+}
+const returnTo=getSafeReturnTo();
+function returnAfterAuthentication(){
+ if(returnTo) window.location.replace(returnTo);
+}
 function status(msg,ok=false){$("status").textContent=msg;$("status").className="status "+(ok?"ok":"err");}
 function show(mode){
  const login=mode==="login"; $("loginPanel").classList.toggle("hidden",!login);$("signupPanel").classList.toggle("hidden",login);
@@ -79,6 +92,7 @@ $("signupBtn").onclick=async()=>{
      const p=await provision(data.user);
      status("Customer account and profile provisioned successfully.\nProfile: "+p.customer_profile_id,true);
      show("login");
+     returnAfterAuthentication();
    }else{
      status("Account created. Please complete the email confirmation if required, then sign in here.",true);
    }
@@ -102,6 +116,7 @@ $("loginBtn").onclick=async()=>{
      if(profile.status!=="active") throw new Error("CUSTOMER_ACCOUNT_SUSPENDED");
      status("Signed in successfully.\nWelcome, "+profile.full_name+".",true);
    }
+   returnAfterAuthentication();
  }catch(e){status(e.message||"Unable to sign in.");}
  finally{$("loginBtn").disabled=false;}
 };

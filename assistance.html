@@ -171,7 +171,8 @@ function showMode(){
  pack.innerHTML="<h3>What you will receive</h3><ul>"+items.map(x=>"<li>"+x+"</li>").join("")+"</ul>"+(guided?"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, this checklist and route-specific field guidance will be shown again in a clean copy-ready format.</p>":"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, the request enters the existing service-order workflow. An associate can then coordinate the stated non-legal digital task.</p>");
  document.getElementById("payBtn").onclick=()=>pay(guided,rd);
  applyConfiguredAssistancePrice(configuredServiceSlug,configuredFallback);
- document.getElementById("loginBtn").onclick=()=>{};
+ const loginBtn=document.getElementById("loginBtn");
+ if(loginBtn) loginBtn.href="customer-portal.html?return_to="+encodeURIComponent(location.pathname+location.search+location.hash);
 }
 async function pay(guided,rd){
  const btn=document.getElementById("payBtn");btn.disabled=true;

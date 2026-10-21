@@ -1,0 +1,62 @@
+name: Customer Payment Continuity Regression
+
+on:
+  pull_request:
+    paths:
+      - "assets/ils-tools.js"
+      - "assistance.html"
+      - "customer-portal.html"
+      - ".github/workflows/test-customer-payment-continuity.yml"
+  push:
+    paths:
+      - "assets/ils-tools.js"
+      - "assistance.html"
+      - "customer-portal.html"
+      - ".github/workflows/test-customer-payment-continuity.yml"
+  workflow_dispatch:
+
+jobs:
+  customer-payment-continuity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify customer return flow and payment callback contract
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const assert = require('node:assert/strict');
+          const tools = fs.readFileSync('assets/ils-tools.js', 'utf8');
+          const assistance = fs.readFileSync('assistance.html', 'utf8');
+          const portal = fs.readFileSync('customer-portal.html', 'utf8');
+
+          assert.match(tools, /customer-portal\.html\?return_to=/, 'Unauthenticated paid tools must use customer login with a return destination');
+          assert.doesNotMatch(tools, /window\.location\.href\s*=\s*['"]portal\.html#login['"]/, 'Paid customer flow must not redirect to professional portal');
+          assert.match(tools, /onPaid\(\s*\{[\s\S]*?order_id:\s*data\.order_id[\s\S]*?order_number:\s*result\.order_number\s*\|\|\s*data\.order_number/, 'Verified payment callback must include the correct order identity');
+          assert.equal((tools.match(/onPaid\(\s*\{/g) || []).length, 2, 'Both UPI-proof and Razorpay verified paths must pass order details');
+          assert.doesNotMatch(tools, /onPaid\(\s*\)/, 'No verified-payment path may call the callback without order details');
+          assert.match(assistance, /loginBtn\.href\s*=\s*["']customer-portal\.html\?return_to=["']\s*\+\s*encodeURIComponent/, 'Assistance login link must preserve the selected route');
+          assert.match(assistance, /paid\?\.order_id/, 'Assistance must build the Passport link from the returned order ID');
+          assert.match(portal, /function getSafeReturnTo\(\)/, 'Customer portal must validate return destinations');
+          assert.match(portal, /target\.origin\s*!==\s*window\.location\.origin/, 'Customer portal must reject external return destinations');
+          assert.match(portal, /window\.location\.replace\(returnTo\)/, 'Customer portal must return after successful authentication');
+
+          const helperStart = portal.indexOf('function getSafeReturnTo(){');
+          const helperEnd = portal.indexOf('const returnTo=getSafeReturnTo();', helperStart);
+          assert(helperStart >= 0 && helperEnd > helperStart, 'Could not isolate safe return URL validator');
+          const helper = portal.slice(helperStart, helperEnd);
+          function validate(search) {
+            return new Function('window', 'URLSearchParams', 'URL', helper + '\nreturn getSafeReturnTo();')(
+              { location: { origin: 'https://instantlegalservices.in', search } },
+              URLSearchParams,
+              URL
+            );
+          }
+          assert.equal(validate('?return_to=%2Fassistance.html%3Fmode%3Dguided%26route%3Dgst'), '/assistance.html?mode=guided&route=gst');
+          assert.equal(validate('?return_to=https%3A%2F%2Fevil.example%2F'), '', 'Absolute external URL must be rejected');
+          assert.equal(validate('?return_to=%2F%2Fevil.example%2F'), '', 'Protocol-relative external URL must be rejected');
+          assert.equal(validate('?return_to=%2F%5C%5Cevil.example'), '', 'Backslash-based external URL must be rejected');
+          console.log('Customer return and verified-order callback contract checks passed.');
+          NODE
