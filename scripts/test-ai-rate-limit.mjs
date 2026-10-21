@@ -20,7 +20,7 @@ assert.match(edge, /status:429/);
 assert.match(edge, /"Retry-After"/);
 assert.match(edge, /AI_RATE_LIMIT_UNAVAILABLE/);
 assert.match(edge, /AI_RATE_LIMIT_IDENTITY_UNAVAILABLE/);
-assert.match(edge, /function clientIp\(req:Request\)[\\s\\S]*cf-connecting-ip/);
+assert.match(edge, /function clientIp\(req:Request\)[\s\S]*cf-connecting-ip/);
 assert.doesNotMatch(edge.slice(edge.indexOf("function clientIp"), edge.indexOf("async function call")), /x-forwarded-for/);
 
 const authCheck = edge.indexOf('adv=await approved(u.id)');
