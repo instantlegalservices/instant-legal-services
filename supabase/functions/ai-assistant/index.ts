@@ -18,10 +18,9 @@ async function checkAiRateLimit(clientKey:string, limit:number, windowSeconds:60
  }catch(e){console.error("AI_RATE_LIMIT_UNAVAILABLE",e);return {allowed:false,degraded:true,retry_after_seconds:60};}
 }
 function clientIp(req:Request){
- const trusted=(req.headers.get("cf-connecting-ip")||req.headers.get("x-real-ip")||"").trim();
- if(trusted)return trusted;
- const forwarded=(req.headers.get("x-forwarded-for")||"").split(",").map(x=>x.trim()).filter(Boolean);
- return forwarded[0]||"";
+ // Do not trust X-Forwarded-For as a fallback: callers can sometimes supply it.
+ // Only accept edge/proxy-normalized headers; TEST E2E must confirm which is present.
+ return (req.headers.get("cf-connecting-ip")||req.headers.get("x-real-ip")||"").trim();
 }
 async function call(key:string,model:string,messages:any[],maxTokens:number){for(let attempt=0;attempt<2;attempt++){const c=new AbortController();const t=setTimeout(()=>c.abort(),22000);try{const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json","HTTP-Referer":"https://instantlegalservices.in/","X-Title":"Instant Legal Services"},body:JSON.stringify({model,messages,temperature:0.1,max_tokens:maxTokens,provider:{allow_fallbacks:true,sort:"throughput"}}),signal:c.signal});const raw=await r.text();let j:any=null;try{j=JSON.parse(raw)}catch{};if(r.ok)return {ok:true,status:r.status,j,error:""};const err=j?.error?.message||raw.slice(0,500);if((r.status===429||r.status>=500)&&attempt===0){await new Promise(x=>setTimeout(x,700));continue}return {ok:false,status:r.status,j,error:err};}catch(e:any){if(attempt===0){await new Promise(x=>setTimeout(x,400));continue}return {ok:false,status:e?.name==="AbortError"?504:502,j:null,error:e?.name==="AbortError"?"upstream timeout":e?.message||"upstream connection failed"};}finally{clearTimeout(t);}}return {ok:false,status:502,j:null,error:"upstream failure"};}
 Deno.serve(async req=>{if(req.method==="OPTIONS")return json({ok:true});if(req.method!=="POST")return json({ok:false,reply:"Method not allowed."},405);try{const b=await req.json();const mode=str(b?.mode||"public").toLowerCase();let adv:any=null;let authUserId="";if(mode==="advocate"||mode==="research"){const u=await user(req);if(!u?.id)return json({ok:false,code:"AUTH_REQUIRED",reply:"Advocate login is required for Research AI."},401);authUserId=String(u.id);adv=await approved(u.id);if(!adv)return json({ok:false,code:"ADVOCATE_ONLY",reply:"Advocate Research AI is available only to approved ILS Network advocates."},403);if(b?.action==="check")return json({ok:true,approved:true,advocate:{id:adv.id,name:adv.advocate_name}});}
