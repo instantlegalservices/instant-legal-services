@@ -110,6 +110,7 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
     try{
       const bytes=await file.arrayBuffer();
       const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+      const pageLimitNotice=pdf.numPages>20?' नोट: PDF में '+pdf.numPages+' पेज हैं; इस जाँच में पहले 20 पेज ही पढ़े गए हैं।':'';
       let chunks=[];
       for(let p=1;p<=Math.min(pdf.numPages,20);p++){
         const page=await pdf.getPage(p);
@@ -138,7 +139,7 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
       addField('स्थान',findValue(extracted,['Challan Place','Place of Violation','Location','Place']));
       rawText.textContent=extracted;
       results.classList.add('show');
-      pdfStatus.textContent='PDF से टेक्स्ट निकाला गया। कृपया सभी फ़ील्ड मूल PDF से मिलाएँ; कुछ फ़ील्ड अपने आप पहचान में नहीं आ सकते।';
+      pdfStatus.textContent='PDF से टेक्स्ट निकाला गया। कृपया सभी फ़ील्ड मूल PDF से मिलाएँ; कुछ फ़ील्ड अपने आप पहचान में नहीं आ सकते।'+pageLimitNotice;
     }catch(e){pdfStatus.textContent='PDF पढ़ी नहीं जा सकी। फ़ाइल सही है या नहीं जाँचें और पुनः प्रयास करें.';}
   });
   document.getElementById('copyText').addEventListener('click',async function(){
