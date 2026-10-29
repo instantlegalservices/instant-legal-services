@@ -23,7 +23,8 @@ Scope: test only `government/echallan/smart-check.html` on the feature branch. D
 - [ ] Very short, malformed, and maximum-length inputs do not crash the page.
 
 ## PDF checks
-- [x] Real text-based Uttar Pradesh traffic notice PDF inspected: the current English-only field rules missed Hindi-labelled fields; Hindi/English recognition and date/amount/numbered-violation fallbacks added on the isolated feature branch. The uploaded PDF itself is not committed to the repository.\n- [ ] Re-run the browser workflow against a locally provided redacted PDF in an isolated local preview; compare each suggested field against the source PDF before release.
+- [x] Real text-based Uttar Pradesh traffic notice PDF inspected: the current English-only field rules missed Hindi-labelled fields; Hindi/English recognition and date/amount/numbered-violation fallbacks added on the isolated feature branch. The uploaded PDF itself is not committed to the repository.
+- [ ] Re-run the browser workflow against a locally provided redacted PDF in an isolated local preview; compare each suggested field against the source PDF before release.
 - [ ] Confirm PDF.js parsing keeps `isEvalSupported: false` so uploaded, untrusted PDFs cannot use the vulnerable eval path.
 - [ ] PDF with multiple pages: verify reading works; for more than 20 pages, confirm the cap warning appears.
 - [ ] Scanned/image-only PDF: confirm the page clearly says text could not be extracted (OCR is not implemented).
