@@ -143,12 +143,23 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
         ((extracted.match(/\b[A-Z]{2}\s?\d{1,2}\s?[A-Z]{0,3}\s?\d{1,4}\b/i)||[])[0]||'');
       const dateMatch=extracted.match(/\b\d{2}[-/.]\d{2}[-/.]\d{4}\b/);
       const amountMatch=extracted.match(/(?:शमन शुल्क|जुर्माना|Challan Amount|Total Amount|Amount Payable|Amount)[^\n\r]{0,60}?₹?\s*([\d,]+\s*\/-?|₹\s*[\d,]+|[\d,]+\s*\/-?)/i);
+      const amountFallback=extracted.match(/(?:^|\n)\s*([\d,]{2,}\s*\/-)\s*(?=\n|$)/);
       const violations=[...extracted.matchAll(/(?:^|\n)\s*(\d+)\s*:\s*([^\n\r]+)/g)].map(m=>m[1]+': '+m[2].trim());
-      const place=findValue(extracted,['चालान स्थान','घटना स्थल','स्थान','Challan Place','Place of Violation','Location','Place']);
+      let place=findValue(extracted,['चालान स्थान','घटना स्थल','स्थान','Challan Place','Place of Violation','Location','Place']);
+      if(!place){
+        const timeMatch=extracted.match(/\b\d{1,2}:\d{2}(?::\d{2})?\b/);
+        const firstViolation=extracted.search(/(?:^|\n)\s*1\s*:/);
+        if(timeMatch && firstViolation>timeMatch.index){
+          place=extracted.slice(timeMatch.index+timeMatch[0].length,firstViolation)
+            .split(/\r?\n/).map(line=>line.trim())
+            .filter(line=>line && !/^(?:चालान|उल्लंघन|विवरण|शमन शुल्क|तिथि|समय|स्थान|[\d,.₹/-]+)$/i.test(line))
+            .join(', ').replace(/\s+/g,' ').trim();
+        }
+      }
       addField('चालान नंबर',challanNo);
       addField('वाहन नंबर',vehicleNo);
       addField('चालान की तारीख',findValue(extracted,['चालान की तारीख','तिथि / समय','Challan Date','Date of Challan']) || (dateMatch?dateMatch[0]:''));
-      addField('चालान राशि',amountMatch?amountMatch[1].trim():findValue(extracted,['शमन शुल्क','चालान राशि','Challan Amount','Total Amount','Amount Payable','Amount']));
+      addField('चालान राशि',amountMatch?amountMatch[1].trim():(amountFallback?amountFallback[1].trim():findValue(extracted,['शमन शुल्क','चालान राशि','Challan Amount','Total Amount','Amount Payable','Amount'])));
       addField('उल्लंघन / विवरण',violations.length?violations.join(' | '):findValue(extracted,['उल्लंघन का विवरण','उल्लंघन','Violation Details','Violation','Offence','Offense','Violation Description']));
       addField('स्थान',place);
       rawText.textContent=extracted;
