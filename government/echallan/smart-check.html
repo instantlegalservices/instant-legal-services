@@ -101,6 +101,8 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
     d.append(b,s);fields.appendChild(d);
   }
   document.getElementById('readPdf').addEventListener('click',async function(){
+    // Clear prior results before each attempt so failed/new uploads cannot leave stale details visible.
+    extracted='';fields.replaceChildren();rawText.textContent='';results.classList.remove('show');
     const file=fileInput.files&&fileInput.files[0];
     if(!file){pdfStatus.textContent='पहले चालान PDF चुनें।';return;}
     if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){pdfStatus.textContent='कृपया PDF फ़ाइल चुनें।';return;}
