@@ -104,11 +104,14 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
     const file=fileInput.files&&fileInput.files[0];
     if(!file){pdfStatus.textContent='पहले चालान PDF चुनें।';return;}
     if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){pdfStatus.textContent='कृपया PDF फ़ाइल चुनें।';return;}
+    if(file.size===0){pdfStatus.textContent='चुनी गई फ़ाइल खाली है। कृपया सही PDF चुनें।';return;}
     if(file.size>15*1024*1024){pdfStatus.textContent='फ़ाइल 15 MB से बड़ी है। छोटी PDF चुनें।';return;}
     if(!window.pdfjsLib){pdfStatus.textContent='PDF रीडर लोड नहीं हुआ। इंटरनेट कनेक्शन जाँचकर फिर प्रयास करें।';return;}
     pdfStatus.textContent='PDF पढ़ी जा रही है…';
     try{
       const bytes=await file.arrayBuffer();
+      const header=new TextDecoder('latin1').decode(bytes.slice(0,1024));
+      if(!header.includes('%PDF-')){pdfStatus.textContent='फ़ाइल में PDF का मान्य header नहीं मिला। कृपया आधिकारिक पोर्टल से मूल PDF डाउनलोड करके चुनें।';return;}
       const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
       const pageLimitNotice=pdf.numPages>20?' नोट: PDF में '+pdf.numPages+' पेज हैं; इस जाँच में पहले 20 पेज ही पढ़े गए हैं।':'';
       let chunks=[];
