@@ -25,9 +25,9 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Playwright and Chromium
+      - name: Install isolated browser test dependencies
         run: |
-          npm install --no-save playwright@1.55.0
+          npm install --no-save --package-lock=false playwright@1.55.0 pdfjs-dist@3.11.174 pdf-lib@1.17.1
           npx playwright install --with-deps chromium
 
       - name: Start local static server
@@ -41,12 +41,14 @@ jobs:
           cat /tmp/ils-http.log
           exit 1
 
-      - name: Run isolated browser smoke checks
+      - name: Run isolated browser and synthetic PDF checks
         env:
           BASE_URL: http://127.0.0.1:4173/government/echallan/smart-check.html
         run: |
           node <<'NODE'
+          const fs = require('node:fs');
           const { chromium } = require('playwright');
+          const { PDFDocument, StandardFonts } = require('pdf-lib');
 
           (async () => {
             const browser = await chromium.launch({ headless: true });
@@ -58,9 +60,28 @@ jobs:
             const page = await context.newPage();
             const failures = [];
             page.on('pageerror', error => failures.push(error.message));
-            // This smoke test deliberately blocks external requests: it does not
-            // contact government portals, ILS APIs, or a third-party PDF CDN.
-            await page.route('https://**/*', route => route.abort());
+
+            // All network requests are blocked except the exact pinned PDF.js
+            // assets, which are served from the installed local package.
+            await page.route('https://**/*', async route => {
+              const url = new URL(route.request().url());
+              if (url.pathname.endsWith('/pdf.min.js')) {
+                return route.fulfill({
+                  status: 200,
+                  contentType: 'application/javascript',
+                  body: fs.readFileSync('node_modules/pdfjs-dist/build/pdf.min.js')
+                });
+              }
+              if (url.pathname.endsWith('/pdf.worker.min.js')) {
+                return route.fulfill({
+                  status: 200,
+                  contentType: 'application/javascript',
+                  body: fs.readFileSync('node_modules/pdfjs-dist/build/pdf.worker.min.js')
+                });
+              }
+              return route.abort();
+            });
+
             try {
               await page.goto(process.env.BASE_URL, { waitUntil: 'domcontentloaded' });
               if (!(await page.locator('#vehicle').isVisible())) throw new Error('Vehicle input is not visible');
@@ -88,19 +109,67 @@ jobs:
                 throw new Error('Missing-PDF validation did not appear');
               }
 
+              // Generate a synthetic PDF fixture locally. It contains no real
+              // person's or vehicle's data and is never sent to a remote service.
+              const pdf = await PDFDocument.create();
+              const pdfPage = pdf.addPage([595, 842]);
+              const font = await pdf.embedFont(StandardFonts.Helvetica);
+              const lines = [
+                'Challan Number: CH-TEST-12345',
+                'Vehicle Number: UP25AB1234',
+                'Challan Date: 2026-10-01',
+                'Challan Amount: INR 1000',
+                'Violation Details: Signal Jumping',
+                'Challan Place: Bareilly'
+              ];
+              lines.forEach((line, index) => {
+                pdfPage.drawText(line, { x: 48, y: 760 - index * 34, size: 12, font });
+              });
+              const pdfBytes = Buffer.from(await pdf.save());
+              await page.locator('#pdfFile').setInputFiles({
+                name: 'synthetic-challan-test.pdf',
+                mimeType: 'application/pdf',
+                buffer: pdfBytes
+              });
+              await page.locator('#readPdf').click();
+              await page.locator('#results.show').waitFor({ state: 'visible', timeout: 10000 });
+
+              const extracted = await page.locator('#rawText').innerText();
+              for (const expected of ['CH-TEST-12345', 'UP25AB1234', '2026-10-01', 'INR 1000', 'Signal Jumping', 'Bareilly']) {
+                if (!extracted.includes(expected)) throw new Error('Extracted PDF text missing: ' + expected);
+              }
+              const resultText = await page.locator('#fields').innerText();
+              if (!resultText.includes('CH-TEST-12345')) throw new Error('Challan number field not populated');
+              if (!resultText.includes('UP25AB1234')) throw new Error('Vehicle number field not populated');
+              if (!resultText.includes('Signal Jumping')) throw new Error('Violation field not populated');
+
+              // A subsequent invalid PDF must clear the earlier successful result.
+              await page.locator('#pdfFile').setInputFiles({
+                name: 'invalid-test.pdf',
+                mimeType: 'application/pdf',
+                buffer: Buffer.from('not a PDF')
+              });
+              await page.locator('#readPdf').click();
+              if (await page.locator('#results').evaluate(el => el.classList.contains('show'))) {
+                throw new Error('Stale successful result remained visible after invalid PDF');
+              }
+              if (!(await page.locator('#pdfStatus').innerText()).includes('मान्य header')) {
+                throw new Error('Invalid PDF header was not rejected clearly');
+              }
+
               const horizontalOverflow = await page.evaluate(() =>
                 document.documentElement.scrollWidth > document.documentElement.clientWidth
               );
               if (horizontalOverflow) throw new Error('Mobile viewport has horizontal overflow');
               if (failures.length) throw new Error('Browser errors: ' + failures.join(' | '));
 
-              console.log('PASS: page loads with external requests blocked');
-              console.log('PASS: required inputs are visible');
-              console.log('PASS: noindex remains enabled');
-              console.log('PASS: empty vehicle input is validated');
-              console.log('PASS: vehicle number is normalized');
-              console.log('PASS: no automatic portal submission is required');
-              console.log('PASS: missing PDF is validated');
+              console.log('PASS: page loads with external network requests blocked');
+              console.log('PASS: inputs and noindex directive are present');
+              console.log('PASS: empty vehicle validation and normalization work');
+              console.log('PASS: no-PDF validation works');
+              console.log('PASS: PDF.js extracts synthetic PDF text locally');
+              console.log('PASS: challan number, vehicle number, and violation fields populate');
+              console.log('PASS: invalid PDF is rejected and stale results are cleared');
               console.log('PASS: mobile viewport has no horizontal overflow');
               console.log('PASS: no uncaught page errors');
             } finally {
