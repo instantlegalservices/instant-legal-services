@@ -1,0 +1,46 @@
+name: Homepage Search Routing E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "index.html"
+      - "scripts/test-home-search-routing.js"
+      - ".github/workflows/test-home-search-routing.yml"
+  push:
+    branches:
+      - "fix/ils-search-query-normalization-2026-10-29"
+    paths:
+      - "index.html"
+      - "scripts/test-home-search-routing.js"
+      - ".github/workflows/test-home-search-routing.yml"
+
+jobs:
+  homepage-search-routing:
+    # Pin to a Playwright-supported image instead of ubuntu-latest's moving target.
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local static site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http.log 2>&1 &
+          echo $! > /tmp/ils-http.pid
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:4173/ > /dev/null
+
+      - name: Run homepage search routing regression
+        env:
+          BASE_URL: http://127.0.0.1:4173/
+        run: node scripts/test-home-search-routing.js
