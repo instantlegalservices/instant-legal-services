@@ -30,6 +30,7 @@ Scope: test only `government/echallan/smart-check.html` on the feature branch. D
 - [ ] File larger than 15 MB: confirm it is rejected before parsing.
 - [ ] PDF with unusual fonts/columns or Hindi text: check line order and avoid treating incorrectly extracted fields as authoritative.
 - [ ] Clear button removes selected file, vehicle number, results, extracted text, and status messages.
+- [ ] After a successful PDF parse, select an invalid/empty PDF attempt and verify the previous PDF's extracted fields and raw text are cleared rather than left visible.
 
 ## Acceptance criteria
 - No uncaught JavaScript errors.
