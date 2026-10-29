@@ -162,6 +162,21 @@ jobs:
                 throw new Error('Invalid PDF did not reach explicit header validation: ' + invalidPdfStatus);
               }
 
+              // Verify the explicit clear action removes both inputs and parsed data.
+              await page.locator('#pdfFile').setInputFiles({
+                name: 'synthetic-challan-test.pdf',
+                mimeType: 'application/pdf',
+                buffer: pdfBytes
+              });
+              await page.locator('#readPdf').click();
+              await page.locator('#results.show').waitFor({ state: 'visible', timeout: 10000 });
+              await page.locator('#clear').click();
+              if (await page.locator('#vehicle').inputValue() !== '') throw new Error('Clear button did not clear vehicle number');
+              if (await page.locator('#pdfFile').inputValue() !== '') throw new Error('Clear button did not clear selected file');
+              if (await page.locator('#results').evaluate(el => el.classList.contains('show'))) throw new Error('Clear button left results visible');
+              if ((await page.locator('#rawText').innerText()).trim() !== '') throw new Error('Clear button left extracted text visible');
+              if ((await page.locator('#pdfStatus').innerText()).trim() !== '') throw new Error('Clear button left PDF status visible');
+
               const horizontalOverflow = await page.evaluate(() =>
                 document.documentElement.scrollWidth > document.documentElement.clientWidth
               );
@@ -175,6 +190,7 @@ jobs:
               console.log('PASS: PDF.js extracts synthetic PDF text locally');
               console.log('PASS: challan number, vehicle number, and violation fields populate');
               console.log('PASS: invalid PDF is rejected and stale results are cleared');
+              console.log('PASS: clear button removes inputs, results, extracted text, and status');
               console.log('PASS: mobile viewport has no horizontal overflow');
               console.log('PASS: no uncaught page errors');
             } finally {
