@@ -40,6 +40,8 @@ check('old extracted data is cleared before each PDF attempt', /extracted\s*=\s*
 check('extracted text is rendered with textContent', /rawText\.textContent\s*=\s*extracted/.test(script));
 check('PDF.js eval support is disabled for untrusted PDFs', /getDocument\(\{\s*data:\s*bytes,\s*isEvalSupported:\s*false\s*\}\)/.test(script));
 check('PDF parsing code contains no fetch/XHR/beacon upload path', !/\bfetch\s*\(|XMLHttpRequest|navigator\.sendBeacon/i.test(script));
+check('clear button resets vehicle, file, results, text, and extracted state', /getElementById\('clear'\)\.addEventListener\('click',[\s\S]*?vehicle\.value\s*=\s*''[\s\S]*?fileInput\.value\s*=\s*''[\s\S]*?fields\.replaceChildren\(\)[\s\S]*?rawText\.textContent\s*=\s*''[\s\S]*?results\.classList\.remove\('show'\)[\s\S]*?extracted\s*=\s*''/.test(script));
+check('vehicle number is not auto-submitted to the government portal', !/fetch\s*\(\s*portal|form\.submit\s*\(|\.submit\s*\(/i.test(script));
 
 for (const result of checks) {
   console.log((result.passed ? 'PASS' : 'FAIL') + ' — ' + result.name);
