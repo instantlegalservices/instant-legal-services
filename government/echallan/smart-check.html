@@ -136,12 +136,22 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
       extracted=chunks.join('\n\n').trim();
       if(!extracted){pdfStatus.textContent='इस PDF से पढ़ने योग्य टेक्स्ट नहीं मिला। यह स्कैन/तस्वीर हो सकती है; मूल PDF या आधिकारिक पोर्टल देखें।';return;}
       fields.replaceChildren();
-      addField('चालान नंबर',findValue(extracted,['Challan Number','Challan No','Challan No.','Challan ID']));
-      addField('वाहन नंबर',findValue(extracted,['Vehicle Number','Vehicle No','Registration Number','Vehicle Registration No']));
-      addField('चालान की तारीख',findValue(extracted,['Challan Date','Date of Challan','Date']));
-      addField('चालान राशि',findValue(extracted,['Challan Amount','Total Amount','Amount Payable','Amount']));
-      addField('उल्लंघन / विवरण',findValue(extracted,['Violation Details','Violation','Offence','Offense','Violation Description']));
-      addField('स्थान',findValue(extracted,['Challan Place','Place of Violation','Location','Place']));
+      // Support Hindi and English labels used by official challan layouts.
+      const challanNo=findValue(extracted,['चालान संख्या','चालान नंबर','Challan Number','Challan No','Challan No.','Challan ID']) ||
+        ((extracted.match(/(?:UP|DL|HR|RJ|UK|PB|MP|MH|GJ|KA|TN|TS|AP|BR|WB|OD|CG|JH|AS|HP|JK|GA|TR|MN|ML|MZ|NL|AR|SK)[A-Z0-9]{8,18}/i)||[])[0]||'');
+      const vehicleNo=findValue(extracted,['वाहन संख्या','वाहन नंबर','Vehicle Number','Vehicle No','Registration Number','Vehicle Registration No']) ||
+        ((extracted.match(/\b[A-Z]{2}\s?\d{1,2}\s?[A-Z]{0,3}\s?\d{1,4}\b/i)||[])[0]||'');
+      const dateMatch=extracted.match(/\b\d{2}[-/.]\d{2}[-/.]\d{4}\b/);
+      const amountMatch=extracted.match(/(?:शमन शुल्क|जुर्माना|Challan Amount|Total Amount|Amount Payable|Amount)[^\n\r]{0,60}?₹?\s*([\d,]+\s*\/-?|₹\s*[\d,]+|[\d,]+\s*\/-?)/i);
+      const violations=[...extracted.matchAll(/(?:^|\n)\s*(\d+)\s*:\s*([^\n\r]+)/g)].map(m=>m[1]+': '+m[2].trim());
+      const place=findValue(extracted,['स्थान','Challan Place','Place of Violation','Location','Place']) ||
+        ((extracted.match(/(?:Delapeer|Izatnagar|Bareilly|उत्तर प्रदेश)[^\n\r]*/i)||[])[0]||'');
+      addField('चालान नंबर',challanNo);
+      addField('वाहन नंबर',vehicleNo);
+      addField('चालान की तारीख',findValue(extracted,['चालान की तारीख','तिथि / समय','Challan Date','Date of Challan']) || (dateMatch?dateMatch[0]:''));
+      addField('चालान राशि',amountMatch?amountMatch[1].trim():findValue(extracted,['शमन शुल्क','चालान राशि','Challan Amount','Total Amount','Amount Payable','Amount']));
+      addField('उल्लंघन / विवरण',violations.length?violations.join(' | '):findValue(extracted,['उल्लंघन का विवरण','उल्लंघन','Violation Details','Violation','Offence','Offense','Violation Description']));
+      addField('स्थान',place);
       rawText.textContent=extracted;
       results.classList.add('show');
       pdfStatus.textContent='PDF से टेक्स्ट निकाला गया। कृपया सभी फ़ील्ड मूल PDF से मिलाएँ; कुछ फ़ील्ड अपने आप पहचान में नहीं आ सकते।'+pageLimitNotice;
