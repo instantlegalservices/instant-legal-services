@@ -46,6 +46,7 @@ check('vehicle number is not auto-submitted to the government portal', !/fetch\s
 check('Hindi challan number and vehicle labels are recognized', /चालान संख्या/.test(script) && /वाहन संख्या/.test(script));
 check('Hindi fine label and date fallback are supported', /शमन शुल्क/.test(script) && /dateMatch/.test(script));
 check('multiple numbered violation lines are collected', /extracted\.matchAll/.test(script));
+check('location parsing uses labels rather than hardcoded test-city names', /const place=findValue\(extracted,\['चालान स्थान','घटना स्थल','स्थान','Challan Place','Place of Violation','Location','Place'\]\);/.test(script) && !/Delapeer|Izatnagar/.test(script));
 
 for (const result of checks) {
   console.log((result.passed ? 'PASS' : 'FAIL') + ' — ' + result.name);
