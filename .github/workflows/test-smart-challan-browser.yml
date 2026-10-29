@@ -146,6 +146,36 @@ jobs:
               if (!resultText.includes('Signal Jumping')) throw new Error('Violation field not populated');
               if (!resultText.includes('Bareilly')) throw new Error('Challan place field not populated');
 
+              // Exercise fallback layouts without a labelled place or amount.
+              const fallbackPdf = await PDFDocument.create();
+              const fallbackPage = fallbackPdf.addPage([595, 842]);
+              const fallbackFont = await fallbackPdf.embedFont(StandardFonts.Helvetica);
+              const fallbackLines = [
+                'Challan Number: CH-TEST-67890',
+                'Vehicle Number: UP25XY6789',
+                'Time: 13:07:01',
+                'Delapeer, Izatnagar, Bareilly, Uttar Pradesh',
+                '6000/-',
+                '1: Driving licence not produced',
+                '2: Defective number plate',
+                '3: Pollution certificate not produced'
+              ];
+              fallbackLines.forEach((line, index) => {
+                fallbackPage.drawText(line, { x: 48, y: 760 - index * 30, size: 12, font: fallbackFont });
+              });
+              await page.locator('#pdfFile').setInputFiles({
+                name: 'synthetic-unlabelled-place-test.pdf',
+                mimeType: 'application/pdf',
+                buffer: Buffer.from(await fallbackPdf.save())
+              });
+              await page.locator('#readPdf').click();
+              await page.locator('#results.show').waitFor({ state: 'visible', timeout: 10000 });
+              const fallbackFields = await page.locator('#fields').innerText();
+              if (!fallbackFields.includes('6000/-')) throw new Error('Unlabelled challan amount fallback failed');
+              if (!fallbackFields.includes('Delapeer')) throw new Error('Unlabelled place fallback did not capture location');
+              if (!fallbackFields.includes('Bareilly')) throw new Error('Unlabelled place fallback lost city text');
+              if (!fallbackFields.includes('Driving licence not produced')) throw new Error('Numbered violation fallback failed');
+
               // A subsequent invalid PDF must clear the earlier successful result.
               await page.locator('#pdfFile').setInputFiles({
                 name: 'invalid-test.pdf',
