@@ -125,7 +125,7 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
         const pageLines=[...rows.entries()]
           .sort((a,b)=>b[0]-a[0])
           .map(([,items])=>items.sort((a,b)=>a.x-b.x).map(x=>x.text).join(' '));
-        chunks.push(pageLines.join('\\n'));
+        chunks.push(pageLines.join('\n'));
       }
       extracted=chunks.join('\n\n').trim();
       if(!extracted){pdfStatus.textContent='इस PDF से पढ़ने योग्य टेक्स्ट नहीं मिला। यह स्कैन/तस्वीर हो सकती है; मूल PDF या आधिकारिक पोर्टल देखें।';return;}
