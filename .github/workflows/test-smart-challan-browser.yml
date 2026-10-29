@@ -1,0 +1,113 @@
+name: Smart Challan Browser Smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/ils-smart-challan-finder-main-sync
+    paths:
+      - "government/echallan/smart-check.html"
+      - ".github/workflows/test-smart-challan-browser.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local static server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http.log 2>&1 &
+          echo $! > /tmp/ils-http.pid
+          for i in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:4173/government/echallan/smart-check.html > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/ils-http.log
+          exit 1
+
+      - name: Run isolated browser smoke checks
+        env:
+          BASE_URL: http://127.0.0.1:4173/government/echallan/smart-check.html
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const context = await browser.newContext({
+              viewport: { width: 390, height: 844 },
+              serviceWorkers: 'block',
+              reducedMotion: 'reduce'
+            });
+            const page = await context.newPage();
+            const failures = [];
+            page.on('pageerror', error => failures.push(error.message));
+            // This smoke test deliberately blocks external requests: it does not
+            // contact government portals, ILS APIs, or a third-party PDF CDN.
+            await page.route('https://**/*', route => route.abort());
+            try {
+              await page.goto(process.env.BASE_URL, { waitUntil: 'domcontentloaded' });
+              if (!(await page.locator('#vehicle').isVisible())) throw new Error('Vehicle input is not visible');
+              if (!(await page.locator('#pdfFile').isVisible())) throw new Error('PDF input is not visible');
+              if (await page.locator('meta[name="robots"]').getAttribute('content') !== 'noindex,follow') {
+                throw new Error('Tool page should remain noindex,follow');
+              }
+
+              await page.locator('#openPortal').click();
+              if (!(await page.locator('#vehicleStatus').innerText()).includes('पहले वाहन नंबर दर्ज करें')) {
+                throw new Error('Empty vehicle number validation did not appear');
+              }
+
+              await page.locator('#vehicle').fill('up 25-ab 1234');
+              await page.locator('#openPortal').click();
+              if (await page.locator('#vehicle').inputValue() !== 'UP25AB1234') {
+                throw new Error('Vehicle number normalization failed');
+              }
+              if (!(await page.locator('#vehicleStatus').innerText()).includes('आधिकारिक eChallan पोर्टल')) {
+                throw new Error('Portal guidance status did not appear');
+              }
+
+              await page.locator('#readPdf').click();
+              if (!(await page.locator('#pdfStatus').innerText()).includes('पहले चालान PDF चुनें')) {
+                throw new Error('Missing-PDF validation did not appear');
+              }
+
+              const horizontalOverflow = await page.evaluate(() =>
+                document.documentElement.scrollWidth > document.documentElement.clientWidth
+              );
+              if (horizontalOverflow) throw new Error('Mobile viewport has horizontal overflow');
+              if (failures.length) throw new Error('Browser errors: ' + failures.join(' | '));
+
+              console.log('PASS: page loads with external requests blocked');
+              console.log('PASS: required inputs are visible');
+              console.log('PASS: noindex remains enabled');
+              console.log('PASS: empty vehicle input is validated');
+              console.log('PASS: vehicle number is normalized');
+              console.log('PASS: no automatic portal submission is required');
+              console.log('PASS: missing PDF is validated');
+              console.log('PASS: mobile viewport has no horizontal overflow');
+              console.log('PASS: no uncaught page errors');
+            } finally {
+              await browser.close();
+            }
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
