@@ -38,6 +38,7 @@ check('15 MB PDF size guard remains present', /file\.size\s*>\s*15\s*\*\s*1024\s
 check('PDF page count is capped at 20', /Math\.min\(pdf\.numPages,\s*20\)/.test(script));
 check('old extracted data is cleared before each PDF attempt', /extracted\s*=\s*'';\s*fields\.replaceChildren\(\);\s*rawText\.textContent\s*=\s*'';\s*results\.classList\.remove\('show'\);/.test(script));
 check('extracted text is rendered with textContent', /rawText\.textContent\s*=\s*extracted/.test(script));
+check('PDF.js eval support is disabled for untrusted PDFs', /getDocument\(\{\s*data:\s*bytes,\s*isEvalSupported:\s*false\s*\}\)/.test(script));
 check('PDF parsing code contains no fetch/XHR/beacon upload path', !/\bfetch\s*\(|XMLHttpRequest|navigator\.sendBeacon/i.test(script));
 
 for (const result of checks) {
