@@ -114,7 +114,18 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
       for(let p=1;p<=Math.min(pdf.numPages,20);p++){
         const page=await pdf.getPage(p);
         const content=await page.getTextContent();
-        chunks.push(content.items.map(x=>x.str).join(' '));
+        // Preserve approximate PDF line breaks using text-item coordinates.
+        const rows=new Map();
+        for(const item of content.items){
+          if(!item.str || !item.str.trim()) continue;
+          const y=Math.round(item.transform ? item.transform[5] : 0);
+          if(!rows.has(y)) rows.set(y,[]);
+          rows.get(y).push({x:item.transform ? item.transform[4] : 0,text:item.str.trim()});
+        }
+        const pageLines=[...rows.entries()]
+          .sort((a,b)=>b[0]-a[0])
+          .map(([,items])=>items.sort((a,b)=>a.x-b.x).map(x=>x.text).join(' '));
+        chunks.push(pageLines.join('\\n'));
       }
       extracted=chunks.join('\n\n').trim();
       if(!extracted){pdfStatus.textContent='इस PDF से पढ़ने योग्य टेक्स्ट नहीं मिला। यह स्कैन/तस्वीर हो सकती है; मूल PDF या आधिकारिक पोर्टल देखें।';return;}
