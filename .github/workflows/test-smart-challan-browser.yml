@@ -150,11 +150,16 @@ jobs:
                 buffer: Buffer.from('not a PDF')
               });
               await page.locator('#readPdf').click();
+              await page.waitForFunction(() => {
+                const status = document.querySelector('#pdfStatus').textContent || '';
+                return status.includes('मान्य header') || status.includes('PDF पढ़ी नहीं जा सकी');
+              }, { timeout: 10000 });
               if (await page.locator('#results').evaluate(el => el.classList.contains('show'))) {
                 throw new Error('Stale successful result remained visible after invalid PDF');
               }
-              if (!(await page.locator('#pdfStatus').innerText()).includes('मान्य header')) {
-                throw new Error('Invalid PDF header was not rejected clearly');
+              const invalidPdfStatus = await page.locator('#pdfStatus').innerText();
+              if (!invalidPdfStatus.includes('मान्य header')) {
+                throw new Error('Invalid PDF did not reach explicit header validation: ' + invalidPdfStatus);
               }
 
               const horizontalOverflow = await page.evaluate(() =>
