@@ -492,8 +492,26 @@ function enrichGovernmentRoute(route){
  if(!row) return route;
  return {...route,url:code==="cyber-financial-fraud"?"https://cybercrime.gov.in/":row.official_url,official:row.title,desc:row.description||route.desc,authority:row.authority||"",verification_status:row.verification_status,source_checked_at:row.source_checked_at,first_action:row.first_action,tracking_supported:row.tracking_supported};
 }
+// Normalize common typing errors without changing the user's displayed query.
+function normalizeSearchQuery(q){
+ const aliases=[
+  [/\b(?:chalan|chaln|challn|challaan)\b/gu,"challan"],
+  [/\b(?:echaln|echalan|e challan|e-chalan)\b/gu,"echallan"],
+  [/\b(?:ragistration|registation|regestration|regstration)\b/gu,"registration"],
+  [/\b(?:complan|complent|complant)\b/gu,"complaint"],
+  [/\b(?:polise|polce)\b/gu,"police"],
+  [/\b(?:jansunwaii|jansunvayi)\b/gu,"jansunwai"],
+  [/\b(?:igrs up|igrs-up)\b/gu,"igrsup"],
+  [/\b(?:cybercrime|cyber-crime)\b/gu,"cyber crime"],
+  [/\b(?:gstin regstration)\b/gu,"gst registration"]
+ ];
+ let n=String(q??"").normalize("NFKC").toLocaleLowerCase("en-IN");
+ n=n.replace(/[’‘'"`]/g," ").replace(/[.,!?;:()[\]{}]+/g," ").replace(/\s+/g," ").trim();
+ for(const [pattern,canonical] of aliases)n=n.replace(pattern,canonical);
+ return n.replace(/\s+/g," ").trim();
+}
 function classify(q){
- const n=q.toLowerCase();
+ const n=normalizeSearchQuery(q);
  const rules=[
   {keys:["up jansunwai","jansunwai","jansunwai samadhan","samadhan up","up grievance","up government grievance","जनसुनवाई","जनसुनवाई समाधान","यूपी जनसुनवाई","उत्तर प्रदेश जनसुनवाई"],title:"UP Jansunwai – Samadhan",desc:"Official Uttar Pradesh grievance registration and tracking route.",url:"https://jansunwai.up.nic.in/",official:"UP Jansunwai – Samadhan",icon:"🏛️",local:"government/up-jansunwai/"},
   {keys:["udyam registration","udyam","udyog aadhaar","udyog aadhar","msme registration","msme registration portal","msme registration government","एमएसएमई रजिस्ट्रेशन","उद्यम रजिस्ट्रेशन","उद्यम पंजीकरण"],title:"Udyam Registration",desc:"Official Government of India MSME Udyam Registration route.",url:"https://www.udyamregistration.gov.in/",official:"Udyam Registration",icon:"🏢",local:"government/udyam-registration/"},
