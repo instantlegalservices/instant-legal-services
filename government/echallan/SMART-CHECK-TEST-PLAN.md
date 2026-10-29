@@ -24,6 +24,7 @@ Scope: test only `government/echallan/smart-check.html` on the feature branch. D
 
 ## PDF checks
 - [ ] Valid text-based official challan PDF: compare extracted raw text and each suggested field against the source PDF.
+- [ ] Confirm PDF.js parsing keeps `isEvalSupported: false` so uploaded, untrusted PDFs cannot use the vulnerable eval path.
 - [ ] PDF with multiple pages: verify reading works; for more than 20 pages, confirm the cap warning appears.
 - [ ] Scanned/image-only PDF: confirm the page clearly says text could not be extracted (OCR is not implemented).
 - [ ] Empty file, non-PDF file renamed to .pdf, malformed PDF, and zero-byte file: confirm a clear error and no uncaught exception.
