@@ -43,6 +43,10 @@ check('PDF parsing code contains no fetch/XHR/beacon upload path', !/\bfetch\s*\
 check('clear button resets vehicle, file, results, text, and extracted state', /getElementById\('clear'\)\.addEventListener\('click',[\s\S]*?vehicle\.value\s*=\s*''[\s\S]*?fileInput\.value\s*=\s*''[\s\S]*?fields\.replaceChildren\(\)[\s\S]*?rawText\.textContent\s*=\s*''[\s\S]*?results\.classList\.remove\('show'\)[\s\S]*?extracted\s*=\s*''/.test(script));
 check('vehicle number is not auto-submitted to the government portal', !/fetch\s*\(\s*portal|form\.submit\s*\(|\.submit\s*\(/i.test(script));
 
+check('Hindi challan number and vehicle labels are recognized', /चालान संख्या/.test(script) && /वाहन संख्या/.test(script));
+check('Hindi fine label and date fallback are supported', /शमन शुल्क/.test(script) && /dateMatch/.test(script));
+check('multiple numbered violation lines are collected', /extracted\.matchAll/.test(script));
+
 for (const result of checks) {
   console.log((result.passed ? 'PASS' : 'FAIL') + ' — ' + result.name);
 }
