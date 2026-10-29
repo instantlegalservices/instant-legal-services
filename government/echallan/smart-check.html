@@ -114,7 +114,7 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
       const bytes=await file.arrayBuffer();
       const header=new TextDecoder('latin1').decode(bytes.slice(0,1024));
       if(!header.includes('%PDF-')){pdfStatus.textContent='फ़ाइल में PDF का मान्य header नहीं मिला। कृपया आधिकारिक पोर्टल से मूल PDF डाउनलोड करके चुनें।';return;}
-      const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+      const pdf=await pdfjsLib.getDocument({data:bytes,isEvalSupported:false}).promise;
       const pageLimitNotice=pdf.numPages>20?' नोट: PDF में '+pdf.numPages+' पेज हैं; इस जाँच में पहले 20 पेज ही पढ़े गए हैं।':'';
       let chunks=[];
       for(let p=1;p<=Math.min(pdf.numPages,20);p++){
