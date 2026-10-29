@@ -144,8 +144,7 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
       const dateMatch=extracted.match(/\b\d{2}[-/.]\d{2}[-/.]\d{4}\b/);
       const amountMatch=extracted.match(/(?:शमन शुल्क|जुर्माना|Challan Amount|Total Amount|Amount Payable|Amount)[^\n\r]{0,60}?₹?\s*([\d,]+\s*\/-?|₹\s*[\d,]+|[\d,]+\s*\/-?)/i);
       const violations=[...extracted.matchAll(/(?:^|\n)\s*(\d+)\s*:\s*([^\n\r]+)/g)].map(m=>m[1]+': '+m[2].trim());
-      const place=findValue(extracted,['स्थान','Challan Place','Place of Violation','Location','Place']) ||
-        ((extracted.match(/(?:Delapeer|Izatnagar|Bareilly|उत्तर प्रदेश)[^\n\r]*/i)||[])[0]||'');
+      const place=findValue(extracted,['चालान स्थान','घटना स्थल','स्थान','Challan Place','Place of Violation','Location','Place']);
       addField('चालान नंबर',challanNo);
       addField('वाहन नंबर',vehicleNo);
       addField('चालान की तारीख',findValue(extracted,['चालान की तारीख','तिथि / समय','Challan Date','Date of Challan']) || (dateMatch?dateMatch[0]:''));
