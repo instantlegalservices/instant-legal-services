@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart Challan Finder | Instant Legal Services</title>
+<meta name="description" content="ILS Smart Challan Finder: आधिकारिक eChallan पोर्टल पर चालान देखें और डाउनलोड की गई PDF से विवरण अपने ब्राउज़र में निकालें।">
+<meta name="robots" content="noindex,follow">
+<style>
+:root{color-scheme:light;--ink:#17202b;--muted:#5b6877;--gold:#f3c74b;--line:#dce2e8;--panel:#fff;--bg:#f4f6f8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.5}
+header{background:#101820;color:#fff;padding:20px 16px}header .wrap,main{max-width:920px;margin:auto}header strong{font-size:18px}header span{display:block;color:#cbd3dc;font-size:13px}
+main{padding:24px 16px 50px}.hero{margin-bottom:18px}.eyebrow{color:#775b00;font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase}h1{font-size:clamp(27px,5vw,40px);line-height:1.15;margin:8px 0 10px}.lead{color:var(--muted);margin:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0;box-shadow:0 6px 22px #17202b0a}.card h2{font-size:20px;margin:0 0 8px}.hint{color:var(--muted);font-size:13px}
+label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=text],input[type=file]{width:100%;padding:12px;border:1px solid #bdc7d1;border-radius:10px;background:#fff;font:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px}.btn{border:0;border-radius:10px;padding:12px 16px;font-weight:800;font-size:14px;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;cursor:pointer}.primary{background:var(--gold);color:#151515}.secondary{background:#17202b;color:#fff}.outline{border:1px solid var(--line);background:#fff;color:var(--ink)}.notice{background:#fff8df;border:1px solid #f0d77c;padding:13px;border-radius:12px;font-size:13px}.status{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted);font-size:13px;margin-top:12px}.results{display:none}.results.show{display:block}.field{padding:12px 0;border-bottom:1px solid var(--line)}.field b{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}.field span{overflow-wrap:anywhere}.raw{max-height:340px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#f7f8fa;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px}.smallprint{font-size:12px;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:12px;padding:22px}
+@media(max-width:620px){.row{grid-template-columns:1fr}.card{padding:16px}.actions .btn{width:100%}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<header><div class="wrap"><strong>INSTANT LEGAL SERVICES</strong><span>Smart Challan Finder · स्वतंत्र सहायता मंच</span></div></header>
+<main>
+<section class="hero">
+<div class="eyebrow">Traffic eChallan Assistance</div>
+<h1>चालान की जानकारी आसानी से देखें</h1>
+<p class="lead">वाहन नंबर से आधिकारिक पोर्टल खोलें। चालान की PDF डाउनलोड करने के बाद यहाँ अपलोड करके उसका टेक्स्ट अपने डिवाइस पर पढ़ें।</p>
+</section>
+<div class="notice"><b>महत्वपूर्ण:</b> यह पेज सरकारी रिकॉर्ड को सीधे नहीं खोजता। API के बिना केवल वाहन नंबर से लाइव चालान विवरण प्राप्त होने की गारंटी नहीं है। आधिकारिक पोर्टल पर CAPTCHA/OTP सहित उसके आवश्यक चरण स्वयं पूरे करें।</div>
+<section class="card">
+<h2>चरण 1 — वाहन नंबर दर्ज करें</h2>
+<p class="hint">वाहन नंबर केवल इस पेज पर कॉपी करने और आपको याद दिलाने के लिए उपयोग होता है; इसे ILS सर्वर पर भेजने वाला कोई कोड इस पेज में नहीं है।</p>
+<label for="vehicle">वाहन पंजीकरण नंबर</label>
+<input id="vehicle" type="text" maxlength="15" placeholder="जैसे UP25AB1234" autocomplete="off" autocapitalize="characters">
+<div class="actions">
+<button class="btn primary" id="openPortal" type="button">सरकारी पोर्टल पर चालान देखें ↗</button>
+<button class="btn outline" id="copyVehicle" type="button">वाहन नंबर कॉपी करें</button>
+</div>
+<div id="vehicleStatus" class="status" aria-live="polite"></div>
+<p class="smallprint">आधिकारिक पोर्टल पर वाहन नंबर डालना आवश्यक हो सकता है। यह बटन विवरण को सरकारी साइट में स्वतः नहीं भरता।</p>
+</section>
+<section class="card">
+<h2>चरण 2 — चालान PDF अपलोड करें</h2>
+<p class="hint">आधिकारिक पोर्टल से डाउनलोड की गई चालान PDF चुनें। PDF का टेक्स्ट आपके ब्राउज़र में पढ़ा जाएगा; यह पेज उसे किसी ILS API पर अपलोड नहीं करता। स्कैन की हुई या केवल तस्वीर वाली PDF से टेक्स्ट नहीं निकल सकता।</p>
+<label for="pdfFile">चालान PDF</label>
+<input id="pdfFile" type="file" accept="application/pdf,.pdf">
+<div class="actions"><button class="btn secondary" id="readPdf" type="button">PDF से विवरण निकालें</button><button class="btn outline" id="clear" type="button">फ़ॉर्म साफ़ करें</button></div>
+<div id="pdfStatus" class="status" aria-live="polite"></div>
+</section>
+<section id="results" class="card results" aria-live="polite">
+<h2>PDF से प्राप्त जानकारी</h2>
+<p class="hint">नीचे का विवरण PDF के टेक्स्ट से अनुमानित है। भुगतान या कानूनी कदम से पहले इसे आधिकारिक पोर्टल/मूल दस्तावेज़ से मिलाएँ।</p>
+<div id="fields"></div>
+<h3>निकाला गया टेक्स्ट</h3>
+<div id="rawText" class="raw"></div>
+<div class="actions"><button class="btn outline" id="copyText" type="button">निकाला गया टेक्स्ट कॉपी करें</button><a class="btn primary" href="https://instantlegalservices.in/assistance.html?mode=guided&amp;problem=Traffic%20eChallan%20document%20review&amp;route=Smart%20Challan%20Finder">ILS सहायता लें</a></div>
+</section>
+<div class="notice"><b>सुरक्षा:</b> OTP, पासवर्ड, UPI PIN, कार्ड विवरण या अन्य प्रमाणीकरण जानकारी ILS के साथ साझा न करें। चालान भुगतान केवल आधिकारिक पोर्टल पर करें।</div>
+<p><a href="https://instantlegalservices.in/government/echallan/">← मौजूदा ILS eChallan पेज पर वापस जाएँ</a></p>
+</main>
+<footer>© 2026 Instant Legal Services · सरकारी रिकॉर्ड और भुगतान के लिए आधिकारिक पोर्टल ही निर्णायक है।</footer>
+<script>
+(function(){
+  const portal='https://echallan.parivahan.gov.in/index/accused-challan';
+  const vehicle=document.getElementById('vehicle');
+  const vehicleStatus=document.getElementById('vehicleStatus');
+  const pdfStatus=document.getElementById('pdfStatus');
+  const fileInput=document.getElementById('pdfFile');
+  const results=document.getElementById('results');
+  const fields=document.getElementById('fields');
+  const rawText=document.getElementById('rawText');
+  let extracted='';
+  if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+  function cleanVehicle(v){return v.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,15);}
+  document.getElementById('openPortal').addEventListener('click',function(){
+    const v=cleanVehicle(vehicle.value);
+    if(!v){vehicleStatus.textContent='पहले वाहन नंबर दर्ज करें।';vehicle.focus();return;}
+    vehicle.value=v;
+    window.open(portal,'_blank','noopener,noreferrer');
+    vehicleStatus.textContent='आधिकारिक eChallan पोर्टल नई टैब में खुल गया है। वहाँ आवश्यक चरण पूरे करें; यह पेज वाहन नंबर या चालान विवरण स्वतः नहीं भेजता।';
+  });
+  document.getElementById('copyVehicle').addEventListener('click',async function(){
+    const v=cleanVehicle(vehicle.value);
+    if(!v){vehicleStatus.textContent='पहले वाहन नंबर दर्ज करें।';return;}
+    vehicle.value=v;
+    try{await navigator.clipboard.writeText(v);vehicleStatus.textContent='वाहन नंबर कॉपी हो गया।';}
+    catch(e){vehicle.select();vehicleStatus.textContent='वाहन नंबर चुना गया है; कॉपी करने के लिए Copy का उपयोग करें।';}
+  });
+  function findValue(text,labels){
+    for(const label of labels){
+      const escaped=label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      const re=new RegExp('(?:'+escaped+')\\s*[:#-]?\\s*([^\\n\\r]{2,100})','i');
+      const m=text.match(re);if(m)return m[1].trim();
+    }
+    return '';
+  }
+  function addField(title,value){
+    const d=document.createElement('div');d.className='field';
+    const b=document.createElement('b');b.textContent=title;
+    const s=document.createElement('span');s.textContent=value||'PDF में स्पष्ट रूप से नहीं मिला — मूल दस्तावेज़ देखें।';
+    d.append(b,s);fields.appendChild(d);
+  }
+  document.getElementById('readPdf').addEventListener('click',async function(){
+    const file=fileInput.files&&fileInput.files[0];
+    if(!file){pdfStatus.textContent='पहले चालान PDF चुनें।';return;}
+    if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){pdfStatus.textContent='कृपया PDF फ़ाइल चुनें।';return;}
+    if(file.size>15*1024*1024){pdfStatus.textContent='फ़ाइल 15 MB से बड़ी है। छोटी PDF चुनें।';return;}
+    if(!window.pdfjsLib){pdfStatus.textContent='PDF रीडर लोड नहीं हुआ। इंटरनेट कनेक्शन जाँचकर फिर प्रयास करें।';return;}
+    pdfStatus.textContent='PDF पढ़ी जा रही है…';
+    try{
+      const bytes=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+      let chunks=[];
+      for(let p=1;p<=Math.min(pdf.numPages,20);p++){
+        const page=await pdf.getPage(p);
+        const content=await page.getTextContent();
+        chunks.push(content.items.map(x=>x.str).join(' '));
+      }
+      extracted=chunks.join('\n\n').trim();
+      if(!extracted){pdfStatus.textContent='इस PDF से पढ़ने योग्य टेक्स्ट नहीं मिला। यह स्कैन/तस्वीर हो सकती है; मूल PDF या आधिकारिक पोर्टल देखें।';return;}
+      fields.replaceChildren();
+      addField('चालान नंबर',findValue(extracted,['Challan Number','Challan No','Challan No.','Challan ID']));
+      addField('वाहन नंबर',findValue(extracted,['Vehicle Number','Vehicle No','Registration Number','Vehicle Registration No']));
+      addField('चालान की तारीख',findValue(extracted,['Challan Date','Date of Challan','Date']));
+      addField('चालान राशि',findValue(extracted,['Challan Amount','Total Amount','Amount Payable','Amount']));
+      addField('उल्लंघन / विवरण',findValue(extracted,['Violation Details','Violation','Offence','Offense','Violation Description']));
+      addField('स्थान',findValue(extracted,['Challan Place','Place of Violation','Location','Place']));
+      rawText.textContent=extracted;
+      results.classList.add('show');
+      pdfStatus.textContent='PDF से टेक्स्ट निकाला गया। कृपया सभी फ़ील्ड मूल PDF से मिलाएँ; कुछ फ़ील्ड अपने आप पहचान में नहीं आ सकते।';
+    }catch(e){pdfStatus.textContent='PDF पढ़ी नहीं जा सकी। फ़ाइल सही है या नहीं जाँचें और पुनः प्रयास करें.';}
+  });
+  document.getElementById('copyText').addEventListener('click',async function(){
+    try{await navigator.clipboard.writeText(extracted);pdfStatus.textContent='निकाला गया टेक्स्ट कॉपी हो गया.';}
+    catch(e){pdfStatus.textContent='कॉपी सुविधा उपलब्ध नहीं है; टेक्स्ट को चुनकर कॉपी करें.';}
+  });
+  document.getElementById('clear').addEventListener('click',function(){
+    vehicle.value='';fileInput.value='';vehicleStatus.textContent='';pdfStatus.textContent='';fields.replaceChildren();rawText.textContent='';results.classList.remove('show');extracted='';
+  });
+})();
+</script>
+</body>
+</html>
