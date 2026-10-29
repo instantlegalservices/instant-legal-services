@@ -141,7 +141,10 @@ jobs:
               const resultText = await page.locator('#fields').innerText();
               if (!resultText.includes('CH-TEST-12345')) throw new Error('Challan number field not populated');
               if (!resultText.includes('UP25AB1234')) throw new Error('Vehicle number field not populated');
+              if (!resultText.includes('2026-10-01')) throw new Error('Challan date field not populated');
+              if (!resultText.includes('1000')) throw new Error('Challan amount field not populated');
               if (!resultText.includes('Signal Jumping')) throw new Error('Violation field not populated');
+              if (!resultText.includes('Bareilly')) throw new Error('Challan place field not populated');
 
               // A subsequent invalid PDF must clear the earlier successful result.
               await page.locator('#pdfFile').setInputFiles({
