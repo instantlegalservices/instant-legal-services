@@ -89,7 +89,7 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input[type=
   function findValue(text,labels){
     for(const label of labels){
       const escaped=label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      const re=new RegExp('(?:'+escaped+')\\s*[:#-]?\\s*([^\\n\\r]{2,100})','i');
+      const re=new RegExp('(?:'+escaped+')\\s*[.:#-]*\\s*([^\\n\\r]{2,100})','i');
       const m=text.match(re);if(m)return m[1].trim();
     }
     return '';
