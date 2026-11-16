@@ -10,6 +10,7 @@ on:
       - "assets/ils-tools.js"
       - "assets/ils-core.js"
       - ".github/workflows/test-checkout-resume.yml"
+      - "supabase/migrations/**"
 
 jobs:
   checkout-resume:
