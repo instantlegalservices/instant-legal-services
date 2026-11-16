@@ -233,7 +233,6 @@ jobs:
 
       - name: Verify real unauthenticated checkout resumes to TEST UPI QR
         env:
-          BASE_URL: ${{ env.BASE_URL }}
           ILS_TEST_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
           ILS_TEST_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_CUSTOMER_PASSWORD }}
           ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
