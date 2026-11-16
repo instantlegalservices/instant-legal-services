@@ -110,6 +110,8 @@
        1. Rotate advocates from a larger live database pool
     ------------------------------------------------------- */
 
+    let advocatePoolPromise = null;
+
     if (
       typeof window.ILS.advocates === "function" &&
       !window.ILS.advocates.__homeRotationWrapped
@@ -121,12 +123,18 @@
       const wrappedAdvocates =
         async function(options = {}) {
 
-          const result =
-            await originalAdvocates({
+          if (!advocatePoolPromise) {
+            advocatePoolPromise = originalAdvocates({
               ...options,
               limit: 12,
               featured: true
+            }).catch(error => {
+              advocatePoolPromise = null;
+              throw error;
             });
+          }
+
+          const result = await advocatePoolPromise;
 
           if (!Array.isArray(result)) {
             return [];
@@ -168,6 +176,8 @@
        2. Rotate judgments from a larger live database pool
     ------------------------------------------------------- */
 
+    let judgmentPoolPromise = null;
+
     if (
       typeof window.ILS.judgments === "function" &&
       !window.ILS.judgments.__homeRotationWrapped
@@ -180,14 +190,20 @@
         async function(options = {}) {
 
           /*
-            Homepage asks for a larger pool.
-            Other judgment pages are NOT affected.
+            Fetch the homepage pool once per page session.
+            Language changes reuse this in-memory result.
           */
-          const result =
-            await originalJudgments({
+          if (!judgmentPoolPromise) {
+            judgmentPoolPromise = originalJudgments({
               ...options,
               limit: 12
+            }).catch(error => {
+              judgmentPoolPromise = null;
+              throw error;
             });
+          }
+
+          const result = await judgmentPoolPromise;
 
           if (!Array.isArray(result)) {
             return [];
@@ -228,53 +244,11 @@
 
 
     /* -------------------------------------------------------
-       3. Refresh homepage every 5 minutes
-       ------------------------------------------------------- */
-
-    window.setTimeout(
-      () => {
-
-        /*
-          Reload only the homepage.
-          Other pages are completely untouched.
-        */
-        if (
-          document.visibilityState === "visible"
-        ) {
-          window.location.reload();
-        } else {
-
-          /*
-            If the tab is not visible, wait until the
-            user returns rather than unexpectedly reloading.
-          */
-          const refreshOnReturn =
-            () => {
-
-              if (
-                document.visibilityState === "visible"
-              ) {
-
-                document.removeEventListener(
-                  "visibilitychange",
-                  refreshOnReturn
-                );
-
-                window.location.reload();
-              }
-
-            };
-
-          document.addEventListener(
-            "visibilitychange",
-            refreshOnReturn
-          );
-
-        }
-
-      },
-      5 * 60 * 1000
-    );
+       3. No periodic homepage reload.
+       Repeated reloads caused avoidable database and image
+       requests for every visitor with the homepage open.
+       Data refreshes on a normal page navigation/reload.
+    ------------------------------------------------------- */
 
   }
 
