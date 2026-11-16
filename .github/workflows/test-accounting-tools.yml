@@ -190,9 +190,13 @@ jobs:
               'ils-payments.js','ils-core.js','ils-tools-catalog.js','ils-tools.js',
               'ils-tools-i18n.js','ils-accounting-advanced.js','pwa.js'
             ];
-            const missingScriptBodies = requiredScriptBodies.filter(script => !scriptTrace.completed.includes(script));
-            if (missingScriptBodies.length) {
-              throw new Error('Tracked application scripts did not complete before reload: ' + missingScriptBodies.join(', '));
+            const scriptWaitDeadline = Date.now() + 20000;
+            while (requiredScriptBodies.some(script => !scriptTrace.completed.includes(script))) {
+              if (Date.now() >= scriptWaitDeadline) {
+                const missingScriptBodies = requiredScriptBodies.filter(script => !scriptTrace.completed.includes(script));
+                throw new Error('Tracked application scripts did not complete before reload: ' + missingScriptBodies.join(', '));
+              }
+              await new Promise(resolve => setTimeout(resolve, 25));
             }
             stage('all tracked application scripts completed; reload tools page');
             await page.reload({ waitUntil: 'commit' });
