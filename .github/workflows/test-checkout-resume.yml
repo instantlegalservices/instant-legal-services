@@ -303,7 +303,7 @@ jobs:
 
               await page.waitForFunction(() => {
                 const status = document.getElementById('status')?.textContent?.trim() || '';
-                return location.pathname === '/assistance.html' || status.length > 0;
+                return location.pathname === '/assistance.html' || (status.length > 0 && status !== 'Ready.');
               }, null, { timeout: 20000 });
 
               if (new URL(page.url()).pathname !== '/assistance.html') {
