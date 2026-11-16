@@ -464,8 +464,22 @@ jobs:
                 window.__ilsSignedProofOpened = '';
                 window.open = url => { window.__ilsSignedProofOpened = String(url || ''); return null; };
                 view.click();
-                await new Promise(resolve => setTimeout(resolve, 700));
-                if (!window.__ilsSignedProofOpened.startsWith('https://')) return { ok: false, reason: 'ADMIN_PRIVATE_SCREENSHOT_ACCESS_FAILED' };
+                await new Promise((resolve, rejectError) => {
+                  const started = Date.now();
+                  const poll = () => {
+                    const buttonReady = view.textContent.trim() === 'View' && !view.disabled;
+                    const message = document.getElementById('appMsg')?.innerText || '';
+                    if (message.includes('Screenshot access failed:')) {
+                      return rejectError(new Error('ADMIN_PRIVATE_SCREENSHOT_ACCESS_FAILED: ' + message));
+                    }
+                    if (buttonReady && window.__ilsSignedProofOpened.startsWith('https://')) return resolve();
+                    if (Date.now() - started > 15000) {
+                      return rejectError(new Error('ADMIN_PRIVATE_SCREENSHOT_ACCESS_TIMEOUT: ' + message));
+                    }
+                    setTimeout(poll, 150);
+                  };
+                  poll();
+                });
                 window.prompt = () => 'TEST ONLY: synthetic screenshot; no payment occurred.';
                 const reject = row.querySelector('.upiProofVerify[data-decision="rejected"]');
                 if (!reject) return { ok: false, reason: 'ADMIN_REJECT_BUTTON_MISSING' };
