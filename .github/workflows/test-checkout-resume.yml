@@ -687,6 +687,8 @@ jobs:
                 window.ILS_SUPABASE_URL = url;
                 window.ILS_SUPABASE_KEY = key;
               }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+              // Trigger the init script on a real same-origin document before using the configured TEST URL.
+              await customer.goto(process.env.BASE_URL + '/customer-portal.html', { waitUntil: 'domcontentloaded' });
 
               // Create a fresh, explicitly synthetic TEST order owned by the non-admin customer.
               const fixture = await customer.evaluate(async ({ email, password }) => {
