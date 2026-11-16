@@ -236,8 +236,8 @@ jobs:
       - name: Verify real unauthenticated checkout resumes to TEST UPI QR
         env:
           BASE_URL: http://127.0.0.1:4173
-          ILS_TEST_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
-          ILS_TEST_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_CUSTOMER_PASSWORD }}
+          ILS_TEST_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
+          ILS_TEST_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD }}
           ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
           ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
         run: |
@@ -270,8 +270,8 @@ jobs:
                 throw new Error('CHECKOUT_INTENT_NOT_PERSISTED_BEFORE_SIGN_IN');
               }
 
-              await page.locator('#loginEmail').fill(process.env.ILS_TEST_CUSTOMER_EMAIL);
-              await page.locator('#loginPassword').fill(process.env.ILS_TEST_CUSTOMER_PASSWORD);
+              await page.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
+              await page.locator('#loginPassword').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD);
               await page.locator('#loginBtn').click();
               await page.waitForURL(url => url.pathname === '/assistance.html' && url.searchParams.get('mode') === 'guided', { timeout: 20000 });
               await page.waitForFunction(() => {
@@ -369,9 +369,7 @@ jobs:
                 const s = JSON.parse(localStorage.getItem('sb-bgsbuepolooybdqrzmoa-auth-token') || '{}');
                 const headers = { apikey: window.ILS_SUPABASE_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' };
                 const base = window.ILS_SUPABASE_URL;
-                const listed = await fetch(base + '/rest/v1/rpc/ils_admin_upi_payment_proofs', {
-                  method: 'POST', headers, body: JSON.stringify({ p_limit: 50 })
-                });
+                const listed = await fetch(base + '/rest/v1/payment_proofs?select=id,order_id,user_id,amount,upi_id,transaction_ref,screenshot_path,screenshot_sha256,mime_type,file_size_bytes,status&order_id=eq.' + encodeURIComponent(window.__ilsTestOrderId), { headers });
                 if (!listed.ok) return { ok: false, reason: 'ADMIN_PROOF_LIST_HTTP_' + listed.status };
                 const rows = await listed.json();
                 const row = Array.isArray(rows) ? rows.find(x => x.order_id === window.__ilsTestOrderId) : null;
@@ -396,9 +394,7 @@ jobs:
                 if (duplicate.ok || duplicateBody.message !== 'PROOF_ALREADY_PENDING') {
                   return { ok: false, reason: 'DUPLICATE_PENDING_PROOF_NOT_REJECTED' };
                 }
-                const afterDuplicate = await fetch(base + '/rest/v1/rpc/ils_admin_upi_payment_proofs', {
-                  method: 'POST', headers, body: JSON.stringify({ p_limit: 50 })
-                });
+                const afterDuplicate = await fetch(base + '/rest/v1/payment_proofs?select=id,order_id,status&order_id=eq.' + encodeURIComponent(row.order_id), { headers });
                 if (!afterDuplicate.ok) return { ok: false, reason: 'PROOF_LIST_AFTER_DUPLICATE_HTTP_' + afterDuplicate.status };
                 const afterRows = await afterDuplicate.json();
                 if (!Array.isArray(afterRows) || afterRows.filter(x => x.order_id === row.order_id).length !== 1) {
@@ -430,8 +426,8 @@ jobs:
       - name: Reject synthetic TEST proof through admin.html
         env:
           BASE_URL: http://127.0.0.1:4173
-          ILS_TEST_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
-          ILS_TEST_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_CUSTOMER_PASSWORD }}
+          ILS_TEST_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
+          ILS_TEST_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_ADMIN_PASSWORD }}
           ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
           ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
         run: |
@@ -561,7 +557,7 @@ jobs:
                 }
 
                 return { ok: true };
-              }, { email: process.env.ILS_TEST_CUSTOMER_EMAIL, password: process.env.ILS_TEST_CUSTOMER_PASSWORD });
+              }, { email: process.env.ILS_TEST_ADMIN_EMAIL, password: process.env.ILS_TEST_ADMIN_PASSWORD });
               if (!result.ok) throw new Error(result.reason);
               console.log('PASS: admin.html displayed pending synthetic proof, opened its private screenshot, rejected it through the UI, and kept the order unpaid/pending.');
             } finally {
@@ -584,8 +580,8 @@ jobs:
     timeout-minutes: 8
     env:
       BASE_URL: http://127.0.0.1:4173
-      ILS_TEST_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
-      ILS_TEST_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_CUSTOMER_PASSWORD }}
+      ILS_TEST_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
+      ILS_TEST_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD }}
       ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
       ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
     steps:
@@ -593,7 +589,7 @@ jobs:
         shell: bash
         run: |
           if [[ -z "$ILS_TEST_CUSTOMER_EMAIL" || -z "$ILS_TEST_CUSTOMER_PASSWORD" ]]; then
-            echo "::error::Configure ILS_TEST_CUSTOMER_EMAIL and ILS_TEST_CUSTOMER_PASSWORD in repository Actions secrets."
+            echo "::error::Configure ILS_TEST_NONADMIN_CUSTOMER_EMAIL and ILS_TEST_NONADMIN_CUSTOMER_PASSWORD in repository Actions secrets."
             exit 1
           fi
 
@@ -639,8 +635,8 @@ jobs:
               }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
 
               await page.goto(process.env.BASE_URL + '/customer-portal.html?returnTo=%2Fassistance.html', { waitUntil: 'domcontentloaded' });
-              await page.locator('#loginEmail').fill(process.env.ILS_TEST_CUSTOMER_EMAIL);
-              await page.locator('#loginPassword').fill(process.env.ILS_TEST_CUSTOMER_PASSWORD);
+              await page.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
+              await page.locator('#loginPassword').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD);
               await page.locator('#loginBtn').click();
 
               await page.waitForFunction(() => {
@@ -686,36 +682,31 @@ jobs:
                 }
                 if (profiles[0].status !== 'active') return { ok: false, reason: 'CUSTOMER_PROFILE_NOT_ACTIVE' };
 
-                // The confirmed TEST owner identity is also the isolated TEST admin.
-                // Exercise admin RPC authorization with its real Supabase JWT.
+                // A normal authenticated customer must not access admin-only proof RPCs.
                 const adminListResponse = await fetch(base + '/rest/v1/rpc/ils_admin_upi_payment_proofs', {
                   method: 'POST',
                   headers: { ...headers, 'Content-Type': 'application/json' },
                   body: JSON.stringify({ p_limit: 10 })
                 });
-                if (!adminListResponse.ok) {
-                  return { ok: false, reason: 'ADMIN_PROOF_LIST_HTTP_' + adminListResponse.status };
-                }
-                const adminProofs = await adminListResponse.json();
-                if (!Array.isArray(adminProofs) || adminProofs.some(proof =>
-                  !proof.id || !proof.order_id || !['pending', 'verified', 'rejected'].includes(proof.status)
-                )) {
-                  return { ok: false, reason: 'ADMIN_PROOF_LIST_SCHEMA_INVALID' };
+                let adminListBody = {};
+                try { adminListBody = await adminListResponse.json(); } catch {}
+                if (adminListResponse.ok || adminListBody.message !== 'ADMIN_REQUIRED') {
+                  return { ok: false, reason: 'NONADMIN_PROOF_LIST_NOT_BLOCKED' };
                 }
 
-                const missingProofResponse = await fetch(base + '/rest/v1/rpc/ils_admin_verify_upi_payment_proof', {
+                const adminVerifyResponse = await fetch(base + '/rest/v1/rpc/ils_admin_verify_upi_payment_proof', {
                   method: 'POST',
                   headers: { ...headers, 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     p_proof_id: crypto.randomUUID(),
                     p_decision: 'verified',
-                    p_notes: 'Automated negative test: proof must not exist'
+                    p_notes: 'Automated non-admin authorization test'
                   })
                 });
-                let missingProofBody = {};
-                try { missingProofBody = await missingProofResponse.json(); } catch {}
-                if (missingProofResponse.ok || missingProofBody.message !== 'PROOF_NOT_FOUND') {
-                  return { ok: false, reason: 'ADMIN_PROOF_NEGATIVE_CHECK_DID_NOT_REACH_NOT_FOUND' };
+                let adminVerifyBody = {};
+                try { adminVerifyBody = await adminVerifyResponse.json(); } catch {}
+                if (adminVerifyResponse.ok || adminVerifyBody.message !== 'ADMIN_REQUIRED') {
+                  return { ok: false, reason: 'NONADMIN_PROOF_VERIFY_NOT_BLOCKED' };
                 }
 
                 const intent = 'ci-' + crypto.randomUUID();
@@ -795,7 +786,7 @@ jobs:
               });
 
               if (!verification.ok) throw new Error(verification.reason);
-              console.log('PASS: real TEST owner/admin authenticated, own customer profile passed RLS, admin proof RPC authorization passed, and checkout idempotency assertions passed.');
+              console.log('PASS: non-admin TEST customer authenticated, own customer profile passed RLS, admin-only proof RPCs were denied, and checkout idempotency assertions passed.');
             } finally {
               if (browser) await browser.close();
             }
@@ -839,7 +830,7 @@ jobs:
                 window.open = url => { window.__ilsSignedProofOpened = String(url || ''); return null; };
                 view.click();
                 return { ok: true, rowCount: body.querySelectorAll('tr').length };
-              }, { email: process.env.ILS_TEST_CUSTOMER_EMAIL, password: process.env.ILS_TEST_CUSTOMER_PASSWORD });
+              }, { email: process.env.ILS_TEST_ADMIN_EMAIL, password: process.env.ILS_TEST_ADMIN_PASSWORD });
               if (!result.ok) throw new Error(result.reason);
               await page.waitForFunction(() => !!window.__ilsSignedProofOpened, null, { timeout: 12000 });
               const signedUrl = await page.evaluate(() => window.__ilsSignedProofOpened);
