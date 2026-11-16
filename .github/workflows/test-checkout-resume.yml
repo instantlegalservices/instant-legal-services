@@ -459,6 +459,23 @@ jobs:
                 const body = document.getElementById('upiProofBody');
                 const row = Array.from(body.querySelectorAll('tr')).find(tr => tr.innerText.includes('ILSTEST'));
                 if (!row || !row.innerText.toLowerCase().includes('pending')) return { ok: false, reason: 'PENDING_TEST_PROOF_NOT_RENDERED' };
+
+                // The private object and admin RPC must not be available to an anonymous visitor.
+                const proofRow = upiProofRows.find(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending');
+                if (!proofRow?.screenshot_path) return { ok: false, reason: 'PENDING_TEST_PROOF_PATH_MISSING' };
+                const objectPath = proofRow.screenshot_path.split('/').map(encodeURIComponent).join('/');
+                const anonymousObject = await fetch(SUPABASE_URL + '/storage/v1/object/payment-proofs/' + objectPath, {
+                  headers: { apikey: window.ILS_SUPABASE_KEY },
+                  cache: 'no-store'
+                });
+                if (anonymousObject.ok) return { ok: false, reason: 'PRIVATE_PROOF_OBJECT_READABLE_ANONYMOUSLY' };
+                const anonymousAdminRpc = await fetch(SUPABASE_URL + '/rest/v1/rpc/ils_admin_upi_payment_proofs', {
+                  method: 'POST',
+                  headers: { apikey: window.ILS_SUPABASE_KEY, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ p_limit: 10 })
+                });
+                if (anonymousAdminRpc.ok) return { ok: false, reason: 'ADMIN_PROOF_RPC_EXECUTABLE_ANONYMOUSLY' };
+
                 const view = row.querySelector('.upiProofView');
                 if (!view) return { ok: false, reason: 'PENDING_TEST_PROOF_VIEW_MISSING' };
                 window.__ilsSignedProofOpened = '';
