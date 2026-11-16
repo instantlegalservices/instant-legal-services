@@ -43,6 +43,7 @@ const { chromium } = require("playwright");
       console.log(spec.path.toUpperCase() + "_DEBOUNCE=PASS");
     }
 
+    await page.route("**/assets/pwa.js", route => route.fulfill({ contentType: "application/javascript", body: "" }));
     await page.goto("http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
     await page.evaluate(() => {
       window.ILS = {
