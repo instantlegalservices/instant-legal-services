@@ -75,7 +75,7 @@ jobs:
             stage('launch chromium');
             browser = await chromium.launch({ headless: true });
             stage('create browser context');
-            const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' });
+            const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'allow', reducedMotion: 'reduce' });
             stage('create browser page');
             const page = await context.newPage();
             await page.addInitScript(() => {
@@ -230,6 +230,9 @@ jobs:
               window.ILS.ready = () => ({
                 auth: { getUser: async () => ({ data: { user: { id: 'e2e-paid-tier-user' } } }) },
                 rpc: async (name, args) => {
+                  if (name === 'ils_get_professional_tool_usage' || name === 'ils_consume_professional_tool_use') {
+                    return { data: { ok: true, eligible: false }, error: null };
+                  }
                   if (name !== 'ils_create_service_order') throw new Error('Unexpected paid-tier RPC: ' + name);
                   const expected = [
                     { slug: 'professional-report-guided', amount: 85 },
@@ -346,6 +349,9 @@ jobs:
                   })
                 },
                 rpc: async (name, args) => {
+                  if (name === 'ils_get_professional_tool_usage' || name === 'ils_consume_professional_tool_use') {
+                    return { data: { ok: true, eligible: false }, error: null };
+                  }
                   if (name === 'ils_create_service_order') {
                     if (args.p_service_slug !== 'accounting-print-basic') {
                       throw new Error('Wrong accounting service slug: ' + args.p_service_slug);
