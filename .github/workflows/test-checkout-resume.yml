@@ -184,7 +184,7 @@ jobs:
               });
 
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
-              await page.getByText('Payment verified. Order: ILS-MOCK-1').waitFor({ timeout: 5000 });
+              await page.waitForFunction(() => document.getElementById('paymentStatus')?.textContent.includes('Payment verified. Order: ILS-MOCK-1'), null, { timeout: 5000 });
 
               const call = await page.evaluate(() => window.__resumeCheckoutCall);
               if (!call) throw new Error('Assistance page did not invoke the checkout module.');
