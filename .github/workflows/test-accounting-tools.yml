@@ -77,6 +77,27 @@ jobs:
             const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' });
             stage('create browser page');
             const page = await context.newPage();
+            await page.addInitScript(() => {
+              const originalAdd = EventTarget.prototype.addEventListener;
+              EventTarget.prototype.addEventListener = function(type, listener, options) {
+                if (type !== 'DOMContentLoaded' || typeof listener !== 'function') {
+                  return originalAdd.call(this, type, listener, options);
+                }
+                const label = String(listener).replace(/\\s+/g, ' ').slice(0, 110);
+                const wrapped = function(event) {
+                  console.log('DCL_HANDLER_STARTED:' + label);
+                  try {
+                    const result = listener.call(this, event);
+                    console.log('DCL_HANDLER_COMPLETED:' + label);
+                    return result;
+                  } catch (error) {
+                    console.error('DCL_HANDLER_ERROR:' + label + ' :: ' + (error?.stack || error));
+                    throw error;
+                  }
+                };
+                return originalAdd.call(this, type, wrapped, options);
+              };
+            });
             page.setDefaultTimeout(10000);
             page.setDefaultNavigationTimeout(20000);
 
