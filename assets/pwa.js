@@ -136,7 +136,16 @@
 
           const result = await advocatePoolPromise;
 
-          if (!Array.isArray(result)) {
+          /*
+            ils-core.js currently converts query errors to [].
+            Do not pin an empty/error result for the whole page
+            session; allow a later homepage refresh to retry.
+            A genuinely empty directory may be queried again on
+            a later language change, which is preferable to a
+            permanently stale empty cache.
+          */
+          if (!Array.isArray(result) || result.length === 0) {
+            advocatePoolPromise = null;
             return [];
           }
 
@@ -205,7 +214,13 @@
 
           const result = await judgmentPoolPromise;
 
-          if (!Array.isArray(result)) {
+          /*
+            judgments() also converts query errors to [].
+            Reset only this homepage cache on an empty result
+            so the next homepage refresh can retry.
+          */
+          if (!Array.isArray(result) || result.length === 0) {
+            judgmentPoolPromise = null;
             return [];
           }
 
