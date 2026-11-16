@@ -61,19 +61,22 @@ jobs:
             }
             console.log('CATALOG_PREFLIGHT_PASS: 208 tools; isolated script executed within 2s.');
 
-            browser = await chromium.launch({ headless: true });
-            const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' });
-            const page = await context.newPage();
-            // Bound a wedged renderer so the CI job reports the last script body
-            // entered/completed instead of waiting for the outer 12-minute timeout.
+            // Start the watchdog before browser launch/context creation too:
+            // those Playwright startup calls can also stall before a Page exists.
             browserWatchdog = setTimeout(() => {
               console.error('BROWSER_WATCHDOG_TIMEOUT: 120s', JSON.stringify(scriptTrace));
-              try { browser.process()?.kill('SIGKILL'); } catch (error) {
-                console.error('BROWSER_WATCHDOG_KILL_FAILURE:', error.message);
+              try { browser?.close().catch(error => console.error('BROWSER_WATCHDOG_CLOSE_FAILURE:', error.message)); } catch (error) {
+                console.error('BROWSER_WATCHDOG_CLOSE_FAILURE:', error.message);
               }
               process.exit(124);
             }, 120000);
             browserWatchdog.unref();
+            stage('launch chromium');
+            browser = await chromium.launch({ headless: true });
+            stage('create browser context');
+            const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' });
+            stage('create browser page');
+            const page = await context.newPage();
             page.setDefaultTimeout(10000);
             page.setDefaultNavigationTimeout(20000);
 
