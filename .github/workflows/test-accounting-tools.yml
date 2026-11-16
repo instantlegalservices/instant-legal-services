@@ -67,19 +67,26 @@ jobs:
 
             const failures = [];
             const stage = name => console.log('E2E_STAGE: ' + name);
+            page.on('request', request => console.log('BROWSER_REQUEST:', request.method(), request.url()));
+            page.on('requestfinished', request => console.log('BROWSER_REQUEST_FINISHED:', request.url()));
             page.on('requestfailed', request => {
               const message = 'requestfailed: ' + request.url() + ' :: ' + (request.failure()?.errorText || 'unknown');
               failures.push(message);
               console.error('BROWSER_REQUEST_FAILURE:', message);
             });
             page.on('response', response => {
+              console.log('BROWSER_RESPONSE:', response.status(), response.url());
               if (response.status() >= 400) console.error('BROWSER_HTTP_ERROR:', response.status(), response.url());
             });
+            page.on('domcontentloaded', () => console.log('BROWSER_DOMCONTENTLOADED'));
+            page.on('load', () => console.log('BROWSER_LOAD'));
+            page.on('framenavigated', frame => console.log('BROWSER_FRAME_NAVIGATED:', frame.url()));
             page.on('pageerror', e => {
               failures.push('pageerror: ' + e.message);
               console.error('BROWSER_PAGE_ERROR:', e.stack || e.message);
             });
             page.on('console', m => {
+              console.log('BROWSER_CONSOLE_' + m.type().toUpperCase() + ':', m.text());
               if (m.type() === 'error' && !m.text().includes('ILS Service Worker Error')) failures.push('console: ' + m.text());
             });
 
