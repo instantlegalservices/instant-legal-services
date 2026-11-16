@@ -221,7 +221,11 @@ async function pay(guided,rd,resumeIntent=null){
    const onPaid=(result)=>{
     if(settled)return;
     settled=true;
-    resolve(result||{ok:true});
+    if(result?.ok!==true||!result?.order_id){
+     reject(new Error("Payment/order confirmation was not verified. Your checkout has been kept so you can safely retry."));
+     return;
+    }
+    resolve(result);
    };
    try{
     const result=window.ILS_TOOLS.createOrder(
