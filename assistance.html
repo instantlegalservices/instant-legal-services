@@ -132,13 +132,13 @@ async function loadConfiguredAssistancePrice(serviceSlug, fallback){
   // Production uses is_active/price; the isolated TEST schema uses status/amount.
   // Retry only for a missing-column/schema-cache error, never for an inactive or absent service.
   let serviceQuery=await sb.from("services").select("id").eq("slug",serviceSlug).eq("is_active",true).maybeSingle();
-  if(serviceQuery.error && ["42703","PGRST204","PGRST200"].includes(serviceQuery.error.code)){
+  if(serviceQuery.error && ["42703","PGRST204"].includes(serviceQuery.error.code)){
    serviceQuery=await sb.from("services").select("id").eq("slug",serviceSlug).eq("status","active").maybeSingle();
   }
   if(serviceQuery.error||!serviceQuery.data?.id)return fallback;
 
   let priceQuery=await sb.from("service_prices").select("price").eq("service_id",serviceQuery.data.id).eq("is_active",true).order("created_at",{ascending:false}).limit(1).maybeSingle();
-  if(priceQuery.error && ["42703","PGRST204","PGRST200"].includes(priceQuery.error.code)){
+  if(priceQuery.error && ["42703","PGRST204"].includes(priceQuery.error.code)){
    priceQuery=await sb.from("service_prices").select("amount").eq("service_id",serviceQuery.data.id).eq("is_active",true).order("created_at",{ascending:false}).limit(1).maybeSingle();
   }
   if(priceQuery.error||!priceQuery.data)return fallback;
