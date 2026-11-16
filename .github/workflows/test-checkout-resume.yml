@@ -301,7 +301,15 @@ jobs:
               await page.locator('#loginPassword').fill(process.env.ILS_TEST_CUSTOMER_PASSWORD);
               await page.locator('#loginBtn').click();
 
-              await page.waitForURL(url => url.pathname === '/assistance.html', { timeout: 20000 });
+              await page.waitForFunction(() => {
+                const status = document.getElementById('status')?.textContent?.trim() || '';
+                return location.pathname === '/assistance.html' || status.length > 0;
+              }, null, { timeout: 20000 });
+
+              if (new URL(page.url()).pathname !== '/assistance.html') {
+                const signInStatus = (await page.locator('#status').textContent().catch(() => 'No sign-in status returned.')).trim();
+                throw new Error('TEST_SIGN_IN_REJECTED: ' + (signInStatus || 'No sign-in status returned.'));
+              }
 
               const verification = await page.evaluate(async () => {
                 const keys = Object.keys(localStorage);
