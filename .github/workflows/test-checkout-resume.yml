@@ -557,7 +557,7 @@ jobs:
                   return { ok: false, reason: 'ACTUAL_STORAGE_MIME_MISMATCH_NOT_REJECTED: ' + (badMime.body.message || badMime.response.status) };
                 }
                 const missingObject = await submitAttempt({
-                  p_screenshot_path: row.user_id + '/' + proof.order_id + '/not-uploaded.png'
+                  p_screenshot_path: proof.screenshot_path.split('/').slice(0, -1).concat('not-uploaded.png').join('/')
                 });
                 if (missingObject.response.ok || missingObject.body.message !== 'PAYMENT_PROOF_OBJECT_NOT_FOUND') {
                   return { ok: false, reason: 'MISSING_STORAGE_OBJECT_NOT_REJECTED: ' + (missingObject.body.message || missingObject.response.status) };
