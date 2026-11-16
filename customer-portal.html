@@ -49,8 +49,8 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
-const SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
-const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+const SUPABASE_URL=window.ILS_SUPABASE_URL || "https://odqebkdzkjfxzyzbrndt.supabase.co";
+const SUPABASE_KEY=window.ILS_SUPABASE_KEY || "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 function status(msg,ok=false){$("status").textContent=msg;$("status").className="status "+(ok?"ok":"err");}
