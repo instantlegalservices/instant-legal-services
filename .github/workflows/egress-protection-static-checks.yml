@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - "assets/pwa.js"
+      - "assets/ils-core.js"
+      - "scripts/test-judgment-summary-projection.js"
+      - "judgment.html"
+      - "legal-search.html"
       - "judgments.html"
       - "advocates.html"
       - "index.html"
@@ -25,6 +29,9 @@ jobs:
 
       - name: Check PWA JavaScript syntax
         run: node --check assets/pwa.js
+
+      - name: Verify judgment list/detail field projections
+        run: node scripts/test-judgment-summary-projection.js
 
       - name: Check inline page JavaScript syntax
         run: |
