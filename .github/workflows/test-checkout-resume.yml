@@ -271,7 +271,16 @@ jobs:
               await page.locator('#loginEmail').fill(process.env.ILS_TEST_CUSTOMER_EMAIL);
               await page.locator('#loginPassword').fill(process.env.ILS_TEST_CUSTOMER_PASSWORD);
               await page.locator('#loginBtn').click();
-              await page.waitForURL(url => url.pathname === '/assistance.html', { timeout: 20000 });
+              await page.waitForURL(url => url.pathname === '/assistance.html' && url.searchParams.get('mode') === 'guided', { timeout: 20000 });
+              await page.waitForFunction(() => {
+                const box = document.getElementById('toolStatus');
+                return !!box?.querySelector('#payNowBtn') || !!box?.innerText?.trim();
+              }, null, { timeout: 20000 });
+              const orderScreen = await page.locator('#toolStatus').innerText().catch(() => '');
+              if (!await page.locator('#payNowBtn').count()) {
+                throw new Error('RESUMED_ORDER_BUTTON_MISSING: ' + (orderScreen || 'No order status displayed').slice(0, 250));
+              }
+              await page.locator('#payNowBtn').click();
               await page.waitForSelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]', { state: 'visible', timeout: 20000 });
               await page.waitForFunction(() => {
                 const img = document.querySelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]');
