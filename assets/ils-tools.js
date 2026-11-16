@@ -416,7 +416,8 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
           return;
         }
 
-        if (result?.order_status === 'paid' || result?.proof_status === 'verified') {
+        // A verified proof alone must never unlock access; the server-confirmed order state is authoritative.
+        if (result?.order_status === 'paid') {
           stopWatch();
           showStatus(
             'Payment proof verified. Order <strong>' +
