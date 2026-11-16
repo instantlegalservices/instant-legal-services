@@ -638,6 +638,55 @@ jobs:
           });
           NODE
 
+      - name: Verify admin payment-proof UI against TEST only
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const page = await browser.newPage();
+              await page.addInitScript(({ url, key }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+              await page.goto(process.env.BASE_URL + '/admin.html', { waitUntil: 'domcontentloaded' });
+              await page.waitForFunction(() => typeof loadUpiProofs === 'function' && typeof isAdmin === 'function');
+              const result = await page.evaluate(async ({ email, password }) => {
+                if (SUPABASE_URL !== 'https://bgsbuepolooybdqrzmoa.supabase.co') return { ok: false, reason: 'ADMIN_NOT_POINTING_TO_TEST' };
+                const { error } = await sb.auth.signInWithPassword({ email, password });
+                if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED' };
+                const check = await isAdmin();
+                if (!check.ok) return { ok: false, reason: 'TEST_ADMIN_AUTHZ_FAILED' };
+                document.getElementById('upiProofStatusFilter').value = '';
+                await loadUpiProofs();
+                const body = document.getElementById('upiProofBody');
+                const text = body?.innerText || '';
+                const row = body?.querySelector('tr');
+                if (!text.includes('ILSTEST') || !text.toLowerCase().includes('rejected')) return { ok: false, reason: 'REJECTED_PROOF_NOT_RENDERED_IN_ADMIN_UI' };
+                if (body.querySelectorAll('.upiProofVerify').length !== 0) return { ok: false, reason: 'DECISION_ACTIONS_SHOWN_FOR_ALREADY_REJECTED_PROOF' };
+                const view = body.querySelector('.upiProofView');
+                if (!view) return { ok: false, reason: 'ADMIN_PROOF_VIEW_ACTION_MISSING' };
+                window.__ilsSignedProofOpened = '';
+                window.open = url => { window.__ilsSignedProofOpened = String(url || ''); return null; };
+                view.click();
+                return { ok: true, rowCount: body.querySelectorAll('tr').length };
+              }, { email: process.env.ILS_TEST_CUSTOMER_EMAIL, password: process.env.ILS_TEST_CUSTOMER_PASSWORD });
+              if (!result.ok) throw new Error(result.reason);
+              await page.waitForFunction(() => !!window.__ilsSignedProofOpened, null, { timeout: 12000 });
+              const signedUrl = await page.evaluate(() => window.__ilsSignedProofOpened);
+              if (!signedUrl.startsWith('https://')) throw new Error('ADMIN_SIGNED_SCREENSHOT_URL_INVALID');
+              console.log('PASS: real TEST admin session rendered rejected proof in admin.html, hid decision actions for decided proof, and opened a private signed screenshot URL.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('ADMIN_PROOF_UI_TEST_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
       - name: Stop local site
         if: always()
         run: |
