@@ -171,7 +171,8 @@ function showMode(){
  pack.innerHTML="<h3>What you will receive</h3><ul>"+items.map(x=>"<li>"+x+"</li>").join("")+"</ul>"+(guided?"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, this checklist and route-specific field guidance will be shown again in a clean copy-ready format.</p>":"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, the request enters the existing service-order workflow. An associate can then coordinate the stated non-legal digital task.</p>");
  document.getElementById("payBtn").onclick=()=>pay(guided,rd);
  applyConfiguredAssistancePrice(configuredServiceSlug,configuredFallback);
- document.getElementById("loginBtn").onclick=()=>{};
+ const returnTo=location.pathname+location.search+location.hash;
+ document.getElementById("loginBtn").href="customer-portal.html?returnTo="+encodeURIComponent(returnTo);
 }
 async function pay(guided,rd){
  const btn=document.getElementById("payBtn");btn.disabled=true;
@@ -214,7 +215,7 @@ async function pay(guided,rd){
       details,
       null,
       onPaid,
-      {forceQr:true}
+      {forceQr:true,resumeCheckout:true}
     );
     if(result?.then)result.catch(err=>{if(!settled)reject(err);});
    }catch(err){reject(err);}
@@ -225,6 +226,7 @@ async function pay(guided,rd){
    },5000);
   });
 
+  try{sessionStorage.removeItem("ils_pending_checkout");}catch(_){}
   const orderNumber=paid.order_number||"created";
   status("Payment verified. Order: "+orderNumber+"\n"+(guided?"Your guidance pack is unlocked below.":"Your assistance request has entered the service workflow."),"ok");
   if(paid?.order_id){
@@ -246,8 +248,37 @@ async function pay(guided,rd){
   status(msg.includes("Please sign in")||msg.includes("Please login")?"Please sign in or create your ILS customer account, then return here to continue.":msg,"err");
  }finally{btn.disabled=false;}
 }
+async function resumePendingCheckout(){
+ try{
+  const raw=sessionStorage.getItem("ils_pending_checkout");
+  if(!raw)return;
+  const pending=JSON.parse(raw);
+  if(!pending||!pending.createdAt||Date.now()-pending.createdAt>30*60*1000){
+   sessionStorage.removeItem("ils_pending_checkout");
+   return;
+  }
+  const current=location.pathname+location.search+location.hash;
+  if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance"].includes(pending.slug))return;
+  const expected=mode==="guided"?"official-route-guidance":mode==="associate"?"digital-form-assistance":null;
+  if(expected!==pending.slug||!pending.details)return;
+  const d=pending.details;
+  if(mode==="associate"){
+   document.getElementById("assistName").value=d.name||"";
+   document.getElementById("assistMobile").value=d.mobile||"";
+   document.getElementById("assistState").value=d.state||"";
+   document.getElementById("assistCity").value=d.city||"";
+   document.getElementById("assistConsent").checked=true;
+  }
+  status("Welcome back. Your saved request is being restored. Please review the order and complete payment.");
+  await pay(mode==="guided",detectRoute());
+ }catch(err){
+  console.warn("Could not resume saved ILS checkout.",err);
+  status("Your saved request could not be restored. Please review your details and try again.","err");
+ }
+}
 document.addEventListener("DOMContentLoaded",()=>{
  showMode();
+ resumePendingCheckout();
  const form=document.getElementById("assistForm");
  form?.addEventListener("submit",async e=>{
   e.preventDefault();const s=document.getElementById("assistStatus");s.className="status";s.textContent="Submitting…";s.style.display="block";
