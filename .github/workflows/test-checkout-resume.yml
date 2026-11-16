@@ -308,7 +308,12 @@ jobs:
 
               if (new URL(page.url()).pathname !== '/assistance.html') {
                 const signInStatus = (await page.locator('#status').textContent().catch(() => 'No sign-in status returned.')).trim();
-                throw new Error('TEST_SIGN_IN_REJECTED: ' + (signInStatus || 'No sign-in status returned.'));
+                if (signInStatus.startsWith('Signed in.') || signInStatus.startsWith('Customer account and profile provisioned successfully.')) {
+                  await page.waitForURL(url => url.pathname === '/assistance.html', { timeout: 7000 });
+                } else {
+                const signInStatus = (await page.locator('#status').textContent().catch(() => 'No sign-in status returned.')).trim();
+                  throw new Error('TEST_SIGN_IN_REJECTED: ' + (signInStatus || 'No sign-in status returned.'));
+                }
               }
 
               const verification = await page.evaluate(async () => {
