@@ -4,11 +4,10 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
 
-const corePath = "assets/ils-core.js";
-const source = fs.readFileSync(corePath, "utf8");
+const source = fs.readFileSync("assets/ils-core.js", "utf8");
 const selections = [];
 const query = {
-  select(columns) { selections.push(String(columns).replace(/\\s+/g, " ").trim()); return this; },
+  select(columns) { selections.push(String(columns).replace(/\s+/g, " ").trim()); return this; },
   eq() { return this; },
   or() { return this; },
   ilike() { return this; },
@@ -67,10 +66,10 @@ const window = {
   const listing = fs.readFileSync("judgments.html", "utf8");
   const detail = fs.readFileSync("judgment.html", "utf8");
   const legalSearch = fs.readFileSync("legal-search.html", "utf8");
-  assert.match(homepage, /originalJudgments\\([\\s\\S]*?summaryOnly:\\s*true/);
-  assert.match(listing, /ILS\\.judgments\\([\\s\\S]*?summaryOnly:\\s*true/);
-  assert.doesNotMatch(detail, /summaryOnly:\\s*true/);
-  assert.doesNotMatch(legalSearch, /summaryOnly:\\s*true/);
+  assert.match(homepage, /originalJudgments\([\s\S]*?summaryOnly:\s*true/);
+  assert.match(listing, /ILS\.judgments\([\s\S]*?summaryOnly:\s*true/);
+  assert.doesNotMatch(detail, /summaryOnly:\s*true/);
+  assert.doesNotMatch(legalSearch, /summaryOnly:\s*true/);
 
   console.log("JUDGMENT_LIST_PROJECTION=PASS");
   console.log("JUDGMENT_DETAIL_FULL_PROJECTION=PASS");
