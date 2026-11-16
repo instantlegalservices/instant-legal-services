@@ -124,6 +124,88 @@ jobs:
           });
           NODE
 
+      - name: Verify assistance page restores the saved checkout intent
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const page = await context.newPage();
+
+              // Keep this test local and deterministic: no Supabase, account, or payment calls.
+              await page.route('**/assets/ils-core.js*', route => route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: `window.ILS = {
+                  ready: () => null,
+                  init: async () => null,
+                  esc: value => String(value ?? '')
+                };`
+              }));
+              await page.route('**/assets/ils-payments.js*', route => route.fulfill({
+                status: 200, contentType: 'application/javascript', body: ''
+              }));
+              await page.route('**/assets/ils-tools.js*', route => route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: `window.ILS_TOOLS = {
+                  createOrder: (slug, details, toolRunId, onPaid, options) => {
+                    window.__resumeCheckoutCall = { slug, details, options };
+                    onPaid({ ok: true, order_id: 'mock-order-id', order_number: 'ILS-MOCK-1' });
+                  }
+                };`
+              }));
+              await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route =>
+                route.fulfill({ status: 200, contentType: 'application/javascript', body: '' })
+              );
+
+              await page.addInitScript(() => {
+                if (location.pathname !== '/assistance.html') return;
+                const returnTo = location.pathname + location.search + location.hash;
+                sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
+                  slug: 'official-route-guidance',
+                  details: {
+                    mode: 'guided',
+                    problem: 'cyber fraud',
+                    route: 'cyber',
+                    checkout_intent_id: 'resume-e2e-intent'
+                  },
+                  checkoutIntentId: 'resume-e2e-intent',
+                  toolRunId: null,
+                  returnTo,
+                  createdAt: Date.now()
+                }));
+              });
+
+              await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
+              await page.getByText('Payment verified. Order: ILS-MOCK-1').waitFor({ timeout: 5000 });
+
+              const call = await page.evaluate(() => window.__resumeCheckoutCall);
+              if (!call) throw new Error('Assistance page did not invoke the checkout module.');
+              if (call.slug !== 'official-route-guidance') throw new Error('Wrong service slug restored.');
+              if (call.details?.checkout_intent_id !== 'resume-e2e-intent') throw new Error('Checkout intent was not forwarded.');
+              if (call.options?.resumeCheckout !== true || call.options?.forceQr !== true) {
+                throw new Error('Resume checkout options were not preserved.');
+              }
+              const pending = await page.evaluate(() => sessionStorage.getItem('ils_pending_checkout'));
+              if (pending !== null) throw new Error('Saved checkout was not cleared after the simulated paid callback.');
+
+              console.log('PASS: assistance page restored the matching checkout, forwarded its intent and options, and cleared storage only after the simulated paid callback.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('ASSISTANCE_RESUME_E2E_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
       - name: Stop local site
         if: always()
         run: |
