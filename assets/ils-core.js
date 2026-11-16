@@ -299,42 +299,60 @@ window.ILS = (() => {
     q = "",
     court = "",
     category = "",
-    id = ""
+    id = "",
+    summaryOnly = false
   } = {}) {
 
     if (!client) await init();
 
     if (!client) return [];
 
+    const listColumns = `
+      id,
+      case_title,
+      case_number,
+      court_type,
+      court_name,
+      judgment_date,
+      primary_category,
+      short_summary,
+      legal_principle,
+      statutes_and_sections,
+      official_source_url,
+      source_pdf_url
+    `;
+
+    const detailColumns = `
+      id,
+      case_title,
+      case_number,
+      court_type,
+      court_name,
+      judgment_date,
+      primary_category,
+      short_summary,
+      detailed_summary,
+      key_legal_issues,
+      legal_principle,
+      statutes_and_sections,
+      important_precedents,
+      final_decision,
+      practical_significance,
+      keywords,
+      official_source_url,
+      source_pdf_url,
+      summary_status,
+      is_latest,
+      is_featured,
+      is_verified,
+      created_at,
+      updated_at,
+      search_text
+    `;
+
     let query = client
       .from("judgments")
-      .select(`
-        id,
-        case_title,
-        case_number,
-        court_type,
-        court_name,
-        judgment_date,
-        primary_category,
-        short_summary,
-        detailed_summary,
-        key_legal_issues,
-        legal_principle,
-        statutes_and_sections,
-        important_precedents,
-        final_decision,
-        practical_significance,
-        keywords,
-        official_source_url,
-        source_pdf_url,
-        summary_status,
-        is_latest,
-        is_featured,
-        is_verified,
-        created_at,
-        updated_at,
-        search_text
-      `)
+      .select(summaryOnly && !id ? listColumns : detailColumns)
       .eq("is_verified", true)
       .eq("summary_status", "completed");
 
