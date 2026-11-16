@@ -43,9 +43,10 @@ const { chromium } = require("playwright");
       console.log(spec.path.toUpperCase() + "_DEBOUNCE=PASS");
     }
 
-    await page.route("**/assets/pwa.js", route => route.fulfill({ contentType: "application/javascript", body: "" }));
-    await page.goto("http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
+    await page.goto("http://127.0.0.1:4173/advocates.html", { waitUntil: "domcontentloaded" });
     await page.evaluate(() => {
+      history.replaceState({}, "", "/");
+      window.__ILS_HOME_ROTATION__ = false;
       window.ILS = {
         advocates: async () => { window.__baseAdv = (window.__baseAdv || 0) + 1; return Array.from({length: 12}, (_,i)=>({id:i})); },
         judgments: async () => { window.__baseJud = (window.__baseJud || 0) + 1; return Array.from({length: 12}, (_,i)=>({id:i})); }
