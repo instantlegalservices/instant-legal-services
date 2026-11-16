@@ -354,7 +354,7 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
             '</strong> is paid. Your requested access/report is now unlocked.',
             'ok'
           );
-          if (typeof onPaid === 'function') onPaid();
+          if (typeof onPaid === 'function') onPaid({ok:true,order_id:data.order_id,order_number:result.order_number||data.order_number||''});
           return;
         }
 
@@ -581,7 +581,7 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
             )}</strong> is now paid.`;
         }
 
-        if(typeof onPaid === 'function') onPaid();
+        if(typeof onPaid === 'function') onPaid({ok:true,order_id:data.order_id,order_number:verified.order_number||data.order_number||''});
       },
 
       modal: {
