@@ -53,8 +53,8 @@ jobs:
               if (m.type() === 'error' && !m.text().includes('ILS Service Worker Error')) failures.push('console: ' + m.text());
             });
 
-            await page.goto(process.env.BASE_URL, { waitUntil: 'networkidle' });
-            await page.reload({ waitUntil: 'networkidle' });
+            await page.goto(process.env.BASE_URL, { waitUntil: 'domcontentloaded' });
+            await page.reload({ waitUntil: 'domcontentloaded' });
             const catalogProbe = await page.evaluate(() => ({
               hasCatalog: Array.isArray(window.ILS_TOOL_CATALOG),
               accounting: Array.isArray(window.ILS_TOOL_CATALOG)
