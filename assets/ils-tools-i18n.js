@@ -166,7 +166,11 @@
       const mode=card.querySelector(".tool-mode"); if(mode){const v=(p.cats[tool.category]||tool.category)+" • "+(p.modes[tool.mode]||tool.mode);if(mode.textContent!==v)mode.textContent=v;}
       const open=card.querySelector(".tool-open"); if(open){const v=lang()==="en-IN"?"Open Tool":lang()==="hi-IN"?"टूल खोलें":lang()==="hinglish"?"Tool kholein":lang()==="ur-IN"?"ٹول کھولیں":"টুল খুলুন";if(open.textContent!==v)open.textContent=v;}
       const pop=card.querySelector(".tool-popular"); if(pop){const v=lang()==="en-IN"?"MOST USED":lang()==="hi-IN"?"अधिक उपयोग":lang()==="hinglish"?"MOST USED":lang()==="ur-IN"?"زیادہ استعمال":"বেশি ব্যবহৃত";if(pop.textContent!==v)pop.textContent=v;}
-      const price=card.querySelector(".tool-price"); if(price&&tool.price)price.textContent="₹"+tool.price;
+      const price=card.querySelector(".tool-price");
+      if(price&&tool.price){
+        const value="₹"+tool.price;
+        if(price.textContent!==value)price.textContent=value;
+      }
       const free=card.querySelector(".tool-badge"); if(free){const v=lang()==="en-IN"?"FREE":lang()==="hi-IN"?"निःशुल्क":lang()==="hinglish"?"FREE":lang()==="ur-IN"?"مفت":"বিনামূল্যে";if(free.textContent!==v)free.textContent=v;}
     });
     document.querySelectorAll("[data-ils-tools-shell]").forEach(el=>{
