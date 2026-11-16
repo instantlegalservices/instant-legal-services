@@ -376,6 +376,35 @@ jobs:
                 const rows = await listed.json();
                 const row = Array.isArray(rows) ? rows.find(x => x.order_id === window.__ilsTestOrderId) : null;
                 if (!row || row.status !== 'pending' || !row.transaction_ref.startsWith('ILSTEST')) return { ok: false, reason: 'SYNTHETIC_PROOF_NOT_PENDING' };
+
+                // A second submission for the same order must not create a second pending proof.
+                const duplicate = await fetch(base + '/rest/v1/rpc/ils_submit_upi_payment_proof', {
+                  method: 'POST', headers,
+                  body: JSON.stringify({
+                    p_order_id: row.order_id,
+                    p_amount: row.amount,
+                    p_upi_id: row.upi_id,
+                    p_transaction_ref: 'ILSDUP' + Date.now().toString(36).toUpperCase(),
+                    p_payee_name_claimed: 'ILS DUPLICATE TEST - NOT PAID',
+                    p_screenshot_path: row.screenshot_path,
+                    p_screenshot_sha256: row.screenshot_sha256,
+                    p_mime_type: row.mime_type,
+                    p_file_size_bytes: row.file_size_bytes
+                  })
+                });
+                const duplicateBody = await duplicate.json().catch(() => ({}));
+                if (duplicate.ok || duplicateBody.message !== 'PROOF_ALREADY_PENDING') {
+                  return { ok: false, reason: 'DUPLICATE_PENDING_PROOF_NOT_REJECTED' };
+                }
+                const afterDuplicate = await fetch(base + '/rest/v1/rpc/ils_admin_upi_payment_proofs', {
+                  method: 'POST', headers, body: JSON.stringify({ p_limit: 50 })
+                });
+                if (!afterDuplicate.ok) return { ok: false, reason: 'PROOF_LIST_AFTER_DUPLICATE_HTTP_' + afterDuplicate.status };
+                const afterRows = await afterDuplicate.json();
+                if (!Array.isArray(afterRows) || afterRows.filter(x => x.order_id === row.order_id).length !== 1) {
+                  return { ok: false, reason: 'DUPLICATE_SUBMISSION_CREATED_EXTRA_PROOF' };
+                }
+
                 const stateResponse = await fetch(base + '/rest/v1/rpc/ils_get_upi_proof_status', {
                   method: 'POST', headers, body: JSON.stringify({ p_order_id: row.order_id })
                 });
