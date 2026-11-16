@@ -94,10 +94,21 @@ jobs:
 
             const waitForCatalog = async stageName => {
               stage(stageName);
-              await Promise.race([
-                page.waitForFunction(() => Array.isArray(window.ILS_TOOL_CATALOG), null, { timeout: 20000 }),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Node watchdog: browser catalog readiness exceeded 25 seconds')), 25000))
-              ]);
+              try {
+                await page.waitForFunction(() => Array.isArray(window.ILS_TOOL_CATALOG), null, { timeout: 20000 });
+              } catch (error) {
+                const diagnostic = await page.evaluate(() => ({
+                  readyState: document.readyState,
+                  catalogType: typeof window.ILS_TOOL_CATALOG,
+                  catalogIsArray: Array.isArray(window.ILS_TOOL_CATALOG),
+                  catalogLength: Array.isArray(window.ILS_TOOL_CATALOG) ? window.ILS_TOOL_CATALOG.length : null,
+                  globals: Object.keys(window).filter(k => /ILS|tool/i.test(k)).slice(0, 80),
+                  scripts: Array.from(document.scripts).map(s => ({ src: s.src || '[inline]', ready: s.readyState || null, defer: s.defer, async: s.async })),
+                  resources: performance.getEntriesByType('resource').map(r => ({ name: r.name, duration: Math.round(r.duration), size: r.transferSize }))
+                }));
+                console.error('CATALOG_READINESS_DIAGNOSTIC:', JSON.stringify(diagnostic));
+                throw error;
+              }
             };
             // Instrument the actual JavaScript response bodies in this test only.
             await page.route('**/assets/*.js*', async route => {
