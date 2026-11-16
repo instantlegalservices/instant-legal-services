@@ -145,8 +145,15 @@ jobs:
               const url = new URL(route.request().url());
               const script = url.pathname.split('/').pop();
               const tracked = ['ils-core.js','ils-tools-catalog.js','ils-tools.js','ils-tools-i18n.js','ils-accounting-advanced.js','pwa.js','ils-payments.js'];
-              const response = await route.fetch();
-              if (!tracked.includes(script) || response.status() >= 400) {
+              // Only proxy scripts whose bodies need instrumentation. Let
+              // dynamically loaded, untracked scripts use the normal browser
+              // request path so this test cannot stall their load lifecycle.
+              if (!tracked.includes(script)) {
+                await route.continue();
+                return;
+              }
+              const response = await route.fetch({ timeout: 10000 });
+              if (response.status() >= 400) {
                 await route.fulfill({ response });
                 return;
               }
