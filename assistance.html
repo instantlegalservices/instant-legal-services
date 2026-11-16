@@ -174,7 +174,7 @@ function showMode(){
  const returnTo=location.pathname+location.search+location.hash;
  document.getElementById("loginBtn").href="customer-portal.html?returnTo="+encodeURIComponent(returnTo);
 }
-async function pay(guided,rd){
+async function pay(guided,rd,resumeIntent=null){
  const btn=document.getElementById("payBtn");btn.disabled=true;
  try{
   if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
@@ -193,7 +193,8 @@ async function pay(guided,rd){
    name:guided?"":document.getElementById("assistName").value.trim(),
    mobile:guided?"":document.getElementById("assistMobile").value.trim(),
    state:guided?"":document.getElementById("assistState").value.trim(),
-   city:guided?"":document.getElementById("assistCity").value.trim()
+   city:guided?"":document.getElementById("assistCity").value.trim(),
+   ...(resumeIntent?.checkoutIntentId?{checkout_intent_id:resumeIntent.checkoutIntentId}: {})
   };
   const serviceSlug=guided?"official-route-guidance":"digital-form-assistance";
   status("Creating your secure service order…");
@@ -270,7 +271,7 @@ async function resumePendingCheckout(){
    document.getElementById("assistConsent").checked=true;
   }
   status("Welcome back. Your saved request is being restored. Please review the order and complete payment.");
-  await pay(mode==="guided",detectRoute());
+  await pay(mode==="guided",detectRoute(),pending);
  }catch(err){
   console.warn("Could not resume saved ILS checkout.",err);
   status("Your saved request could not be restored. Please review your details and try again.","err");
