@@ -124,7 +124,14 @@ jobs:
             page.on('request', request => console.log('BROWSER_REQUEST:', request.method(), request.url()));
             page.on('requestfinished', request => console.log('BROWSER_REQUEST_FINISHED:', request.url()));
             page.on('requestfailed', request => {
-              const message = 'requestfailed: ' + request.url() + ' :: ' + (request.failure()?.errorText || 'unknown');
+              const errorText = request.failure()?.errorText || 'unknown';
+              // The optional Supabase export-price lookup can be aborted by the
+              // deliberate page reload after all tracked scripts have completed.
+              if (errorText === 'net::ERR_ABORTED' && request.url().includes('/rest/v1/services?select=id%2Cslug')) {
+                console.log('EXPECTED_BACKGROUND_REQUEST_ABORTED:', request.url());
+                return;
+              }
+              const message = 'requestfailed: ' + request.url() + ' :: ' + errorText;
               failures.push(message);
               console.error('BROWSER_REQUEST_FAILURE:', message);
             });
