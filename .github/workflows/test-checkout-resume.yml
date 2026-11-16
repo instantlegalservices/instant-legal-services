@@ -53,7 +53,9 @@ jobs:
                   status: 200,
                   contentType: 'application/javascript',
                   body: `window.supabase = {
-                    createClient: () => ({
+                    createClient: (url, key) => {
+                      window.__supabaseConfig = { url, key };
+                      return {
                       auth: {
                         signInWithPassword: async () => ({
                           data: { user: { id: 'e2e-customer', email: 'e2e@example.test', user_metadata: { full_name: 'E2E Customer' } } },
@@ -70,13 +72,22 @@ jobs:
                         })
                       }),
                       rpc: async () => ({ data: { ok: true, customer_profile_id: 'e2e-profile' }, error: null })
-                    })
+                    };
+                    }
                   };`
                 })
               );
 
               const base = process.env.BASE_URL;
+              await page.addInitScript(() => {
+                window.ILS_SUPABASE_URL = 'https://bgsbuepolooybdqrzmoa.supabase.co';
+                window.ILS_SUPABASE_KEY = 'sb_publishable_TEST_ONLY';
+              });
               await page.goto(base + '/customer-portal.html?returnTo=%2Fassistance.html');
+              const configured = await page.evaluate(() => window.__supabaseConfig);
+              if (configured?.url !== 'https://bgsbuepolooybdqrzmoa.supabase.co' || configured?.key !== 'sb_publishable_TEST_ONLY') {
+                throw new Error('Customer portal did not honor the isolated TEST Supabase runtime configuration.');
+              }
               await page.evaluate(() => {
                 sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
                   slug: 'digital-form-assistance',
@@ -162,11 +173,20 @@ jobs:
                 };`
               }));
               await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route =>
-                route.fulfill({ status: 200, contentType: 'application/javascript', body: '' })
+                route.fulfill({
+                  status: 200,
+                  contentType: 'application/javascript',
+                  body: `window.supabase = { createClient: (url, key) => {
+                    window.__assistanceSupabaseConfig = { url, key };
+                    return {};
+                  }};`
+                })
               );
 
               await page.addInitScript(() => {
                 if (location.pathname !== '/assistance.html') return;
+                window.ILS_SUPABASE_URL = 'https://bgsbuepolooybdqrzmoa.supabase.co';
+                window.ILS_SUPABASE_KEY = 'sb_publishable_TEST_ONLY';
                 const returnTo = location.pathname + location.search + location.hash;
                 sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
                   slug: 'official-route-guidance',
@@ -185,6 +205,11 @@ jobs:
 
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
               await page.waitForFunction(() => document.getElementById('paymentStatus')?.textContent.includes('Payment verified. Order: ILS-MOCK-1'), null, { timeout: 5000 });
+
+              const config = await page.evaluate(() => window.__assistanceSupabaseConfig);
+              if (config?.url !== 'https://bgsbuepolooybdqrzmoa.supabase.co' || config?.key !== 'sb_publishable_TEST_ONLY') {
+                throw new Error('Assistance page did not honor the isolated TEST Supabase runtime configuration.');
+              }
 
               const call = await page.evaluate(() => window.__resumeCheckoutCall);
               if (!call) throw new Error('Assistance page did not invoke the checkout module.');
