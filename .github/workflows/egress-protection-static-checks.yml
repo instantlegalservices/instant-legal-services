@@ -1,0 +1,51 @@
+name: Egress Protection Static Checks
+
+on:
+  pull_request:
+    paths:
+      - "assets/pwa.js"
+      - "judgments.html"
+      - "advocates.html"
+      - "index.html"
+      - "supabase/functions/daily-judgment-pipeline/**"
+      - ".github/workflows/egress-protection-static-checks.yml"
+  workflow_dispatch:
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check PWA JavaScript syntax
+        run: node --check assets/pwa.js
+
+      - name: Check inline page JavaScript syntax
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const vm = require('node:vm');
+          for (const file of ['index.html', 'judgments.html', 'advocates.html']) {
+            const html = fs.readFileSync(file, 'utf8');
+            const scripts = [...html.matchAll(/<script(?![^>]*type=["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi)];
+            for (let i = 0; i < scripts.length; i++) {
+              const source = scripts[i][1].trim();
+              if (source) new vm.Script(source, { filename: file + '#inline-' + (i + 1) });
+            }
+          }
+          console.log('Inline JavaScript syntax: PASS');
+          NODE
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check judgment pipeline (no secrets or deployment)
+        run: deno check supabase/functions/daily-judgment-pipeline/index.ts

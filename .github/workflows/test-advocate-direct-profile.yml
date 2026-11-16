@@ -1,0 +1,39 @@
+name: Advocate Direct Profile E2E
+
+on:
+  pull_request:
+    paths:
+      - "advocates.html"
+      - "assets/ils-core.js"
+      - "scripts/test-advocate-direct-profile.js"
+      - ".github/workflows/test-advocate-direct-profile.yml"
+  workflow_dispatch:
+
+jobs:
+  advocate-direct-profile:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local static site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http.log 2>&1 &
+          echo $! > /tmp/ils-http.pid
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:4173/advocates.html > /dev/null
+
+      - name: Run direct profile browser regression
+        env:
+          BASE_URL: http://127.0.0.1:4173/
+        run: node scripts/test-advocate-direct-profile.js

@@ -110,6 +110,8 @@
        1. Rotate advocates from a larger live database pool
     ------------------------------------------------------- */
 
+    let advocatePoolPromise = null;
+
     if (
       typeof window.ILS.advocates === "function" &&
       !window.ILS.advocates.__homeRotationWrapped
@@ -121,14 +123,29 @@
       const wrappedAdvocates =
         async function(options = {}) {
 
-          const result =
-            await originalAdvocates({
+          if (!advocatePoolPromise) {
+            advocatePoolPromise = originalAdvocates({
               ...options,
               limit: 12,
-              featured: true
+              featured: false
+            }).catch(error => {
+              advocatePoolPromise = null;
+              throw error;
             });
+          }
 
-          if (!Array.isArray(result)) {
+          const result = await advocatePoolPromise;
+
+          /*
+            ils-core.js currently converts query errors to [].
+            Do not pin an empty/error result for the whole page
+            session; allow a later homepage refresh to retry.
+            A genuinely empty directory may be queried again on
+            a later language change, which is preferable to a
+            permanently stale empty cache.
+          */
+          if (!Array.isArray(result) || result.length === 0) {
+            advocatePoolPromise = null;
             return [];
           }
 
@@ -168,6 +185,8 @@
        2. Rotate judgments from a larger live database pool
     ------------------------------------------------------- */
 
+    let judgmentPoolPromise = null;
+
     if (
       typeof window.ILS.judgments === "function" &&
       !window.ILS.judgments.__homeRotationWrapped
@@ -180,16 +199,28 @@
         async function(options = {}) {
 
           /*
-            Homepage asks for a larger pool.
-            Other judgment pages are NOT affected.
+            Fetch the homepage pool once per page session.
+            Language changes reuse this in-memory result.
           */
-          const result =
-            await originalJudgments({
+          if (!judgmentPoolPromise) {
+            judgmentPoolPromise = originalJudgments({
               ...options,
               limit: 12
+            }).catch(error => {
+              judgmentPoolPromise = null;
+              throw error;
             });
+          }
 
-          if (!Array.isArray(result)) {
+          const result = await judgmentPoolPromise;
+
+          /*
+            judgments() also converts query errors to [].
+            Reset only this homepage cache on an empty result
+            so the next homepage refresh can retry.
+          */
+          if (!Array.isArray(result) || result.length === 0) {
+            judgmentPoolPromise = null;
             return [];
           }
 
@@ -228,53 +259,11 @@
 
 
     /* -------------------------------------------------------
-       3. Refresh homepage every 5 minutes
-       ------------------------------------------------------- */
-
-    window.setTimeout(
-      () => {
-
-        /*
-          Reload only the homepage.
-          Other pages are completely untouched.
-        */
-        if (
-          document.visibilityState === "visible"
-        ) {
-          window.location.reload();
-        } else {
-
-          /*
-            If the tab is not visible, wait until the
-            user returns rather than unexpectedly reloading.
-          */
-          const refreshOnReturn =
-            () => {
-
-              if (
-                document.visibilityState === "visible"
-              ) {
-
-                document.removeEventListener(
-                  "visibilitychange",
-                  refreshOnReturn
-                );
-
-                window.location.reload();
-              }
-
-            };
-
-          document.addEventListener(
-            "visibilitychange",
-            refreshOnReturn
-          );
-
-        }
-
-      },
-      5 * 60 * 1000
-    );
+       3. No periodic homepage reload.
+       Repeated reloads caused avoidable database and image
+       requests for every visitor with the homepage open.
+       Data refreshes on a normal page navigation/reload.
+    ------------------------------------------------------- */
 
   }
 

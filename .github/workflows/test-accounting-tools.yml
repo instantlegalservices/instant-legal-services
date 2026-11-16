@@ -13,7 +13,8 @@ on:
 
 jobs:
   accounting-tools-ui:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,25 +37,177 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:4173/tools.html > /dev/null
 
       - name: Run accounting UI regression
+        timeout-minutes: 12
         env:
           BASE_URL: http://127.0.0.1:4173/tools.html
         run: |
           node <<'NODE'
           const { chromium } = require('playwright');
+          const vm = require('node:vm');
+          const fs = require('node:fs');
 
           (async () => {
-            const browser = await chromium.launch({ headless: true });
+            let browser;
+            let browserWatchdog;
+            const scriptTrace = { started: [], completed: [] };
+            const stage = name => console.log('E2E_STAGE: ' + name);
+            try {
+            // Isolate the authoritative catalog from browser/CDN loading.
+            const catalogSource = await (await fetch('http://127.0.0.1:4173/assets/ils-tools-catalog.js')).text();
+            const catalogSandbox = { window: {} };
+            vm.runInNewContext(catalogSource, catalogSandbox, { timeout: 2000, filename: 'ils-tools-catalog.js' });
+            const isolatedCatalog = catalogSandbox.window.ILS_TOOL_CATALOG;
+            if (!Array.isArray(isolatedCatalog) || isolatedCatalog.length !== 208) {
+              throw new Error('Catalog isolated preflight failed: ' + (Array.isArray(isolatedCatalog) ? isolatedCatalog.length : typeof isolatedCatalog));
+            }
+            console.log('CATALOG_PREFLIGHT_PASS: 208 tools; isolated script executed within 2s.');
+
+            // Start the watchdog before browser launch/context creation too:
+            // those Playwright startup calls can also stall before a Page exists.
+            browserWatchdog = setTimeout(() => {
+              console.error('BROWSER_WATCHDOG_TIMEOUT: 120s', JSON.stringify(scriptTrace));
+              try { browser?.close().catch(error => console.error('BROWSER_WATCHDOG_CLOSE_FAILURE:', error.message)); } catch (error) {
+                console.error('BROWSER_WATCHDOG_CLOSE_FAILURE:', error.message);
+              }
+              process.exit(124);
+            }, 120000);
+            browserWatchdog.unref();
+            stage('launch chromium');
+            browser = await chromium.launch({ headless: true });
+            stage('create browser context');
             const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' });
+            stage('create browser page');
             const page = await context.newPage();
+            await page.addInitScript(() => {
+              const NativeMutationObserver = window.MutationObserver;
+              let mutationCallbackCount = 0;
+              if (NativeMutationObserver) {
+                window.MutationObserver = class extends NativeMutationObserver {
+                  constructor(callback) {
+                    const label = String(callback).replace(/\\s+/g, ' ').slice(0, 100);
+                    super((records, observer) => {
+                      mutationCallbackCount += 1;
+                      const trace = mutationCallbackCount <= 30;
+                      if (trace) console.log('MO_CALLBACK_STARTED:' + mutationCallbackCount + ':' + records.length + ':' + label);
+                      try { return callback(records, observer); }
+                      finally {
+                        if (trace) console.log('MO_CALLBACK_COMPLETED:' + mutationCallbackCount + ':' + label);
+                      }
+                    });
+                  }
+                };
+              }
+              const originalAdd = EventTarget.prototype.addEventListener;
+              EventTarget.prototype.addEventListener = function(type, listener, options) {
+                if (type !== 'DOMContentLoaded' || typeof listener !== 'function') {
+                  return originalAdd.call(this, type, listener, options);
+                }
+                const label = String(listener).replace(/\\s+/g, ' ').slice(0, 110);
+                const wrapped = function(event) {
+                  console.log('DCL_HANDLER_STARTED:' + label);
+                  try {
+                    const result = listener.call(this, event);
+                    console.log('DCL_HANDLER_COMPLETED:' + label);
+                    return result;
+                  } catch (error) {
+                    console.error('DCL_HANDLER_ERROR:' + label + ' :: ' + (error?.stack || error));
+                    throw error;
+                  }
+                };
+                return originalAdd.call(this, type, wrapped, options);
+              };
+            });
+            page.setDefaultTimeout(10000);
+            page.setDefaultNavigationTimeout(20000);
 
             const failures = [];
-            page.on('pageerror', e => failures.push('pageerror: ' + e.message));
+            page.on('request', request => console.log('BROWSER_REQUEST:', request.method(), request.url()));
+            page.on('requestfinished', request => console.log('BROWSER_REQUEST_FINISHED:', request.url()));
+            page.on('requestfailed', request => {
+              const errorText = request.failure()?.errorText || 'unknown';
+              // The optional Supabase export-price lookup can be aborted by the
+              // deliberate page reload after all tracked scripts have completed.
+              if (errorText === 'net::ERR_ABORTED' && request.url().includes('/rest/v1/services?select=id%2Cslug')) {
+                console.log('EXPECTED_BACKGROUND_REQUEST_ABORTED:', request.url());
+                return;
+              }
+              const message = 'requestfailed: ' + request.url() + ' :: ' + errorText;
+              failures.push(message);
+              console.error('BROWSER_REQUEST_FAILURE:', message);
+            });
+            page.on('response', response => {
+              console.log('BROWSER_RESPONSE:', response.status(), response.url());
+              if (response.status() >= 400) console.error('BROWSER_HTTP_ERROR:', response.status(), response.url());
+            });
+            page.on('domcontentloaded', () => console.log('BROWSER_DOMCONTENTLOADED'));
+            page.on('domcontentloaded', () => console.log('BROWSER_READY_STATE_AT_DOMCONTENTLOADED:', page.url()));
+            page.on('load', () => console.log('BROWSER_READY_STATE_AT_LOAD:', page.url()));
+            page.on('load', () => console.log('BROWSER_LOAD'));
+            page.on('framenavigated', frame => console.log('BROWSER_FRAME_NAVIGATED:', frame.url()));
+            page.on('pageerror', e => {
+              failures.push('pageerror: ' + e.message);
+              console.error('BROWSER_PAGE_ERROR:', e.stack || e.message);
+            });
             page.on('console', m => {
-              if (m.type() === 'error' && !m.text().includes('ILS Service Worker Error')) failures.push('console: ' + m.text());
+              const message = m.text();
+              if (message.startsWith('SCRIPT_BODY_STARTED:')) scriptTrace.started.push(message.slice(19));
+              if (message.startsWith('SCRIPT_BODY_COMPLETED:')) scriptTrace.completed.push(message.slice(22));
+              console.log('BROWSER_CONSOLE_' + m.type().toUpperCase() + ':', message);
+              if (m.type() === 'error' && !message.includes('ILS Service Worker Error')) failures.push('console: ' + message);
             });
 
-            await page.goto(process.env.BASE_URL, { waitUntil: 'networkidle' });
-            await page.reload({ waitUntil: 'networkidle' });
+            const waitForCatalog = async stageName => {
+              stage(stageName);
+              try {
+                await page.waitForFunction(() => Array.isArray(window.ILS_TOOL_CATALOG), null, { timeout: 20000 });
+              } catch (error) {
+                console.error('CATALOG_READINESS_TIMEOUT:', error.message);
+                throw error;
+              }
+            };
+            // Instrument the actual JavaScript response bodies in this test only.
+            await page.route('**/assets/*.js*', async route => {
+              const url = new URL(route.request().url());
+              const script = url.pathname.split('/').pop();
+              const tracked = ['ils-core.js','ils-tools-catalog.js','ils-tools.js','ils-tools-i18n.js','ils-accounting-advanced.js','pwa.js','ils-payments.js'];
+              // Only proxy scripts whose bodies need instrumentation. Let
+              // dynamically loaded, untracked scripts use the normal browser
+              // request path so this test cannot stall their load lifecycle.
+              if (!tracked.includes(script)) {
+                await route.continue();
+                return;
+              }
+              const response = await route.fetch({ timeout: 10000 });
+              if (response.status() >= 400) {
+                await route.fulfill({ response });
+                return;
+              }
+              const source = await response.text();
+              const marker = 'console.log("SCRIPT_BODY_STARTED:' + script + '");\n';
+              const completed = '\n;console.log("SCRIPT_BODY_COMPLETED:' + script + '");';
+              await route.fulfill({ response, body: marker + source + completed });
+            });
+            stage('open tools page');
+            await page.goto(process.env.BASE_URL, { waitUntil: 'commit' });
+            await waitForCatalog('wait for catalog after initial navigation');
+            // All deferred application scripts must have executed before reload.
+            // The dynamically injected global language script and background data
+            // fetches are not prerequisites for the accounting UI regression.
+            const requiredScriptBodies = [
+              'ils-payments.js','ils-core.js','ils-tools-catalog.js','ils-tools.js',
+              'ils-tools-i18n.js','ils-accounting-advanced.js','pwa.js'
+            ];
+            const scriptWaitDeadline = Date.now() + 20000;
+            while (requiredScriptBodies.some(script => !scriptTrace.completed.includes(script))) {
+              if (Date.now() >= scriptWaitDeadline) {
+                const missingScriptBodies = requiredScriptBodies.filter(script => !scriptTrace.completed.includes(script));
+                throw new Error('Tracked application scripts did not complete before reload: ' + missingScriptBodies.join(', '));
+              }
+              await new Promise(resolve => setTimeout(resolve, 25));
+            }
+            stage('all tracked application scripts completed; reload tools page');
+            await page.reload({ waitUntil: 'commit' });
+            await waitForCatalog('wait for catalog after reload');
             const catalogProbe = await page.evaluate(() => ({
               hasCatalog: Array.isArray(window.ILS_TOOL_CATALOG),
               accounting: Array.isArray(window.ILS_TOOL_CATALOG)
@@ -89,6 +242,7 @@ jobs:
                 }
               });
             });
+            stage('verify paid-tier mapping');
             const paidTierChecks = [
               { slug: 'professional-report-guided', amount: 85 },
               { slug: 'professional-report-professional', amount: 125 }
@@ -139,6 +293,7 @@ jobs:
               }
             }
 
+            stage('open profit and loss accounting mode');
             await page.locator('.tool-card .tool-open[data-tool="profit-loss-tool"]').click();
             await page.locator('#plAccountingMode').click();
             const workspace = page.locator('#toolWorkspace');
@@ -178,6 +333,7 @@ jobs:
               throw new Error('Paid PDF/print export option missing');
             }
 
+            stage('verify accounting calculation and paid export tiers');
             // Verify accounting exports use the exact existing main-branch
             // order + Razorpay/QR fallback path. No real payment is made.
             await page.evaluate(() => {
@@ -266,6 +422,7 @@ jobs:
               window.ILS.ready = () => fakeSupabase;
             });
 
+            stage('verify QR proof and report unlock');
             const exportButton = page.locator('.tool-export-buy[data-export-service="accounting-print-basic"]').first();
             await exportButton.click();
 
@@ -322,6 +479,7 @@ jobs:
               throw new Error('Unlocked PDF/print control is not visible'); 
             }
 
+            stage('verify advanced accounting tools');
             // Advanced accounting layer regression: new tools and dedicated workflows.
             for (const slug of ['bank-reconciliation','trial-balance','inventory-valuation','fixed-asset-register','payroll-compliance-estimator']) {
               if (await page.locator('.tool-card .tool-open[data-tool="' + slug + '"]').count() !== 1) {
@@ -330,10 +488,7 @@ jobs:
             }
 
             await page.locator('.tool-card .tool-open[data-tool="trial-balance"]').click();
-            await page.locator('#tbRows').fill('Cash | 100000 | 0
-Sales | 0 | 80000
-Capital | 0 | 50000
-Rent | 30000 | 0');
+            await page.locator('#tbRows').fill('Cash | 100000 | 0\nSales | 0 | 80000\nCapital | 0 | 50000\nRent | 30000 | 0');
             await page.locator('#tbRun').click();
             const tbText = await page.locator('#toolWorkspace').innerText();
             for (const expected of ['Trial Balance','₹80,000.00','Balanced']) {
@@ -352,12 +507,17 @@ Rent | 30000 | 0');
             await page.evaluate(() => { if (window.__ilsOriginalReady) window.ILS.ready = window.__ilsOriginalReady; });
 
             if (failures.length) {
-              throw new Error(failures.join('
-'));
+              throw new Error(failures.join('\n'));
             }
 
             console.log('PASS: Accounting filter, 3 cards, auto-scroll, calculation, and paid PDF tiers verified.');
-            await browser.close();
+            } catch (error) {
+              console.error('ACCOUNTING_E2E_FAILURE:', error && error.stack ? error.stack : error);
+              process.exitCode = 1;
+            } finally {
+              if (browserWatchdog) clearTimeout(browserWatchdog);
+              if (browser) await browser.close().catch(error => console.error('BROWSER_CLOSE_FAILURE:', error.message));
+            }
           })();
           NODE
 
