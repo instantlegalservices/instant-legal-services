@@ -443,7 +443,8 @@ jobs:
                 await new Promise((resolve, rejectError) => {
                   const started = Date.now();
                   const poll = () => {
-                    if ((document.getElementById('appMsg')?.innerText || '').includes('Payment proof rejected')) return resolve();
+                    if ((document.getElementById('appMsg')?.innerText || '').includes('Payment proof rejected') &&
+                        upiProofRows.some(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected')) return resolve();
                     if (Date.now() - started > 12000) return rejectError(new Error('ADMIN_UI_REJECTION_TIMEOUT'));
                     setTimeout(poll, 150);
                   };
