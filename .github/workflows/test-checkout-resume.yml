@@ -276,7 +276,7 @@ jobs:
                 }));
               });
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
-              await page.waitForFunction(() => (document.getElementById('paymentStatus')?.textContent || '').includes('not been verified'), null, { timeout: 5000 });
+              await page.waitForFunction(() => (document.getElementById('paymentStatus')?.textContent || '').includes('Payment/order confirmation was not verified'), null, { timeout: 5000 });
               const result = await page.evaluate(() => ({
                 pending: sessionStorage.getItem('ils_pending_checkout'),
                 status: document.getElementById('paymentStatus')?.textContent || '',
