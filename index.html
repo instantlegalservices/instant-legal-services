@@ -180,13 +180,12 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
 <header class="header">
 <div class="wrap nav">
 <a class="brand" href="/"><img src="assets/ils-logo.jpg" alt="ILS"><div><b>INSTANT LEGAL SERVICES</b><small id="brandTag" data-t="brandTag">कानून समझना • सही रास्ता पाना</small></div></a>
-<nav class="navlinks" id="navLinks">
-<a href="#start" data-t="navProblem">अपनी आवश्यकता बताइए</a><a href="#how" data-t="navHow">आईएलएस कैसे काम करता है</a><a href="tools.html" data-t="navTools">कानूनी उपकरण</a><a href="judgments.html" data-t="navJudgments">न्यायिक निर्णय</a><a href="advocates.html" data-t="navAdv">पेशेवर खोजें</a><a href="assistance.html" data-t="navHelp">सहायता</a>
+<nav class="navlinks" id="navLinks" aria-label="मुख्य ग्राहक नेविगेशन">
+<a href="#start" data-t="navProblem">अपनी आवश्यकता बताइए</a>
+<a href="government/" data-t="officialTitle">सरकारी सेवाएँ</a>
+<a href="judgments.html" data-t="navJudgments">न्यायिक निर्णय</a>
+<a href="assistance.html" data-t="navHelp">कानूनी सहायता</a>
 </nav>
-<div class="nav-quick" aria-label="Professional access">
-<a class="nav-quick-btn join" href="advocate-register.html?v=20260928" data-t="joinNetwork">आईएलएस नेटवर्क से जुड़ें</a>
-<a class="nav-quick-btn login" href="portal.html#login" data-t="signIn">प्रवेश करें</a>
-</div>
 <select id="language" class="lang" aria-label="Language"><option value="hi-IN">हिन्दी</option><option value="en-IN">English</option><option value="hinglish">Hinglish</option><option value="ur-IN">اردو</option><option value="bn-IN">বাংলা</option></select>
 <button class="menu" id="menu" aria-label="Menu" aria-expanded="false" type="button">☰</button><button class="btn btn-ghost btn-small" data-install-app hidden type="button" data-t="installApp">Install App</button>
 </div>
@@ -306,7 +305,7 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
 <div><strong data-t="footerBrand">Instant Legal Services</strong><p data-t="footerDesc">Problem-first legal guidance, public legal information, official-route discovery, tools and professional network coordination.</p><p data-t="footerNote">ILS is not a government portal. Official services, fees and filing decisions remain with the relevant authority or user.</p></div>
 <div><strong data-t="footerExplore">Explore</strong><a href="legal-search.html" data-t="footerLegalSearch">Legal Search</a><a href="judgments.html" data-t="footerJudgments">Judgments</a><a href="law-guide.html" data-t="footerLawGuide">Law Guide</a><a href="tools.html" data-t="footerTools">Tools</a></div>
 <div><strong data-t="footerHelp">Help</strong><a href="assistance.html" data-t="footerAssistance">Legal Assistance</a><a href="advocates.html" data-t="footerAdvocate">Find an Advocate</a><a href="faq.html" data-t="footerFaq">FAQ</a></div>
-<div><strong data-t="footerPortals">Portals</strong><a href="customer-portal.html" data-t="footerClient">Client Login</a><a href="portal.html#login" data-t="footerPortal">Professional Portal</a><a href="admin.html" data-t="footerAdmin">Admin</a></div>
+<div><strong data-t="footerPortals">Portals</strong><a href="customer-portal.html" data-t="footerClient">Client Login</a><a href="advocate-register.html?v=20260928" data-t="joinNetwork">ILS Network Registration</a><a href="portal.html#login" data-t="footerPortal">Professional Portal</a><a href="admin.html" data-t="footerAdmin">Admin</a></div>
 </div></footer>
 
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LegalService","name":"Instant Legal Services","url":"https://instantlegalservices.in/","areaServed":"India","serviceType":["Legal Information","Official Route Navigation","Legal Assistance","Advocate Network"]}</script>
