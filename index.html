@@ -695,7 +695,7 @@ function loadDynamic(){
  const ui=()=>{const d=langText[$("language").value]||langText["hi-IN"];return {view:d.viewAll,profile:d.findAdvocate,loadingJ:d.loadingJudgments,loadingA:d.loadingAdvocates};};
  ILS.judgments({limit:4}).then(rows=>{
   const el=$("judgments"),u=ui();if(!rows?.length){el.innerHTML='<div class="loading">'+u.loadingJ+'</div>';return}
-  el.innerHTML=rows.map(x=>'<article class="dcard"><div class="meta"><span>'+ILS.esc(x.court||"")+'</span><span>'+ILS.esc(ILS.formatDate?.(x.judgment_date)||"")+'</span></div><h3>'+ILS.esc(x.title||x.case_title||"")+'</h3><p>'+ILS.esc(x.summary||x.short_summary||"")+'</p><a class="btn ghost" href="judgment.html?id='+encodeURIComponent(x.id||"")+'">'+u.view+'</a></article>').join("");
+  el.innerHTML=rows.map(x=>'<article class="dcard"><div class="meta"><span>'+ILS.esc(x.court_name||x.court_type||x.court||"")+'</span><span>'+ILS.esc(ILS.formatDate?.(x.judgment_date)||"")+'</span></div><h3>'+ILS.esc(x.title||x.case_title||"")+'</h3><p>'+ILS.esc(x.summary||x.short_summary||"")+'</p><a class="btn ghost" href="judgment.html?id='+encodeURIComponent(x.id||"")+'">'+u.view+'</a></article>').join("");
  }).catch(()=>{$("judgments").innerHTML='<div class="loading">'+ui().loadingJ+'</div>'});
  ILS.advocates({limit:4,featured:true}).then(rows=>{
   const el=$("advocates"),u=ui();if(!rows?.length){el.innerHTML='<div class="loading">'+u.loadingA+'</div>';return}
