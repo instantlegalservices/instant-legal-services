@@ -349,8 +349,7 @@ jobs:
             await page.evaluate(() => { if (window.__ilsOriginalReady) window.ILS.ready = window.__ilsOriginalReady; });
 
             if (failures.length) {
-              throw new Error(failures.join('
-'));
+              throw new Error(failures.join('\\n'));
             }
 
             console.log('PASS: Accounting filter, 3 cards, auto-scroll, calculation, and paid PDF tiers verified.');
