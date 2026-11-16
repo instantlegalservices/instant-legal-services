@@ -233,6 +233,69 @@ jobs:
           });
           NODE
 
+      - name: Reject an unverified checkout callback without clearing saved intent
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const page = await context.newPage();
+              await page.route('**/assets/ils-core.js*', route => route.fulfill({
+                status: 200, contentType: 'application/javascript',
+                body: `window.ILS = { ready: () => null, init: async () => null, esc: v => String(v ?? '') };`
+              }));
+              await page.route('**/assets/ils-payments.js*', route => route.fulfill({
+                status: 200, contentType: 'application/javascript', body: ''
+              }));
+              await page.route('**/assets/ils-tools.js*', route => route.fulfill({
+                status: 200, contentType: 'application/javascript',
+                body: `window.ILS_TOOLS = { createOrder: (slug, details, toolRunId, onPaid) => {
+                  window.__resumeCheckoutCall = { slug, details };
+                  onPaid({ ok: false, order_id: 'mock-unverified-order' });
+                }};`
+              }));
+              await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route => route.fulfill({
+                status: 200, contentType: 'application/javascript',
+                body: `window.supabase = { createClient: () => ({}) };`
+              }));
+              await page.addInitScript(() => {
+                if (location.pathname !== '/assistance.html') return;
+                window.ILS_SUPABASE_URL = 'https://bgsbuepolooybdqrzmoa.supabase.co';
+                window.ILS_SUPABASE_KEY = 'sb_publishable_TEST_ONLY';
+                const returnTo = location.pathname + location.search + location.hash;
+                sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
+                  slug: 'official-route-guidance',
+                  details: { mode: 'guided', problem: 'cyber fraud', route: 'cyber', checkout_intent_id: 'negative-callback-intent' },
+                  checkoutIntentId: 'negative-callback-intent',
+                  toolRunId: null, returnTo, createdAt: Date.now()
+                }));
+              });
+              await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
+              await page.waitForFunction(() => (document.getElementById('paymentStatus')?.textContent || '').includes('not been verified'), null, { timeout: 5000 });
+              const result = await page.evaluate(() => ({
+                pending: sessionStorage.getItem('ils_pending_checkout'),
+                status: document.getElementById('paymentStatus')?.textContent || '',
+                guidance: document.getElementById('guidancePack')?.textContent || ''
+              }));
+              if (!result.pending?.includes('negative-callback-intent')) throw new Error('UNVERIFIED_CALLBACK_CLEARED_PENDING_CHECKOUT');
+              if (/Payment verified|Guidance pack unlocked|Assistance request created/i.test(result.status + ' ' + result.guidance)) {
+                throw new Error('UNVERIFIED_CALLBACK_SHOWED_SUCCESS_OR_UNLOCKED_ACCESS');
+              }
+              console.log('PASS: unverified callback rejected; pending checkout retained; no success message or access unlock.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('UNVERIFIED_CALLBACK_REGRESSION_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
       - name: Verify real unauthenticated checkout resumes to TEST UPI QR
         env:
           BASE_URL: http://127.0.0.1:4173
