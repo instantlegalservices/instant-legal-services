@@ -49,11 +49,25 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
-const SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
-const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+const SUPABASE_URL=window.ILS_SUPABASE_URL || "https://odqebkdzkjfxzyzbrndt.supabase.co";
+const SUPABASE_KEY=window.ILS_SUPABASE_KEY || "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 function status(msg,ok=false){$("status").textContent=msg;$("status").className="status "+(ok?"ok":"err");}
+const returnParam=new URLSearchParams(location.search).get("returnTo");
+function safeReturnTo(value){
+ if(!value)return "";
+ try{
+  const u=new URL(value,location.origin);
+  const allowedPaths=new Set(["/assistance.html","/tools.html"]);
+  if(u.origin!==location.origin||!allowedPaths.has(u.pathname))return "";
+  return u.pathname+u.search+u.hash;
+ }catch(_){return ""}
+}
+const returnTo=safeReturnTo(returnParam);
+function continueAfterAuth(){
+ if(returnTo){$("status").textContent+="\nReturning you to your saved request…";setTimeout(()=>location.replace(returnTo),450);}
+}
 function show(mode){
  const login=mode==="login"; $("loginPanel").classList.toggle("hidden",!login);$("signupPanel").classList.toggle("hidden",login);
  $("tabLogin").classList.toggle("active",login);$("tabSignup").classList.toggle("active",!login);
@@ -72,15 +86,16 @@ $("signupBtn").onclick=async()=>{
    const name=$("signupName").value.trim(),email=$("signupEmail").value.trim(),password=$("signupPassword").value;
    if(!name||!email||!password) throw new Error("Full name, email and password are required.");
    if(password.length<8) throw new Error("Password must be at least 8 characters.");
-   const {data,error}=await sb.auth.signUp({email,password});
+   const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:name,mobile:$("signupMobile").value.trim()||null}}});
    if(error) throw error;
    if(!data.user) throw new Error("AUTH_USER_NOT_CREATED");
    if(data.session){
      const p=await provision(data.user);
      status("Customer account and profile provisioned successfully.\nProfile: "+p.customer_profile_id,true);
+     continueAfterAuth();
      show("login");
    }else{
-     status("Account created. Please complete the email confirmation if required, then sign in here.",true);
+     status("Account created. If email confirmation is required, confirm it, return to the original checkout tab, and sign in there. Your saved request is stored in that tab.",true);
    }
  }catch(e){status(e.message||"Unable to create account.");}
  finally{$("signupBtn").disabled=false;}
@@ -98,9 +113,11 @@ $("loginBtn").onclick=async()=>{
      const {data:p,error:e}=await sb.rpc("provision_customer_profile",{p_full_name:name,p_mobile:null,p_client_requirement_id:null});
      if(e||!p?.ok) throw new Error(e?.message||"CUSTOMER_PROFILE_PROVISION_FAILED");
      status("Signed in. Missing customer profile was safely provisioned.\nProfile: "+p.customer_profile_id,true);
+     continueAfterAuth();
    }else{
      if(profile.status!=="active") throw new Error("CUSTOMER_ACCOUNT_SUSPENDED");
      status("Signed in successfully.\nWelcome, "+profile.full_name+".",true);
+     continueAfterAuth();
    }
  }catch(e){status(e.message||"Unable to sign in.");}
  finally{$("loginBtn").disabled=false;}

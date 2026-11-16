@@ -1,6 +1,6 @@
 window.ILS = (() => {
-  const SUPABASE_URL = "https://odqebkdzkjfxzyzbrndt.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+  const SUPABASE_URL = window.ILS_SUPABASE_URL || "https://odqebkdzkjfxzyzbrndt.supabase.co";
+  const SUPABASE_KEY = window.ILS_SUPABASE_KEY || "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 
   const esc = (v) =>
     String(v ?? "").replace(/[&<>"']/g, (c) => ({

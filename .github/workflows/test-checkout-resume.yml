@@ -1,0 +1,1124 @@
+name: Checkout Resume UI E2E
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "customer-portal.html"
+      - "assistance.html"
+      - "admin.html"
+      - "assets/ils-tools.js"
+      - "assets/ils-core.js"
+      - ".github/workflows/test-checkout-resume.yml"
+
+jobs:
+  checkout-resume:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http.log 2>&1 &
+          echo $! > /tmp/ils-http.pid
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:4173/customer-portal.html > /dev/null
+
+      - name: Verify checkout return and tab-scoped storage
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const page = await context.newPage();
+
+              await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route =>
+                route.fulfill({
+                  status: 200,
+                  contentType: 'application/javascript',
+                  body: `window.supabase = {
+                    createClient: (url, key) => {
+                      window.__supabaseConfig = { url, key };
+                      return {
+                      auth: {
+                        signInWithPassword: async () => ({
+                          data: { user: { id: 'e2e-customer', email: 'e2e@example.test', user_metadata: { full_name: 'E2E Customer' } } },
+                          error: null
+                        }),
+                        signUp: async () => ({ data: { user: { id: 'e2e-customer' }, session: null }, error: null })
+                      },
+                      from: () => ({
+                        select() { return this; },
+                        eq() { return this; },
+                        maybeSingle: async () => ({
+                          data: { id: 'e2e-profile', full_name: 'E2E Customer', status: 'active' },
+                          error: null
+                        })
+                      }),
+                      rpc: async () => ({ data: { ok: true, customer_profile_id: 'e2e-profile' }, error: null })
+                    };
+                    }
+                  };`
+                })
+              );
+
+              const base = process.env.BASE_URL;
+              await page.addInitScript(() => {
+                window.ILS_SUPABASE_URL = 'https://bgsbuepolooybdqrzmoa.supabase.co';
+                window.ILS_SUPABASE_KEY = 'sb_publishable_TEST_ONLY';
+              });
+              await page.goto(base + '/customer-portal.html?returnTo=%2Fassistance.html');
+              const configured = await page.evaluate(() => window.__supabaseConfig);
+              if (configured?.url !== 'https://bgsbuepolooybdqrzmoa.supabase.co' || configured?.key !== 'sb_publishable_TEST_ONLY') {
+                throw new Error('Customer portal did not honor the isolated TEST Supabase runtime configuration.');
+              }
+              await page.evaluate(() => {
+                sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
+                  slug: 'digital-form-assistance',
+                  checkoutIntentId: 'e2e-intent',
+                  createdAt: Date.now()
+                }));
+              });
+
+              // A separate confirmation tab must not destroy the original tab's pending checkout.
+              const confirmationTab = await context.newPage();
+              await confirmationTab.goto(base + '/customer-portal.html');
+              const pendingBefore = await page.evaluate(() => sessionStorage.getItem('ils_pending_checkout'));
+              if (!pendingBefore || !pendingBefore.includes('e2e-intent')) {
+                throw new Error('Original checkout tab lost its pending sessionStorage state.');
+              }
+              await confirmationTab.close();
+
+              await page.locator('#loginEmail').fill('e2e@example.test');
+              await page.locator('#loginPassword').fill('not-a-real-password');
+              await page.locator('#loginBtn').click();
+              await page.waitForURL('**/assistance.html', { timeout: 5000 });
+
+              const pendingAfter = await page.evaluate(() => sessionStorage.getItem('ils_pending_checkout'));
+              if (!pendingAfter || !pendingAfter.includes('e2e-intent')) {
+                throw new Error('Pending checkout state did not survive same-tab sign-in redirect.');
+              }
+
+              const unsafe = await context.newPage();
+              await unsafe.goto(base + '/customer-portal.html?returnTo=' + encodeURIComponent('https://evil.example/steal'));
+              await unsafe.locator('#loginEmail').fill('e2e@example.test');
+              await unsafe.locator('#loginPassword').fill('not-a-real-password');
+              await unsafe.locator('#loginBtn').click();
+              await unsafe.waitForTimeout(700);
+              if (!unsafe.url().startsWith(base + '/customer-portal.html')) {
+                throw new Error('External returnTo was not rejected: ' + unsafe.url());
+              }
+
+              console.log('PASS: same-tab checkout state retained; authenticated return completed; external returnTo rejected.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('CHECKOUT_RESUME_E2E_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Verify assistance page restores the saved checkout intent
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const page = await context.newPage();
+
+              // Keep this test local and deterministic: no Supabase, account, or payment calls.
+              await page.route('**/assets/ils-core.js*', route => route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: `window.ILS = {
+                  ready: () => null,
+                  init: async () => null,
+                  esc: value => String(value ?? '')
+                };`
+              }));
+              await page.route('**/assets/ils-payments.js*', route => route.fulfill({
+                status: 200, contentType: 'application/javascript', body: ''
+              }));
+              await page.route('**/assets/ils-tools.js*', route => route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: `window.ILS_TOOLS = {
+                  createOrder: (slug, details, toolRunId, onPaid, options) => {
+                    window.__resumeCheckoutCall = { slug, details, options };
+                    onPaid({ ok: true, order_id: 'mock-order-id', order_number: 'ILS-MOCK-1' });
+                  }
+                };`
+              }));
+              await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route =>
+                route.fulfill({
+                  status: 200,
+                  contentType: 'application/javascript',
+                  body: `window.supabase = { createClient: (url, key) => {
+                    window.__assistanceSupabaseConfig = { url, key };
+                    return {};
+                  }};`
+                })
+              );
+
+              await page.addInitScript(() => {
+                if (location.pathname !== '/assistance.html') return;
+                window.ILS_SUPABASE_URL = 'https://bgsbuepolooybdqrzmoa.supabase.co';
+                window.ILS_SUPABASE_KEY = 'sb_publishable_TEST_ONLY';
+                const returnTo = location.pathname + location.search + location.hash;
+                sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
+                  slug: 'official-route-guidance',
+                  details: {
+                    mode: 'guided',
+                    problem: 'cyber fraud',
+                    route: 'cyber',
+                    checkout_intent_id: 'resume-e2e-intent'
+                  },
+                  checkoutIntentId: 'resume-e2e-intent',
+                  toolRunId: null,
+                  returnTo,
+                  createdAt: Date.now()
+                }));
+              });
+
+              await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
+              await page.waitForFunction(() => document.getElementById('paymentStatus')?.textContent.includes('Payment verified. Order: ILS-MOCK-1'), null, { timeout: 5000 });
+
+              const config = await page.evaluate(() => window.__assistanceSupabaseConfig);
+              if (config?.url !== 'https://bgsbuepolooybdqrzmoa.supabase.co' || config?.key !== 'sb_publishable_TEST_ONLY') {
+                throw new Error('Assistance page did not honor the isolated TEST Supabase runtime configuration.');
+              }
+
+              const call = await page.evaluate(() => window.__resumeCheckoutCall);
+              if (!call) throw new Error('Assistance page did not invoke the checkout module.');
+              if (call.slug !== 'official-route-guidance') throw new Error('Wrong service slug restored.');
+              if (call.details?.checkout_intent_id !== 'resume-e2e-intent') throw new Error('Checkout intent was not forwarded.');
+              if (call.options?.resumeCheckout !== true || call.options?.forceQr !== true) {
+                throw new Error('Resume checkout options were not preserved.');
+              }
+              const pending = await page.evaluate(() => sessionStorage.getItem('ils_pending_checkout'));
+              if (pending !== null) throw new Error('Saved checkout was not cleared after the simulated paid callback.');
+
+              console.log('PASS: assistance page restored the matching checkout, forwarded its intent and options, and cleared storage only after the simulated paid callback.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('ASSISTANCE_RESUME_E2E_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Reject an unverified checkout callback without clearing saved intent
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const page = await context.newPage();
+              await page.route('**/assets/ils-core.js*', route => route.fulfill({
+                status: 200, contentType: 'application/javascript',
+                body: `window.ILS = { ready: () => null, init: async () => null, esc: v => String(v ?? '') };`
+              }));
+              await page.route('**/assets/ils-payments.js*', route => route.fulfill({
+                status: 200, contentType: 'application/javascript', body: ''
+              }));
+              await page.route('**/assets/ils-tools.js*', route => route.fulfill({
+                status: 200, contentType: 'application/javascript',
+                body: `window.ILS_TOOLS = { createOrder: (slug, details, toolRunId, onPaid) => {
+                  window.__resumeCheckoutCall = { slug, details };
+                  onPaid({ ok: false, order_id: 'mock-unverified-order' });
+                }};`
+              }));
+              await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route => route.fulfill({
+                status: 200, contentType: 'application/javascript',
+                body: `window.supabase = { createClient: () => ({}) };`
+              }));
+              await page.addInitScript(() => {
+                if (location.pathname !== '/assistance.html') return;
+                window.ILS_SUPABASE_URL = 'https://bgsbuepolooybdqrzmoa.supabase.co';
+                window.ILS_SUPABASE_KEY = 'sb_publishable_TEST_ONLY';
+                const returnTo = location.pathname + location.search + location.hash;
+                sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
+                  slug: 'official-route-guidance',
+                  details: { mode: 'guided', problem: 'cyber fraud', route: 'cyber', checkout_intent_id: 'negative-callback-intent' },
+                  checkoutIntentId: 'negative-callback-intent',
+                  toolRunId: null, returnTo, createdAt: Date.now()
+                }));
+              });
+              await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
+              await page.waitForFunction(() => (document.getElementById('paymentStatus')?.textContent || '').includes('Payment/order confirmation was not verified'), null, { timeout: 5000 });
+              const result = await page.evaluate(() => ({
+                pending: sessionStorage.getItem('ils_pending_checkout'),
+                status: document.getElementById('paymentStatus')?.textContent || '',
+                guidance: document.getElementById('guidancePack')?.textContent || ''
+              }));
+              if (!result.pending?.includes('negative-callback-intent')) throw new Error('UNVERIFIED_CALLBACK_CLEARED_PENDING_CHECKOUT');
+              if (/Payment verified|Guidance pack unlocked|Assistance request created/i.test(result.status + ' ' + result.guidance)) {
+                throw new Error('UNVERIFIED_CALLBACK_SHOWED_SUCCESS_OR_UNLOCKED_ACCESS');
+              }
+              console.log('PASS: unverified callback rejected; pending checkout retained; no success message or access unlock.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('UNVERIFIED_CALLBACK_REGRESSION_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Verify real unauthenticated checkout resumes to TEST UPI QR
+        env:
+          BASE_URL: http://127.0.0.1:4173
+          ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
+          ILS_TEST_NONADMIN_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD }}
+          ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+          ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const page = await context.newPage();
+              page.on('pageerror', error => console.error('Checkout page error:', String(error).slice(0, 250)));
+              await page.addInitScript(({ url, key }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+
+              await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber', { waitUntil: 'domcontentloaded' });
+              await page.locator('#payBtn').waitFor({ state: 'visible', timeout: 15000 });
+              await page.locator('#payBtn').click();
+              await page.waitForURL(url => url.pathname === '/customer-portal.html', { timeout: 10000 });
+
+              const saved = await page.evaluate(() => {
+                const raw = sessionStorage.getItem('ils_pending_checkout');
+                if (!raw) return null;
+                try { return JSON.parse(raw); } catch { return null; }
+              });
+              if (!saved?.checkoutIntentId || saved.slug !== 'official-route-guidance') {
+                throw new Error('CHECKOUT_INTENT_NOT_PERSISTED_BEFORE_SIGN_IN');
+              }
+
+              await page.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
+              await page.locator('#loginPassword').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD);
+              await page.locator('#loginBtn').click();
+              await page.waitForURL(url => url.pathname === '/assistance.html' && url.searchParams.get('mode') === 'guided', { timeout: 20000 });
+              await page.waitForFunction(() => {
+                const box = document.getElementById('toolStatus');
+                return !!box?.querySelector('#payNowBtn') || !!box?.innerText?.trim();
+              }, null, { timeout: 20000 });
+              const orderScreen = await page.locator('#toolStatus').innerText().catch(() => '');
+              if (!await page.locator('#payNowBtn').count()) {
+                throw new Error('RESUMED_ORDER_BUTTON_MISSING: ' + (orderScreen || 'No order status displayed').slice(0, 250));
+              }
+              await page.locator('#payNowBtn').click();
+              await page.waitForSelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]', { state: 'visible', timeout: 20000 });
+              await page.waitForFunction(() => {
+                const img = document.querySelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]');
+                return !!img && img.complete && img.naturalWidth > 0;
+              }, null, { timeout: 10000 });
+
+              const result = await page.evaluate(async () => {
+                const raw = sessionStorage.getItem('ils_pending_checkout');
+                if (!raw) return { ok: false, reason: 'PENDING_INTENT_CLEARED_BEFORE_PAYMENT' };
+                const pending = JSON.parse(raw);
+                const authKey = 'sb-bgsbuepolooybdqrzmoa-auth-token';
+                const session = JSON.parse(localStorage.getItem(authKey) || '{}');
+                if (!session.access_token) return { ok: false, reason: 'AUTH_SESSION_MISSING_AFTER_RESUME' };
+                const base = window.ILS_SUPABASE_URL;
+                const headers = {
+                  apikey: window.ILS_SUPABASE_KEY,
+                  Authorization: 'Bearer ' + session.access_token
+                };
+                const userResponse = await fetch(base + '/auth/v1/user', { headers });
+                if (!userResponse.ok) return { ok: false, reason: 'AUTH_USER_HTTP_' + userResponse.status };
+                const user = await userResponse.json();
+                const requestUrl = new URL(base + '/rest/v1/service_requests');
+                requestUrl.searchParams.set('select', 'id,details');
+                requestUrl.searchParams.set('user_id', 'eq.' + user.id);
+                requestUrl.searchParams.set('details->>checkout_intent_id', 'eq.' + pending.checkoutIntentId);
+                const requestResponse = await fetch(requestUrl, { headers });
+                if (!requestResponse.ok) return { ok: false, reason: 'REQUEST_READ_HTTP_' + requestResponse.status };
+                const requests = await requestResponse.json();
+                if (!Array.isArray(requests) || requests.length !== 1) return { ok: false, reason: 'RESUMED_REQUEST_COUNT_' + (requests?.length ?? 'INVALID') };
+
+                const orderUrl = new URL(base + '/rest/v1/orders');
+                orderUrl.searchParams.set('select', 'id,status,service_request_id,total');
+                orderUrl.searchParams.set('user_id', 'eq.' + user.id);
+                orderUrl.searchParams.set('service_request_id', 'eq.' + requests[0].id);
+                const orderResponse = await fetch(orderUrl, { headers });
+                if (!orderResponse.ok) return { ok: false, reason: 'ORDER_READ_HTTP_' + orderResponse.status };
+                const orders = await orderResponse.json();
+                if (!Array.isArray(orders) || orders.length !== 1) return { ok: false, reason: 'RESUMED_ORDER_COUNT_' + (orders?.length ?? 'INVALID') };
+                if (orders[0].status !== 'pending') return { ok: false, reason: 'RESUMED_ORDER_NOT_PENDING' };
+
+                const itemUrl = new URL(base + '/rest/v1/order_items');
+                itemUrl.searchParams.set('select', 'id');
+                itemUrl.searchParams.set('order_id', 'eq.' + orders[0].id);
+                const itemResponse = await fetch(itemUrl, { headers });
+                if (!itemResponse.ok) return { ok: false, reason: 'ORDER_ITEM_READ_HTTP_' + itemResponse.status };
+                const items = await itemResponse.json();
+                if (!Array.isArray(items) || items.length !== 1) return { ok: false, reason: 'RESUMED_ORDER_ITEM_COUNT_' + (items?.length ?? 'INVALID') };
+
+                const proofUrl = new URL(base + '/rest/v1/payment_proofs');
+                proofUrl.searchParams.set('select', 'id');
+                proofUrl.searchParams.set('order_id', 'eq.' + orders[0].id);
+                const proofResponse = await fetch(proofUrl, { headers });
+                if (!proofResponse.ok) return { ok: false, reason: 'PAYMENT_PROOF_READ_HTTP_' + proofResponse.status };
+                const proofs = await proofResponse.json();
+                if (!Array.isArray(proofs) || proofs.length !== 0) return { ok: false, reason: 'UNEXPECTED_PAYMENT_PROOF_EXISTS' };
+
+                window.__ilsTestOrderId = orders[0].id;
+                const qr = document.querySelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]');
+                const screenText = document.getElementById('toolStatus')?.innerText || '';
+                if (!qr || !screenText.includes('8445609837@axl') || !document.getElementById('upiPaidBtn')) {
+                  return { ok: false, reason: 'REAL_UPI_PAYMENT_SCREEN_INCOMPLETE' };
+                }
+                return { ok: true, requestCount: requests.length, orderCount: orders.length, itemCount: items.length, proofCount: proofs.length, status: orders[0].status };
+              });
+
+              if (!result.ok) throw new Error(result.reason);
+
+              // Synthetic TEST-only PNG and transaction reference; no UPI payment is made.
+              await page.locator('#upiTransactionRef').fill('ILSTEST' + Date.now().toString(36).toUpperCase());
+              await page.locator('#upiPayeeName').fill('ILS AUTOMATED TEST - NOT PAID');
+              await page.locator('#upiPaymentScreenshot').setInputFiles({
+                name: 'ils-test-only-not-a-payment.png',
+                mimeType: 'image/png',
+                buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p2cAAAAASUVORK5CYII=', 'base64')
+              });
+              await page.locator('#upiPaidBtn').click();
+              await page.waitForFunction(() => {
+                const b = document.getElementById('upiPaidBtn');
+                const n = document.getElementById('upiPaidNote')?.innerText || '';
+                return b?.textContent?.includes('Proof Submitted') || n.includes('Payment proof submitted');
+              }, null, { timeout: 20000 });
+
+              const proof = await page.evaluate(async () => {
+                const s = JSON.parse(localStorage.getItem('sb-bgsbuepolooybdqrzmoa-auth-token') || '{}');
+                const headers = { apikey: window.ILS_SUPABASE_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' };
+                const base = window.ILS_SUPABASE_URL;
+                const listed = await fetch(base + '/rest/v1/payment_proofs?select=id,order_id,user_id,amount,upi_id,transaction_ref,screenshot_path,screenshot_sha256,mime_type,file_size_bytes,status&order_id=eq.' + encodeURIComponent(window.__ilsTestOrderId), { headers });
+                if (!listed.ok) return { ok: false, reason: 'ADMIN_PROOF_LIST_HTTP_' + listed.status };
+                const rows = await listed.json();
+                const row = Array.isArray(rows) ? rows.find(x => x.order_id === window.__ilsTestOrderId) : null;
+                if (!row || row.status !== 'pending' || !row.transaction_ref.startsWith('ILSTEST')) return { ok: false, reason: 'SYNTHETIC_PROOF_NOT_PENDING' };
+
+                // A second submission for the same order must not create a second pending proof.
+                const duplicate = await fetch(base + '/rest/v1/rpc/ils_submit_upi_payment_proof', {
+                  method: 'POST', headers,
+                  body: JSON.stringify({
+                    p_order_id: row.order_id,
+                    p_amount: row.amount,
+                    p_upi_id: row.upi_id,
+                    p_transaction_ref: 'ILSDUP' + Date.now().toString(36).toUpperCase(),
+                    p_payee_name_claimed: 'ILS DUPLICATE TEST - NOT PAID',
+                    p_screenshot_path: row.screenshot_path,
+                    p_screenshot_sha256: row.screenshot_sha256,
+                    p_mime_type: row.mime_type,
+                    p_file_size_bytes: row.file_size_bytes
+                  })
+                });
+                const duplicateBody = await duplicate.json().catch(() => ({}));
+                if (duplicate.ok || duplicateBody.message !== 'PROOF_ALREADY_PENDING') {
+                  return { ok: false, reason: 'DUPLICATE_PENDING_PROOF_NOT_REJECTED' };
+                }
+                const afterDuplicate = await fetch(base + '/rest/v1/payment_proofs?select=id,order_id,status&order_id=eq.' + encodeURIComponent(row.order_id), { headers });
+                if (!afterDuplicate.ok) return { ok: false, reason: 'PROOF_LIST_AFTER_DUPLICATE_HTTP_' + afterDuplicate.status };
+                const afterRows = await afterDuplicate.json();
+                if (!Array.isArray(afterRows) || afterRows.filter(x => x.order_id === row.order_id).length !== 1) {
+                  return { ok: false, reason: 'DUPLICATE_SUBMISSION_CREATED_EXTRA_PROOF' };
+                }
+
+                const stateResponse = await fetch(base + '/rest/v1/rpc/ils_get_upi_proof_status', {
+                  method: 'POST', headers, body: JSON.stringify({ p_order_id: row.order_id })
+                });
+                if (!stateResponse.ok) return { ok: false, reason: 'PROOF_STATUS_HTTP_' + stateResponse.status };
+                const state = await stateResponse.json();
+                const orderResponse = await fetch(base + '/rest/v1/orders?select=id,status,service_request_id&id=eq.' + row.order_id, { headers });
+                const orders = await orderResponse.json();
+                if (state.proof_status !== 'pending' || state.order_status !== 'pending' || !orders[0] || orders[0].status !== 'pending') return { ok: false, reason: 'PENDING_PROOF_CHANGED_ORDER_STATE' };
+                return { ok: true, proofId: row.id, orderId: row.order_id };
+              });
+              if (!proof.ok) throw new Error(proof.reason);
+              await page.waitForFunction(() => (document.getElementById('upiPaidNote')?.innerText || '').includes('Verification is still pending'), null, { timeout: 15000 });
+              console.log('PASS: synthetic TEST-only proof uploaded and remained pending; no payment or admin decision performed.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('REAL_CHECKOUT_RESUME_QR_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Reject synthetic TEST proof through admin.html
+        env:
+          BASE_URL: http://127.0.0.1:4173
+          ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
+          ILS_TEST_ADMIN_PASSWORD: ${{ secrets.ILS_TEST_ADMIN_PASSWORD }}
+          ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
+          ILS_TEST_NONADMIN_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD }}
+          ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+          ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const page = await browser.newPage();
+              await page.addInitScript(({ url, key }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+              await page.goto(process.env.BASE_URL + '/admin.html', { waitUntil: 'domcontentloaded' });
+              await page.waitForFunction(() => typeof loadUpiProofs === 'function' && typeof isAdmin === 'function');
+              const result = await page.evaluate(async ({ email, password, customerEmail, customerPassword }) => {
+                if (SUPABASE_URL !== 'https://bgsbuepolooybdqrzmoa.supabase.co') return { ok: false, reason: 'ADMIN_NOT_POINTING_TO_TEST' };
+                const { error } = await sb.auth.signInWithPassword({ email, password });
+                if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED: ' + String(error.message || 'unknown auth error').slice(0, 180) };
+                const auth = await isAdmin();
+                if (!auth.ok) return { ok: false, reason: 'TEST_ADMIN_AUTHORIZATION_FAILED' };
+                document.getElementById('upiProofStatusFilter').value = 'pending';
+                await loadUpiProofs();
+                const body = document.getElementById('upiProofBody');
+                const row = Array.from(body.querySelectorAll('tr')).find(tr => tr.innerText.includes('ILSTEST'));
+                if (!row || !row.innerText.toLowerCase().includes('pending')) return { ok: false, reason: 'PENDING_TEST_PROOF_NOT_RENDERED' };
+
+                // The private object and admin RPC must not be available to an anonymous visitor.
+                const proofRow = upiProofRows.find(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending');
+                if (!proofRow?.screenshot_path) return { ok: false, reason: 'PENDING_TEST_PROOF_PATH_MISSING' };
+                const objectPath = proofRow.screenshot_path.split('/').map(encodeURIComponent).join('/');
+                const anonymousObject = await fetch(SUPABASE_URL + '/storage/v1/object/payment-proofs/' + objectPath, {
+                  headers: { apikey: window.ILS_SUPABASE_KEY },
+                  cache: 'no-store'
+                });
+                if (anonymousObject.ok) return { ok: false, reason: 'PRIVATE_PROOF_OBJECT_READABLE_ANONYMOUSLY' };
+                const anonymousAdminRpc = await fetch(SUPABASE_URL + '/rest/v1/rpc/ils_admin_upi_payment_proofs', {
+                  method: 'POST',
+                  headers: { apikey: window.ILS_SUPABASE_KEY, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ p_limit: 10 })
+                });
+                if (anonymousAdminRpc.ok) return { ok: false, reason: 'ADMIN_PROOF_RPC_EXECUTABLE_ANONYMOUSLY' };
+
+                const view = row.querySelector('.upiProofView');
+                if (!view) return { ok: false, reason: 'PENDING_TEST_PROOF_VIEW_MISSING' };
+                window.__ilsSignedProofOpened = '';
+                window.open = url => { window.__ilsSignedProofOpened = String(url || ''); return null; };
+                view.click();
+                await new Promise((resolve, rejectError) => {
+                  const started = Date.now();
+                  const poll = () => {
+                    const buttonReady = view.textContent.trim() === 'View' && !view.disabled;
+                    const message = document.getElementById('appMsg')?.innerText || '';
+                    if (message.includes('Screenshot access failed:')) {
+                      return rejectError(new Error('ADMIN_PRIVATE_SCREENSHOT_ACCESS_FAILED: ' + message));
+                    }
+                    if (buttonReady && window.__ilsSignedProofOpened.startsWith('https://')) return resolve();
+                    if (Date.now() - started > 15000) {
+                      return rejectError(new Error('ADMIN_PRIVATE_SCREENSHOT_ACCESS_TIMEOUT: ' + message));
+                    }
+                    setTimeout(poll, 150);
+                  };
+                  poll();
+                });
+                window.prompt = () => 'TEST ONLY: synthetic screenshot; no payment occurred.';
+                const reject = row.querySelector('.upiProofVerify[data-decision="rejected"]');
+                if (!reject) return { ok: false, reason: 'ADMIN_REJECT_BUTTON_MISSING' };
+                reject.click();
+                await new Promise((resolve, rejectError) => {
+                  const started = Date.now();
+                  const poll = () => {
+                    if ((document.getElementById('appMsg')?.innerText || '').includes('Payment proof rejected') &&
+                        upiProofRows.some(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected')) return resolve();
+                    if (Date.now() - started > 12000) return rejectError(new Error('ADMIN_UI_REJECTION_TIMEOUT'));
+                    setTimeout(poll, 150);
+                  };
+                  poll();
+                });
+                // Reject any stale ILSTEST-only pending proofs left by earlier interrupted CI attempts.
+                for (const stale of upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
+                  const cleanup = await sb.rpc('ils_admin_verify_upi_payment_proof', {
+                    p_proof_id: stale.id,
+                    p_decision: 'rejected',
+                    p_notes: 'TEST cleanup only: synthetic ILSTEST proof from interrupted CI; no payment occurred.'
+                  });
+                  // Another parallel CI attempt may have decided the same proof; the fresh list below is authoritative.
+                }
+                await loadUpiProofs();
+                if (upiProofRows.some(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
+                  return { ok: false, reason: 'SYNTHETIC_PENDING_PROOFS_REMAIN' };
+                }
+                const proof = upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected').sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0))[0];
+                if (!proof) return { ok: false, reason: 'ADMIN_UI_DID_NOT_REFRESH_REJECTED_PROOF' };
+                // This browser is authenticated as the admin, not as the order owner.
+                // Verify both states from the admin-only proof listing, which includes order_status.
+                if (proof.status !== 'rejected' || proof.order_status !== 'pending') {
+                  return { ok: false, reason: 'ADMIN_UI_REJECTION_UNLOCKED_ORDER: proof=' + proof.status + ', order=' + proof.order_status };
+                }
+                // Storage submission RPC is owner-scoped. Keep admin UI review above,
+                // then authenticate the owning TEST customer for the negative guard cases.
+                const customerLogin = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+                  method: 'POST',
+                  headers: { apikey: window.ILS_SUPABASE_KEY, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    email: customerEmail,
+                    password: customerPassword
+                  })
+                });
+                const customerSession = await customerLogin.json().catch(() => ({}));
+                if (!customerLogin.ok || !customerSession.access_token || customerSession.user?.id !== proof.user_id) {
+                  return { ok: false, reason: 'STORAGE_GUARD_CUSTOMER_AUTH_OR_OWNERSHIP_FAILED' };
+                }
+                const customerHeaders = {
+                  apikey: window.ILS_SUPABASE_KEY,
+                  Authorization: 'Bearer ' + customerSession.access_token,
+                  'Content-Type': 'application/json'
+                };
+                const submitAttempt = async (overrides) => {
+                  const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/ils_submit_upi_payment_proof', {
+                    method: 'POST',
+                    headers: customerHeaders,
+                    body: JSON.stringify({
+                      p_order_id: proof.order_id,
+                      p_amount: proof.amount,
+                      p_upi_id: proof.upi_id,
+                      p_transaction_ref: 'ILSGUARD' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase(),
+                      p_payee_name_claimed: 'ILS INTEGRITY TEST - NOT PAID',
+                      p_screenshot_path: proof.screenshot_path,
+                      p_screenshot_sha256: proof.screenshot_sha256,
+                      p_mime_type: proof.mime_type,
+                      p_file_size_bytes: proof.file_size_bytes,
+                      ...overrides
+                    })
+                  });
+                  const body = await response.json().catch(() => ({}));
+                  return { data: body, error: response.ok ? null : { message: body.message || body.details || 'HTTP_' + response.status } };
+                };
+                const badSize = await submitAttempt({ p_file_size_bytes: proof.file_size_bytes + 1 });
+                if (!badSize.error?.message?.includes('PAYMENT_PROOF_SIZE_MISMATCH')) {
+                  return { ok: false, reason: 'ACTUAL_STORAGE_SIZE_MISMATCH_NOT_REJECTED: ' + (badSize.error?.message || 'RPC unexpectedly succeeded') };
+                }
+                const badMime = await submitAttempt({ p_mime_type: 'image/jpeg' });
+                if (!badMime.error?.message?.includes('PAYMENT_PROOF_TYPE_MISMATCH')) {
+                  return { ok: false, reason: 'ACTUAL_STORAGE_MIME_MISMATCH_NOT_REJECTED: ' + (badMime.error?.message || 'RPC unexpectedly succeeded') };
+                }
+                const missingObject = await submitAttempt({
+                  p_screenshot_path: proof.screenshot_path.split('/').slice(0, -1).concat('not-uploaded.png').join('/')
+                });
+                if (!missingObject.error?.message?.includes('PAYMENT_PROOF_OBJECT_NOT_FOUND')) {
+                  return { ok: false, reason: 'MISSING_STORAGE_OBJECT_NOT_REJECTED: ' + (missingObject.error?.message || 'RPC unexpectedly succeeded') };
+                }
+
+                return { ok: true };
+              }, {
+                email: process.env.ILS_TEST_ADMIN_EMAIL,
+                password: process.env.ILS_TEST_ADMIN_PASSWORD,
+                customerEmail: process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL,
+                customerPassword: process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD
+              });
+              if (!result.ok) throw new Error(result.reason);
+              console.log('PASS: admin.html displayed pending synthetic proof, opened its private screenshot, rejected it through the UI, and kept the order unpaid/pending.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('ADMIN_UI_REJECTION_E2E_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Verify synthetic TEST payment through admin UI and unlock customer access
+        env:
+          BASE_URL: http://127.0.0.1:4173
+          ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
+          ILS_TEST_ADMIN_PASSWORD: ${{ secrets.ILS_TEST_ADMIN_PASSWORD }}
+          ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
+          ILS_TEST_NONADMIN_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD }}
+          ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+          ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const customer = await context.newPage();
+              await customer.addInitScript(({ url, key }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+              // Trigger the init script on a real same-origin document before using the configured TEST URL.
+              await customer.goto(process.env.BASE_URL + '/customer-portal.html', { waitUntil: 'domcontentloaded' });
+
+              // Create a fresh, explicitly synthetic TEST order owned by the non-admin customer.
+              const fixture = await customer.evaluate(async ({ email, password }) => {
+                const base = window.ILS_SUPABASE_URL, key = window.ILS_SUPABASE_KEY;
+                const login = await fetch(base + '/auth/v1/token?grant_type=password', {
+                  method: 'POST',
+                  headers: { apikey: key, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, password })
+                });
+                const session = await login.json().catch(() => ({}));
+                if (!login.ok || !session.access_token || !session.user?.id) return { ok: false, reason: 'TEST_CUSTOMER_LOGIN_FAILED' };
+                const headers = { apikey: key, Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' };
+                const intent = 'ci-positive-' + crypto.randomUUID();
+                const created = await fetch(base + '/rest/v1/rpc/ils_create_service_order', {
+                  method: 'POST', headers,
+                  body: JSON.stringify({
+                    p_service_slug: 'official-route-guidance',
+                    p_details: {
+                      mode: 'guided', problem: 'TEST ONLY - synthetic payment verification',
+                      route: 'cyber', checkout_intent_id: intent,
+                      test_run: true, source: 'github-actions-positive-verification'
+                    },
+                    p_tool_run_id: null
+                  })
+                });
+                const order = await created.json().catch(() => ({}));
+                if (!created.ok || !order.ok || !order.order_id || order.status !== 'pending') {
+                  return { ok: false, reason: 'SYNTHETIC_TEST_ORDER_CREATE_FAILED: ' + (order.message || created.status) };
+                }
+
+                // Upload a tiny valid PNG fixture to the private TEST bucket; no bank/UPI payment is made.
+                const path = session.user.id + '/' + order.order_id + '/ils-positive-test.png';
+                const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p2cAAAAASUVORK5CYII=';
+                const binary = Uint8Array.from(atob(pngBase64), c => c.charCodeAt(0));
+                const upload = await fetch(base + '/storage/v1/object/payment-proofs/' + path.split('/').map(encodeURIComponent).join('/'), {
+                  method: 'POST',
+                  headers: { apikey: key, Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'image/png', 'x-upsert': 'false' },
+                  body: binary
+                });
+                if (!upload.ok) return { ok: false, reason: 'SYNTHETIC_TEST_STORAGE_UPLOAD_FAILED_' + upload.status };
+
+                const digest = await crypto.subtle.digest('SHA-256', binary);
+                const hash = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+                const reference = 'ILSPOS' + Date.now().toString(36).toUpperCase() + crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
+                const submitted = await fetch(base + '/rest/v1/rpc/ils_submit_upi_payment_proof', {
+                  method: 'POST', headers,
+                  body: JSON.stringify({
+                    p_order_id: order.order_id, p_amount: order.amount, p_upi_id: '8445609837@axl',
+                    p_transaction_ref: reference, p_payee_name_claimed: 'ILS TEST FIXTURE - NOT PAID',
+                    p_screenshot_path: path, p_screenshot_sha256: hash,
+                    p_mime_type: 'image/png', p_file_size_bytes: binary.byteLength
+                  })
+                });
+                const proof = await submitted.json().catch(() => ({}));
+                if (!submitted.ok || !proof.ok || proof.status !== 'pending') {
+                  return { ok: false, reason: 'SYNTHETIC_TEST_PROOF_SUBMISSION_FAILED: ' + (proof.message || submitted.status) };
+                }
+                return { ok: true, orderId: order.order_id, proofId: proof.proof_id, intent, reference };
+              }, {
+                email: process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL,
+                password: process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD
+              });
+              if (!fixture.ok) throw new Error(fixture.reason);
+
+              // Verify only the fresh ILSPOS fixture through the actual admin.html UI.
+              const admin = await context.newPage();
+              await admin.addInitScript(({ url, key }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+              await admin.goto(process.env.BASE_URL + '/admin.html', { waitUntil: 'domcontentloaded' });
+              await admin.waitForFunction(() => typeof loadUpiProofs === 'function' && typeof isAdmin === 'function');
+              const adminResult = await admin.evaluate(async ({ email, password, proofId, orderId }) => {
+                if (SUPABASE_URL !== 'https://bgsbuepolooybdqrzmoa.supabase.co') return { ok: false, reason: 'ADMIN_NOT_POINTING_TO_TEST' };
+                const { error } = await sb.auth.signInWithPassword({ email, password });
+                if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED' };
+                const authorization = await isAdmin();
+                if (!authorization.ok) return { ok: false, reason: 'TEST_ADMIN_AUTHORIZATION_FAILED' };
+                document.getElementById('upiProofStatusFilter').value = 'pending';
+                await loadUpiProofs();
+                const proof = upiProofRows.find(row => row.id === proofId && row.status === 'pending' && row.order_id === orderId);
+                if (!proof) return { ok: false, reason: 'FRESH_SYNTHETIC_PROOF_NOT_IN_ADMIN_QUEUE' };
+                const button = document.querySelector('.upiProofVerify[data-proof-id="' + proofId + '"][data-decision="verified"]');
+                if (!button) return { ok: false, reason: 'ADMIN_VERIFY_ACTION_MISSING' };
+                window.confirm = () => true;
+                window.prompt = () => 'TEST ONLY: synthetic fixture; no UPI payment occurred.';
+                button.click();
+                const started = Date.now();
+                while (Date.now() - started < 15000) {
+                  if ((document.getElementById('appMsg')?.innerText || '').includes('Payment proof verified')) break;
+                  await new Promise(resolve => setTimeout(resolve, 150));
+                }
+                await loadUpiProofs();
+                const decided = upiProofRows.find(row => row.id === proofId);
+                if (!decided || decided.status !== 'verified' || decided.order_status !== 'paid') {
+                  return { ok: false, reason: 'ADMIN_UI_DID_NOT_ATOMICALLY_VERIFY_AND_MARK_ORDER_PAID' };
+                }
+                return { ok: true };
+              }, {
+                email: process.env.ILS_TEST_ADMIN_EMAIL,
+                password: process.env.ILS_TEST_ADMIN_PASSWORD,
+                proofId: fixture.proofId, orderId: fixture.orderId
+              });
+              if (!adminResult.ok) throw new Error(adminResult.reason);
+
+              // Sign in as the order owner and let the real customer portal resume the paid order.
+              await customer.addInitScript(({ url, key, intent }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+                if (location.pathname === '/customer-portal.html') {
+                  const returnTo = '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber';
+                  sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
+                    slug: 'official-route-guidance',
+                    details: {
+                      mode: 'guided', problem: 'TEST ONLY - synthetic payment verification',
+                      route: 'cyber', checkout_intent_id: intent
+                    },
+                    checkoutIntentId: intent, toolRunId: null, returnTo, createdAt: Date.now()
+                  }));
+                }
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY, intent: fixture.intent });
+              await customer.goto(process.env.BASE_URL + '/customer-portal.html?returnTo=' + encodeURIComponent('/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber'), { waitUntil: 'domcontentloaded' });
+              await customer.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
+              await customer.locator('#loginPassword').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD);
+              await customer.locator('#loginBtn').click();
+              await customer.waitForURL(url => url.pathname === '/assistance.html', { timeout: 20000 });
+              await customer.waitForFunction(() =>
+                (document.getElementById('paymentStatus')?.innerText || '').includes('Payment verified.') &&
+                (document.getElementById('guidancePack')?.innerText || '').includes('Guidance pack unlocked'),
+                null, { timeout: 15000 }
+              );
+              const customerResult = await customer.evaluate(() => ({
+                status: document.getElementById('paymentStatus')?.innerText || '',
+                guidance: document.getElementById('guidancePack')?.innerText || '',
+                pendingCheckout: sessionStorage.getItem('ils_pending_checkout')
+              }));
+              if (customerResult.pendingCheckout !== null) throw new Error('PAID_CHECKOUT_INTENT_NOT_CLEARED_AFTER_CONFIRMED_UNLOCK');
+              console.log('PASS: synthetic TEST proof verified through admin UI; order and service request paid; customer portal resumed the order and unlocked guidance. No real payment occurred.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('POSITIVE_PAYMENT_VERIFICATION_E2E_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Stop local site
+        if: always()
+        run: |
+          if [ -f /tmp/ils-http.pid ]; then kill "$(cat /tmp/ils-http.pid)" || true; fi
+
+  authenticated-test-customer:
+    name: Authenticated TEST customer smoke test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      BASE_URL: http://127.0.0.1:4173
+      ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
+      ILS_TEST_NONADMIN_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD }}
+      ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+      ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
+    steps:
+      - name: Require protected TEST customer credentials
+        shell: bash
+        run: |
+          if [[ -z "$ILS_TEST_NONADMIN_CUSTOMER_EMAIL" || -z "$ILS_TEST_NONADMIN_CUSTOMER_PASSWORD" ]]; then
+            echo "::error::Configure ILS_TEST_NONADMIN_CUSTOMER_EMAIL and ILS_TEST_NONADMIN_CUSTOMER_PASSWORD in repository Actions secrets."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http-auth.log 2>&1 &
+          echo $! > /tmp/ils-http-auth.pid
+          sleep 2
+          curl --fail --silent --show-error "$BASE_URL/customer-portal.html" > /dev/null
+
+      - name: Sign in against real TEST Supabase and verify customer profile
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const page = await context.newPage();
+              page.on('console', msg => {
+                if (msg.type() === 'error') console.error('Browser console error:', msg.text().slice(0, 300));
+              });
+              page.on('pageerror', error => console.error('Browser page error:', String(error).slice(0, 300)));
+
+              await page.addInitScript(({ url, key }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+
+              await page.goto(process.env.BASE_URL + '/customer-portal.html?returnTo=%2Fassistance.html', { waitUntil: 'domcontentloaded' });
+              await page.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
+              await page.locator('#loginPassword').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD);
+              await page.locator('#loginBtn').click();
+
+              await page.waitForFunction(() => {
+                const status = document.getElementById('status')?.textContent?.trim() || '';
+                return location.pathname === '/assistance.html' || (status.length > 0 && status !== 'Ready.');
+              }, null, { timeout: 20000 });
+
+              if (new URL(page.url()).pathname !== '/assistance.html') {
+                const signInStatus = (await page.locator('#status').textContent().catch(() => 'No sign-in status returned.')).trim();
+                if (signInStatus.startsWith('Signed in') || signInStatus.startsWith('Customer account and profile provisioned successfully.')) {
+                  await page.waitForURL(url => url.pathname === '/assistance.html', { timeout: 7000 });
+                } else {
+                const signInStatus = (await page.locator('#status').textContent().catch(() => 'No sign-in status returned.')).trim();
+                  throw new Error('TEST_SIGN_IN_REJECTED: ' + (signInStatus || 'No sign-in status returned.'));
+                }
+              }
+
+              const verification = await page.evaluate(async () => {
+                const keys = Object.keys(localStorage);
+                const authKey = keys.find(key => key === 'sb-bgsbuepolooybdqrzmoa-auth-token');
+                if (!authKey) return { ok: false, reason: 'AUTH_SESSION_NOT_PERSISTED' };
+                let session;
+                try { session = JSON.parse(localStorage.getItem(authKey) || '{}'); }
+                catch { return { ok: false, reason: 'AUTH_SESSION_INVALID' }; }
+                if (!session.access_token) return { ok: false, reason: 'ACCESS_TOKEN_MISSING' };
+
+                const base = window.ILS_SUPABASE_URL;
+                const headers = {
+                  apikey: window.ILS_SUPABASE_KEY,
+                  Authorization: 'Bearer ' + session.access_token
+                };
+                const userResponse = await fetch(base + '/auth/v1/user', { headers });
+                if (!userResponse.ok) return { ok: false, reason: 'AUTH_USER_ENDPOINT_' + userResponse.status };
+                const user = await userResponse.json();
+                if (!user.id) return { ok: false, reason: 'AUTH_USER_ID_MISSING' };
+
+                const profileUrl = base + '/rest/v1/customer_profiles?select=id,status&user_id=eq.' + encodeURIComponent(user.id);
+                const profileResponse = await fetch(profileUrl, { headers });
+                if (!profileResponse.ok) return { ok: false, reason: 'PROFILE_ENDPOINT_' + profileResponse.status };
+                const profiles = await profileResponse.json();
+                if (!Array.isArray(profiles) || profiles.length !== 1) {
+                  return { ok: false, reason: 'CUSTOMER_PROFILE_NOT_UNIQUE' };
+                }
+                if (profiles[0].status !== 'active') return { ok: false, reason: 'CUSTOMER_PROFILE_NOT_ACTIVE' };
+
+                // A normal authenticated customer must not access admin-only proof RPCs.
+                const adminListResponse = await fetch(base + '/rest/v1/rpc/ils_admin_upi_payment_proofs', {
+                  method: 'POST',
+                  headers: { ...headers, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ p_limit: 10 })
+                });
+                let adminListBody = {};
+                try { adminListBody = await adminListResponse.json(); } catch {}
+                if (adminListResponse.ok || adminListBody.message !== 'ADMIN_REQUIRED') {
+                  return { ok: false, reason: 'NONADMIN_PROOF_LIST_NOT_BLOCKED' };
+                }
+
+                const adminVerifyResponse = await fetch(base + '/rest/v1/rpc/ils_admin_verify_upi_payment_proof', {
+                  method: 'POST',
+                  headers: { ...headers, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    p_proof_id: crypto.randomUUID(),
+                    p_decision: 'verified',
+                    p_notes: 'Automated non-admin authorization test'
+                  })
+                });
+                let adminVerifyBody = {};
+                try { adminVerifyBody = await adminVerifyResponse.json(); } catch {}
+                if (adminVerifyResponse.ok || adminVerifyBody.message !== 'ADMIN_REQUIRED') {
+                  return { ok: false, reason: 'NONADMIN_PROOF_VERIFY_NOT_BLOCKED' };
+                }
+
+                const intent = 'ci-' + crypto.randomUUID();
+                const rpcUrl = base + '/rest/v1/rpc/ils_create_service_order';
+                const rpcBody = {
+                  p_service_slug: 'digital-form-assistance',
+                  p_details: { checkout_intent_id: intent, test_run: true, source: 'github-actions-authenticated-idempotency' },
+                  p_tool_run_id: null
+                };
+                const createOrder = async () => {
+                  const response = await fetch(rpcUrl, {
+                    method: 'POST',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(rpcBody)
+                  });
+                  if (!response.ok) return { error: 'ORDER_RPC_HTTP_' + response.status };
+                  return await response.json();
+                };
+                const first = await createOrder();
+                if (first.error || !first.ok || !first.order_id) {
+                  return { ok: false, reason: first.error || 'FIRST_ORDER_CREATE_FAILED' };
+                }
+                const second = await createOrder();
+                if (second.error || !second.ok || second.order_id !== first.order_id) {
+                  return { ok: false, reason: second.error || 'CHECKOUT_IDEMPOTENCY_ORDER_ID_MISMATCH' };
+                }
+
+                // A checkout token must never be reused to switch the purchased service.
+                const conflictResponse = await fetch(rpcUrl, {
+                  method: 'POST',
+                  headers: { ...headers, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    ...rpcBody,
+                    p_service_slug: 'official-route-guidance'
+                  })
+                });
+                let conflictBody = {};
+                try { conflictBody = await conflictResponse.json(); } catch {}
+                if (conflictResponse.ok || conflictBody.message !== 'CHECKOUT_INTENT_CONFLICT') {
+                  return { ok: false, reason: 'CHECKOUT_INTENT_SERVICE_CONFLICT_NOT_REJECTED' };
+                }
+
+                const requestUrl = new URL(base + '/rest/v1/service_requests');
+                requestUrl.searchParams.set('select', 'id,service_id,details');
+                requestUrl.searchParams.set('user_id', 'eq.' + user.id);
+                requestUrl.searchParams.set('details->>checkout_intent_id', 'eq.' + intent);
+                const requestResponse = await fetch(requestUrl, { headers });
+                if (!requestResponse.ok) return { ok: false, reason: 'SERVICE_REQUEST_VERIFY_HTTP_' + requestResponse.status };
+                const requests = await requestResponse.json();
+                if (!Array.isArray(requests) || requests.length !== 1) {
+                  return { ok: false, reason: 'CHECKOUT_IDEMPOTENCY_REQUEST_COUNT_' + (requests?.length ?? 'INVALID') };
+                }
+
+                const orderUrl = new URL(base + '/rest/v1/orders');
+                orderUrl.searchParams.set('select', 'id,service_request_id,status');
+                orderUrl.searchParams.set('user_id', 'eq.' + user.id);
+                orderUrl.searchParams.set('service_request_id', 'eq.' + requests[0].id);
+                const orderResponse = await fetch(orderUrl, { headers });
+                if (!orderResponse.ok) return { ok: false, reason: 'ORDER_VERIFY_HTTP_' + orderResponse.status };
+                const orders = await orderResponse.json();
+                if (!Array.isArray(orders) || orders.length !== 1 || orders[0].id !== first.order_id) {
+                  return { ok: false, reason: 'CHECKOUT_IDEMPOTENCY_ORDER_COUNT_' + (orders?.length ?? 'INVALID') };
+                }
+
+                const itemUrl = new URL(base + '/rest/v1/order_items');
+                itemUrl.searchParams.set('select', 'id,order_id');
+                itemUrl.searchParams.set('order_id', 'eq.' + first.order_id);
+                const itemResponse = await fetch(itemUrl, { headers });
+                if (!itemResponse.ok) return { ok: false, reason: 'ORDER_ITEM_VERIFY_HTTP_' + itemResponse.status };
+                const items = await itemResponse.json();
+                if (!Array.isArray(items) || items.length !== 1) {
+                  return { ok: false, reason: 'CHECKOUT_IDEMPOTENCY_ITEM_COUNT_' + (items?.length ?? 'INVALID') };
+                }
+                if (orders[0].status !== 'pending') return { ok: false, reason: 'TEST_ORDER_NOT_PENDING' };
+                return { ok: true, idempotency: true, unpaid: true };
+
+              });
+
+              if (!verification.ok) throw new Error(verification.reason);
+              console.log('PASS: non-admin TEST customer authenticated, own customer profile passed RLS, admin-only proof RPCs were denied, and checkout idempotency assertions passed.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('REAL_TEST_CUSTOMER_AUTH_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Verify admin payment-proof UI against TEST only
+        env:
+          BASE_URL: http://127.0.0.1:4173
+          ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
+          ILS_TEST_ADMIN_PASSWORD: ${{ secrets.ILS_TEST_ADMIN_PASSWORD }}
+          ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+          ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const page = await browser.newPage();
+              await page.addInitScript(({ url, key }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+              await page.goto(process.env.BASE_URL + '/admin.html', { waitUntil: 'domcontentloaded' });
+              await page.waitForFunction(() => typeof loadUpiProofs === 'function' && typeof isAdmin === 'function');
+              const result = await page.evaluate(async ({ email, password }) => {
+                if (SUPABASE_URL !== 'https://bgsbuepolooybdqrzmoa.supabase.co') return { ok: false, reason: 'ADMIN_NOT_POINTING_TO_TEST' };
+                const { error } = await sb.auth.signInWithPassword({ email, password });
+                if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED' };
+                const check = await isAdmin();
+                if (!check.ok) return { ok: false, reason: 'TEST_ADMIN_AUTHZ_FAILED' };
+                document.getElementById('upiProofStatusFilter').value = 'rejected';
+                await loadUpiProofs();
+                const body = document.getElementById('upiProofBody');
+                const text = body?.innerText || '';
+                const row = body?.querySelector('tr');
+                if (!text.includes('ILSTEST') || !text.toLowerCase().includes('rejected')) return { ok: false, reason: 'REJECTED_PROOF_NOT_RENDERED_IN_ADMIN_UI' };
+                if (body.querySelectorAll('.upiProofVerify').length !== 0) return { ok: false, reason: 'DECISION_ACTIONS_SHOWN_FOR_ALREADY_REJECTED_PROOF' };
+                const view = body.querySelector('.upiProofView');
+                if (!view) return { ok: false, reason: 'ADMIN_PROOF_VIEW_ACTION_MISSING' };
+                window.__ilsSignedProofOpened = '';
+                window.open = url => { window.__ilsSignedProofOpened = String(url || ''); return null; };
+                view.click();
+                return { ok: true, rowCount: body.querySelectorAll('tr').length };
+              }, { email: process.env.ILS_TEST_ADMIN_EMAIL, password: process.env.ILS_TEST_ADMIN_PASSWORD });
+              if (!result.ok) throw new Error(result.reason);
+              await page.waitForFunction(() => !!window.__ilsSignedProofOpened, null, { timeout: 12000 });
+              const signedUrl = await page.evaluate(() => window.__ilsSignedProofOpened);
+              if (!signedUrl.startsWith('https://')) throw new Error('ADMIN_SIGNED_SCREENSHOT_URL_INVALID');
+              console.log('PASS: real TEST admin session rendered rejected proof in admin.html, hid decision actions for decided proof, and opened a private signed screenshot URL.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('ADMIN_PROOF_UI_TEST_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Stop local site
+        if: always()
+        run: |
+          if [ -f /tmp/ils-http-auth.pid ]; then kill "$(cat /tmp/ils-http-auth.pid)" || true; fi

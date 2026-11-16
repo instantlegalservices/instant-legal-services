@@ -428,8 +428,8 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 </div>
 
 <script>
-const SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
-const SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+const SUPABASE_URL=window.ILS_SUPABASE_URL || "https://odqebkdzkjfxzyzbrndt.supabase.co";
+const SUPABASE_KEY=window.ILS_SUPABASE_KEY || "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
 const $=id=>document.getElementById(id);

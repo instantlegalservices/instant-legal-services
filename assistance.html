@@ -9,8 +9,8 @@
 <link rel="stylesheet" href="assets/ils.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2';"></script>
 <script>
-window.ILS_SUPABASE_URL="https://odqebkdzkjfxzyzbrndt.supabase.co";
-window.ILS_SUPABASE_KEY="sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+window.ILS_SUPABASE_URL=window.ILS_SUPABASE_URL || "https://odqebkdzkjfxzyzbrndt.supabase.co";
+window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY || "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 if(window.supabase && !window.supabaseClient){window.supabaseClient=window.supabase.createClient(window.ILS_SUPABASE_URL,window.ILS_SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});}
 </script>
 <script src="assets/ils-core.js?v=20260927-connfix2" defer></script>
@@ -128,11 +128,24 @@ async function loadConfiguredAssistancePrice(serviceSlug, fallback){
  try{
   const sb=window.ILS?.ready?.() || await window.ILS?.init?.();
   if(!sb)return fallback;
-  const {data:service,error:serviceError}=await sb.from("services").select("id").eq("slug",serviceSlug).eq("is_active",true).maybeSingle();
-  if(serviceError||!service?.id)return fallback;
-  const {data:price,error:priceError}=await sb.from("service_prices").select("price").eq("service_id",service.id).eq("is_active",true).order("created_at",{ascending:false}).limit(1).maybeSingle();
-  if(priceError||price?.price===null||price?.price===undefined)return fallback;
-  const n=Number(price.price);return Number.isFinite(n)&&n>=0?n:fallback;
+
+  // Production uses is_active/price; the isolated TEST schema uses status/amount.
+  // Retry only for a missing-column/schema-cache error, never for an inactive or absent service.
+  let serviceQuery=await sb.from("services").select("id").eq("slug",serviceSlug).eq("is_active",true).maybeSingle();
+  if(serviceQuery.error && ["42703","PGRST204"].includes(serviceQuery.error.code)){
+   serviceQuery=await sb.from("services").select("id").eq("slug",serviceSlug).eq("status","active").maybeSingle();
+  }
+  if(serviceQuery.error||!serviceQuery.data?.id)return fallback;
+
+  let priceQuery=await sb.from("service_prices").select("price").eq("service_id",serviceQuery.data.id).eq("is_active",true).order("created_at",{ascending:false}).limit(1).maybeSingle();
+  if(priceQuery.error && ["42703","PGRST204"].includes(priceQuery.error.code)){
+   priceQuery=await sb.from("service_prices").select("amount").eq("service_id",serviceQuery.data.id).eq("is_active",true).order("created_at",{ascending:false}).limit(1).maybeSingle();
+  }
+  if(priceQuery.error||!priceQuery.data)return fallback;
+  const configured=priceQuery.data.price??priceQuery.data.amount;
+  if(configured===null||configured===undefined)return fallback;
+  const n=Number(configured);
+  return Number.isFinite(n)&&n>=0?n:fallback;
  }catch(e){console.warn("Configured assistance price unavailable; using safe display fallback.",e);return fallback;}
 }
 
@@ -153,14 +166,14 @@ function showMode(){
  document.getElementById("problemText").textContent=problem||"Problem details were not carried forward. You can return to the problem search.";
  const guided=mode==="guided";
  const configuredServiceSlug=guided?"official-route-guidance":"digital-form-assistance";
- const configuredFallback=guided?19:45;
+ const configuredFallback=guided?19:160;
  document.getElementById("modePill").textContent=guided?"PAID GUIDED SELF-SERVICE":"PAID ASSOCIATE ASSISTANCE";
  document.getElementById("modeTitle").textContent=guided?"Fill the official form yourself — with a concise guidance pack.":"Have an ILS associate assist with the digital/form-filling task.";
  document.getElementById("modeLead").textContent=guided?"You remain in control of the official filing. ILS provides a summarized, non-legal checklist and field guidance.":"This is non-legal digital/administrative assistance. The associate does not provide legal advice or replace an independent professional.";
  document.getElementById("payTitle").textContent=guided?"Guided self-service":"Associate assistance — basic";
- document.getElementById("payPrice").textContent=guided?"₹19":"₹45";
+ document.getElementById("payPrice").textContent=guided?"₹19":"₹160";
  document.getElementById("payDesc").textContent=guided?"One-time guidance pack. Government fee, if any, is separate and paid to the official authority.":"Basic digital/form-filling assistance. Scope is confirmed before work; professional legal fees, if needed, are separate.";
- document.getElementById("payBtn").textContent=guided?"Pay ₹19 & unlock guidance":"Pay ₹45 & request assistance";
+ document.getElementById("payBtn").textContent=guided?"Pay ₹19 & unlock guidance":"Pay ₹160 & request assistance";
  if(guided)document.getElementById("associateFields").classList.add("hide");
  else {document.getElementById("associateFields").classList.remove("hide");document.getElementById("consentWrap").classList.remove("hide");}
  const btn=document.getElementById("officialBtn");
@@ -171,9 +184,10 @@ function showMode(){
  pack.innerHTML="<h3>What you will receive</h3><ul>"+items.map(x=>"<li>"+x+"</li>").join("")+"</ul>"+(guided?"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, this checklist and route-specific field guidance will be shown again in a clean copy-ready format.</p>":"<p style='margin:10px 0 0;color:#8fa2b4;font-size:9px'>After verified payment, the request enters the existing service-order workflow. An associate can then coordinate the stated non-legal digital task.</p>");
  document.getElementById("payBtn").onclick=()=>pay(guided,rd);
  applyConfiguredAssistancePrice(configuredServiceSlug,configuredFallback);
- document.getElementById("loginBtn").onclick=()=>{};
+ const returnTo=location.pathname+location.search+location.hash;
+ document.getElementById("loginBtn").href="customer-portal.html?returnTo="+encodeURIComponent(returnTo);
 }
-async function pay(guided,rd){
+async function pay(guided,rd,resumeIntent=null){
  const btn=document.getElementById("payBtn");btn.disabled=true;
  try{
   if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
@@ -192,7 +206,8 @@ async function pay(guided,rd){
    name:guided?"":document.getElementById("assistName").value.trim(),
    mobile:guided?"":document.getElementById("assistMobile").value.trim(),
    state:guided?"":document.getElementById("assistState").value.trim(),
-   city:guided?"":document.getElementById("assistCity").value.trim()
+   city:guided?"":document.getElementById("assistCity").value.trim(),
+   ...(resumeIntent?.checkoutIntentId?{checkout_intent_id:resumeIntent.checkoutIntentId}: {})
   };
   const serviceSlug=guided?"official-route-guidance":"digital-form-assistance";
   status("Creating your secure service order…");
@@ -206,7 +221,11 @@ async function pay(guided,rd){
    const onPaid=(result)=>{
     if(settled)return;
     settled=true;
-    resolve(result||{ok:true});
+    if(result?.ok!==true||!result?.order_id){
+     reject(new Error("Payment/order confirmation was not verified. Your checkout has been kept so you can safely retry."));
+     return;
+    }
+    resolve(result);
    };
    try{
     const result=window.ILS_TOOLS.createOrder(
@@ -214,7 +233,7 @@ async function pay(guided,rd){
       details,
       null,
       onPaid,
-      {forceQr:true}
+      {forceQr:true,resumeCheckout:true}
     );
     if(result?.then)result.catch(err=>{if(!settled)reject(err);});
    }catch(err){reject(err);}
@@ -225,6 +244,7 @@ async function pay(guided,rd){
    },5000);
   });
 
+  try{sessionStorage.removeItem("ils_pending_checkout");}catch(_){}
   const orderNumber=paid.order_number||"created";
   status("Payment verified. Order: "+orderNumber+"\n"+(guided?"Your guidance pack is unlocked below.":"Your assistance request has entered the service workflow."),"ok");
   if(paid?.order_id){
@@ -246,8 +266,37 @@ async function pay(guided,rd){
   status(msg.includes("Please sign in")||msg.includes("Please login")?"Please sign in or create your ILS customer account, then return here to continue.":msg,"err");
  }finally{btn.disabled=false;}
 }
+async function resumePendingCheckout(){
+ try{
+  const raw=sessionStorage.getItem("ils_pending_checkout");
+  if(!raw)return;
+  const pending=JSON.parse(raw);
+  if(!pending||!pending.createdAt||Date.now()-pending.createdAt>30*60*1000){
+   sessionStorage.removeItem("ils_pending_checkout");
+   return;
+  }
+  const current=location.pathname+location.search+location.hash;
+  if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance"].includes(pending.slug))return;
+  const expected=mode==="guided"?"official-route-guidance":mode==="associate"?"digital-form-assistance":null;
+  if(expected!==pending.slug||!pending.details)return;
+  const d=pending.details;
+  if(mode==="associate"){
+   document.getElementById("assistName").value=d.name||"";
+   document.getElementById("assistMobile").value=d.mobile||"";
+   document.getElementById("assistState").value=d.state||"";
+   document.getElementById("assistCity").value=d.city||"";
+   document.getElementById("assistConsent").checked=true;
+  }
+  status("Welcome back. Your saved request is being restored. Please review the order and complete payment.");
+  await pay(mode==="guided",detectRoute(),pending);
+ }catch(err){
+  console.warn("Could not resume saved ILS checkout.",err);
+  status("Your saved request could not be restored. Please review your details and try again.","err");
+ }
+}
 document.addEventListener("DOMContentLoaded",()=>{
  showMode();
+ resumePendingCheckout();
  const form=document.getElementById("assistForm");
  form?.addEventListener("submit",async e=>{
   e.preventDefault();const s=document.getElementById("assistStatus");s.className="status";s.textContent="Submitting…";s.style.display="block";

@@ -130,8 +130,24 @@ window.ILS_TOOLS = (() => {
     const {data:{user}}=await sb.auth.getUser();
 
     if(!user){
-      status('Please sign in to start this paid service.');
-      setTimeout(()=>{ window.location.href='portal.html#login'; },700);
+      status('Please sign in or create your ILS customer account to continue this order.');
+      if(options.resumeCheckout){
+        try{
+          const checkoutIntentId=details?.checkout_intent_id||
+            (window.crypto?.randomUUID?.()||('ils-'+Date.now()+'-'+Math.random().toString(36).slice(2)));
+          const savedDetails={...(details||{}),checkout_intent_id:checkoutIntentId};
+          sessionStorage.setItem('ils_pending_checkout',JSON.stringify({
+            slug,details:savedDetails,checkoutIntentId,toolRunId:toolRunId||null,
+            returnTo:window.location.pathname+window.location.search+window.location.hash,
+            createdAt:Date.now()
+          }));
+        }catch(storageError){
+          console.warn('Checkout could not be saved for automatic resume.',storageError);
+        }
+      }
+      const returnTo=window.location.pathname+window.location.search+window.location.hash;
+      const target='customer-portal.html?returnTo='+encodeURIComponent(returnTo);
+      setTimeout(()=>{ window.location.href=target; },350);
       return;
     }
 
@@ -141,15 +157,82 @@ window.ILS_TOOLS = (() => {
       return;
     }
 
-    const {data,error}=await sb.rpc('ils_create_service_order',{
-      p_service_slug:service,
-      p_details:details||{},
-      p_tool_run_id:toolRunId
-    });
+    let data=null;
 
-    if(error||!data?.ok){
-      status(error?.message||'Unable to create the service order.');
-      return;
+    // A resumed checkout carries a per-attempt token saved before sign-in.
+    // Find its own request/order first so a reload cannot create a second order.
+    if(options.resumeCheckout && typeof details?.checkout_intent_id==='string' && details.checkout_intent_id){
+      const {data:requests,error:requestError}=await sb
+        .from('service_requests')
+        .select('id,service:services!inner(slug,name)')
+        .eq('user_id',user.id)
+        .eq('details->>checkout_intent_id',details.checkout_intent_id)
+        .limit(2);
+
+      if(requestError){
+        status('Unable to safely resume your saved request. Please try again shortly.');
+        console.error('Checkout request lookup failed.',requestError);
+        return;
+      }
+
+      const matches=(requests||[]).filter(row=>row.service?.slug===service);
+      if(matches.length>1){
+        status('More than one saved order matches this checkout. Please contact ILS support before paying.');
+        return;
+      }
+
+      if(matches.length===1){
+        const {data:existingOrder,error:orderError}=await sb
+          .from('orders')
+          .select('id,order_number,total,currency,status')
+          .eq('user_id',user.id)
+          .eq('service_request_id',matches[0].id)
+          .maybeSingle();
+
+        if(orderError || !existingOrder){
+          status('Your saved request was found, but its order could not be safely loaded. Please contact ILS support.');
+          console.error('Resumed checkout order lookup failed.',orderError);
+          return;
+        }
+
+        if(existingOrder.status==='paid'){
+          const {data:paymentState,error:paymentStateError}=await sb.rpc(
+            'ils_get_upi_proof_status',{p_order_id:existingOrder.id}
+          );
+          if(paymentStateError || paymentState?.order_status!=='paid'){
+            status('The saved order status could not be verified. Access remains locked.');
+            return;
+          }
+          if(typeof onPaid==='function'){
+            onPaid({ok:true,order_id:existingOrder.id,order_number:existingOrder.order_number||''});
+          }
+          return;
+        }
+
+        if(existingOrder.status!=='pending'){
+          status('Your saved order is no longer payable. Please contact ILS support before creating another order.');
+          return;
+        }
+
+        data={
+          ok:true,order_id:existingOrder.id,order_number:existingOrder.order_number,
+          amount:existingOrder.total,currency:existingOrder.currency,
+          service_name:matches[0].service?.name||'ILS Service',status:existingOrder.status
+        };
+      }
+    }
+
+    if(!data){
+      const {data:createdOrder,error}=await sb.rpc('ils_create_service_order',{
+        p_service_slug:service,
+        p_details:details||{},
+        p_tool_run_id:toolRunId
+      });
+      if(error||!createdOrder?.ok){
+        status(error?.message||'Unable to create the service order.');
+        return;
+      }
+      data=createdOrder;
     }
 
     const box=document.getElementById('toolStatus');
@@ -333,15 +416,16 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
           return;
         }
 
-        if (result?.order_status === 'paid' || result?.proof_status === 'verified') {
+        // A verified proof alone must never unlock access; the server-confirmed order state is authoritative.
+        if (result?.order_status === 'paid') {
           stopWatch();
           showStatus(
-            'Payment proof verified. Order <strong>' +
+            'Payment confirmed. Order <strong>' +
             esc(result.order_number || data.order_number || '') +
             '</strong> is paid. Your requested access/report is now unlocked.',
             'ok'
           );
-          if (typeof onPaid === 'function') onPaid();
+          if (typeof onPaid === 'function') onPaid({ok:true,order_id:data.order_id,order_number:result.order_number||data.order_number||''});
           return;
         }
 
@@ -568,7 +652,7 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
             )}</strong> is now paid.`;
         }
 
-        if(typeof onPaid === 'function') onPaid();
+        if(typeof onPaid === 'function') onPaid({ok:true,order_id:data.order_id,order_number:verified.order_number||data.order_number||''});
       },
 
       modal: {
