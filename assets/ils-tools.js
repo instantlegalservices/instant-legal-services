@@ -130,8 +130,21 @@ window.ILS_TOOLS = (() => {
     const {data:{user}}=await sb.auth.getUser();
 
     if(!user){
-      status('Please sign in to start this paid service.');
-      setTimeout(()=>{ window.location.href='portal.html#login'; },700);
+      status('Please sign in or create your ILS customer account to continue this order.');
+      if(options.resumeCheckout){
+        try{
+          sessionStorage.setItem('ils_pending_checkout',JSON.stringify({
+            slug,details:details||{},toolRunId:toolRunId||null,
+            returnTo:window.location.pathname+window.location.search+window.location.hash,
+            createdAt:Date.now()
+          }));
+        }catch(storageError){
+          console.warn('Checkout could not be saved for automatic resume.',storageError);
+        }
+      }
+      const returnTo=window.location.pathname+window.location.search+window.location.hash;
+      const target='customer-portal.html?returnTo='+encodeURIComponent(returnTo);
+      setTimeout(()=>{ window.location.href=target; },350);
       return;
     }
 
