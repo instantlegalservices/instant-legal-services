@@ -165,20 +165,6 @@ window.ILS_TOOLS = (() => {
       return;
     }
 
-    // Consume the saved checkout intent once its order exists. Keeping it until
-    // payment verification could create a duplicate order after a page reload.
-    if(options.resumeCheckout){
-      try{
-        const pending=JSON.parse(sessionStorage.getItem('ils_pending_checkout')||'null');
-        const current=window.location.pathname+window.location.search+window.location.hash;
-        if(pending?.slug===slug && pending.returnTo===current){
-          sessionStorage.removeItem('ils_pending_checkout');
-        }
-      }catch(storageError){
-        console.warn('Saved checkout intent could not be cleared after order creation.',storageError);
-      }
-    }
-
     const box=document.getElementById('toolStatus');
 
     if(box){
