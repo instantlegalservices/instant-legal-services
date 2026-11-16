@@ -624,10 +624,12 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
       const slug=btn.dataset.exportService;
       const price=configuredExportPrices[slug];
       if(!Number.isFinite(price))return;
-      btn.textContent="Pay ₹"+price.toLocaleString("en-IN",{maximumFractionDigits:2})+" & Unlock";
+      const buttonLabel="Pay ₹"+price.toLocaleString("en-IN",{maximumFractionDigits:2})+" & Unlock";
+      if(btn.textContent!==buttonLabel)btn.textContent=buttonLabel;
       const card=btn.closest(".card");
       const priceNode=card?.querySelector('div[style*="font-size:1.25rem"]');
-      if(priceNode)priceNode.textContent="₹"+price.toLocaleString("en-IN",{maximumFractionDigits:2});
+      const priceLabel="₹"+price.toLocaleString("en-IN",{maximumFractionDigits:2});
+      if(priceNode&&priceNode.textContent!==priceLabel)priceNode.textContent=priceLabel;
     });
   }
 
