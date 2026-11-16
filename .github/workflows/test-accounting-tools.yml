@@ -83,15 +83,19 @@ jobs:
               if (m.type() === 'error' && !m.text().includes('ILS Service Worker Error')) failures.push('console: ' + m.text());
             });
 
+            const waitForCatalog = async stageName => {
+              stage(stageName);
+              await Promise.race([
+                page.waitForFunction(() => Array.isArray(window.ILS_TOOL_CATALOG), null, { timeout: 20000 }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Node watchdog: browser catalog readiness exceeded 25 seconds')), 25000))
+              ]);
+            };
             stage('open tools page');
             await page.goto(process.env.BASE_URL, { waitUntil: 'commit' });
-            stage('reload tools page');
+            await waitForCatalog('wait for catalog after initial navigation');
+            stage('reload tools page after catalog readiness');
             await page.reload({ waitUntil: 'commit' });
-            stage('wait for catalog');
-            await Promise.race([
-              page.waitForFunction(() => Array.isArray(window.ILS_TOOL_CATALOG), null, { timeout: 20000 }),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Node watchdog: browser catalog readiness exceeded 25 seconds')), 25000))
-            ]);
+            await waitForCatalog('wait for catalog after reload');
             const catalogProbe = await page.evaluate(() => ({
               hasCatalog: Array.isArray(window.ILS_TOOL_CATALOG),
               accounting: Array.isArray(window.ILS_TOOL_CATALOG)
