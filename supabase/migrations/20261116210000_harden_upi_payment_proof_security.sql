@@ -214,7 +214,7 @@ begin
     if not found then raise exception 'SERVICE_REQUEST_OWNER_MISMATCH'; end if;
     if v_request.status<>'pending' then raise exception 'SERVICE_REQUEST_NOT_PENDING'; end if;
 
-    select count(*),array_agg(oi.service_id order by oi.created_at,oi.id)
+    select count(*),array_agg(oi.service_id order by oi.id)
       into v_item_count,v_service_ids
     from public.order_items oi
     where oi.order_id=v_order.id;
