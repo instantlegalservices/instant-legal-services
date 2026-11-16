@@ -231,6 +231,122 @@ jobs:
           });
           NODE
 
+      - name: Verify real unauthenticated checkout resumes to TEST UPI QR
+        env:
+          BASE_URL: ${{ env.BASE_URL }}
+          ILS_TEST_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
+          ILS_TEST_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_CUSTOMER_PASSWORD }}
+          ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+          ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const page = await context.newPage();
+              page.on('pageerror', error => console.error('Checkout page error:', String(error).slice(0, 250)));
+              await page.addInitScript(({ url, key }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+
+              await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber', { waitUntil: 'domcontentloaded' });
+              await page.locator('#payBtn').waitFor({ state: 'visible', timeout: 15000 });
+              await page.locator('#payBtn').click();
+              await page.waitForURL(url => url.pathname === '/customer-portal.html', { timeout: 10000 });
+
+              const saved = await page.evaluate(() => {
+                const raw = sessionStorage.getItem('ils_pending_checkout');
+                if (!raw) return null;
+                try { return JSON.parse(raw); } catch { return null; }
+              });
+              if (!saved?.checkoutIntentId || saved.slug !== 'official-route-guidance') {
+                throw new Error('CHECKOUT_INTENT_NOT_PERSISTED_BEFORE_SIGN_IN');
+              }
+
+              await page.locator('#loginEmail').fill(process.env.ILS_TEST_CUSTOMER_EMAIL);
+              await page.locator('#loginPassword').fill(process.env.ILS_TEST_CUSTOMER_PASSWORD);
+              await page.locator('#loginBtn').click();
+              await page.waitForURL(url => url.pathname === '/assistance.html', { timeout: 20000 });
+              await page.waitForSelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]', { state: 'visible', timeout: 20000 });
+              await page.waitForFunction(() => {
+                const img = document.querySelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]');
+                return !!img && img.complete && img.naturalWidth > 0;
+              }, null, { timeout: 10000 });
+
+              const result = await page.evaluate(async () => {
+                const raw = sessionStorage.getItem('ils_pending_checkout');
+                if (!raw) return { ok: false, reason: 'PENDING_INTENT_CLEARED_BEFORE_PAYMENT' };
+                const pending = JSON.parse(raw);
+                const authKey = 'sb-bgsbuepolooybdqrzmoa-auth-token';
+                const session = JSON.parse(localStorage.getItem(authKey) || '{}');
+                if (!session.access_token) return { ok: false, reason: 'AUTH_SESSION_MISSING_AFTER_RESUME' };
+                const base = window.ILS_SUPABASE_URL;
+                const headers = {
+                  apikey: window.ILS_SUPABASE_KEY,
+                  Authorization: 'Bearer ' + session.access_token
+                };
+                const userResponse = await fetch(base + '/auth/v1/user', { headers });
+                if (!userResponse.ok) return { ok: false, reason: 'AUTH_USER_HTTP_' + userResponse.status };
+                const user = await userResponse.json();
+                const requestUrl = new URL(base + '/rest/v1/service_requests');
+                requestUrl.searchParams.set('select', 'id,details');
+                requestUrl.searchParams.set('user_id', 'eq.' + user.id);
+                requestUrl.searchParams.set('details->>checkout_intent_id', 'eq.' + pending.checkoutIntentId);
+                const requestResponse = await fetch(requestUrl, { headers });
+                if (!requestResponse.ok) return { ok: false, reason: 'REQUEST_READ_HTTP_' + requestResponse.status };
+                const requests = await requestResponse.json();
+                if (!Array.isArray(requests) || requests.length !== 1) return { ok: false, reason: 'RESUMED_REQUEST_COUNT_' + (requests?.length ?? 'INVALID') };
+
+                const orderUrl = new URL(base + '/rest/v1/orders');
+                orderUrl.searchParams.set('select', 'id,status,service_request_id,total');
+                orderUrl.searchParams.set('user_id', 'eq.' + user.id);
+                orderUrl.searchParams.set('service_request_id', 'eq.' + requests[0].id);
+                const orderResponse = await fetch(orderUrl, { headers });
+                if (!orderResponse.ok) return { ok: false, reason: 'ORDER_READ_HTTP_' + orderResponse.status };
+                const orders = await orderResponse.json();
+                if (!Array.isArray(orders) || orders.length !== 1) return { ok: false, reason: 'RESUMED_ORDER_COUNT_' + (orders?.length ?? 'INVALID') };
+                if (orders[0].status !== 'pending') return { ok: false, reason: 'RESUMED_ORDER_NOT_PENDING' };
+
+                const itemUrl = new URL(base + '/rest/v1/order_items');
+                itemUrl.searchParams.set('select', 'id');
+                itemUrl.searchParams.set('order_id', 'eq.' + orders[0].id);
+                const itemResponse = await fetch(itemUrl, { headers });
+                if (!itemResponse.ok) return { ok: false, reason: 'ORDER_ITEM_READ_HTTP_' + itemResponse.status };
+                const items = await itemResponse.json();
+                if (!Array.isArray(items) || items.length !== 1) return { ok: false, reason: 'RESUMED_ORDER_ITEM_COUNT_' + (items?.length ?? 'INVALID') };
+
+                const proofUrl = new URL(base + '/rest/v1/payment_proofs');
+                proofUrl.searchParams.set('select', 'id');
+                proofUrl.searchParams.set('order_id', 'eq.' + orders[0].id);
+                const proofResponse = await fetch(proofUrl, { headers });
+                if (!proofResponse.ok) return { ok: false, reason: 'PAYMENT_PROOF_READ_HTTP_' + proofResponse.status };
+                const proofs = await proofResponse.json();
+                if (!Array.isArray(proofs) || proofs.length !== 0) return { ok: false, reason: 'UNEXPECTED_PAYMENT_PROOF_EXISTS' };
+
+                const qr = document.querySelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]');
+                const screenText = document.getElementById('toolStatus')?.innerText || '';
+                if (!qr || !screenText.includes('8445609837@axl') || !document.getElementById('upiPaidBtn')) {
+                  return { ok: false, reason: 'REAL_UPI_PAYMENT_SCREEN_INCOMPLETE' };
+                }
+                return { ok: true, requestCount: requests.length, orderCount: orders.length, itemCount: items.length, proofCount: proofs.length, status: orders[0].status };
+              });
+
+              if (!result.ok) throw new Error(result.reason);
+              console.log('PASS: unauthenticated checkout persisted in the same tab, real TEST sign-in resumed the exact intent, and the actual UPI QR screen displayed for one pending unpaid order; no proof submitted.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('REAL_CHECKOUT_RESUME_QR_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
       - name: Stop local site
         if: always()
         run: |
