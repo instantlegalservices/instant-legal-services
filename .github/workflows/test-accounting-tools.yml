@@ -55,6 +55,7 @@ jobs:
 
             await page.goto(process.env.BASE_URL, { waitUntil: 'commit' });
             await page.reload({ waitUntil: 'commit' });
+            await page.waitForFunction(() => Array.isArray(window.ILS_TOOL_CATALOG), null, { timeout: 20000 });
             const catalogProbe = await page.evaluate(() => ({
               hasCatalog: Array.isArray(window.ILS_TOOL_CATALOG),
               accounting: Array.isArray(window.ILS_TOOL_CATALOG)
