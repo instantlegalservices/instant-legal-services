@@ -101,7 +101,7 @@ jobs:
             await page.route('**/assets/*.js*', async route => {
               const url = new URL(route.request().url());
               const script = url.pathname.split('/').pop();
-              const tracked = ['ils-core.js','ils-tools-catalog.js','ils-tools.js','ils-tools-i18n.js','ils-accounting-advanced.js','pwa.js'];
+              const tracked = ['ils-core.js','ils-tools-catalog.js','ils-tools.js','ils-tools-i18n.js','ils-accounting-advanced.js','pwa.js','ils-payments.js'];
               const response = await route.fetch();
               if (!tracked.includes(script) || response.status() >= 400) {
                 await route.fulfill({ response });
@@ -116,7 +116,7 @@ jobs:
             await waitForCatalog('wait for catalog after initial navigation');
             // The catalog global is assigned before later deferred scripts finish.
             // Wait for the document load event before reloading, or the test aborts them.
-            await page.waitForLoadState('load', { timeout: 20000 });
+            await page.waitForFunction(() => document.readyState === 'complete', null, { timeout: 20000 });
             stage('reload tools page after full document load');
             await page.reload({ waitUntil: 'commit' });
             await waitForCatalog('wait for catalog after reload');
