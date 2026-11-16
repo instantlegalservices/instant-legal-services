@@ -524,7 +524,7 @@ jobs:
                 if (upiProofRows.some(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
                   return { ok: false, reason: 'SYNTHETIC_PENDING_PROOFS_REMAIN' };
                 }
-                const proof = upiProofRows.find(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected');
+                const proof = upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected').sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0))[0];
                 if (!proof) return { ok: false, reason: 'ADMIN_UI_DID_NOT_REFRESH_REJECTED_PROOF' };
                 const state = await sb.rpc('ils_get_upi_proof_status', { p_order_id: proof.order_id });
                 if (state.error || state.data?.proof_status !== 'rejected' || state.data?.order_status !== 'pending') return { ok: false, reason: 'ADMIN_UI_REJECTION_UNLOCKED_ORDER' };
