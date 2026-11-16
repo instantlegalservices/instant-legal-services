@@ -50,6 +50,7 @@ jobs:
             let browser;
             let browserWatchdog;
             const scriptTrace = { started: [], completed: [] };
+            const stage = name => console.log('E2E_STAGE: ' + name);
             try {
             // Isolate the authoritative catalog from browser/CDN loading.
             const catalogSource = await (await fetch('http://127.0.0.1:4173/assets/ils-tools-catalog.js')).text();
@@ -102,7 +103,6 @@ jobs:
             page.setDefaultNavigationTimeout(20000);
 
             const failures = [];
-            const stage = name => console.log('E2E_STAGE: ' + name);
             page.on('request', request => console.log('BROWSER_REQUEST:', request.method(), request.url()));
             page.on('requestfinished', request => console.log('BROWSER_REQUEST_FINISHED:', request.url()));
             page.on('requestfailed', request => {
