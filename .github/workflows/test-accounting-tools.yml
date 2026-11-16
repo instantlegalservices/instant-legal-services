@@ -97,16 +97,7 @@ jobs:
               try {
                 await page.waitForFunction(() => Array.isArray(window.ILS_TOOL_CATALOG), null, { timeout: 20000 });
               } catch (error) {
-                const diagnostic = await page.evaluate(() => ({
-                  readyState: document.readyState,
-                  catalogType: typeof window.ILS_TOOL_CATALOG,
-                  catalogIsArray: Array.isArray(window.ILS_TOOL_CATALOG),
-                  catalogLength: Array.isArray(window.ILS_TOOL_CATALOG) ? window.ILS_TOOL_CATALOG.length : null,
-                  globals: Object.keys(window).filter(k => /ILS|tool/i.test(k)).slice(0, 80),
-                  scripts: Array.from(document.scripts).map(s => ({ src: s.src || '[inline]', ready: s.readyState || null, defer: s.defer, async: s.async })),
-                  resources: performance.getEntriesByType('resource').map(r => ({ name: r.name, duration: Math.round(r.duration), size: r.transferSize }))
-                }));
-                console.error('CATALOG_READINESS_DIAGNOSTIC:', JSON.stringify(diagnostic));
+                console.error('CATALOG_READINESS_TIMEOUT:', error.message);
                 throw error;
               }
             };
@@ -121,8 +112,9 @@ jobs:
                 return;
               }
               const source = await response.text();
-              const marker = 'console.log("SCRIPT_BODY_EXECUTED:' + script + '");\n';
-              await route.fulfill({ response, body: marker + source });
+              const marker = 'console.log("SCRIPT_BODY_STARTED:' + script + '");\n';
+              const completed = '\n;console.log("SCRIPT_BODY_COMPLETED:' + script + '");';
+              await route.fulfill({ response, body: marker + source + completed });
             });
             stage('open tools page');
             await page.goto(process.env.BASE_URL, { waitUntil: 'commit' });
