@@ -95,7 +95,7 @@ $("signupBtn").onclick=async()=>{
      continueAfterAuth();
      show("login");
    }else{
-     status("Account created. If email confirmation is required, confirm it and then sign in here. Your saved request will be waiting in this browser session.",true);
+     status("Account created. If email confirmation is required, confirm it, return to the original checkout tab, and sign in there. Your saved request is stored in that tab.",true);
    }
  }catch(e){status(e.message||"Unable to create account.");}
  finally{$("signupBtn").disabled=false;}
