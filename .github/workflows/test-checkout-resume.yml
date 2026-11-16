@@ -428,6 +428,8 @@ jobs:
           BASE_URL: http://127.0.0.1:4173
           ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
           ILS_TEST_ADMIN_PASSWORD: ${{ secrets.ILS_TEST_ADMIN_PASSWORD }}
+          ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
+          ILS_TEST_NONADMIN_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD }}
           ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
           ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
         run: |
@@ -527,22 +529,44 @@ jobs:
                 if (proof.status !== 'rejected' || proof.order_status !== 'pending') {
                   return { ok: false, reason: 'ADMIN_UI_REJECTION_UNLOCKED_ORDER: proof=' + proof.status + ', order=' + proof.order_status };
                 }
-                // Exercise TEST-only Storage-object guards after the fixture proof has been rejected.
-                // Reuse the authenticated Supabase client in this page; no direct fetch headers are assumed.
+                // Storage submission RPC is owner-scoped. Keep admin UI review above,
+                // then authenticate the owning TEST customer for the negative guard cases.
+                const customerLogin = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+                  method: 'POST',
+                  headers: { apikey: window.ILS_SUPABASE_KEY, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    email: arguments[0]?.customerEmail,
+                    password: arguments[0]?.customerPassword
+                  })
+                });
+                const customerSession = await customerLogin.json().catch(() => ({}));
+                if (!customerLogin.ok || !customerSession.access_token || customerSession.user?.id !== proof.user_id) {
+                  return { ok: false, reason: 'STORAGE_GUARD_CUSTOMER_AUTH_OR_OWNERSHIP_FAILED' };
+                }
+                const customerHeaders = {
+                  apikey: window.ILS_SUPABASE_KEY,
+                  Authorization: 'Bearer ' + customerSession.access_token,
+                  'Content-Type': 'application/json'
+                };
                 const submitAttempt = async (overrides) => {
-                  const { data, error } = await sb.rpc('ils_submit_upi_payment_proof', {
-                    p_order_id: proof.order_id,
-                    p_amount: proof.amount,
-                    p_upi_id: proof.upi_id,
-                    p_transaction_ref: 'ILSGUARD' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase(),
-                    p_payee_name_claimed: 'ILS INTEGRITY TEST - NOT PAID',
-                    p_screenshot_path: proof.screenshot_path,
-                    p_screenshot_sha256: proof.screenshot_sha256,
-                    p_mime_type: proof.mime_type,
-                    p_file_size_bytes: proof.file_size_bytes,
-                    ...overrides
+                  const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/ils_submit_upi_payment_proof', {
+                    method: 'POST',
+                    headers: customerHeaders,
+                    body: JSON.stringify({
+                      p_order_id: proof.order_id,
+                      p_amount: proof.amount,
+                      p_upi_id: proof.upi_id,
+                      p_transaction_ref: 'ILSGUARD' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase(),
+                      p_payee_name_claimed: 'ILS INTEGRITY TEST - NOT PAID',
+                      p_screenshot_path: proof.screenshot_path,
+                      p_screenshot_sha256: proof.screenshot_sha256,
+                      p_mime_type: proof.mime_type,
+                      p_file_size_bytes: proof.file_size_bytes,
+                      ...overrides
+                    })
                   });
-                  return { data, error };
+                  const body = await response.json().catch(() => ({}));
+                  return { data: body, error: response.ok ? null : { message: body.message || body.details || 'HTTP_' + response.status } };
                 };
                 const badSize = await submitAttempt({ p_file_size_bytes: proof.file_size_bytes + 1 });
                 if (!badSize.error?.message?.includes('PAYMENT_PROOF_SIZE_MISMATCH')) {
@@ -560,7 +584,12 @@ jobs:
                 }
 
                 return { ok: true };
-              }, { email: process.env.ILS_TEST_ADMIN_EMAIL, password: process.env.ILS_TEST_ADMIN_PASSWORD });
+              }, {
+                email: process.env.ILS_TEST_ADMIN_EMAIL,
+                password: process.env.ILS_TEST_ADMIN_PASSWORD,
+                customerEmail: process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL,
+                customerPassword: process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD
+              });
               if (!result.ok) throw new Error(result.reason);
               console.log('PASS: admin.html displayed pending synthetic proof, opened its private screenshot, rejected it through the UI, and kept the order unpaid/pending.');
             } finally {
