@@ -6,6 +6,7 @@ on:
     paths:
       - "customer-portal.html"
       - "assistance.html"
+      - "admin.html"
       - "assets/ils-tools.js"
       - "assets/ils-core.js"
       - ".github/workflows/test-checkout-resume.yml"
