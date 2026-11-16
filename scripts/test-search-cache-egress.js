@@ -48,7 +48,7 @@ const { chromium } = require("playwright");
       history.replaceState({}, "", "/");
       window.__ILS_HOME_ROTATION__ = false;
       window.ILS = {
-        advocates: async () => { window.__baseAdv = (window.__baseAdv || 0) + 1; return Array.from({length: 12}, (_,i)=>({id:i})); },
+        advocates: async options => { window.__baseAdv = (window.__baseAdv || 0) + 1; window.__advOptions = options; return Array.from({length: 12}, (_,i)=>({id:i})); },
         judgments: async () => { window.__baseJud = (window.__baseJud || 0) + 1; return Array.from({length: 12}, (_,i)=>({id:i})); }
       };
     });
@@ -62,6 +62,8 @@ const { chromium } = require("playwright");
     });
     const counts = await page.evaluate(() => ({adv:window.__baseAdv,jud:window.__baseJud}));
     if (counts.adv !== 1 || counts.jud !== 1) throw new Error("Homepage pools were not cached: " + JSON.stringify(counts));
+    const advOptions = await page.evaluate(() => window.__advOptions);
+    if (advOptions.limit !== 12 || advOptions.featured !== false) throw new Error("Homepage advocate pool must fetch exactly 12 rows without the featured 2x multiplier: " + JSON.stringify(advOptions));
     let navigations = 0;
     page.on("framenavigated", frame => { if (frame === page.mainFrame()) navigations++; });
     await page.waitForTimeout(1200);
