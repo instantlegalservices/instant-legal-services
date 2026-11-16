@@ -525,6 +525,21 @@ jobs:
                   return { ok: false, reason: second.error || 'CHECKOUT_IDEMPOTENCY_ORDER_ID_MISMATCH' };
                 }
 
+                // A checkout token must never be reused to switch the purchased service.
+                const conflictResponse = await fetch(rpcUrl, {
+                  method: 'POST',
+                  headers: { ...headers, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    ...rpcBody,
+                    p_service_slug: 'official-route-guidance'
+                  })
+                });
+                let conflictBody = {};
+                try { conflictBody = await conflictResponse.json(); } catch {}
+                if (conflictResponse.ok || conflictBody.message !== 'CHECKOUT_INTENT_CONFLICT') {
+                  return { ok: false, reason: 'CHECKOUT_INTENT_SERVICE_CONFLICT_NOT_REJECTED' };
+                }
+
                 const requestUrl = new URL(base + '/rest/v1/service_requests');
                 requestUrl.searchParams.set('select', 'id,service_id,details');
                 requestUrl.searchParams.set('user_id', 'eq.' + user.id);
