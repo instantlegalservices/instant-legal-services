@@ -446,7 +446,7 @@ jobs:
               }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
               await page.goto(process.env.BASE_URL + '/admin.html', { waitUntil: 'domcontentloaded' });
               await page.waitForFunction(() => typeof loadUpiProofs === 'function' && typeof isAdmin === 'function');
-              const result = await page.evaluate(async ({ email, password }) => {
+              const result = await page.evaluate(async ({ email, password, customerEmail, customerPassword }) => {
                 if (SUPABASE_URL !== 'https://bgsbuepolooybdqrzmoa.supabase.co') return { ok: false, reason: 'ADMIN_NOT_POINTING_TO_TEST' };
                 const { error } = await sb.auth.signInWithPassword({ email, password });
                 if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED: ' + String(error.message || 'unknown auth error').slice(0, 180) };
@@ -535,8 +535,8 @@ jobs:
                   method: 'POST',
                   headers: { apikey: window.ILS_SUPABASE_KEY, 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    email: arguments[0]?.customerEmail,
-                    password: arguments[0]?.customerPassword
+                    email: customerEmail,
+                    password: customerPassword
                   })
                 });
                 const customerSession = await customerLogin.json().catch(() => ({}));
