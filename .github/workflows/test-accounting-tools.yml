@@ -79,6 +79,24 @@ jobs:
             stage('create browser page');
             const page = await context.newPage();
             await page.addInitScript(() => {
+              const NativeMutationObserver = window.MutationObserver;
+              let mutationCallbackCount = 0;
+              if (NativeMutationObserver) {
+                window.MutationObserver = class extends NativeMutationObserver {
+                  constructor(callback) {
+                    const label = String(callback).replace(/\\s+/g, ' ').slice(0, 100);
+                    super((records, observer) => {
+                      mutationCallbackCount += 1;
+                      const trace = mutationCallbackCount <= 30;
+                      if (trace) console.log('MO_CALLBACK_STARTED:' + mutationCallbackCount + ':' + records.length + ':' + label);
+                      try { return callback(records, observer); }
+                      finally {
+                        if (trace) console.log('MO_CALLBACK_COMPLETED:' + mutationCallbackCount + ':' + label);
+                      }
+                    });
+                  }
+                };
+              }
               const originalAdd = EventTarget.prototype.addEventListener;
               EventTarget.prototype.addEventListener = function(type, listener, options) {
                 if (type !== 'DOMContentLoaded' || typeof listener !== 'function') {
