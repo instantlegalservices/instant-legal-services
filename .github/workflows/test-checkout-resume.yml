@@ -451,6 +451,19 @@ jobs:
                   };
                   poll();
                 });
+                // Reject any stale ILSTEST-only pending proofs left by earlier interrupted CI attempts.
+                for (const stale of upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
+                  const cleanup = await sb.rpc('ils_admin_verify_upi_payment_proof', {
+                    p_proof_id: stale.id,
+                    p_decision: 'rejected',
+                    p_notes: 'TEST cleanup only: synthetic ILSTEST proof from interrupted CI; no payment occurred.'
+                  });
+                  if (cleanup.error || !cleanup.data?.ok) return { ok: false, reason: 'STALE_TEST_PROOF_CLEANUP_FAILED' };
+                }
+                await loadUpiProofs();
+                if (upiProofRows.some(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
+                  return { ok: false, reason: 'SYNTHETIC_PENDING_PROOFS_REMAIN' };
+                }
                 const proof = upiProofRows.find(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected');
                 if (!proof) return { ok: false, reason: 'ADMIN_UI_DID_NOT_REFRESH_REJECTED_PROOF' };
                 const state = await sb.rpc('ils_get_upi_proof_status', { p_order_id: proof.order_id });
