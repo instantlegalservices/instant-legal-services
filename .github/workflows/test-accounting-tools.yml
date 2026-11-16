@@ -165,24 +165,18 @@ jobs:
             stage('open tools page');
             await page.goto(process.env.BASE_URL, { waitUntil: 'commit' });
             await waitForCatalog('wait for catalog after initial navigation');
-            // The catalog global is assigned before later deferred scripts finish.
-            // Wait for the document load event before reloading, or the test aborts them.
-            try {
-              await page.waitForFunction(() => document.readyState === 'complete', null, { timeout: 20000 });
-            } catch (error) {
-              const diagnostic = await page.evaluate(() => ({
-                readyState: document.readyState,
-                htmlLength: document.documentElement?.outerHTML?.length || 0,
-                bodyChildCount: document.body?.children?.length || 0,
-                scripts: Array.from(document.scripts).map(s => ({ src: s.src || '[inline]', defer: s.defer, async: s.async, type: s.type })),
-                resources: performance.getEntriesByType('resource').map(r => ({ name: r.name, type: r.initiatorType, duration: Math.round(r.duration), size: r.transferSize })),
-                pendingImages: Array.from(document.images).filter(i => !i.complete).map(i => i.src),
-                documentWriteState: document.readyState
-              }));
-              console.error('DOCUMENT_LIFECYCLE_DIAGNOSTIC:', JSON.stringify(diagnostic));
-              throw error;
+            // All deferred application scripts must have executed before reload.
+            // The dynamically injected global language script and background data
+            // fetches are not prerequisites for the accounting UI regression.
+            const requiredScriptBodies = [
+              'ils-payments.js','ils-core.js','ils-tools-catalog.js','ils-tools.js',
+              'ils-tools-i18n.js','ils-accounting-advanced.js','pwa.js'
+            ];
+            const missingScriptBodies = requiredScriptBodies.filter(script => !scriptTrace.completed.includes(script));
+            if (missingScriptBodies.length) {
+              throw new Error('Tracked application scripts did not complete before reload: ' + missingScriptBodies.join(', '));
             }
-            stage('reload tools page after full document load');
+            stage('all tracked application scripts completed; reload tools page');
             await page.reload({ waitUntil: 'commit' });
             await waitForCatalog('wait for catalog after reload');
             const catalogProbe = await page.evaluate(() => ({
