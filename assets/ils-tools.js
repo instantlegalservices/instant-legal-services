@@ -420,7 +420,7 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
         if (result?.order_status === 'paid') {
           stopWatch();
           showStatus(
-            'Payment proof verified. Order <strong>' +
+            'Payment confirmed. Order <strong>' +
             esc(result.order_number || data.order_number || '') +
             '</strong> is paid. Your requested access/report is now unlocked.',
             'ok'
