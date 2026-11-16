@@ -14,6 +14,7 @@ on:
 jobs:
   accounting-tools-ui:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,6 +37,7 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:4173/tools.html > /dev/null
 
       - name: Run accounting UI regression
+        timeout-minutes: 12
         env:
           BASE_URL: http://127.0.0.1:4173/tools.html
         run: |
