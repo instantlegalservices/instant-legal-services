@@ -127,7 +127,7 @@
             advocatePoolPromise = originalAdvocates({
               ...options,
               limit: 12,
-              featured: true
+              featured: false
             }).catch(error => {
               advocatePoolPromise = null;
               throw error;
