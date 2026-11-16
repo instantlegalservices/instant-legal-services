@@ -376,14 +376,6 @@ jobs:
                 const rows = await listed.json();
                 const row = Array.isArray(rows) ? rows.find(x => x.order_id === window.__ilsTestOrderId) : null;
                 if (!row || row.status !== 'pending' || !row.transaction_ref.startsWith('ILSTEST')) return { ok: false, reason: 'SYNTHETIC_PROOF_NOT_PENDING' };
-
-                const decision = await fetch(base + '/rest/v1/rpc/ils_admin_verify_upi_payment_proof', {
-                  method: 'POST', headers,
-                  body: JSON.stringify({ p_proof_id: row.id, p_decision: 'rejected', p_notes: 'TEST ONLY: synthetic screenshot; no payment occurred.' })
-                });
-                const decided = await decision.json().catch(() => ({}));
-                if (!decision.ok || decided.decision !== 'rejected') return { ok: false, reason: decided.message || 'ADMIN_REJECTION_FAILED' };
-
                 const stateResponse = await fetch(base + '/rest/v1/rpc/ils_get_upi_proof_status', {
                   method: 'POST', headers, body: JSON.stringify({ p_order_id: row.order_id })
                 });
@@ -391,20 +383,85 @@ jobs:
                 const state = await stateResponse.json();
                 const orderResponse = await fetch(base + '/rest/v1/orders?select=id,status,service_request_id&id=eq.' + row.order_id, { headers });
                 const orders = await orderResponse.json();
-                if (state.proof_status !== 'rejected' || state.order_status !== 'pending' || !orders[0] || orders[0].status !== 'pending') return { ok: false, reason: 'REJECTED_PROOF_CHANGED_ORDER_STATE' };
-                const requestResponse = await fetch(base + '/rest/v1/service_requests?select=id,status&id=eq.' + orders[0].service_request_id, { headers });
-                const requests = await requestResponse.json();
-                if (!requests[0] || requests[0].status !== 'pending') return { ok: false, reason: 'REJECTED_PROOF_UNLOCKED_REQUEST' };
-                return { ok: true };
+                if (state.proof_status !== 'pending' || state.order_status !== 'pending' || !orders[0] || orders[0].status !== 'pending') return { ok: false, reason: 'PENDING_PROOF_CHANGED_ORDER_STATE' };
+                return { ok: true, proofId: row.id, orderId: row.order_id };
               });
               if (!proof.ok) throw new Error(proof.reason);
-              await page.waitForFunction(() => (document.getElementById('upiPaidNote')?.innerText || '').includes('Payment proof was not verified'), null, { timeout: 15000 });
-              console.log('PASS: TEST-only synthetic proof uploaded, admin rejection succeeded, and order/request stayed pending; no real payment.');
+              await page.waitForFunction(() => (document.getElementById('upiPaidNote')?.innerText || '').includes('Verification is still pending'), null, { timeout: 15000 });
+              console.log('PASS: synthetic TEST-only proof uploaded and remained pending; no payment or admin decision performed.');
             } finally {
               if (browser) await browser.close();
             }
           })().catch(error => {
             console.error('REAL_CHECKOUT_RESUME_QR_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Reject synthetic TEST proof through admin.html
+        env:
+          ILS_TEST_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_CUSTOMER_EMAIL }}
+          ILS_TEST_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_CUSTOMER_PASSWORD }}
+          ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
+          ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const page = await browser.newPage();
+              await page.addInitScript(({ url, key }) => {
+                window.ILS_SUPABASE_URL = url;
+                window.ILS_SUPABASE_KEY = key;
+              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
+              await page.goto(process.env.BASE_URL + '/admin.html', { waitUntil: 'domcontentloaded' });
+              await page.waitForFunction(() => typeof loadUpiProofs === 'function' && typeof isAdmin === 'function');
+              const result = await page.evaluate(async ({ email, password }) => {
+                if (SUPABASE_URL !== 'https://bgsbuepolooybdqrzmoa.supabase.co') return { ok: false, reason: 'ADMIN_NOT_POINTING_TO_TEST' };
+                const { error } = await sb.auth.signInWithPassword({ email, password });
+                if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED' };
+                const auth = await isAdmin();
+                if (!auth.ok) return { ok: false, reason: 'TEST_ADMIN_AUTHORIZATION_FAILED' };
+                document.getElementById('upiProofStatusFilter').value = 'pending';
+                await loadUpiProofs();
+                const body = document.getElementById('upiProofBody');
+                const row = Array.from(body.querySelectorAll('tr')).find(tr => tr.innerText.includes('ILSTEST'));
+                if (!row || !row.innerText.toLowerCase().includes('pending')) return { ok: false, reason: 'PENDING_TEST_PROOF_NOT_RENDERED' };
+                const view = row.querySelector('.upiProofView');
+                if (!view) return { ok: false, reason: 'PENDING_TEST_PROOF_VIEW_MISSING' };
+                window.__ilsSignedProofOpened = '';
+                window.open = url => { window.__ilsSignedProofOpened = String(url || ''); return null; };
+                view.click();
+                await new Promise(resolve => setTimeout(resolve, 700));
+                if (!window.__ilsSignedProofOpened.startsWith('https://')) return { ok: false, reason: 'ADMIN_PRIVATE_SCREENSHOT_ACCESS_FAILED' };
+                window.prompt = () => 'TEST ONLY: synthetic screenshot; no payment occurred.';
+                const reject = row.querySelector('.upiProofVerify[data-decision="rejected"]');
+                if (!reject) return { ok: false, reason: 'ADMIN_REJECT_BUTTON_MISSING' };
+                reject.click();
+                await new Promise((resolve, rejectError) => {
+                  const started = Date.now();
+                  const poll = () => {
+                    if ((document.getElementById('appMsg')?.innerText || '').includes('Payment proof rejected')) return resolve();
+                    if (Date.now() - started > 12000) return rejectError(new Error('ADMIN_UI_REJECTION_TIMEOUT'));
+                    setTimeout(poll, 150);
+                  };
+                  poll();
+                });
+                const proof = upiProofRows.find(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected');
+                if (!proof) return { ok: false, reason: 'ADMIN_UI_DID_NOT_REFRESH_REJECTED_PROOF' };
+                const state = await sb.rpc('ils_get_upi_proof_status', { p_order_id: proof.order_id });
+                if (state.error || state.data?.proof_status !== 'rejected' || state.data?.order_status !== 'pending') return { ok: false, reason: 'ADMIN_UI_REJECTION_UNLOCKED_ORDER' };
+                return { ok: true };
+              }, { email: process.env.ILS_TEST_CUSTOMER_EMAIL, password: process.env.ILS_TEST_CUSTOMER_PASSWORD });
+              if (!result.ok) throw new Error(result.reason);
+              console.log('PASS: admin.html displayed pending synthetic proof, opened its private screenshot, rejected it through the UI, and kept the order unpaid/pending.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('ADMIN_UI_REJECTION_E2E_FAILURE:', error && error.stack ? error.stack : error);
             process.exitCode = 1;
           });
           NODE
@@ -662,7 +719,7 @@ jobs:
                 if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED' };
                 const check = await isAdmin();
                 if (!check.ok) return { ok: false, reason: 'TEST_ADMIN_AUTHZ_FAILED' };
-                document.getElementById('upiProofStatusFilter').value = '';
+                document.getElementById('upiProofStatusFilter').value = 'rejected';
                 await loadUpiProofs();
                 const body = document.getElementById('upiProofBody');
                 const text = body?.innerText || '';
