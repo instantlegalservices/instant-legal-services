@@ -1,0 +1,130 @@
+name: Checkout Resume UI E2E
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "customer-portal.html"
+      - "assistance.html"
+      - "assets/ils-tools.js"
+      - ".github/workflows/test-checkout-resume.yml"
+
+jobs:
+  checkout-resume:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http.log 2>&1 &
+          echo $! > /tmp/ils-http.pid
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:4173/customer-portal.html > /dev/null
+
+      - name: Verify checkout return and tab-scoped storage
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            let browser;
+            try {
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext();
+              const page = await context.newPage();
+
+              await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route =>
+                route.fulfill({
+                  status: 200,
+                  contentType: 'application/javascript',
+                  body: `window.supabase = {
+                    createClient: () => ({
+                      auth: {
+                        signInWithPassword: async () => ({
+                          data: { user: { id: 'e2e-customer', email: 'e2e@example.test', user_metadata: { full_name: 'E2E Customer' } } },
+                          error: null
+                        }),
+                        signUp: async () => ({ data: { user: { id: 'e2e-customer' }, session: null }, error: null })
+                      },
+                      from: () => ({
+                        select() { return this; },
+                        eq() { return this; },
+                        maybeSingle: async () => ({
+                          data: { id: 'e2e-profile', full_name: 'E2E Customer', status: 'active' },
+                          error: null
+                        })
+                      }),
+                      rpc: async () => ({ data: { ok: true, customer_profile_id: 'e2e-profile' }, error: null })
+                    })
+                  };`
+                })
+              );
+
+              const base = process.env.BASE_URL;
+              await page.goto(base + '/customer-portal.html?returnTo=%2Fassistance.html');
+              await page.evaluate(() => {
+                sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
+                  slug: 'digital-form-assistance',
+                  checkoutIntentId: 'e2e-intent',
+                  createdAt: Date.now()
+                }));
+              });
+
+              // A separate confirmation tab must not destroy the original tab's pending checkout.
+              const confirmationTab = await context.newPage();
+              await confirmationTab.goto(base + '/customer-portal.html');
+              const pendingBefore = await page.evaluate(() => sessionStorage.getItem('ils_pending_checkout'));
+              if (!pendingBefore || !pendingBefore.includes('e2e-intent')) {
+                throw new Error('Original checkout tab lost its pending sessionStorage state.');
+              }
+              await confirmationTab.close();
+
+              await page.locator('#loginEmail').fill('e2e@example.test');
+              await page.locator('#loginPassword').fill('not-a-real-password');
+              await page.locator('#loginBtn').click();
+              await page.waitForURL('**/assistance.html', { timeout: 5000 });
+
+              const pendingAfter = await page.evaluate(() => sessionStorage.getItem('ils_pending_checkout'));
+              if (!pendingAfter || !pendingAfter.includes('e2e-intent')) {
+                throw new Error('Pending checkout state did not survive same-tab sign-in redirect.');
+              }
+
+              const unsafe = await context.newPage();
+              await unsafe.goto(base + '/customer-portal.html?returnTo=' + encodeURIComponent('https://evil.example/steal'));
+              await unsafe.locator('#loginEmail').fill('e2e@example.test');
+              await unsafe.locator('#loginPassword').fill('not-a-real-password');
+              await unsafe.locator('#loginBtn').click();
+              await unsafe.waitForTimeout(700);
+              if (!unsafe.url().startsWith(base + '/customer-portal.html')) {
+                throw new Error('External returnTo was not rejected: ' + unsafe.url());
+              }
+
+              console.log('PASS: same-tab checkout state retained; authenticated return completed; external returnTo rejected.');
+            } finally {
+              if (browser) await browser.close();
+            }
+          })().catch(error => {
+            console.error('CHECKOUT_RESUME_E2E_FAILURE:', error && error.stack ? error.stack : error);
+            process.exitCode = 1;
+          });
+          NODE
+
+      - name: Stop local site
+        if: always()
+        run: |
+          if [ -f /tmp/ils-http.pid ]; then kill "$(cat /tmp/ils-http.pid)" || true; fi
