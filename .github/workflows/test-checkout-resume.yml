@@ -338,6 +338,7 @@ jobs:
                 const proofs = await proofResponse.json();
                 if (!Array.isArray(proofs) || proofs.length !== 0) return { ok: false, reason: 'UNEXPECTED_PAYMENT_PROOF_EXISTS' };
 
+                window.__ilsTestOrderId = orders[0].id;
                 const qr = document.querySelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]');
                 const screenText = document.getElementById('toolStatus')?.innerText || '';
                 if (!qr || !screenText.includes('8445609837@axl') || !document.getElementById('upiPaidBtn')) {
@@ -347,7 +348,57 @@ jobs:
               });
 
               if (!result.ok) throw new Error(result.reason);
-              console.log('PASS: unauthenticated checkout persisted in the same tab, real TEST sign-in resumed the exact intent, and the actual UPI QR screen displayed for one pending unpaid order; no proof submitted.');
+
+              // Synthetic TEST-only PNG and transaction reference; no UPI payment is made.
+              await page.locator('#upiTransactionRef').fill('ILSTEST' + Date.now().toString(36).toUpperCase());
+              await page.locator('#upiPayeeName').fill('ILS AUTOMATED TEST - NOT PAID');
+              await page.locator('#upiPaymentScreenshot').setInputFiles({
+                name: 'ils-test-only-not-a-payment.png',
+                mimeType: 'image/png',
+                buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p2cAAAAASUVORK5CYII=', 'base64')
+              });
+              await page.locator('#upiPaidBtn').click();
+              await page.waitForFunction(() => {
+                const b = document.getElementById('upiPaidBtn');
+                const n = document.getElementById('upiPaidNote')?.innerText || '';
+                return b?.textContent?.includes('Proof Submitted') || n.includes('Payment proof submitted');
+              }, null, { timeout: 20000 });
+
+              const proof = await page.evaluate(async () => {
+                const s = JSON.parse(localStorage.getItem('sb-bgsbuepolooybdqrzmoa-auth-token') || '{}');
+                const headers = { apikey: window.ILS_SUPABASE_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' };
+                const base = window.ILS_SUPABASE_URL;
+                const listed = await fetch(base + '/rest/v1/rpc/ils_admin_upi_payment_proofs', {
+                  method: 'POST', headers, body: JSON.stringify({ p_limit: 50 })
+                });
+                if (!listed.ok) return { ok: false, reason: 'ADMIN_PROOF_LIST_HTTP_' + listed.status };
+                const rows = await listed.json();
+                const row = Array.isArray(rows) ? rows.find(x => x.order_id === window.__ilsTestOrderId) : null;
+                if (!row || row.status !== 'pending' || !row.transaction_ref.startsWith('ILSTEST')) return { ok: false, reason: 'SYNTHETIC_PROOF_NOT_PENDING' };
+
+                const decision = await fetch(base + '/rest/v1/rpc/ils_admin_verify_upi_payment_proof', {
+                  method: 'POST', headers,
+                  body: JSON.stringify({ p_proof_id: row.id, p_decision: 'rejected', p_notes: 'TEST ONLY: synthetic screenshot; no payment occurred.' })
+                });
+                const decided = await decision.json().catch(() => ({}));
+                if (!decision.ok || decided.decision !== 'rejected') return { ok: false, reason: decided.message || 'ADMIN_REJECTION_FAILED' };
+
+                const stateResponse = await fetch(base + '/rest/v1/rpc/ils_get_upi_proof_status', {
+                  method: 'POST', headers, body: JSON.stringify({ p_order_id: row.order_id })
+                });
+                if (!stateResponse.ok) return { ok: false, reason: 'PROOF_STATUS_HTTP_' + stateResponse.status };
+                const state = await stateResponse.json();
+                const orderResponse = await fetch(base + '/rest/v1/orders?select=id,status,service_request_id&id=eq.' + row.order_id, { headers });
+                const orders = await orderResponse.json();
+                if (state.proof_status !== 'rejected' || state.order_status !== 'pending' || !orders[0] || orders[0].status !== 'pending') return { ok: false, reason: 'REJECTED_PROOF_CHANGED_ORDER_STATE' };
+                const requestResponse = await fetch(base + '/rest/v1/service_requests?select=id,status&id=eq.' + orders[0].service_request_id, { headers });
+                const requests = await requestResponse.json();
+                if (!requests[0] || requests[0].status !== 'pending') return { ok: false, reason: 'REJECTED_PROOF_UNLOCKED_REQUEST' };
+                return { ok: true };
+              });
+              if (!proof.ok) throw new Error(proof.reason);
+              await page.waitForFunction(() => (document.getElementById('upiPaidNote')?.innerText || '').includes('Payment proof was not verified'), null, { timeout: 15000 });
+              console.log('PASS: TEST-only synthetic proof uploaded, admin rejection succeeded, and order/request stayed pending; no real payment.');
             } finally {
               if (browser) await browser.close();
             }
