@@ -48,20 +48,25 @@ const { chromium } = require("playwright");
       history.replaceState({}, "", "/");
       window.__ILS_HOME_ROTATION__ = false;
       window.ILS = {
-        advocates: async options => { window.__baseAdv = (window.__baseAdv || 0) + 1; window.__advOptions = options; return Array.from({length: 12}, (_,i)=>({id:i})); },
-        judgments: async () => { window.__baseJud = (window.__baseJud || 0) + 1; return Array.from({length: 12}, (_,i)=>({id:i})); }
+        advocates: async options => { window.__baseAdv = (window.__baseAdv || 0) + 1; window.__advOptions = options; return window.__baseAdv === 1 ? [] : Array.from({length: 12}, (_,i)=>({id:i})); },
+        judgments: async () => { window.__baseJud = (window.__baseJud || 0) + 1; return window.__baseJud === 1 ? [] : Array.from({length: 12}, (_,i)=>({id:i})); }
       };
     });
     await page.addScriptTag({ url: "http://127.0.0.1:4173/assets/pwa.js" });
     await page.waitForFunction(() => window.ILS.advocates.__homeRotationWrapped && window.ILS.judgments.__homeRotationWrapped);
     await page.evaluate(async () => {
-      await window.ILS.advocates({limit:4,featured:true});
-      await window.ILS.advocates({limit:4,featured:true});
-      await window.ILS.judgments({limit:4});
-      await window.ILS.judgments({limit:4});
+      const firstAdv = await window.ILS.advocates({limit:4,featured:true});
+      const retryAdv = await window.ILS.advocates({limit:4,featured:true});
+      const cachedAdv = await window.ILS.advocates({limit:4,featured:true});
+      const firstJud = await window.ILS.judgments({limit:4});
+      const retryJud = await window.ILS.judgments({limit:4});
+      const cachedJud = await window.ILS.judgments({limit:4});
+      window.__retryResults = { firstAdv:firstAdv.length, retryAdv:retryAdv.length, cachedAdv:cachedAdv.length, firstJud:firstJud.length, retryJud:retryJud.length, cachedJud:cachedJud.length };
     });
     const counts = await page.evaluate(() => ({adv:window.__baseAdv,jud:window.__baseJud}));
-    if (counts.adv !== 1 || counts.jud !== 1) throw new Error("Homepage pools were not cached: " + JSON.stringify(counts));
+    if (counts.adv !== 2 || counts.jud !== 2) throw new Error("Empty homepage pools did not retry once and then cache: " + JSON.stringify(counts));
+    const retryResults = await page.evaluate(() => window.__retryResults);
+    if (Object.values(retryResults).some((n, i) => n !== (i % 3 === 0 ? 0 : 4))) throw new Error("Empty-result retry/cache behaviour failed: " + JSON.stringify(retryResults));
     const advOptions = await page.evaluate(() => window.__advOptions);
     if (advOptions.limit !== 12 || advOptions.featured !== false) throw new Error("Homepage advocate pool must fetch exactly 12 rows without the featured 2x multiplier: " + JSON.stringify(advOptions));
     let navigations = 0;
