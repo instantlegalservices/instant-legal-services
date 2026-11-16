@@ -97,13 +97,23 @@ jobs:
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Node watchdog: browser catalog readiness exceeded 25 seconds')), 25000))
               ]);
             };
-            // Instrument only the test-served HTML: script load events identify
-            // the last deferred script to execute before browser parsing stalls.
+            // Instrument only the test-served HTML: marker scripts run immediately
+            // before each deferred script, identifying the last reached execution point.
             await page.route('**/tools.html', async route => {
               const response = await route.fetch();
               let html = await response.text();
               for (const script of ['ils-core.js','ils-tools-catalog.js','ils-tools.js','ils-tools-i18n.js','ils-accounting-advanced.js','pwa.js']) {
-                html = html.replace(new RegExp('(<script[^>]+src="[^"]*' + script.replace(/[.*+?^${}()|[\\]\\]/g, '\\            stage('open tools page');
+                const needle = 'src="assets/' + script;
+                const at = html.indexOf(needle);
+                if (at >= 0) {
+                  const tagStart = html.lastIndexOf('<script', at);
+                  const marker = '<script>console.log("DEFER_SCRIPT_EXECUTION_REACHED:' + script + '")</script>';
+                  html = html.slice(0, tagStart) + marker + html.slice(tagStart);
+                }
+              }
+              await route.fulfill({ response, body: html });
+            });
+            stage('open tools page');
             await page.goto(process.env.BASE_URL, { waitUntil: 'commit' });') + '(?:\\?[^"]*)?"[^>]*>)'), '$1');
                 const marker = '<script>console.log("DEFER_SCRIPT_EXECUTION_REACHED:' + script + '")</script>';
                 const tag = new RegExp('(<script[^>]+src="[^"]*' + script.replace(/[.*+?^${}()|[\\]\\]/g, '\\            stage('open tools page');
