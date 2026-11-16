@@ -192,7 +192,8 @@ window.ILS = (() => {
     featured = false,
     q = "",
     state = "",
-    area = ""
+    area = "",
+    id = ""
   } = {}) {
 
     if (!client) await init();
@@ -218,6 +219,10 @@ window.ILS = (() => {
         created_at,
         professional_type
       `);
+
+    if (id) {
+      query = query.eq("id", String(id));
+    }
 
     const safeQ = String(q || "")
       .replace(/[,%()]/g, " ")
