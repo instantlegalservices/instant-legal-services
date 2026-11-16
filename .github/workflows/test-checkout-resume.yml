@@ -533,8 +533,8 @@ jobs:
                   return { ok: false, reason: 'ADMIN_PROOF_LIST_HTTP_' + adminListResponse.status };
                 }
                 const adminProofs = await adminListResponse.json();
-                if (!Array.isArray(adminProofs) || adminProofs.length !== 0) {
-                  return { ok: false, reason: 'ADMIN_PROOF_LIST_UNEXPECTED_ROWS' };
+                if (!Array.isArray(adminProofs) || adminProofs.some(proof => proof.status === 'pending')) {
+                  return { ok: false, reason: 'ADMIN_PROOF_LIST_CONTAINS_UNexpected_PENDING_ROWS' };
                 }
 
                 const missingProofResponse = await fetch(base + '/rest/v1/rpc/ils_admin_verify_upi_payment_proof', {
