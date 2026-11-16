@@ -43,10 +43,22 @@ jobs:
         run: |
           node <<'NODE'
           const { chromium } = require('playwright');
+          const vm = require('node:vm');
+          const fs = require('node:fs');
 
           (async () => {
             let browser;
             try {
+            // Isolate the authoritative catalog from browser/CDN loading.
+            const catalogSource = await (await fetch('http://127.0.0.1:4173/assets/ils-tools-catalog.js')).text();
+            const catalogSandbox = { window: {} };
+            vm.runInNewContext(catalogSource, catalogSandbox, { timeout: 2000, filename: 'ils-tools-catalog.js' });
+            const isolatedCatalog = catalogSandbox.window.ILS_TOOL_CATALOG;
+            if (!Array.isArray(isolatedCatalog) || isolatedCatalog.length !== 208) {
+              throw new Error('Catalog isolated preflight failed: ' + (Array.isArray(isolatedCatalog) ? isolatedCatalog.length : typeof isolatedCatalog));
+            }
+            console.log('CATALOG_PREFLIGHT_PASS: 208 tools; isolated script executed within 2s.');
+
             browser = await chromium.launch({ headless: true });
             const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' });
             const page = await context.newPage();
@@ -55,7 +67,18 @@ jobs:
 
             const failures = [];
             const stage = name => console.log('E2E_STAGE: ' + name);
-            page.on('pageerror', e => failures.push('pageerror: ' + e.message));
+            page.on('requestfailed', request => {
+              const message = 'requestfailed: ' + request.url() + ' :: ' + (request.failure()?.errorText || 'unknown');
+              failures.push(message);
+              console.error('BROWSER_REQUEST_FAILURE:', message);
+            });
+            page.on('response', response => {
+              if (response.status() >= 400) console.error('BROWSER_HTTP_ERROR:', response.status(), response.url());
+            });
+            page.on('pageerror', e => {
+              failures.push('pageerror: ' + e.message);
+              console.error('BROWSER_PAGE_ERROR:', e.stack || e.message);
+            });
             page.on('console', m => {
               if (m.type() === 'error' && !m.text().includes('ILS Service Worker Error')) failures.push('console: ' + m.text());
             });
@@ -65,7 +88,10 @@ jobs:
             stage('reload tools page');
             await page.reload({ waitUntil: 'commit' });
             stage('wait for catalog');
-            await page.waitForFunction(() => Array.isArray(window.ILS_TOOL_CATALOG), null, { timeout: 20000 });
+            await Promise.race([
+              page.waitForFunction(() => Array.isArray(window.ILS_TOOL_CATALOG), null, { timeout: 20000 }),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Node watchdog: browser catalog readiness exceeded 25 seconds')), 25000))
+            ]);
             const catalogProbe = await page.evaluate(() => ({
               hasCatalog: Array.isArray(window.ILS_TOOL_CATALOG),
               accounting: Array.isArray(window.ILS_TOOL_CATALOG)
