@@ -205,7 +205,8 @@
           if (!judgmentPoolPromise) {
             judgmentPoolPromise = originalJudgments({
               ...options,
-              limit: 12
+              limit: 12,
+              summaryOnly: true
             }).catch(error => {
               judgmentPoolPromise = null;
               throw error;
