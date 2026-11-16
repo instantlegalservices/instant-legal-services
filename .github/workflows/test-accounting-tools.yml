@@ -114,7 +114,10 @@ jobs:
             stage('open tools page');
             await page.goto(process.env.BASE_URL, { waitUntil: 'commit' });
             await waitForCatalog('wait for catalog after initial navigation');
-            stage('reload tools page after catalog readiness');
+            // The catalog global is assigned before later deferred scripts finish.
+            // Wait for the document load event before reloading, or the test aborts them.
+            await page.waitForLoadState('load', { timeout: 20000 });
+            stage('reload tools page after full document load');
             await page.reload({ waitUntil: 'commit' });
             await waitForCatalog('wait for catalog after reload');
             const catalogProbe = await page.evaluate(() => ({
