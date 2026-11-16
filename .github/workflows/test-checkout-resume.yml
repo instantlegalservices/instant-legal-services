@@ -458,7 +458,7 @@ jobs:
                     p_decision: 'rejected',
                     p_notes: 'TEST cleanup only: synthetic ILSTEST proof from interrupted CI; no payment occurred.'
                   });
-                  if (cleanup.error || !cleanup.data?.ok) return { ok: false, reason: 'STALE_TEST_PROOF_CLEANUP_FAILED' };
+                  // Another parallel CI attempt may have decided the same proof; the fresh list below is authoritative.
                 }
                 await loadUpiProofs();
                 if (upiProofRows.some(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
