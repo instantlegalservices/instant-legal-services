@@ -108,7 +108,7 @@ jobs:
                 return;
               }
               const source = await response.text();
-              const marker = 'console.log("SCRIPT_BODY_EXECUTED:' + script + '");\\n';
+              const marker = 'console.log("SCRIPT_BODY_EXECUTED:' + script + '");\n';
               await route.fulfill({ response, body: marker + source });
             });
             stage('open tools page');
