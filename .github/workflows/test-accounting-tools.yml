@@ -79,6 +79,8 @@ jobs:
               if (response.status() >= 400) console.error('BROWSER_HTTP_ERROR:', response.status(), response.url());
             });
             page.on('domcontentloaded', () => console.log('BROWSER_DOMCONTENTLOADED'));
+            page.on('domcontentloaded', () => console.log('BROWSER_READY_STATE_AT_DOMCONTENTLOADED:', page.url()));
+            page.on('load', () => console.log('BROWSER_READY_STATE_AT_LOAD:', page.url()));
             page.on('load', () => console.log('BROWSER_LOAD'));
             page.on('framenavigated', frame => console.log('BROWSER_FRAME_NAVIGATED:', frame.url()));
             page.on('pageerror', e => {
@@ -116,7 +118,21 @@ jobs:
             await waitForCatalog('wait for catalog after initial navigation');
             // The catalog global is assigned before later deferred scripts finish.
             // Wait for the document load event before reloading, or the test aborts them.
-            await page.waitForFunction(() => document.readyState === 'complete', null, { timeout: 20000 });
+            try {
+              await page.waitForFunction(() => document.readyState === 'complete', null, { timeout: 20000 });
+            } catch (error) {
+              const diagnostic = await page.evaluate(() => ({
+                readyState: document.readyState,
+                htmlLength: document.documentElement?.outerHTML?.length || 0,
+                bodyChildCount: document.body?.children?.length || 0,
+                scripts: Array.from(document.scripts).map(s => ({ src: s.src || '[inline]', defer: s.defer, async: s.async, type: s.type })),
+                resources: performance.getEntriesByType('resource').map(r => ({ name: r.name, type: r.initiatorType, duration: Math.round(r.duration), size: r.transferSize })),
+                pendingImages: Array.from(document.images).filter(i => !i.complete).map(i => i.src),
+                documentWriteState: document.readyState
+              }));
+              console.error('DOCUMENT_LIFECYCLE_DIAGNOSTIC:', JSON.stringify(diagnostic));
+              throw error;
+            }
             stage('reload tools page after full document load');
             await page.reload({ waitUntil: 'commit' });
             await waitForCatalog('wait for catalog after reload');
