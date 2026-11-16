@@ -522,8 +522,11 @@ jobs:
                 }
                 const proof = upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected').sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0))[0];
                 if (!proof) return { ok: false, reason: 'ADMIN_UI_DID_NOT_REFRESH_REJECTED_PROOF' };
-                const state = await sb.rpc('ils_get_upi_proof_status', { p_order_id: proof.order_id });
-                if (state.error || state.data?.proof_status !== 'rejected' || state.data?.order_status !== 'pending') return { ok: false, reason: 'ADMIN_UI_REJECTION_UNLOCKED_ORDER' };
+                // This browser is authenticated as the admin, not as the order owner.
+                // Verify both states from the admin-only proof listing, which includes order_status.
+                if (proof.status !== 'rejected' || proof.order_status !== 'pending') {
+                  return { ok: false, reason: 'ADMIN_UI_REJECTION_UNLOCKED_ORDER: proof=' + proof.status + ', order=' + proof.order_status };
+                }
                 // Exercise TEST-only Storage-object guards after the fixture proof has been rejected.
                 // Reuse the authenticated Supabase client in this page; no direct fetch headers are assumed.
                 const submitAttempt = async (overrides) => {
