@@ -107,7 +107,9 @@ begin
   where o.bucket_id='payment-proofs'
     and o.name=v_path
     and o.owner=v_user
-    and o.owner_id=v_user::text;
+    and o.owner_id=v_user::text
+    and o.archived_at is null
+    and o.is_delete_marker is false;
   if not found then raise exception 'PAYMENT_PROOF_OBJECT_NOT_FOUND'; end if;
   if v_object_size is null or v_object_size<=0
      or v_object_size>5242880 or v_object_size<>p_file_size_bytes then
