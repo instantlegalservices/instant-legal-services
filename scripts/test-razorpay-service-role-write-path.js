@@ -28,6 +28,8 @@ assert.doesNotMatch(webhook,/from\("orders"\)\.update\(\{\s*status:\s*"failed"/)
 assert.match(migration,/status not in \('created','pending','failed'\)/);
 
 for(const marker of [
+ "alter table public.payment_events",
+ "add column if not exists payload jsonb",
  "create or replace function public.ils_reserve_razorpay_attempt",
  "grant execute on function public.ils_reserve_razorpay_attempt(uuid) to service_role",
  "create or replace function public.ils_attach_razorpay_order",
