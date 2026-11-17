@@ -61,10 +61,18 @@ Deno.serve(async req=>{
    const gp=await gr.json().catch(()=>({}));
    if(!gr.ok||gp?.order_id!==p.gateway_order_id||Number(gp?.amount)!==Math.round(Number(o.total)*100)||String(gp?.currency||"").toUpperCase()!==String(o.currency||"").toUpperCase()||gp?.status!=="captured")return json({ok:false,error:"GATEWAY_PAYMENT_NOT_CONFIRMED"},409);
    if(p.gateway_payment_id&&p.gateway_payment_id!==pid)return json({ok:false,error:"PAYMENT_ID_MISMATCH"},409);
+   var paidGatewayAmount=gp.amount;
+   var paidGatewayCurrency=gp.currency;
   }else if(p.gateway_payment_id&&p.gateway_payment_id!==pid)return json({ok:false,error:"PAYMENT_ID_MISMATCH"},409);
+  if(p.status==="paid"){
+   var paidGatewayAmount=Math.round(Number(p.amount)*100);
+   var paidGatewayCurrency=p.currency;
+  }
   // One database transaction settles payment, order, request and entitlement.
   const {data:finalized,error:finalizeError}=await admin.rpc("ils_finalize_razorpay_payment",{
-   p_payment_id:p.id,p_gateway_payment_id:pid
+   p_payment_id:p.id,p_gateway_payment_id:pid,
+   p_gateway_amount_minor:Number(paidGatewayAmount),
+   p_gateway_currency:String(paidGatewayCurrency||"")
   });
   if(finalizeError||!finalized?.ok)return json({ok:false,error:"PAYMENT_FINALIZATION_FAILED"},409);
   return json({ok:true,status:"paid",order_number:o.order_number});
