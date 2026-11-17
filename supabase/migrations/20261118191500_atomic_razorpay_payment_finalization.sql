@@ -181,7 +181,7 @@ END;
 $function$;
 
 REVOKE ALL ON FUNCTION public.ils_finalize_razorpay_payment(uuid,text,bigint,text) FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION public.ils_finalize_razorpay_payment(uuid,text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.ils_finalize_razorpay_payment(uuid,text,bigint,text) TO service_role;
 
 -- Prevent two concurrently-created active Razorpay attempts for one order.
 CREATE UNIQUE INDEX IF NOT EXISTS payments_razorpay_gateway_order_id_uidx
