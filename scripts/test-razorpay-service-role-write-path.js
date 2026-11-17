@@ -26,7 +26,7 @@ assert.match(endpoint,/candidate\?\.notes\?\.payment_attempt_id/);
 assert.match(endpoint,/candidate\?\.notes\?\.ils_order_id/);
 assert.match(endpoint,/reservation\.created_at/);
 assert.match(endpoint,/reservation\.existing_attempt===true/);
-assert.match(endpoint,/reconcile the same reservation before allowing any further create attempt/);
+assert.match(endpoint,/previous request may have timed out after Razorpay created the order/);
 assert.match(migration,/existing_attempt',true/);
 assert.doesNotMatch(migration,/RAZORPAY_ORDER_CREATION_IN_PROGRESS/);
 assert.doesNotMatch(endpoint,/update\(\{status:"failed"\}\)\.eq\("id",reservation\.payment_id\)/);
