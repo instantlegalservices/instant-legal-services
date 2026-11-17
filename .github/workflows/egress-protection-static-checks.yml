@@ -29,7 +29,10 @@ jobs:
         with:
           node-version: 20
 
-      - name: Verify professional application anonymous-read hardening\n        run: node scripts/test-professional-application-anon-read-hardening.js\n\n      - name: Check PWA JavaScript syntax
+      - name: Verify professional application anonymous-read hardening
+        run: node scripts/test-professional-application-anon-read-hardening.js
+
+      - name: Check PWA JavaScript syntax
         run: node --check assets/pwa.js
 
       - name: Verify judgment list/detail field projections
