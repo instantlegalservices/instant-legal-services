@@ -30,6 +30,7 @@ for(const marker of [
  "gateway_amount_currency_mismatch",
  "service_request_owner_mismatch",
  "order_service_mapping_mismatch",
+ "payments_razorpay_gateway_order_id_uidx",
  "payments_one_razorpay_created_per_order_uidx",
  "revoke all on function public.ils_finalize_razorpay_payment",
  "grant execute on function public.ils_finalize_razorpay_payment(uuid,text,bigint,text) to service_role"
