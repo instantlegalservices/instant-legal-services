@@ -33,8 +33,15 @@ Deno.serve(async req=>{
   if(!Number.isFinite(amount)||amount<=0||!/^[A-Z]{3}$/.test(currency))return json({ok:false,error:"INVALID_ORDER_AMOUNT"},422);
   if(reservation.gateway_order_id)return json({ok:true,key_id:kid,razorpay_order_id:reservation.gateway_order_id,payment_id:reservation.payment_id,amount,currency});
 
-  const rr=await fetch("https://api.razorpay.com/v1/orders",{method:"POST",headers:{Authorization:"Basic "+btoa(kid+":"+secret),"Content-Type":"application/json"},body:JSON.stringify({amount:Math.round(amount*100),currency,receipt:reservation.order_number,notes:{ils_order_id:oid,user_id:user.id},payment_capture:1})});
-  const ro=await rr.json().catch(()=>({}));
+  let rr:Response;
+  let ro:any;
+  try{
+   rr=await fetch("https://api.razorpay.com/v1/orders",{method:"POST",headers:{Authorization:"Basic "+btoa(kid+":"+secret),"Content-Type":"application/json"},body:JSON.stringify({amount:Math.round(amount*100),currency,receipt:reservation.order_number,notes:{ils_order_id:oid,user_id:user.id},payment_capture:1}),signal:AbortSignal.timeout(15000)});
+   ro=await rr.json().catch(()=>({}));
+  }catch{
+   await admin.from("payments").update({status:"failed"}).eq("id",reservation.payment_id).eq("status","pending").is("gateway_order_id",null);
+   return json({ok:false,error:"RAZORPAY_ORDER_CREATE_TIMEOUT"},504);
+  }
   if(!rr.ok||!ro?.id){
    await admin.from("payments").update({status:"failed"}).eq("id",reservation.payment_id).eq("status","pending");
    return json({ok:false,error:"RAZORPAY_ORDER_CREATE_FAILED"},502);
