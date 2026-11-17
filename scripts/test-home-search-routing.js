@@ -25,7 +25,11 @@ const { chromium } = require("playwright");
     const cases = [
       { query: "Chalan bharwana hai", expected: "Traffic / eChallan" },
       { query: "challan payment", expected: "Traffic / eChallan" },
-      { query: "e-chalan status", expected: "Traffic / eChallan" }
+      { query: "e-chalan status", expected: "Traffic / eChallan" },
+      { query: "UP Labour Department", expected: "UP Labour Department", official: "https://uplabour.gov.in/" },
+      { query: "labour registration UP", expected: "UP Labour Department", official: "https://uplabour.gov.in/" },
+      { query: "unpaid wages claim", expected: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" },
+      { query: "industrial dispute", expected: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" }
     ];
 
     for (const item of cases) {
@@ -36,9 +40,10 @@ const { chromium } = require("playwright");
       if (!result.includes(item.expected)) {
         throw new Error('Query "' + item.query + '" expected route "' + item.expected + '"; actual result: ' + result.slice(0, 800));
       }
-      const officialLink = page.locator('#result a[href="https://echallan.parivahan.gov.in/index/accused-challan"]');
+      const expectedOfficial = item.official || "https://echallan.parivahan.gov.in/index/accused-challan";
+      const officialLink = page.locator('#result a[href="' + expectedOfficial + '"]');
       if (await officialLink.count() < 1) {
-        throw new Error('Official eChallan link missing for query "' + item.query + '"');
+        throw new Error('Official link "' + expectedOfficial + '" missing for query "' + item.query + '"');
       }
       await page.locator("#close").click();
       await page.locator("#modal").waitFor({ state: "hidden" });
