@@ -29,7 +29,7 @@ for(const marker of [
  "create or replace function public.ils_reserve_razorpay_attempt",
  "create or replace function public.ils_attach_razorpay_order",
  "create or replace function public.ils_finalize_razorpay_payment",
- "razorpay_proof_pending",
+ "upi_proof_pending",
  "payment_proofs pp",
  "status in ('created','pending')",
  "for update",
