@@ -53,9 +53,10 @@ const samadhanRule = homepage.indexOf('keys:["samadhan labour"');
 const labourRule = homepage.indexOf('keys:["up labour"');
 assert.ok(samadhanRule >= 0 && labourRule > samadhanRule, "specific SAMADHAN claims must be classified before generic labour queries");
 
+const routeMapStart = homepage.indexOf("const routeMap=");
 for (const locale of ["hi-IN", "en-IN", "hinglish", "ur-IN", "bn-IN"]) {
-  const localeStart = homepage.indexOf('  "' + locale + '":{');
-  assert.ok(localeStart >= 0, "missing locale: " + locale);
+  const localeStart = homepage.indexOf('  "' + locale + '":{', routeMapStart);
+  assert.ok(localeStart >= 0, "missing route-map locale: " + locale);
   const nextLocale = homepage.indexOf('\n  "', localeStart + 4);
   const block = homepage.slice(localeStart, nextLocale < 0 ? homepage.length : nextLocale);
   assert.ok(block.includes('"UP Labour Department":['), "UP Labour translation missing: " + locale);
