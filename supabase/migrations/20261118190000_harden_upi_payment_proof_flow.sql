@@ -194,7 +194,8 @@ BEGIN
     INTO v_service_count,v_service_id
   FROM public.order_items
   WHERE order_id=v_order.id AND service_id IS NOT NULL;
-  IF v_service_count<>1 OR v_service_id IS NULL THEN
+  IF v_service_count<>1 OR v_service_id IS NULL
+     OR v_service_id IS DISTINCT FROM v_request.service_id THEN
     RAISE EXCEPTION 'ORDER_SERVICE_MAPPING_INVALID';
   END IF;
 
