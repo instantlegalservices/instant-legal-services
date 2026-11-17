@@ -14,7 +14,7 @@ assert.match(endpoint,/gp\?\.status!=="captured"/);
 assert.match(endpoint,/PAYMENT_FINALIZATION_FAILED/);
 assert.match(endpoint,/ils_reserve_razorpay_attempt/);
 assert.match(endpoint,/AbortSignal\.timeout\(15000\)/);
-assert.match(endpoint,/razorpay_order_create_timeout/);
+assert.match(endpoint,/RAZORPAY_ORDER_CREATE_TIMEOUT/);
 assert.match(endpoint,/ils_attach_razorpay_order/);
 assert.match(endpoint,/ils_finalize_razorpay_payment/);
 assert.doesNotMatch(endpoint,/admin\.from\("orders"\)\.update\(\{status:"paid"\}\)/);
