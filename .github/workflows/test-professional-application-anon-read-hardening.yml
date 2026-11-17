@@ -1,0 +1,25 @@
+name: Professional Application Anonymous Read Hardening
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261117183000_restrict_anon_professional_join_request_reads.sql"
+      - "scripts/test-professional-application-anon-read-hardening.js"
+      - ".github/workflows/test-professional-application-anon-read-hardening.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261117183000_restrict_anon_professional_join_request_reads.sql"
+      - "scripts/test-professional-application-anon-read-hardening.js"
+      - ".github/workflows/test-professional-application-anon-read-hardening.yml"
+
+jobs:
+  static-security-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Verify anonymous professional application read restrictions
+        run: node scripts/test-professional-application-anon-read-hardening.js
