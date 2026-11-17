@@ -14,7 +14,10 @@ assert.match(endpoint,/gp\?\.status!=="captured"/);
 assert.match(endpoint,/PAYMENT_FINALIZATION_FAILED/);
 assert.match(endpoint,/ils_reserve_razorpay_attempt/);
 assert.match(endpoint,/AbortSignal\.timeout\(15000\)/);
-assert.match(endpoint,/RAZORPAY_ORDER_CREATE_TIMEOUT/);
+assert.match(endpoint,/RAZORPAY_ORDER_CREATE_OUTCOME_UNKNOWN/);
+assert.match(endpoint,/receipt:"ILS"\+String\(reservation\.payment_id\)\.replaceAll\("-",""\)/);
+assert.match(endpoint,/payment_attempt_id:reservation\.payment_id/);
+assert.match(endpoint,/RAZORPAY_ORDER_ATTACH_RECONCILIATION_REQUIRED/);
 assert.match(endpoint,/ils_attach_razorpay_order/);
 assert.match(endpoint,/ils_finalize_razorpay_payment/);
 assert.doesNotMatch(endpoint,/admin\.from\("orders"\)\.update\(\{status:"paid"\}\)/);
@@ -42,7 +45,7 @@ for(const marker of [
  "upi_proof_pending",
  "payment_proofs pp",
  "status in ('created','pending')",
- "created_at < now() - interval '15 minutes'",
+ "do not expire unattached reservations automatically",
  "for update",
  "p_gateway_amount_minor",
  "gateway_amount_currency_mismatch",
