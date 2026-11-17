@@ -48,7 +48,7 @@ Deno.serve(async req=>{
   const {data:p,error:pe}=await admin.from("payments").select("id,gateway_order_id,gateway_payment_id,status").eq("order_id",oid).eq("gateway","razorpay").order("created_at",{ascending:false}).limit(1).maybeSingle();
   if(pe)return json({ok:false,error:"PAYMENT_LOOKUP_FAILED"},500);
   if(!p?.gateway_order_id)return json({ok:false,error:"PAYMENT_RECORD_NOT_FOUND"},404);
-  if(p.status!=="paid"){
+  if(p.status!=="paid"||!p.gateway_payment_id){
    const expected=await hmac(secret,p.gateway_order_id+"|"+pid);
    if(!safeEqual(expected,sig))return json({ok:false,error:"SIGNATURE_VERIFICATION_FAILED"},400);
    const gr=await fetch("https://api.razorpay.com/v1/payments/"+encodeURIComponent(pid),{headers:{Authorization:"Basic "+btoa(kid+":"+secret)}});
