@@ -27,22 +27,23 @@ Deno.serve(async req=>{
   if(oe)return json({ok:false,error:"ORDER_LOOKUP_FAILED"},500);
   if(!o)return json({ok:false,error:"ORDER_NOT_FOUND"},404);
   if(o.status!=="pending")return json({ok:false,error:"ORDER_NOT_PAYABLE"},409);
-  const amount=Number(o.total),currency=String(o.currency||"").toUpperCase();
+  const {data:reservation,error:reservationError}=await admin.rpc("ils_reserve_razorpay_attempt",{p_order_id:oid});
+  if(reservationError||!reservation?.ok)return json({ok:false,error:reservationError?.message||"PAYMENT_RESERVATION_FAILED"},409);
+  const amount=Number(reservation.amount),currency=String(reservation.currency||"").toUpperCase();
   if(!Number.isFinite(amount)||amount<=0||!/^[A-Z]{3}$/.test(currency))return json({ok:false,error:"INVALID_ORDER_AMOUNT"},422);
-  const {data:ex,error:xe}=await admin.from("payments").select("id,gateway_order_id,status").eq("order_id",oid).eq("gateway","razorpay").eq("status","created").order("created_at",{ascending:false}).limit(1).maybeSingle();
-  if(xe)return json({ok:false,error:"PAYMENT_LOOKUP_FAILED"},500);
-  if(ex?.gateway_order_id)return json({ok:true,key_id:kid,razorpay_order_id:ex.gateway_order_id,payment_id:ex.id,amount,currency});
-  const rr=await fetch("https://api.razorpay.com/v1/orders",{method:"POST",headers:{Authorization:"Basic "+btoa(kid+":"+secret),"Content-Type":"application/json"},body:JSON.stringify({amount:Math.round(amount*100),currency,receipt:o.order_number,notes:{ils_order_id:o.id,user_id:user.id},payment_capture:1})});
+  if(reservation.gateway_order_id)return json({ok:true,key_id:kid,razorpay_order_id:reservation.gateway_order_id,payment_id:reservation.payment_id,amount,currency});
+
+  const rr=await fetch("https://api.razorpay.com/v1/orders",{method:"POST",headers:{Authorization:"Basic "+btoa(kid+":"+secret),"Content-Type":"application/json"},body:JSON.stringify({amount:Math.round(amount*100),currency,receipt:reservation.order_number,notes:{ils_order_id:oid,user_id:user.id},payment_capture:1})});
   const ro=await rr.json().catch(()=>({}));
-  if(!rr.ok||!ro?.id)return json({ok:false,error:"RAZORPAY_ORDER_CREATE_FAILED"},502);
-  const {data:p,error:pe}=await admin.from("payments").insert({order_id:oid,gateway:"razorpay",gateway_order_id:ro.id,amount,currency,status:"created"}).select("id").single();
-  if(pe||!p){
-   // A concurrent checkout may have won the one-active-attempt constraint.
-   const {data:existing,error:lookupError}=await admin.from("payments").select("id,gateway_order_id").eq("order_id",oid).eq("gateway","razorpay").eq("status","created").order("created_at",{ascending:false}).limit(1).maybeSingle();
-   if(lookupError||!existing?.gateway_order_id)return json({ok:false,error:"PAYMENT_RECORD_FAILED"},500);
-   return json({ok:true,key_id:kid,razorpay_order_id:existing.gateway_order_id,payment_id:existing.id,amount,currency});
+  if(!rr.ok||!ro?.id){
+   await admin.from("payments").update({status:"failed"}).eq("id",reservation.payment_id).eq("status","pending");
+   return json({ok:false,error:"RAZORPAY_ORDER_CREATE_FAILED"},502);
   }
-  return json({ok:true,key_id:kid,razorpay_order_id:ro.id,payment_id:p.id,amount,currency});
+  const {data:attached,error:attachError}=await admin.rpc("ils_attach_razorpay_order",{
+   p_payment_id:reservation.payment_id,p_gateway_order_id:String(ro.id)
+  });
+  if(attachError||!attached?.ok)return json({ok:false,error:"RAZORPAY_ORDER_ATTACH_FAILED"},500);
+  return json({ok:true,key_id:kid,razorpay_order_id:ro.id,payment_id:reservation.payment_id,amount,currency});
  }
  if(body?.action==="verify"){
   const oid=String(body.order_id||"").trim(),pid=String(body.razorpay_payment_id||"").trim(),sig=String(body.razorpay_signature||"").trim();
