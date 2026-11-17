@@ -42,7 +42,10 @@ Deno.serve(async req=>{
   const {data:attached,error:attachError}=await admin.rpc("ils_attach_razorpay_order",{
    p_payment_id:reservation.payment_id,p_gateway_order_id:String(ro.id)
   });
-  if(attachError||!attached?.ok)return json({ok:false,error:"RAZORPAY_ORDER_ATTACH_FAILED"},500);
+  if(attachError||!attached?.ok){
+   await admin.from("payments").update({status:"failed"}).eq("id",reservation.payment_id).eq("status","pending").is("gateway_order_id",null);
+   return json({ok:false,error:"RAZORPAY_ORDER_ATTACH_FAILED"},500);
+  }
   return json({ok:true,key_id:kid,razorpay_order_id:ro.id,payment_id:reservation.payment_id,amount,currency});
  }
  if(body?.action==="verify"){
