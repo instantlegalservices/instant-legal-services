@@ -75,8 +75,11 @@ Deno.serve(async (req) => {
   } else if (eventType === "payment.failed") {
     // Do not fail the order on a gateway failure event: webhook delivery can be out of order.
     if (row.status !== "paid" && !row.gateway_payment_id) {
+      // A failed attempt is not the final payment ID for the Razorpay order:
+      // customers may retry and a later captured event can carry a different ID.
+      // Bind gateway_payment_id only after a captured payment is confirmed.
       const { error: paymentError } = await db.from("payments")
-        .update({ gateway_payment_id: payment.id, status: "failed" })
+        .update({ status: "failed" })
         .eq("id", row.id)
         .in("status", ["created", "pending"]);
       if (paymentError) return new Response("Payment update failed", { status: 500 });
