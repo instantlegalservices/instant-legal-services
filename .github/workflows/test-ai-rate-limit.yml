@@ -5,7 +5,7 @@ on:
       - "supabase/functions/ai-assistant/**"
       - "supabase/functions/ils-ai-assistant/**"
       - "supabase/functions/_shared/ai-rate-limit.ts"
-      - "supabase/migrations/20261117070000_ils_ai_rate_limit_shared.sql"
+      - "supabase/migrations/20261117063714_ils_ai_rate_limit_shared.sql"
       - "scripts/test-ai-rate-limit.mjs"
       - ".github/workflows/test-ai-rate-limit.yml"
   push:
@@ -15,7 +15,7 @@ on:
       - "supabase/functions/ai-assistant/**"
       - "supabase/functions/ils-ai-assistant/**"
       - "supabase/functions/_shared/ai-rate-limit.ts"
-      - "supabase/migrations/20261117070000_ils_ai_rate_limit_shared.sql"
+      - "supabase/migrations/20261117063714_ils_ai_rate_limit_shared.sql"
       - "scripts/test-ai-rate-limit.mjs"
       - ".github/workflows/test-ai-rate-limit.yml"
 jobs:
