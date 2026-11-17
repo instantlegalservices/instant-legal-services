@@ -1,7 +1,8 @@
--- Tighten anonymous privileges while retaining the two intentionally public paths:
--- 1) advocate_registrations: public INSERT remains available behind its existing RLS validation policy.
--- 2) judgments: public SELECT remains available behind the verified + completed RLS policy.
--- All other target tables are private and receive no anon privileges.
+-- Tighten anonymous privileges while retaining only the intentional public path:
+-- judgments: public SELECT remains available behind the verified + completed RLS policy.
+-- Advocate registration is handled by the register-advocate Edge Function using
+-- a service-role client; anonymous direct table INSERT is not required.
+-- Private profile, research, customer profile and tool-run tables receive no anon grants.
 -- No policies, authenticated/service_role grants, or table data are changed.
 
 DO $migration$
@@ -11,7 +12,6 @@ DECLARE
   v_privilege text;
   v_relation regclass;
   v_expected_select boolean;
-  v_expected_insert boolean;
 BEGIN
   FOREACH v_table IN ARRAY ARRAY[
     'advocate_registrations',
@@ -30,7 +30,7 @@ BEGIN
       v_table
     );
 
-    -- Remove any column-specific grants before restoring only intentional table-level access.
+    -- Remove any column-specific grants before restoring only public judgment SELECT.
     FOR v_column IN
       SELECT column_name
       FROM information_schema.columns
@@ -46,20 +46,16 @@ BEGIN
     END LOOP;
 
     v_expected_select := (v_table = 'judgments');
-    v_expected_insert := (v_table = 'advocate_registrations');
 
     IF v_expected_select THEN
       EXECUTE format('GRANT SELECT ON TABLE public.%I TO anon', v_table);
-    END IF;
-    IF v_expected_insert THEN
-      EXECUTE format('GRANT INSERT ON TABLE public.%I TO anon', v_table);
     END IF;
 
     IF has_table_privilege('anon', v_relation, 'SELECT') <> v_expected_select THEN
       RAISE EXCEPTION 'Unexpected anon SELECT privilege on public.%', v_table;
     END IF;
-    IF has_table_privilege('anon', v_relation, 'INSERT') <> v_expected_insert THEN
-      RAISE EXCEPTION 'Unexpected anon INSERT privilege on public.%', v_table;
+    IF has_table_privilege('anon', v_relation, 'INSERT') THEN
+      RAISE EXCEPTION 'anon retains INSERT on public.%', v_table;
     END IF;
 
     FOREACH v_privilege IN ARRAY ARRAY[
@@ -72,10 +68,8 @@ BEGIN
 
     FOREACH v_privilege IN ARRAY ARRAY['SELECT', 'INSERT', 'UPDATE', 'REFERENCES'] LOOP
       IF has_any_column_privilege('anon', v_relation, v_privilege) THEN
-        -- Table-level grants also satisfy has_any_column_privilege; allow only the
-        -- matching intentionally-public privilege on its corresponding table.
-        IF NOT (v_table = 'judgments' AND v_privilege = 'SELECT')
-           AND NOT (v_table = 'advocate_registrations' AND v_privilege = 'INSERT') THEN
+        -- Table-level SELECT on judgments also satisfies has_any_column_privilege.
+        IF NOT (v_table = 'judgments' AND v_privilege = 'SELECT') THEN
           RAISE EXCEPTION 'anon retains unexpected column-level % on public.%', v_privilege, v_table;
         END IF;
       END IF;
