@@ -29,7 +29,9 @@ assert.match(migration,/status not in \('created','pending','failed'\)/);
 
 for(const marker of [
  "create or replace function public.ils_reserve_razorpay_attempt",
+ "grant execute on function public.ils_reserve_razorpay_attempt(uuid) to service_role",
  "create or replace function public.ils_attach_razorpay_order",
+ "grant execute on function public.ils_attach_razorpay_order(uuid,text) to service_role",
  "create or replace function public.ils_finalize_razorpay_payment",
  "upi_proof_pending",
  "payment_proofs pp",
