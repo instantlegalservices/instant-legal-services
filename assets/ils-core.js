@@ -488,16 +488,7 @@ window.ILS = (() => {
         payload.matter,
 
       brief_requirement:
-        String(payload.brief || "").trim(),
-
-      status:
-        "New",
-
-      payment_status:
-        "Pending",
-
-      priority:
-        "Normal"
+        String(payload.brief || "").trim()
     };
 
     const { error } = await client
