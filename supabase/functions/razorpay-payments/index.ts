@@ -6,6 +6,28 @@ const env=(k:string)=>Deno.env.get(k)||"";
 const url=env("SUPABASE_URL"),anonKey=env("SUPABASE_ANON_KEY"),serviceRoleKey=env("SUPABASE_SERVICE_ROLE_KEY"),kid=env("RAZORPAY_KEY_ID"),secret=env("RAZORPAY_KEY_SECRET");
 async function hmac(s:string,m:string){const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(s),{name:"HMAC",hash:"SHA-256"},false,["sign"]);const b=await crypto.subtle.sign("HMAC",k,new TextEncoder().encode(m));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");}
 function safeEqual(a:string,b:string){if(a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0;}
+async function reconcileRazorpayOrder(paymentAttemptId:string,orderId:string,amount:number,currency:string,createdAt:number){
+ const receipt="ILS"+String(paymentAttemptId).replaceAll("-","");
+ const from=Math.max(0,Math.floor(createdAt)-60);
+ const to=Math.floor(Date.now()/1000)+60;
+ const matches:any[]=[];
+ let complete=false;
+ for(let skip=0;skip<1000;skip+=100){
+  const query=new URLSearchParams({from:String(from),to:String(to),count:"100",skip:String(skip)});
+  let response:Response;
+  try{response=await fetch("https://api.razorpay.com/v1/orders?"+query.toString(),{headers:{Authorization:"Basic "+btoa(kid+":"+secret)},signal:AbortSignal.timeout(10000)});}
+  catch{return {ok:false,reason:"ORDER_LOOKUP_UNAVAILABLE"};}
+  const page=await response.json().catch(()=>null);
+  if(!response.ok||!Array.isArray(page?.items))return {ok:false,reason:"ORDER_LOOKUP_UNAVAILABLE"};
+  for(const candidate of page.items){
+   if(candidate?.receipt===receipt && String(candidate?.notes?.payment_attempt_id||"")===String(paymentAttemptId) && String(candidate?.notes?.ils_order_id||"")===String(orderId) && Number(candidate?.amount)===Math.round(amount*100) && String(candidate?.currency||"").toUpperCase()===currency)matches.push(candidate);
+  }
+  if(page.items.length<100){complete=true;break;}
+ }
+ if(!complete)return {ok:false,reason:"ORDER_LOOKUP_WINDOW_INCOMPLETE"};
+ if(matches.length!==1)return {ok:false,reason:matches.length>1?"MULTIPLE_MATCHING_GATEWAY_ORDERS":"NO_MATCHING_GATEWAY_ORDER"};
+ return {ok:true,order:matches[0]};
+}
 Deno.serve(async req=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
@@ -43,8 +65,10 @@ Deno.serve(async req=>{
    return json({ok:false,error:"RAZORPAY_ORDER_CREATE_OUTCOME_UNKNOWN"},504);
   }
   if(!rr.ok||!ro?.id){
-   await admin.from("payments").update({status:"failed"}).eq("id",reservation.payment_id).eq("status","pending");
-   return json({ok:false,error:"RAZORPAY_ORDER_CREATE_FAILED"},502);
+   // Duplicate receipt may mean the original order already exists. Reconcile exact identifiers before proceeding.
+   const reconciled=await reconcileRazorpayOrder(String(reservation.payment_id),oid,amount,currency,Number(reservation.created_at));
+   if(!reconciled.ok)return json({ok:false,error:"RAZORPAY_ORDER_RECONCILIATION_REQUIRED",reason:reconciled.reason},409);
+   ro=reconciled.order;
   }
   const {data:attached,error:attachError}=await admin.rpc("ils_attach_razorpay_order",{
    p_payment_id:reservation.payment_id,p_gateway_order_id:String(ro.id)
