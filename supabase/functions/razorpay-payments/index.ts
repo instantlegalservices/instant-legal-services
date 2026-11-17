@@ -36,7 +36,12 @@ Deno.serve(async req=>{
   const ro=await rr.json().catch(()=>({}));
   if(!rr.ok||!ro?.id)return json({ok:false,error:"RAZORPAY_ORDER_CREATE_FAILED"},502);
   const {data:p,error:pe}=await admin.from("payments").insert({order_id:oid,gateway:"razorpay",gateway_order_id:ro.id,amount,currency,status:"created"}).select("id").single();
-  if(pe||!p)return json({ok:false,error:"PAYMENT_RECORD_FAILED"},500);
+  if(pe||!p){
+   // A concurrent checkout may have won the one-active-attempt constraint.
+   const {data:existing,error:lookupError}=await admin.from("payments").select("id,gateway_order_id").eq("order_id",oid).eq("gateway","razorpay").eq("status","created").order("created_at",{ascending:false}).limit(1).maybeSingle();
+   if(lookupError||!existing?.gateway_order_id)return json({ok:false,error:"PAYMENT_RECORD_FAILED"},500);
+   return json({ok:true,key_id:kid,razorpay_order_id:existing.gateway_order_id,payment_id:existing.id,amount,currency});
+  }
   return json({ok:true,key_id:kid,razorpay_order_id:ro.id,payment_id:p.id,amount,currency});
  }
  if(body?.action==="verify"){
@@ -45,9 +50,10 @@ Deno.serve(async req=>{
   const {data:o,error:oe}=await admin.from("orders").select("id,order_number,total,currency,status,user_id,service_request_id").eq("id",oid).eq("user_id",user.id).maybeSingle();
   if(oe)return json({ok:false,error:"ORDER_LOOKUP_FAILED"},500);
   if(!o)return json({ok:false,error:"ORDER_NOT_FOUND"},404);
-  const {data:p,error:pe}=await admin.from("payments").select("id,gateway_order_id,gateway_payment_id,status").eq("order_id",oid).eq("gateway","razorpay").order("created_at",{ascending:false}).limit(1).maybeSingle();
+  const {data:p,error:pe}=await admin.from("payments").select("id,gateway_order_id,gateway_payment_id,status,amount,currency").eq("order_id",oid).eq("gateway","razorpay").order("created_at",{ascending:false}).limit(1).maybeSingle();
   if(pe)return json({ok:false,error:"PAYMENT_LOOKUP_FAILED"},500);
   if(!p?.gateway_order_id)return json({ok:false,error:"PAYMENT_RECORD_NOT_FOUND"},404);
+  if(Number(p.amount)!==Number(o.total)||String(p.currency||"").toUpperCase()!==String(o.currency||"").toUpperCase())return json({ok:false,error:"PAYMENT_ORDER_AMOUNT_CURRENCY_MISMATCH"},409);
   if(p.status!=="paid"||!p.gateway_payment_id){
    const expected=await hmac(secret,p.gateway_order_id+"|"+pid);
    if(!safeEqual(expected,sig))return json({ok:false,error:"SIGNATURE_VERIFICATION_FAILED"},400);
@@ -55,20 +61,12 @@ Deno.serve(async req=>{
    const gp=await gr.json().catch(()=>({}));
    if(!gr.ok||gp?.order_id!==p.gateway_order_id||Number(gp?.amount)!==Math.round(Number(o.total)*100)||String(gp?.currency||"").toUpperCase()!==String(o.currency||"").toUpperCase()||gp?.status!=="captured")return json({ok:false,error:"GATEWAY_PAYMENT_NOT_CONFIRMED"},409);
    if(p.gateway_payment_id&&p.gateway_payment_id!==pid)return json({ok:false,error:"PAYMENT_ID_MISMATCH"},409);
-   const {error}=await admin.from("payments").update({gateway_payment_id:pid,status:"paid",paid_at:new Date().toISOString()}).eq("id",p.id);
-   if(error)return json({ok:false,error:"PAYMENT_UPDATE_FAILED"},500);
   }else if(p.gateway_payment_id&&p.gateway_payment_id!==pid)return json({ok:false,error:"PAYMENT_ID_MISMATCH"},409);
-  const {error:oe2}=await admin.from("orders").update({status:"paid"}).eq("id",oid);
-  if(oe2)return json({ok:false,error:"ORDER_UPDATE_FAILED"},500);
-  if(o.service_request_id){
-   const {data:sr,error:se}=await admin.from("service_requests").select("id,service_id").eq("id",o.service_request_id).eq("user_id",user.id).maybeSingle();
-   if(se)return json({ok:false,error:"SERVICE_REQUEST_LOOKUP_FAILED"},500);
-   if(!sr?.service_id)return json({ok:false,error:"SERVICE_REQUEST_NOT_FOUND"},409);
-   const {error:sue}=await admin.from("service_requests").update({status:"paid"}).eq("id",sr.id);
-   if(sue)return json({ok:false,error:"SERVICE_REQUEST_UPDATE_FAILED"},500);
-   const {error:ee}=await admin.from("entitlements").upsert({user_id:user.id,service_id:sr.service_id,order_id:oid,status:"active"},{onConflict:"user_id,service_id,order_id"});
-   if(ee)return json({ok:false,error:"ENTITLEMENT_GRANT_FAILED"},500);
-  }
+  // One database transaction settles payment, order, request and entitlement.
+  const {data:finalized,error:finalizeError}=await admin.rpc("ils_finalize_razorpay_payment",{
+   p_payment_id:p.id,p_gateway_payment_id:pid
+  });
+  if(finalizeError||!finalized?.ok)return json({ok:false,error:"PAYMENT_FINALIZATION_FAILED"},409);
   return json({ok:true,status:"paid",order_number:o.order_number});
  }
  return json({ok:false,error:"UNKNOWN_ACTION"},400);
