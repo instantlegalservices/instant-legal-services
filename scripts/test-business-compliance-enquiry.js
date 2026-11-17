@@ -24,7 +24,7 @@ try {
   assert.equal(await page.locator("#businessEnquiryForm input[type=password]").count(), 0, "initial enquiry must not require a password");
 
   const gridColumns = await page.locator(".bc-form-grid").evaluate(el => getComputedStyle(el).gridTemplateColumns);
-  assert.equal(gridColumns.trim().split(/\\s+/).length, 1, "form fields should stack on a mobile viewport");
+  assert.equal(gridColumns.trim().split(/\s+/).length, 1, "form fields should stack on a mobile viewport");
 
   await page.locator("#bcName").fill("Test Business Owner");
   await page.locator("#bcMobile").fill("9876543210");
