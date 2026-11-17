@@ -36,11 +36,11 @@ Deno.serve(async req=>{
   let rr:Response;
   let ro:any;
   try{
-   rr=await fetch("https://api.razorpay.com/v1/orders",{method:"POST",headers:{Authorization:"Basic "+btoa(kid+":"+secret),"Content-Type":"application/json"},body:JSON.stringify({amount:Math.round(amount*100),currency,receipt:reservation.order_number,notes:{ils_order_id:oid,user_id:user.id},payment_capture:1}),signal:AbortSignal.timeout(15000)});
+   rr=await fetch("https://api.razorpay.com/v1/orders",{method:"POST",headers:{Authorization:"Basic "+btoa(kid+":"+secret),"Content-Type":"application/json"},body:JSON.stringify({amount:Math.round(amount*100),currency,receipt:"ILS"+String(reservation.payment_id).replaceAll("-",""),notes:{ils_order_id:oid,user_id:user.id,payment_attempt_id:reservation.payment_id},payment_capture:1}),signal:AbortSignal.timeout(15000)});
    ro=await rr.json().catch(()=>({}));
   }catch{
-   await admin.from("payments").update({status:"failed"}).eq("id",reservation.payment_id).eq("status","pending").is("gateway_order_id",null);
-   return json({ok:false,error:"RAZORPAY_ORDER_CREATE_TIMEOUT"},504);
+   // Gateway may have created the order despite this network timeout. Keep the reservation pending so UPI fallback and duplicate creates remain blocked until reconciliation.
+   return json({ok:false,error:"RAZORPAY_ORDER_CREATE_OUTCOME_UNKNOWN"},504);
   }
   if(!rr.ok||!ro?.id){
    await admin.from("payments").update({status:"failed"}).eq("id",reservation.payment_id).eq("status","pending");
@@ -50,8 +50,8 @@ Deno.serve(async req=>{
    p_payment_id:reservation.payment_id,p_gateway_order_id:String(ro.id)
   });
   if(attachError||!attached?.ok){
-   await admin.from("payments").update({status:"failed"}).eq("id",reservation.payment_id).eq("status","pending").is("gateway_order_id",null);
-   return json({ok:false,error:"RAZORPAY_ORDER_ATTACH_FAILED"},500);
+   // External order exists; keep the reservation pending and block another gateway attempt until reconciliation.
+   return json({ok:false,error:"RAZORPAY_ORDER_ATTACH_RECONCILIATION_REQUIRED"},500);
   }
   return json({ok:true,key_id:kid,razorpay_order_id:ro.id,payment_id:reservation.payment_id,amount,currency});
  }
