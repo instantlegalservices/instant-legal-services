@@ -49,9 +49,12 @@ for (const route of routes) {
 
 assert.ok(homepage.includes('"up-labour-department": {'), "UP Labour route context missing");
 assert.ok(homepage.includes('"samadhan-labour-disputes": {'), "SAMADHAN route context missing");
+const legalAssistanceRule = homepage.indexOf('keys:["labour lawyer"');
 const samadhanRule = homepage.indexOf('keys:["samadhan labour"');
 const labourRule = homepage.indexOf('keys:["up labour"');
-assert.ok(samadhanRule >= 0 && labourRule > samadhanRule, "specific SAMADHAN claims must be classified before generic labour queries");
+assert.ok(legalAssistanceRule >= 0 && samadhanRule > legalAssistanceRule && labourRule > samadhanRule, "specific legal-assistance and SAMADHAN claims must be classified before generic labour queries");
+const genericLabourRule = homepage.slice(labourRule, homepage.indexOf('title:"UP Labour Department"', labourRule));
+assert.ok(!genericLabourRule.includes('"labour","labor","labour law"'), "ambiguous single-word labour queries must not be forced to the UP government portal");
 
 const routeMapStart = homepage.indexOf("const routeMap=");
 for (const locale of ["hi-IN", "en-IN", "hinglish", "ur-IN", "bn-IN"]) {
@@ -61,6 +64,7 @@ for (const locale of ["hi-IN", "en-IN", "hinglish", "ur-IN", "bn-IN"]) {
   const block = homepage.slice(localeStart, nextLocale < 0 ? homepage.length : nextLocale);
   assert.ok(block.includes('"UP Labour Department":['), "UP Labour translation missing: " + locale);
   assert.ok(block.includes('"SAMADHAN Labour Disputes":['), "SAMADHAN translation missing: " + locale);
+  assert.ok(block.includes('"Labour & Employment Legal Assistance":['), "labour legal-assistance translation missing: " + locale);
 }
 
 console.log("PASS: labour route registry, query routing, localized labels, SEO canonicals, navigator cards and sitemap entries.");
