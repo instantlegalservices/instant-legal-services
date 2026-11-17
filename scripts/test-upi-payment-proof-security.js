@@ -6,6 +6,8 @@ for(const s of [
  "revoke insert on table public.payment_proofs from authenticated, public",
  "drop policy if exists payment_proofs_insert_own",
  "payment_proofs_active_utr_uidx",
+ "payment_proofs_utr_order_history_uidx",
+ "upper(regexp_replace(transaction_ref, '[^a-za-z0-9]', '', 'g'))=v_ref",
  "pg_advisory_xact_lock(hashtextextended(v_ref,0))",
  "o.bucket_id='payment-proofs'",
  "o.owner=v_user",
