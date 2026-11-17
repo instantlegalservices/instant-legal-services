@@ -37,7 +37,8 @@ BEGIN
     IF v_payment.gateway_order_id IS NULL THEN RAISE EXCEPTION 'RAZORPAY_ORDER_CREATION_IN_PROGRESS'; END IF;
     RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
       'gateway_order_id',v_payment.gateway_order_id,'amount',v_order.total,
-      'currency',v_order.currency,'order_number',v_order.order_number);
+      'currency',v_order.currency,'order_number',v_order.order_number,
+      'created_at',extract(epoch from v_payment.created_at)::bigint);
   END IF;
 
   INSERT INTO public.payments(order_id,gateway,amount,currency,status)
@@ -45,7 +46,8 @@ BEGIN
   RETURNING * INTO v_payment;
   RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
     'gateway_order_id',NULL,'amount',v_order.total,
-    'currency',v_order.currency,'order_number',v_order.order_number);
+    'currency',v_order.currency,'order_number',v_order.order_number,
+      'created_at',extract(epoch from v_payment.created_at)::bigint);
 END;
 $function$;
 
