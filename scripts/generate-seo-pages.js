@@ -378,9 +378,15 @@ const GOVERNMENT_SERVICES = [
     title: "SAMADHAN Labour Disputes",
     category: "Government of India",
     description:
-      "Official Ministry of Labour and Employment portal for industrial disputes, eligible labour-law claims and employment-related grievances.",
+      "Official Ministry of Labour and Employment route for eligible labour and industrial dispute filings through SAMADHAN 2.0.",
     guidance:
-      "The official SAMADHAN portal supports eligible industrial disputes, including certain termination disputes, and claims such as unpaid or delayed wages, minimum wages, gratuity and maternity benefits. Check the portal's current eligibility, applicable law and filing instructions before proceeding.",
+      "SAMADHAN 2.0 is the Ministry of Labour and Employment's online route for eligible labour and industrial dispute filings. The exact complaint category, competent authority, jurisdiction, limitation period and required documents depend on the facts and the portal's current instructions. Do not assume that every employment or wage dispute is accepted through this portal.",
+    legalFramework:
+      "The four Labour Codes — the Code on Wages, 2019; Industrial Relations Code, 2020; Code on Social Security, 2020; and Occupational Safety, Health and Working Conditions Code, 2020 — came into effect on 21 November 2025. Check the current Code, applicable rules, transitional provisions and portal instructions for your specific claim.",
+    legalFrameworkSourceUrl:
+      "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192463",
+    applicantManualUrl:
+      "https://samadhan.labour.gov.in/documents/User_Manual_Applicants.pdf",
     officialUrl:
       "https://samadhan.labour.gov.in/"
   },
@@ -514,6 +520,8 @@ function governmentPageContent(service) {
   <p>${escapeHtml(service.description)}</p>
 
   ${service.guidance ? `<div class="card"><h2>What this portal is for</h2><p>${escapeHtml(service.guidance)}</p></div>` : ""}
+
+  ${service.legalFramework ? `<div class="card"><h2>Current legal framework</h2><p>${escapeHtml(service.legalFramework)}</p><p><a href="${escapeHtml(service.legalFrameworkSourceUrl)}" target="_blank" rel="noopener noreferrer">Ministry announcement on implementation of the four Labour Codes ↗</a></p><p><a href="${escapeHtml(service.applicantManualUrl)}" target="_blank" rel="noopener noreferrer">SAMADHAN applicant user manual ↗</a></p></div>` : ""}
 
   <div class="card" style="background:#fafafa">
     <h2>Official Government Route</h2>
