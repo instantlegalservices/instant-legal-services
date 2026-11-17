@@ -25,6 +25,7 @@ for(const s of [
  "v_service_id is distinct from v_request.service_id",
  "razorpay_payment_attempt_exists",
  "status in ('created','pending','paid')",
+ "status='failed' and gateway_order_id is not null",
  "entitlements e",
  "revoke all on function public.ils_submit_upi_payment_proof",
  "grant execute on function public.ils_submit_upi_payment_proof"
