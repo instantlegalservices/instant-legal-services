@@ -12,9 +12,9 @@ await page.route("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2", route =
     status: 200,
     contentType: "application/javascript",
     body: `
-      window.__ilsTestCapture = [];
+      window.__ilsTestCapture = [];\n      window.__ilsCreateClientCount = 0;
       window.supabase = {
-        createClient: () => ({
+        createClient: () => {\n          window.__ilsCreateClientCount++;\n          return ({
           from: table => ({
             insert: async rows => {
               window.__ilsTestCapture.push({ table, rows });
@@ -31,7 +31,7 @@ try {
   await page.goto(new URL("business-compliance.html", baseUrl).toString(), { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => !!window.ILS?.submitRequirement);
 
-  assert.equal(await page.locator("#businessEnquiryForm").count(), 1, "business enquiry form should exist");
+  assert.equal(await page.locator("#businessEnquiryForm").count(), 1, "business enquiry form should exist");\n  assert.equal(await page.evaluate(() => window.__ilsCreateClientCount), 1, "the page should create exactly one canonical Supabase client");
   assert.equal(await page.locator("#businessEnquiryForm input[type=password]").count(), 0, "initial enquiry must not require a password");
 
   const gridColumns = await page.locator(".bc-form-grid").evaluate(el => getComputedStyle(el).gridTemplateColumns);
