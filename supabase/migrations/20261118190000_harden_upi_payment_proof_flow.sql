@@ -21,6 +21,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS payment_proofs_active_utr_uidx
 ON public.payment_proofs (transaction_ref)
 WHERE status IN ('pending','verified');
 
+-- Retain cross-order UTR uniqueness even after a proof is rejected.
+-- Same-order resubmission remains possible after correcting the evidence.
+CREATE UNIQUE INDEX IF NOT EXISTS payment_proofs_utr_order_history_uidx
+ON public.payment_proofs (
+  upper(regexp_replace(transaction_ref, '[^A-Za-z0-9]', '', 'g')),
+  order_id
+);
+
 CREATE OR REPLACE FUNCTION public.ils_submit_upi_payment_proof(
   p_order_id uuid,
   p_amount numeric,
@@ -109,7 +117,8 @@ BEGIN
   -- Serialize a canonical UTR across concurrent submissions, including rejected history.
   PERFORM pg_advisory_xact_lock(hashtextextended(v_ref,0));
   IF EXISTS (SELECT 1 FROM public.payment_proofs
-             WHERE transaction_ref=v_ref AND order_id<>p_order_id) THEN
+             WHERE upper(regexp_replace(transaction_ref, '[^A-Za-z0-9]', '', 'g'))=v_ref
+               AND order_id<>p_order_id) THEN
     RAISE EXCEPTION 'TRANSACTION_REFERENCE_ALREADY_USED';
   END IF;
   IF EXISTS (SELECT 1 FROM public.payment_proofs
