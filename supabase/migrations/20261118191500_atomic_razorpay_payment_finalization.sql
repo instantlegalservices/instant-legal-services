@@ -2,6 +2,10 @@
 -- Edge handlers must independently validate gateway signature/payment status before invoking.
 BEGIN;
 
+-- TEST's isolated payment_events schema uses `data`; Production already has `payload`.
+ALTER TABLE public.payment_events
+  ADD COLUMN IF NOT EXISTS payload jsonb NOT NULL DEFAULT '{}'::jsonb;
+
 CREATE OR REPLACE FUNCTION public.ils_reserve_razorpay_attempt(p_order_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
