@@ -12,6 +12,8 @@ on:
       - "advocates.html"
       - "index.html"
       - "supabase/functions/daily-judgment-pipeline/**"
+      - "supabase/migrations/20261117183000_restrict_anon_professional_join_request_reads.sql"
+      - "scripts/test-professional-application-anon-read-hardening.js"
       - ".github/workflows/egress-protection-static-checks.yml"
   workflow_dispatch:
 
@@ -27,7 +29,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Check PWA JavaScript syntax
+      - name: Verify professional application anonymous-read hardening\n        run: node scripts/test-professional-application-anon-read-hardening.js\n\n      - name: Check PWA JavaScript syntax
         run: node --check assets/pwa.js
 
       - name: Verify judgment list/detail field projections
