@@ -55,8 +55,8 @@ Deno.serve(async req=>{
   if(pe)return json({ok:false,error:"PAYMENT_LOOKUP_FAILED"},500);
   if(!p?.gateway_order_id)return json({ok:false,error:"PAYMENT_RECORD_NOT_FOUND"},404);
   if(Number(p.amount)!==Number(o.total)||String(p.currency||"").toUpperCase()!==String(o.currency||"").toUpperCase())return json({ok:false,error:"PAYMENT_ORDER_AMOUNT_CURRENCY_MISMATCH"},409);
-  let paidGatewayAmount:number;
-  let paidGatewayCurrency:string;
+  let paidGatewayAmount=0;
+  let paidGatewayCurrency="";
   if(p.status!=="paid"||!p.gateway_payment_id){
    const expected=await hmac(secret,p.gateway_order_id+"|"+pid);
    if(!safeEqual(expected,sig))return json({ok:false,error:"SIGNATURE_VERIFICATION_FAILED"},400);
@@ -71,6 +71,7 @@ Deno.serve(async req=>{
    paidGatewayAmount=Math.round(Number(p.amount)*100);
    paidGatewayCurrency=String(p.currency);
   }
+  if(!paidGatewayAmount||!paidGatewayCurrency)return json({ok:false,error:"GATEWAY_SETTLEMENT_DETAILS_MISSING"},409);
   // One database transaction settles payment, order, request and entitlement.
   const {data:finalized,error:finalizeError}=await admin.rpc("ils_finalize_razorpay_payment",{
    p_payment_id:p.id,p_gateway_payment_id:pid,
