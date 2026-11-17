@@ -67,7 +67,10 @@ BEGIN
   -- The same order cannot have a live Razorpay attempt and a UPI proof concurrently.
   IF EXISTS (SELECT 1 FROM public.payments
              WHERE order_id=p_order_id AND gateway='razorpay'
-               AND status IN ('created','pending','paid')) THEN
+               AND (
+                 status IN ('created','pending','paid')
+                 OR (status='failed' AND gateway_order_id IS NOT NULL)
+               )) THEN
     RAISE EXCEPTION 'RAZORPAY_PAYMENT_ATTEMPT_EXISTS';
   END IF;
   IF p_amount IS NULL OR abs(p_amount-v_order.total) > 0.01 THEN
