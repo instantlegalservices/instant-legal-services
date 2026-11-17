@@ -1,8 +1,9 @@
 -- Remove anonymous access to existing public-schema sequences and stop
--- broad privileges from being inherited by future objects created by the
--- two roles observed in Production as public-schema object creators.
+-- broad privileges from being inherited by future public-schema objects
+-- created by postgres. The migration executor cannot manage supabase_admin
+-- default privileges (it is not a member of that role); that separate
+-- provider-admin change remains a release blocker and is documented in PR #124.
 -- Existing table/function privileges are not changed by ALTER DEFAULT PRIVILEGES.
--- Existing public table/function access is handled by the separately reviewed PRs.
 
 REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM anon, PUBLIC;
 
@@ -13,15 +14,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
   REVOKE EXECUTE ON FUNCTIONS FROM anon;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres
-  REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
-
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
-  REVOKE ALL ON TABLES FROM anon, PUBLIC;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
-  REVOKE ALL ON SEQUENCES FROM anon, PUBLIC;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
-  REVOKE EXECUTE ON FUNCTIONS FROM anon;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin
   REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 
 DO $verify$
@@ -45,13 +37,13 @@ BEGIN
     SELECT 1
     FROM pg_default_acl d
     CROSS JOIN LATERAL aclexplode(d.defaclacl) a
-    WHERE d.defaclrole IN ('postgres'::regrole, 'supabase_admin'::regrole)
+    WHERE d.defaclrole = 'postgres'::regrole
       AND (
         (d.defaclnamespace = 'public'::regnamespace AND d.defaclobjtype IN ('r', 'S', 'f'))
         OR (d.defaclnamespace = 0 AND d.defaclobjtype = 'f')
       )
       AND (
-        (a.grantee = 'anon'::regrole)
+        a.grantee = 'anon'::regrole
         OR (a.grantee = 0 AND d.defaclobjtype = 'f')
       )
       AND (
@@ -60,7 +52,7 @@ BEGIN
         OR (d.defaclobjtype = 'f' AND a.privilege_type = 'EXECUTE')
       )
   ) THEN
-    RAISE EXCEPTION 'Anonymous or PUBLIC privileges remain in public-schema future-object defaults';
+    RAISE EXCEPTION 'Anonymous or PUBLIC privileges remain in postgres public-schema future-object defaults';
   END IF;
 END
 $verify$;
