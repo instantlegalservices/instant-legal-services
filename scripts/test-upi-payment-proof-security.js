@@ -21,6 +21,8 @@ for(const s of [
  "service_request_not_pending",
  "order_service_mapping_invalid",
  "v_service_id is distinct from v_request.service_id",
+ "razorpay_payment_attempt_exists",
+ "status in ('created','pending','paid')",
  "entitlements e",
  "revoke all on function public.ils_submit_upi_payment_proof",
  "grant execute on function public.ils_submit_upi_payment_proof"
