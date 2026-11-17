@@ -1,0 +1,22 @@
+name: Profile and Judgment Anonymous Grant Hardening
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261117185000_restrict_anon_profile_and_judgment_grants.sql"
+      - "scripts/test-anon-profile-judgment-grants.js"
+      - ".github/workflows/test-anon-profile-judgment-grants.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify profile and judgment grant hardening
+        run: node scripts/test-anon-profile-judgment-grants.js
