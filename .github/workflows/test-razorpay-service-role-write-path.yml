@@ -1,0 +1,27 @@
+name: Razorpay Service Role Write Path
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/razorpay-payments/index.ts"
+      - "supabase/functions/razorpay-webhook/index.ts"
+      - "supabase/migrations/20261118191500_atomic_razorpay_payment_finalization.sql"
+      - "scripts/test-razorpay-service-role-write-path.js"
+      - ".github/workflows/test-razorpay-service-role-write-path.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Verify TypeScript functions
+        run: |
+          deno check supabase/functions/razorpay-payments/index.ts
+          deno check supabase/functions/razorpay-webhook/index.ts
+      - name: Verify atomic settlement, privilege separation and replay safety
+        run: node scripts/test-razorpay-service-role-write-path.js
