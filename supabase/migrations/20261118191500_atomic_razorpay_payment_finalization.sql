@@ -4,7 +4,9 @@ BEGIN;
 
 CREATE OR REPLACE FUNCTION public.ils_finalize_razorpay_payment(
   p_payment_id uuid,
-  p_gateway_payment_id text
+  p_gateway_payment_id text,
+  p_gateway_amount_minor bigint,
+  p_gateway_currency text
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -36,6 +38,10 @@ BEGIN
   IF v_payment.amount IS DISTINCT FROM v_order.total
      OR upper(v_payment.currency) IS DISTINCT FROM upper(v_order.currency) THEN
     RAISE EXCEPTION 'PAYMENT_ORDER_AMOUNT_CURRENCY_MISMATCH';
+  END IF;
+  IF p_gateway_amount_minor IS NULL OR p_gateway_amount_minor<>round(v_payment.amount*100)::bigint
+     OR upper(coalesce(p_gateway_currency,''))<>upper(v_payment.currency) THEN
+    RAISE EXCEPTION 'GATEWAY_AMOUNT_CURRENCY_MISMATCH';
   END IF;
 
   IF v_payment.status='paid' THEN
@@ -97,7 +103,7 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.ils_finalize_razorpay_payment(uuid,text) FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.ils_finalize_razorpay_payment(uuid,text,bigint,text) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.ils_finalize_razorpay_payment(uuid,text) TO service_role;
 
 -- Prevent two concurrently-created active Razorpay attempts for one order.
