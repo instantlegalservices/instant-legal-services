@@ -1,5 +1,5 @@
 -- ILS AI rate limiting shared by both public AI Edge Function endpoints.
--- Only SHA-256 identities are stored; raw IPs and user IDs never reach Postgres.
+-- Only keyed HMAC-SHA-256 identities are stored; raw IPs and user IDs never reach Postgres.
 create table if not exists public.ils_ai_rate_limits (
   key_hash text not null check (key_hash ~ '^[0-9a-f]{64}$'),
   window_seconds integer not null check (window_seconds in (60, 3600)),
