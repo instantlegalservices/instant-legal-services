@@ -375,7 +375,7 @@ const GOVERNMENT_SERVICES = [
   },
   {
     slug: "samadhan-labour-disputes",
-    title: "SAMADHAN Labour Disputes",
+    title: "SAMADHAN 2.0 Labour Disputes",
     category: "Government of India",
     description:
       "Official Ministry of Labour and Employment route for eligible labour and industrial dispute filings through SAMADHAN 2.0.",
