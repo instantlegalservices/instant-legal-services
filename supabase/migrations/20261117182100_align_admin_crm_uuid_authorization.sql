@@ -13,6 +13,7 @@ begin
     'public.ils_admin_save_lead_multi(bigint,text,text,text,jsonb,boolean,date,text)'::regprocedure
   ] loop
     select pg_get_functiondef(v_function) into v_definition;
+    v_definition := replace(v_definition, E'\\r\\n', E'\\n');
     v_matches := length(v_definition) - length(replace(v_definition, v_old, ''));
     if v_matches = 0 or v_matches / length(v_old) <> 1 then
       raise exception 'Expected exactly one legacy email guard in %; refusing migration', v_function;
