@@ -365,6 +365,24 @@ const GOVERNMENT_CONTEXT_ROUTES = {
   icon: "🏛️",
   local: "government/up-jansunwai/"
  },
+ "up-labour-department": {
+  seed: "UP Labour Department",
+  title: "UP Labour Department",
+  desc: "Official Uttar Pradesh Labour Department website for state labour and employment services.",
+  url: "https://uplabour.gov.in/",
+  official: "UP Labour Department, Government of Uttar Pradesh",
+  icon: "👷",
+  local: "government/up-labour-department/"
+ },
+ "samadhan-labour-disputes": {
+  seed: "SAMADHAN labour dispute",
+  title: "SAMADHAN Labour Disputes",
+  desc: "Official Ministry of Labour and Employment route for industrial disputes, eligible labour-law claims and employment grievances.",
+  url: "https://samadhan.labour.gov.in/",
+  official: "SAMADHAN Portal — Ministry of Labour & Employment",
+  icon: "⚖️",
+  local: "government/samadhan-labour-disputes/"
+ },
  "udyam-registration": {
   seed: "Udyam Registration",
   title: "Udyam Registration",
@@ -535,7 +553,8 @@ function classify(q){
   {keys:["challan","traffic challan","e challan","echallan","online challan","challan check","challan status","challan payment","traffic fine","traffic violation","vehicle challan","car challan","bike challan","driving challan","चालान","ई चालान","ट्रैफिक चालान","चालान चेक","चालान स्टेटस","चालान भुगतान","ट्रैफिक","वाहन चालान"],title:"Traffic / eChallan",desc:"Official traffic challan service",url:"https://echallan.parivahan.gov.in/index/accused-challan",official:"Parivahan eChallan",icon:"🚦",local:"government/echallan/"},
   {keys:["gst","GST registration","gst registration","gst return","gst refund","gst complaint","gst portal","gst login","gst notice","gst help","gst taxpayer","जीएसटी","जीएसटी रजिस्ट्रेशन","जीएसटी रिटर्न","जीएसटी रिफंड","जीएसटी शिकायत","जीएसटी पोर्टल","जीएसटी नोटिस"],title:"GST / Tax Portal Issue",desc:"GST official helpdesk / grievance route",url:"https://selfservice.gstsystem.in/",official:"GST Self Service / Helpdesk",icon:"🧾",local:"government/gst-portal/"},
   {keys:["income tax","income-tax","itr","ITR","income tax return","income tax refund","income tax notice","income tax complaint","e filing","efiling","income tax portal","tax return","आयकर","इनकम टैक्स","आईटीआर","इनकम टैक्स रिटर्न","टैक्स रिटर्न","आयकर रिफंड","आयकर नोटिस","ई फाइलिंग"],title:"Income Tax / e-Filing",desc:"Official income-tax services route",url:"https://www.incometax.gov.in/",official:"Income Tax e-Filing",icon:"💼",local:"government/income-tax-e-filing/"},
-  {keys:["labour","labor","labour law","labour complaint","labour grievance","employment complaint","worker complaint","employee complaint","salary dispute","wage complaint","minimum wage","gratuity","maternity benefit","industrial dispute","श्रम","श्रम कानून","श्रमिक शिकायत","मजदूर शिकायत","वेतन शिकायत","वेतन विवाद","कर्मचारी शिकायत"],title:"Labour & Employment",desc:"Official Ministry of Labour & Employment services and grievance route",url:"https://www.labour.gov.in/connect/grievance-redressal",official:"Ministry of Labour & Employment",icon:"👷",local:"practice/labour-and-employment-law/"},
+   {keys:["samadhan labour","samadhan portal","industrial dispute","industrial disputes","illegal termination","wrongful termination","unpaid wages","non payment of wages","non-payment of wages","wage claim","minimum wage claim","gratuity claim","maternity benefit claim","श्रम विवाद","औद्योगिक विवाद","अवैध बर्खास्तगी","बकाया वेतन","वेतन बकाया"],title:"SAMADHAN Labour Disputes",desc:"Official Ministry of Labour and Employment portal for industrial disputes, eligible labour-law claims and employment-related grievances.",url:"https://samadhan.labour.gov.in/",official:"SAMADHAN Portal — Ministry of Labour & Employment",icon:"⚖️",local:"government/samadhan-labour-disputes/"},
+   {keys:["up labour","uplabour","up labour department","labour department uttar pradesh","labour department up","labour registration up","labour card up","labour","labor","labour law","labour complaint","labour grievance","employment complaint","worker complaint","employee complaint","salary dispute","wage complaint","minimum wage","gratuity","maternity benefit","श्रम","श्रम कानून","श्रम विभाग","उत्तर प्रदेश श्रम विभाग","श्रमिक शिकायत","मजदूर शिकायत","वेतन शिकायत","वेतन विवाद","कर्मचारी शिकायत"],title:"UP Labour Department",desc:"Official Uttar Pradesh Labour Department website for state labour and employment department information and services.",url:"https://uplabour.gov.in/",official:"UP Labour Department, Government of Uttar Pradesh",icon:"👷",local:"government/up-labour-department/"},
   {keys:["epfo service","epfo services","epfo portal","epf services","epf member services","provident fund services","provident fund portal","uan services","ईपीएफओ सेवा","ईपीएफओ सेवाएं","ईपीएफ सेवा"],title:"EPFO Services",desc:"Official Employees' Provident Fund Organisation services route",url:"https://www.epfindia.gov.in/",official:"EPFO Services",icon:"🧑‍💼",local:"government/epfo-services/"},
   {keys:["epfo complaint","epfo grievance","pf withdrawal","pf transfer","pf balance","epfo claim","pf claim","pf claim status","uan complaint","pension fund grievance","ईपीएफओ शिकायत","ईपीएफओ शिकायत निवारण","पीएफ निकासी","पीएफ ट्रांसफर","पीएफ बैलेंस","यूएएन शिकायत"],title:"EPFO Grievance",desc:"Official EPFO grievance route",url:"https://epfigms.gov.in/",official:"EPFiGMS",icon:"🧑‍💼",local:"government/epfigms-grievance/"},
   {keys:["court case","court matter","case status","case tracking","ecourt","e court","e-court","ecourts","court order","court judgment","case number","cnr number","CNR","case hearing","next date","अदालत","कोर्ट","केस स्टेटस","केस की स्थिति","केस नंबर","सीएनआर","अगली तारीख","कोर्ट ऑर्डर","फैसला"],title:"Court / Case Status",desc:"Official eCourts route",url:"https://services.ecourts.gov.in/ecourtindia_v6/",official:"eCourts",icon:"⚖️",local:"government/ecourts-case-status/"}
@@ -583,6 +602,8 @@ function renderResult(q,r){
    "GST / Tax Portal Issue":["जीएसटी / कर पोर्टल समस्या","जीएसटी पंजीकरण, कर पोर्टल और संबंधित सहायता का आधिकारिक मार्ग।"],
    "Income Tax / e-Filing":["आयकर / ई-फाइलिंग","आयकर रिटर्न और संबंधित आधिकारिक ई-फाइलिंग सेवाओं का मार्ग।"]
   , "Labour & Employment":["श्रम और रोजगार","श्रम एवं रोजगार से संबंधित सरकारी सेवाओं और शिकायत के आधिकारिक मार्ग।"],
+   "UP Labour Department":["उत्तर प्रदेश श्रम विभाग","उत्तर प्रदेश श्रम एवं सेवायोजन विभाग की आधिकारिक वेबसाइट और राज्य स्तरीय सेवाओं का मार्ग।"],
+   "SAMADHAN Labour Disputes":["समाधान श्रम विवाद पोर्टल","औद्योगिक विवाद, पात्र श्रम-कानून दावे और रोजगार संबंधी शिकायतों के लिए श्रम एवं रोजगार मंत्रालय का आधिकारिक पोर्टल।"],
    "Udyam Registration":["उद्यम पंजीकरण","सूक्ष्म, लघु और मध्यम उद्यम के लिए आधिकारिक उद्यम पंजीकरण मार्ग।"],
    "MCA21 – Ministry of Corporate Affairs":["एमसीए21 – कॉर्पोरेट कार्य मंत्रालय","कंपनी और एलएलपी सेवाओं के लिए कॉर्पोरेट कार्य मंत्रालय का आधिकारिक मार्ग।"],
    "EPFO Services":["ईपीएफओ सेवाएँ","भविष्य निधि और ईपीएफओ से संबंधित आधिकारिक सेवाओं का मार्ग।"],
@@ -601,6 +622,8 @@ function renderResult(q,r){
    "GST / Tax Portal Issue":["GST / Tax Portal Issue","Official route for GST registration, tax-portal issues and related help."],
    "Income Tax / e-Filing":["Income Tax / e-Filing","Official route for income-tax returns and related e-filing services."]
   , "Labour & Employment":["Labour & Employment","Official route for Ministry of Labour & Employment services and grievances."],
+   "UP Labour Department":["UP Labour Department","Official Uttar Pradesh Labour Department website and state labour-service route."],
+   "SAMADHAN Labour Disputes":["SAMADHAN Labour Disputes","Official Ministry of Labour and Employment portal for industrial disputes, eligible labour-law claims and employment-related grievances."],
    "Udyam Registration":["Udyam Registration","Official route for Udyam registration for micro, small and medium enterprises."],
    "MCA21 – Ministry of Corporate Affairs":["MCA21 – Ministry of Corporate Affairs","Official Ministry of Corporate Affairs route for company and LLP services."],
    "EPFO Services":["EPFO Services","Official route for provident-fund and EPFO-related services."],
@@ -619,6 +642,8 @@ function renderResult(q,r){
    "GST / Tax Portal Issue":["GST / Tax Portal Issue","GST registration, tax-portal issue aur related help ka official route."],
    "Income Tax / e-Filing":["Income Tax / e-Filing","Income-tax return aur related e-filing services ka official route."]
   , "Labour & Employment":["Labour & Employment","Labour aur employment services ya grievance ke liye official route."],
+   "UP Labour Department":["UP Labour Department","Uttar Pradesh Labour Department ki official website aur state labour services ka route."],
+   "SAMADHAN Labour Disputes":["SAMADHAN Labour Disputes","Industrial disputes, eligible labour-law claims aur employment grievances ke liye Ministry of Labour ka official portal."],
    "Udyam Registration":["Udyam Registration","MSME ke liye official Udyam registration route."],
    "MCA21 – Ministry of Corporate Affairs":["MCA21 – Ministry of Corporate Affairs","Company aur LLP services ke liye Ministry of Corporate Affairs ka official route."],
    "EPFO Services":["EPFO Services","PF aur EPFO-related services ke liye official route."],
@@ -637,6 +662,8 @@ function renderResult(q,r){
    "GST / Tax Portal Issue":["جی ایس ٹی / ٹیکس پورٹل مسئلہ","جی ایس ٹی رجسٹریشن، ٹیکس پورٹل مسائل اور متعلقہ مدد کا سرکاری راستہ۔"],
    "Income Tax / e-Filing":["انکم ٹیکس / ای فائلنگ","انکم ٹیکس ریٹرن اور متعلقہ ای فائلنگ خدمات کا سرکاری راستہ۔"]
   , "Labour & Employment":["محنت اور روزگار","محنت و روزگار کی سرکاری خدمات اور شکایات کے لیے سرکاری راستہ۔"],
+   "UP Labour Department":["اتر پردیش محکمہ محنت","اتر پردیش محکمہ محنت کی سرکاری ویب سائٹ اور ریاستی خدمات کا راستہ۔"],
+   "SAMADHAN Labour Disputes":["سمادھان مزدور تنازعات","صنعتی تنازعات، اہل مزدور قانون کے دعووں اور ملازمت سے متعلق شکایات کے لیے وزارت محنت کا سرکاری پورٹل۔"],
    "Udyam Registration":["ادیم رجسٹریشن","مائیکرو، چھوٹے اور درمیانے کاروبار کے لیے سرکاری ادیم رجسٹریشن کا راستہ۔"],
    "MCA21 – Ministry of Corporate Affairs":["MCA21 – وزارت کارپوریٹ امور","کمپنی اور LLP خدمات کے لیے وزارت کارپوریٹ امور کا سرکاری راستہ۔"],
    "EPFO Services":["EPFO خدمات","پراویڈنٹ فنڈ اور EPFO سے متعلق سرکاری خدمات کا راستہ۔"],
@@ -655,6 +682,8 @@ function renderResult(q,r){
    "GST / Tax Portal Issue":["জিএসটি / ট্যাক্স পোর্টাল সমস্যা","জিএসটি নিবন্ধন, ট্যাক্স পোর্টাল সমস্যা ও সংশ্লিষ্ট সহায়তার সরকারি পথ।"],
    "Income Tax / e-Filing":["আয়কর / ই-ফাইলিং","আয়কর রিটার্ন ও সংশ্লিষ্ট ই-ফাইলিং পরিষেবার সরকারি পথ।"]
   , "Labour & Employment":["শ্রম ও কর্মসংস্থান","শ্রম ও কর্মসংস্থান পরিষেবা ও অভিযোগের জন্য সরকারি পথ।"],
+   "UP Labour Department":["উত্তর প্রদেশ শ্রম দপ্তর","উত্তর প্রদেশ শ্রম দপ্তরের সরকারি ওয়েবসাইট ও রাজ্য শ্রম পরিষেবার পথ।"],
+   "SAMADHAN Labour Disputes":["SAMADHAN শ্রম বিরোধ","শিল্প বিরোধ, যোগ্য শ্রম-আইন দাবি এবং কর্মসংস্থান সংক্রান্ত অভিযোগের জন্য শ্রম ও কর্মসংস্থান মন্ত্রকের সরকারি পোর্টাল।"],
    "Udyam Registration":["উদ্যম নিবন্ধন","ক্ষুদ্র, ছোট ও মাঝারি উদ্যোগের জন্য সরকারি উদ্যম নিবন্ধনের পথ।"],
    "MCA21 – Ministry of Corporate Affairs":["MCA21 – কর্পোরেট বিষয়ক মন্ত্রক","কোম্পানি ও LLP পরিষেবার জন্য কর্পোরেট বিষয়ক মন্ত্রকের সরকারি পথ।"],
    "EPFO Services":["EPFO পরিষেবা","প্রভিডেন্ট ফান্ড ও EPFO-সংক্রান্ত সরকারি পরিষেবার পথ।"],
