@@ -35,7 +35,7 @@ try {
   assert.equal(await page.locator("#businessEnquiryForm input[type=password]").count(), 0, "initial enquiry must not require a password");
 
   const gridColumns = await page.locator(".bc-form-grid").evaluate(el => getComputedStyle(el).gridTemplateColumns);
-  assert.equal(gridColumns.trim().split(/\\s+/).length, 1, "form fields should stack on a mobile viewport");
+  assert.equal(gridColumns.trim().split(/\s+/).length, 1, "form fields should stack on a mobile viewport");
 
   await page.locator("#bcName").fill("Test Business Owner");
   await page.locator("#bcMobile").fill("9876543210");
@@ -54,8 +54,8 @@ try {
   assert.equal(captured[0].rows[0].client_name, "Test Business Owner");
   assert.equal(captured[0].rows[0].mobile, "9876543210");
   assert.match(captured[0].rows[0].legal_matter, /Business Compliance/);
-  assert.match(captured[0].rows[0].brief_requirement, /Wholesale \\/ Trading/);
-  assert.match(captured[0].rows[0].brief_requirement, /GST return \\/ notice \\/ portal issue/);
+  assert.ok(captured[0].rows[0].brief_requirement.includes("Wholesale / Trading"));
+  assert.ok(captured[0].rows[0].brief_requirement.includes("GST return / notice / portal issue"));
   assert.equal(await page.locator("#bcName").inputValue(), "", "form should reset only after successful submission");
   assert.deepEqual(pageErrors, [], "page should not produce JavaScript errors");
 
