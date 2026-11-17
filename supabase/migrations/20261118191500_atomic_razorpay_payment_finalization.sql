@@ -107,6 +107,10 @@ REVOKE ALL ON FUNCTION public.ils_finalize_razorpay_payment(uuid,text,bigint,tex
 GRANT EXECUTE ON FUNCTION public.ils_finalize_razorpay_payment(uuid,text) TO service_role;
 
 -- Prevent two concurrently-created active Razorpay attempts for one order.
+CREATE UNIQUE INDEX IF NOT EXISTS payments_razorpay_gateway_order_id_uidx
+ON public.payments(gateway_order_id)
+WHERE gateway='razorpay' AND gateway_order_id IS NOT NULL;
+
 CREATE UNIQUE INDEX IF NOT EXISTS payments_one_razorpay_created_per_order_uidx
 ON public.payments(order_id)
 WHERE gateway='razorpay' AND status='created';
