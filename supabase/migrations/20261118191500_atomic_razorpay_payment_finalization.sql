@@ -126,7 +126,7 @@ BEGIN
       'payment_id',v_payment.id,'order_id',v_order.id);
   END IF;
 
-  IF v_payment.status NOT IN ('created','pending') THEN
+  IF v_payment.status NOT IN ('created','pending','failed') THEN
     RAISE EXCEPTION 'PAYMENT_NOT_SETTLEABLE';
   END IF;
   IF v_order.status<>'pending' THEN RAISE EXCEPTION 'ORDER_NOT_PENDING'; END IF;
