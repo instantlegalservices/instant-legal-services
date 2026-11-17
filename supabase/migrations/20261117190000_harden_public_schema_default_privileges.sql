@@ -1,8 +1,15 @@
 -- Remove anonymous access to existing public-schema sequences and stop
 -- broad privileges from being inherited by future public-schema objects
--- created by postgres. The migration executor cannot manage supabase_admin
--- default privileges (it is not a member of that role); that separate
--- provider-admin change remains a release blocker and is documented in PR #124.
+-- created by postgres.
+--
+-- Supabase documents that project-level postgres cannot alter the managed
+-- supabase_admin default ACLs. Those defaults apply only to objects that
+-- supabase_admin itself creates. A read-only catalog audit found no
+-- supabase_admin-owned objects in public in either ILS Production or TEST.
+-- Do not attempt unauthorized role membership changes or ALTER DEFAULT
+-- PRIVILEGES for supabase_admin. Keep extensions in the dedicated extensions
+-- schema where supported, and re-audit public object ownership after upgrades.
+--
 -- Existing table/function privileges are not changed by ALTER DEFAULT PRIVILEGES.
 
 REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM anon, PUBLIC;
