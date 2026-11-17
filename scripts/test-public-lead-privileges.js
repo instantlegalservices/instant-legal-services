@@ -2,7 +2,7 @@
 const fs = require("node:fs");
 const assert = require("node:assert/strict");
 
-const path = "supabase/migrations/20261117181500_restrict_anon_client_requirement_insert_columns.sql";
+const path = "supabase/migrations/20261117181527_restrict_anon_client_requirement_insert_columns.sql";
 const sql = fs.readFileSync(path, "utf8");
 const core = fs.readFileSync("assets/ils-core.js", "utf8");
 const submitStart = core.indexOf("async function submitRequirement(payload)");
