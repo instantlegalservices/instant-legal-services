@@ -1,0 +1,22 @@
+name: Private Commerce Anonymous Grant Hardening
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261117184500_restrict_anon_commerce_table_grants.sql"
+      - "scripts/test-anon-commerce-table-grants.js"
+      - ".github/workflows/test-anon-commerce-table-grants.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify private commerce grant hardening
+        run: node scripts/test-anon-commerce-table-grants.js
