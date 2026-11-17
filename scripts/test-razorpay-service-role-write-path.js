@@ -24,6 +24,8 @@ assert.match(webhook,/ils_finalize_razorpay_payment/);
 assert.match(webhook,/\.in\("status",\s*\["created",\s*"pending"\]\)/);
 assert.doesNotMatch(webhook,/from\("orders"\)\.update\(\{\s*status:\s*"paid"/);
 assert.match(webhook,/if \(row\.status !== "paid" && !row\.gateway_payment_id\)/);
+assert.doesNotMatch(webhook,/from\("orders"\)\.update\(\{\s*status:\s*"failed"/);
+assert.match(migration,/status not in \('created','pending','failed'\)/);
 
 for(const marker of [
  "create or replace function public.ils_reserve_razorpay_attempt",
