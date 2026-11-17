@@ -16,12 +16,13 @@ const tables = [
 for (const table of tables) assert.ok(sql.includes("'" + table + "'"), "missing target: " + table);
 assert.ok(sql.includes("revoke all privileges on table public.%i from anon, public"));
 assert.ok(sql.includes("grant select on table public.%i to anon"));
-assert.ok(sql.includes("grant insert on table public.%i to anon"));
 assert.ok(sql.includes("v_expected_select := (v_table = 'judgments')"));
-assert.ok(sql.includes("v_expected_insert := (v_table = 'advocate_registrations')"));
+assert.ok(sql.includes("register-advocate edge function using"));
 assert.ok(sql.includes("has_table_privilege('anon', v_relation, 'select')"));
 assert.ok(sql.includes("has_table_privilege('anon', v_relation, 'insert')"));
+assert.ok(sql.includes("has_any_column_privilege"));
 assert.ok(sql.includes("'truncate'"));
 assert.ok(sql.includes("verified + completed"));
+assert.doesNotMatch(sql, /grant insert on table public.%i to anon/);
 assert.doesNotMatch(sql, /drop\s+policy|create\s+policy|disable\s+row\s+level\s+security|delete\s+from|truncate\s+table/);
-console.log("PASS: anonymous privileges are narrowed to public advocate INSERT and verified/completed judgment SELECT; private profile/research/tool tables are closed.");
+console.log("PASS: anonymous privileges are narrowed to verified/completed judgment SELECT only; advocate registration remains on the service-role Edge Function and private tables are closed.");
