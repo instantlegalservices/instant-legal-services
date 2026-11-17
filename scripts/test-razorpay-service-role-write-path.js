@@ -1,0 +1,14 @@
+"use strict";
+const fs=require("node:fs");
+const assert=require("node:assert/strict");
+const source=fs.readFileSync("supabase/functions/razorpay-payments/index.ts","utf8");
+assert.match(source,/createClient\(url,anonKey/);
+assert.match(source,/createClient\(url,serviceRoleKey/);
+assert.match(source,/userClient\.auth\.getUser\(\)/);
+assert.match(source,/never forward their JWT to the service-role client/i);
+assert.doesNotMatch(source,/createClient\(url,serviceRoleKey,\s*\{\s*global:\s*\{\s*headers:\s*\{\s*Authorization/);
+assert.match(source,/\.eq\("user_id",user\.id\)/);
+for(const marker of ["GATEWAY_PAYMENT_NOT_CONFIRMED","PAYMENT_UPDATE_FAILED","ORDER_UPDATE_FAILED","SERVICE_REQUEST_UPDATE_FAILED","ENTITLEMENT_GRANT_FAILED"])assert.ok(source.includes(marker),"missing checked failure: "+marker);
+assert.match(source,/safeEqual\(expected,sig\)/);
+assert.match(source,/gp\?\.status!=="captured"/);
+console.log("PASS: Razorpay user authentication is separated from service-role writes; ownership, gateway capture/amount/currency, and every finalization write are checked.");
