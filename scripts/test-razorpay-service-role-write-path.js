@@ -13,6 +13,8 @@ assert.match(endpoint,/safeEqual\(expected,sig\)/);
 assert.match(endpoint,/gp\?\.status!=="captured"/);
 assert.match(endpoint,/PAYMENT_FINALIZATION_FAILED/);
 assert.match(endpoint,/ils_reserve_razorpay_attempt/);
+assert.match(endpoint,/abortsignal\.timeout\(15000\)/);
+assert.match(endpoint,/razorpay_order_create_timeout/);
 assert.match(endpoint,/ils_attach_razorpay_order/);
 assert.match(endpoint,/ils_finalize_razorpay_payment/);
 assert.doesNotMatch(endpoint,/admin\.from\("orders"\)\.update\(\{status:"paid"\}\)/);
@@ -25,6 +27,8 @@ assert.match(webhook,/\.in\("status",\s*\["created",\s*"pending"\]\)/);
 assert.doesNotMatch(webhook,/from\("orders"\)\.update\(\{\s*status:\s*"paid"/);
 assert.match(webhook,/if \(row\.status !== "paid" && !row\.gateway_payment_id\)/);
 assert.doesNotMatch(webhook,/from\("orders"\)\.update\(\{\s*status:\s*"failed"/);
+assert.match(webhook,/update\(\{\s*status:\s*"failed"\s*\}\)/);
+assert.doesNotMatch(webhook,/update\(\{\s*gateway_payment_id:\s*payment\.id,\s*status:\s*"failed"/);
 assert.match(migration,/status not in \('created','pending','failed'\)/);
 
 for(const marker of [
@@ -38,6 +42,7 @@ for(const marker of [
  "upi_proof_pending",
  "payment_proofs pp",
  "status in ('created','pending')",
+ "created_at < now() - interval '15 minutes'",
  "for update",
  "p_gateway_amount_minor",
  "gateway_amount_currency_mismatch",
