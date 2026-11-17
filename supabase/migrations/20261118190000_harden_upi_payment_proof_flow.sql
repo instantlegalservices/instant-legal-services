@@ -190,7 +190,7 @@ BEGIN
   END IF;
   IF v_request.status<>'pending' THEN RAISE EXCEPTION 'SERVICE_REQUEST_NOT_PENDING'; END IF;
 
-  SELECT count(DISTINCT service_id),min(service_id)
+  SELECT count(DISTINCT service_id),min(service_id::text)::uuid
     INTO v_service_count,v_service_id
   FROM public.order_items
   WHERE order_id=v_order.id AND service_id IS NOT NULL;
