@@ -37,7 +37,7 @@ export async function enforceAiRateLimit(req:Request,advocateUserId?:string){
     identity=`advocate:${advocateUserId}`;
   }else{
     const ip=(req.headers.get("cf-connecting-ip")||"").trim();
-    if(!ip||ip.length>64||ip.includes(",")||/\\s/.test(ip))return unavailable();
+    if(!ip||ip.length>64||ip.includes(",")||ip.split("").some(c=>c.charCodeAt(0)<=32))return unavailable();
     identity=`public:${ip}`;
   }
   try{
