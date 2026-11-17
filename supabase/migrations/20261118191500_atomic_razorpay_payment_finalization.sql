@@ -23,16 +23,17 @@ BEGIN
   END IF;
 
   SELECT * INTO v_payment FROM public.payments
-  WHERE order_id=v_order.id AND gateway='razorpay' AND status='created'
+  WHERE order_id=v_order.id AND gateway='razorpay' AND status IN ('created','pending')
   ORDER BY created_at DESC LIMIT 1 FOR UPDATE;
   IF FOUND THEN
+    IF v_payment.gateway_order_id IS NULL THEN RAISE EXCEPTION 'RAZORPAY_ORDER_CREATION_IN_PROGRESS'; END IF;
     RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
       'gateway_order_id',v_payment.gateway_order_id,'amount',v_order.total,
       'currency',v_order.currency,'order_number',v_order.order_number);
   END IF;
 
   INSERT INTO public.payments(order_id,gateway,amount,currency,status)
-  VALUES(v_order.id,'razorpay',v_order.total,v_order.currency,'created')
+  VALUES(v_order.id,'razorpay',v_order.total,v_order.currency,'pending')
   RETURNING * INTO v_payment;
   RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
     'gateway_order_id',NULL,'amount',v_order.total,
@@ -57,12 +58,12 @@ BEGIN
   SELECT * INTO v_payment FROM public.payments
   WHERE id=p_payment_id AND gateway='razorpay' FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'RAZORPAY_PAYMENT_NOT_FOUND'; END IF;
-  IF v_payment.status<>'created' THEN RAISE EXCEPTION 'PAYMENT_NOT_ATTACHABLE'; END IF;
+  IF v_payment.status<>'pending' THEN RAISE EXCEPTION 'PAYMENT_NOT_ATTACHABLE'; END IF;
   IF v_payment.gateway_order_id IS NOT NULL
      AND v_payment.gateway_order_id<>p_gateway_order_id THEN
     RAISE EXCEPTION 'GATEWAY_ORDER_ALREADY_ATTACHED';
   END IF;
-  UPDATE public.payments SET gateway_order_id=p_gateway_order_id
+  UPDATE public.payments SET gateway_order_id=p_gateway_order_id,status='created'
   WHERE id=v_payment.id;
   RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
     'gateway_order_id',p_gateway_order_id);
@@ -185,6 +186,6 @@ WHERE gateway='razorpay' AND gateway_order_id IS NOT NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS payments_one_razorpay_created_per_order_uidx
 ON public.payments(order_id)
-WHERE gateway='razorpay' AND status='created';
+WHERE gateway='razorpay' AND status IN ('created','pending');
 
 COMMIT;
