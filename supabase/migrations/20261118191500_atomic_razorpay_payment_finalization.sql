@@ -34,10 +34,13 @@ BEGIN
   WHERE order_id=v_order.id AND gateway='razorpay' AND status IN ('created','pending')
   ORDER BY created_at DESC LIMIT 1 FOR UPDATE;
   IF FOUND THEN
-    IF v_payment.gateway_order_id IS NULL THEN RAISE EXCEPTION 'RAZORPAY_ORDER_CREATION_IN_PROGRESS'; END IF;
+    -- Return the same unattached reservation to the caller. The Edge Function
+    -- must reconcile the deterministic receipt before it can create or attach
+    -- another gateway order; never strand a timed-out attempt behind an exception.
     RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
-      'gateway_order_id',v_payment.gateway_order_id,'amount',v_order.total,
-      'currency',v_order.currency,'order_number',v_order.order_number,
+      'gateway_order_id',v_payment.gateway_order_id,'existing_attempt',true,
+      'amount',v_order.total,'currency',v_order.currency,
+      'order_number',v_order.order_number,
       'created_at',extract(epoch from v_payment.created_at)::bigint);
   END IF;
 
