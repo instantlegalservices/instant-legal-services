@@ -130,6 +130,10 @@ BEGIN
     RAISE EXCEPTION 'PAYMENT_NOT_SETTLEABLE';
   END IF;
   IF v_order.status<>'pending' THEN RAISE EXCEPTION 'ORDER_NOT_PENDING'; END IF;
+  IF EXISTS (SELECT 1 FROM public.payment_proofs pp
+             WHERE pp.order_id=v_order.id AND pp.status='pending') THEN
+    RAISE EXCEPTION 'UPI_PROOF_PENDING';
+  END IF;
   IF v_payment.gateway_payment_id IS NOT NULL
      AND v_payment.gateway_payment_id<>p_gateway_payment_id THEN
     RAISE EXCEPTION 'PAYMENT_ID_MISMATCH';
