@@ -363,6 +363,24 @@ const GOVERNMENT_SERVICES = [
       "https://jansunwai.up.nic.in/"
   },
   {
+    slug: "up-labour-department",
+    title: "UP Labour Department",
+    category: "Uttar Pradesh Government",
+    description:
+      "Official Uttar Pradesh Labour Department website for state labour and employment department information and services.",
+    officialUrl:
+      "https://uplabour.gov.in/"
+  },
+  {
+    slug: "samadhan-labour-disputes",
+    title: "SAMADHAN Labour Disputes",
+    category: "Government of India",
+    description:
+      "Official Ministry of Labour and Employment portal for industrial disputes, eligible labour-law claims and employment-related grievances.",
+    officialUrl:
+      "https://samadhan.labour.gov.in/"
+  },
+  {
     slug: "up-property-registration",
     title: "UP Property Registration – IGRSUP",
     category: "Uttar Pradesh Government",
