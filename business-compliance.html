@@ -18,12 +18,12 @@
 .bc-hero{padding:54px 0 36px;background:linear-gradient(135deg,#07111f,#10283a)}
 .bc-hero h1{font-size:clamp(34px,5vw,58px);line-height:1.08;margin:12px 0}
 .bc-hero p{max-width:760px;font-size:17px;line-height:1.7;color:#d1dbe5}
-.bc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.bc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.bc-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .bc-card{padding:22px;border:1px solid #dce3ea;border-radius:16px;background:#fff;color:#172536}
 .bc-card h2{margin:0 0 10px;font-size:20px}.bc-card p,.bc-card li{line-height:1.6;color:#465568;font-size:14px}
 .bc-card ul{padding-left:19px}.bc-note{padding:18px;border-left:4px solid #c69a45;background:#f7f4ed;line-height:1.65}
 .bc-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
-@media(max-width:760px){.bc-grid{grid-template-columns:1fr}.bc-hero{padding:38px 0 28px}}
+@media(max-width:760px){.bc-grid,.bc-form-grid{grid-template-columns:1fr}.bc-hero{padding:38px 0 28px}}
 </style>
 </head>
 <body>
@@ -54,7 +54,7 @@
 <section class="section alt" id="business-enquiry"><div class="wrap">
 <div class="section-head"><div><h2>Start with a free business enquiry</h2><p>No account or upfront payment is required to send an enquiry. We will review the requirement, confirm availability, scope and ILS service charges before you decide whether to proceed.</p></div></div>
 <form id="businessEnquiryForm" class="bc-card" style="max-width:820px;margin:0 auto">
-<div class="bc-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+<div class="bc-form-grid">
 <div><label for="bcName">Your name</label><input id="bcName" name="name" autocomplete="name" maxlength="100" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
 <div><label for="bcMobile">10-digit mobile number</label><input id="bcMobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
 <div><label for="bcBusinessType">Business type</label><select id="bcBusinessType" name="business_type" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"><option value="">Select business type</option><option>Retail shop</option><option>Wholesale / Trading</option><option>Manufacturer</option><option>Factory / Workshop</option><option>Service business</option><option>Other</option></select></div>
