@@ -7,6 +7,9 @@ on:
       - "index.html"
       - "scripts/test-home-search-routing.js"
       - "scripts/test-home-judgment-cards.js"
+      - "scripts/generate-seo-pages.js"
+      - "government/**"
+      - "sitemap.xml"
       - ".github/workflows/test-home-search-routing.yml"
   push:
     branches:
