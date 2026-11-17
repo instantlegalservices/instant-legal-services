@@ -1,0 +1,34 @@
+name: Business Compliance Enquiry E2E
+
+on:
+  pull_request:
+    paths:
+      - "business-compliance.html"
+      - "scripts/test-business-compliance-enquiry.js"
+      - ".github/workflows/test-business-compliance-enquiry.yml"
+  workflow_dispatch:
+
+jobs:
+  business-compliance-enquiry:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start local static site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http.log 2>&1 &
+          echo $! > /tmp/ils-http.pid
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:4173/business-compliance.html > /dev/null
+      - name: Run business enquiry browser regression
+        env:
+          BASE_URL: http://127.0.0.1:4173/
+        run: node scripts/test-business-compliance-enquiry.js
