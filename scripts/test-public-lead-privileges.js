@@ -4,6 +4,14 @@ const assert = require("node:assert/strict");
 
 const path = "supabase/migrations/20261117181500_restrict_anon_client_requirement_insert_columns.sql";
 const sql = fs.readFileSync(path, "utf8");
+const core = fs.readFileSync("assets/ils-core.js", "utf8");
+const submitStart = core.indexOf("async function submitRequirement(payload)");
+const submitEnd = core.indexOf("/* =========================================================", submitStart + 1);
+assert.ok(submitStart >= 0 && submitEnd > submitStart, "canonical submitRequirement implementation must exist");
+const submitBody = core.slice(submitStart, submitEnd);
+for (const protectedField of ["status:", "payment_status:", "priority:"]) {
+  assert.ok(!submitBody.includes(protectedField), "public submitRequirement must not set protected CRM field: " + protectedField);
+}
 const normalized = sql.replace(/--[^\n]*/g, " ").replace(/\s+/g, " ").toLowerCase();
 
 assert.match(normalized, /revoke all privileges on table public\.client_requirements from anon/);
