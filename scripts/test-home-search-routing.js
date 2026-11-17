@@ -29,7 +29,8 @@ const { chromium } = require("playwright");
       { query: "UP Labour Department", expected: "UP Labour Department", official: "https://uplabour.gov.in/" },
       { query: "labour registration UP", expected: "UP Labour Department", official: "https://uplabour.gov.in/" },
       { query: "unpaid wages claim", expected: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" },
-      { query: "industrial dispute", expected: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" }
+      { query: "industrial dispute", expected: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" },
+      { query: "labour court lawyer", expected: "Labour & Employment Legal Assistance", official: "https://instantlegalservices.in/practice/labour-and-employment-law/" }
     ];
 
     for (const item of cases) {
