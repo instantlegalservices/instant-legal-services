@@ -4,7 +4,10 @@ on:
   pull_request:
     paths:
       - "business-compliance.html"
+      - "assets/ils-core.js"
       - "scripts/test-business-compliance-enquiry.js"
+      - "scripts/test-public-lead-privileges.js"
+      - "scripts/test-admin-crm-security-migrations.js"
       - ".github/workflows/test-business-compliance-enquiry.yml"
       - "supabase/migrations/**"
   workflow_dispatch:
