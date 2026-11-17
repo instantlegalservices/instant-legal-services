@@ -13,7 +13,8 @@ function limited(retry:number){
 async function check(clientKey:string,limit:number,windowSeconds:60|3600){
   const url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if(!url||!key)throw new Error("rate-limit service configuration missing");
-  const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(clientKey));
+  const hmacKey=await crypto.subtle.importKey("raw",new TextEncoder().encode(key),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+  const digest=await crypto.subtle.sign("HMAC",hmacKey,new TextEncoder().encode(clientKey));
   const hash=Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,"0")).join("");
   const response=await fetch(`${url}/rest/v1/rpc/ils_ai_rate_limit_check`,{
     method:"POST",
