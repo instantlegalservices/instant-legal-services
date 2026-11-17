@@ -42,6 +42,9 @@ try {
   assert.equal(captured[0].table, "client_requirements");
   assert.equal(captured[0].rows[0].client_name, "Test Business Owner");
   assert.equal(captured[0].rows[0].mobile, "9876543210");
+  assert.ok(!("status" in captured[0].rows[0]), "public enquiry must use the database status default");
+  assert.ok(!("payment_status" in captured[0].rows[0]), "public enquiry must not write payment workflow fields");
+  assert.ok(!("priority" in captured[0].rows[0]), "public enquiry must not write CRM priority fields");
   assert.match(captured[0].rows[0].legal_matter, /Business Compliance/);
   assert.ok(captured[0].rows[0].brief_requirement.includes("Wholesale / Trading"));
   assert.ok(captured[0].rows[0].brief_requirement.includes("GST return / notice / portal issue"));
