@@ -49,8 +49,27 @@ const { chromium } = require("playwright");
       await page.locator("#modal").waitFor({ state: "hidden" });
     }
 
+    const baseUrl = process.env.BASE_URL || "http://127.0.0.1:4173/";
+    const routePages = [
+      { path: "government/up-labour-department/", title: "UP Labour Department", official: "https://uplabour.gov.in/" },
+      { path: "government/samadhan-labour-disputes/", title: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" }
+    ];
+    for (const route of routePages) {
+      await page.goto(new URL(route.path, baseUrl).toString(), { waitUntil: "networkidle" });
+      if (!(await page.locator("h1").innerText()).includes(route.title)) {
+        throw new Error("Government route page heading mismatch: " + route.path);
+      }
+      const canonical = "https://instantlegalservices.in/" + route.path;
+      if (await page.locator('link[rel="canonical"][href="' + canonical + '"]').count() !== 1) {
+        throw new Error("Canonical URL missing or duplicated: " + route.path);
+      }
+      if (await page.locator('a[href="' + route.official + '"]').count() < 1) {
+        throw new Error("Official portal link missing: " + route.path);
+      }
+    }
+
     if (failures.length) throw new Error("Browser errors: " + failures.join(" | "));
-    console.log("HOME_SEARCH_ROUTING_E2E=PASS (" + cases.length + " cases)");
+    console.log("HOME_SEARCH_ROUTING_E2E=PASS (" + cases.length + " queries; " + routePages.length + " government pages)");
   } finally {
     await browser.close();
   }
