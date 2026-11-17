@@ -1,11 +1,24 @@
 "use strict";
 const fs = require("fs");
 const assert = require("node:assert/strict");
+const vm = require("node:vm");
 
 const generator = fs.readFileSync("scripts/generate-seo-pages.js", "utf8");
 const homepage = fs.readFileSync("index.html", "utf8");
 const navigator = fs.readFileSync("government/index.html", "utf8");
 const sitemap = fs.readFileSync("sitemap.xml", "utf8");
+
+const inlineScripts = [...homepage.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)];
+let compiledInlineScripts = 0;
+for (const match of inlineScripts) {
+  const attributes = match[1] || "";
+  const source = match[2] || "";
+  if (/\\bsrc\\s*=/.test(attributes) || /type=["']application\\/ld\\+json["']/i.test(attributes) || !source.trim()) continue;
+  new vm.Script(source, { filename: "index.html inline script " + (compiledInlineScripts + 1) });
+  compiledInlineScripts++;
+}
+assert.ok(compiledInlineScripts > 0, "homepage inline JavaScript should be syntax-checked");
+
 
 const routes = [
   { slug: "up-labour-department", title: "UP Labour Department", official: "https://uplabour.gov.in/" },
