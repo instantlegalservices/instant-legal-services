@@ -54,6 +54,17 @@ Deno.serve(async req=>{
   const amount=Number(reservation.amount),currency=String(reservation.currency||"").toUpperCase();
   if(!Number.isFinite(amount)||amount<=0||!/^[A-Z]{3}$/.test(currency))return json({ok:false,error:"INVALID_ORDER_AMOUNT"},422);
   if(reservation.gateway_order_id)return json({ok:true,key_id:kid,razorpay_order_id:reservation.gateway_order_id,payment_id:reservation.payment_id,amount,currency});
+  if(reservation.existing_attempt===true){
+   // A previous request may have timed out after Razorpay created the order.
+   // Reconcile the same reservation before allowing any further create attempt.
+   const reconciled=await reconcileRazorpayOrder(String(reservation.payment_id),oid,amount,currency,Number(reservation.created_at));
+   if(!reconciled.ok)return json({ok:false,error:"RAZORPAY_ORDER_RECONCILIATION_REQUIRED",reason:reconciled.reason},409);
+   const {data:attached,error:attachError}=await admin.rpc("ils_attach_razorpay_order",{
+    p_payment_id:reservation.payment_id,p_gateway_order_id:String(reconciled.order.id)
+   });
+   if(attachError||!attached?.ok)return json({ok:false,error:"RAZORPAY_ORDER_ATTACH_RECONCILIATION_REQUIRED"},500);
+   return json({ok:true,key_id:kid,razorpay_order_id:reconciled.order.id,payment_id:reservation.payment_id,amount,currency});
+  }
 
   let rr:Response;
   let ro:any;
