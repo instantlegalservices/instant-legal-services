@@ -18,7 +18,7 @@ assert.match(endpoint,/ils_finalize_razorpay_payment/);
 assert.doesNotMatch(endpoint,/admin\.from\("orders"\)\.update\(\{status:"paid"\}\)/);
 assert.doesNotMatch(endpoint,/admin\.from\("entitlements"\)\.upsert/);
 
-assert.match(webhook,/safeEqual\(expected,signature\)/);
+assert.match(webhook,/safeEqual\(expected,\s*signature\)/);
 assert.match(webhook,/payment\.status !== "captured"/);
 assert.match(webhook,/ils_finalize_razorpay_payment/);
 assert.match(webhook,/\.in\("status",\s*\["created",\s*"pending"\]\)/);
