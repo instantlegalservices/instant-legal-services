@@ -56,8 +56,6 @@ Deno.serve(async req=>{
   if(Number(p.amount)!==Number(o.total)||String(p.currency||"").toUpperCase()!==String(o.currency||"").toUpperCase())return json({ok:false,error:"PAYMENT_ORDER_AMOUNT_CURRENCY_MISMATCH"},409);
   let paidGatewayAmount:number;
   let paidGatewayCurrency:string;
-  let paidGatewayAmount:number;
-  let paidGatewayCurrency:string;
   if(p.status!=="paid"||!p.gateway_payment_id){
    const expected=await hmac(secret,p.gateway_order_id+"|"+pid);
    if(!safeEqual(expected,sig))return json({ok:false,error:"SIGNATURE_VERIFICATION_FAILED"},400);
