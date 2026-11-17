@@ -368,6 +368,8 @@ const GOVERNMENT_SERVICES = [
     category: "Uttar Pradesh Government",
     description:
       "Official Uttar Pradesh Labour Department website for state labour and employment department information and services.",
+    guidance:
+      "Use this state department route for Uttar Pradesh labour and employment information and the services currently provided by the department. Availability, eligibility, application requirements and district-level procedures must be checked on the official website.",
     officialUrl:
       "https://uplabour.gov.in/"
   },
@@ -377,6 +379,8 @@ const GOVERNMENT_SERVICES = [
     category: "Government of India",
     description:
       "Official Ministry of Labour and Employment portal for industrial disputes, eligible labour-law claims and employment-related grievances.",
+    guidance:
+      "The official SAMADHAN portal supports eligible industrial disputes, including certain termination disputes, and claims such as unpaid or delayed wages, minimum wages, gratuity and maternity benefits. Check the portal's current eligibility, applicable law and filing instructions before proceeding.",
     officialUrl:
       "https://samadhan.labour.gov.in/"
   },
@@ -508,6 +512,8 @@ function governmentPageContent(service) {
   </p>
 
   <p>${escapeHtml(service.description)}</p>
+
+  ${service.guidance ? `<div class="card"><h2>What this portal is for</h2><p>${escapeHtml(service.guidance)}</p></div>` : ""}
 
   <div class="card" style="background:#fafafa">
     <h2>Official Government Route</h2>
