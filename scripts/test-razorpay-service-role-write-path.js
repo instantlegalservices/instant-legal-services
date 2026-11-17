@@ -12,6 +12,8 @@ assert.match(endpoint,/\.eq\("user_id",user\.id\)/);
 assert.match(endpoint,/safeEqual\(expected,sig\)/);
 assert.match(endpoint,/gp\?\.status!=="captured"/);
 assert.match(endpoint,/PAYMENT_FINALIZATION_FAILED/);
+assert.match(endpoint,/ils_reserve_razorpay_attempt/);
+assert.match(endpoint,/ils_attach_razorpay_order/);
 assert.match(endpoint,/ils_finalize_razorpay_payment/);
 assert.doesNotMatch(endpoint,/admin\.from\("orders"\)\.update\(\{status:"paid"\}\)/);
 assert.doesNotMatch(endpoint,/admin\.from\("entitlements"\)\.upsert/);
@@ -24,7 +26,12 @@ assert.doesNotMatch(webhook,/from\("orders"\)\.update\(\{\s*status:\s*"paid"/);
 assert.match(webhook,/if \(row\.status !== "paid" && !row\.gateway_payment_id\)/);
 
 for(const marker of [
+ "create or replace function public.ils_reserve_razorpay_attempt",
+ "create or replace function public.ils_attach_razorpay_order",
  "create or replace function public.ils_finalize_razorpay_payment",
+ "razorpay_proof_pending",
+ "payment_proofs pp",
+ "status in ('created','pending')",
  "for update",
  "p_gateway_amount_minor",
  "gateway_amount_currency_mismatch",
