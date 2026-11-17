@@ -26,6 +26,14 @@ BEGIN
     RAISE EXCEPTION 'UPI_PROOF_PENDING';
   END IF;
 
+  -- Recover abandoned reservations where the external order was never attached.
+  -- The Edge Function also times out its gateway request; this is a final safety net.
+  UPDATE public.payments
+  SET status='failed'
+  WHERE order_id=v_order.id AND gateway='razorpay'
+    AND status='pending' AND gateway_order_id IS NULL
+    AND created_at < now() - interval '15 minutes';
+
   SELECT * INTO v_payment FROM public.payments
   WHERE order_id=v_order.id AND gateway='razorpay' AND status IN ('created','pending')
   ORDER BY created_at DESC LIMIT 1 FOR UPDATE;
