@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     });
     if (finalizeError || !finalized?.ok) return new Response("Payment finalization failed", { status: 409 });
   } else if (eventType === "payment.failed") {
-    // A delayed failure event must never downgrade a payment already captured.
+    // Do not fail the order on a gateway failure event: webhook delivery can be out of order.
     if (row.status !== "paid" && !row.gateway_payment_id) {
       const { error: paymentError } = await db.from("payments")
         .update({ gateway_payment_id: payment.id, status: "failed" })
@@ -81,11 +81,6 @@ Deno.serve(async (req) => {
         .in("status", ["created", "pending"]);
       if (paymentError) return new Response("Payment update failed", { status: 500 });
 
-      const { error: orderError } = await db.from("orders")
-        .update({ status: "failed" })
-        .eq("id", row.order_id)
-        .eq("status", "pending");
-      if (orderError) return new Response("Order update failed", { status: 500 });
     }
   }
 
