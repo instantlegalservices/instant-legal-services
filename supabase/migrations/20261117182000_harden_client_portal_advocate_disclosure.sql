@@ -11,6 +11,7 @@ declare
 begin
   select pg_get_functiondef('public.get_client_portal(text,text)'::regprocedure)
     into v_definition;
+  v_definition := replace(v_definition, E'\\r\\n', E'\\n');
 
   select count(*) into v_mobile_count
   from regexp_matches(v_definition, v_mobile_pattern, 'g');
