@@ -1,0 +1,18 @@
+name: Razorpay Service Role Write Path
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/razorpay-payments/index.ts"
+      - "scripts/test-razorpay-service-role-write-path.js"
+      - ".github/workflows/test-razorpay-service-role-write-path.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify Razorpay privilege separation and payment checks
+        run: node scripts/test-razorpay-service-role-write-path.js
