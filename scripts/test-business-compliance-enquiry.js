@@ -11,19 +11,7 @@ await page.route("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2", route =
   route.fulfill({
     status: 200,
     contentType: "application/javascript",
-    body: `
-      window.__ilsTestCapture = [];\n      window.__ilsCreateClientCount = 0;
-      window.supabase = {
-        createClient: () => {\n          window.__ilsCreateClientCount++;\n          return ({
-          from: table => ({
-            insert: async rows => {
-              window.__ilsTestCapture.push({ table, rows });
-              return { error: null };
-            }
-          })
-        })
-      };
-    `
+    body: "window.__ilsTestCapture=[];window.__ilsCreateClientCount=0;window.supabase={createClient:()=>{window.__ilsCreateClientCount++;return {from:table=>({insert:async rows=>{window.__ilsTestCapture.push({table,rows});return {error:null};}})};}};"
   })
 );
 
@@ -31,11 +19,12 @@ try {
   await page.goto(new URL("business-compliance.html", baseUrl).toString(), { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => !!window.ILS?.submitRequirement);
 
-  assert.equal(await page.locator("#businessEnquiryForm").count(), 1, "business enquiry form should exist");\n  assert.equal(await page.evaluate(() => window.__ilsCreateClientCount), 1, "the page should create exactly one canonical Supabase client");
+  assert.equal(await page.locator("#businessEnquiryForm").count(), 1, "business enquiry form should exist");
+  assert.equal(await page.evaluate(() => window.__ilsCreateClientCount), 1, "the page should create exactly one canonical Supabase client");
   assert.equal(await page.locator("#businessEnquiryForm input[type=password]").count(), 0, "initial enquiry must not require a password");
 
   const gridColumns = await page.locator(".bc-form-grid").evaluate(el => getComputedStyle(el).gridTemplateColumns);
-  assert.equal(gridColumns.trim().split(/\s+/).length, 1, "form fields should stack on a mobile viewport");
+  assert.equal(gridColumns.trim().split(/\\s+/).length, 1, "form fields should stack on a mobile viewport");
 
   await page.locator("#bcName").fill("Test Business Owner");
   await page.locator("#bcMobile").fill("9876543210");
@@ -59,7 +48,7 @@ try {
   assert.equal(await page.locator("#bcName").inputValue(), "", "form should reset only after successful submission");
   assert.deepEqual(pageErrors, [], "page should not produce JavaScript errors");
 
-  console.log("PASS: mobile business enquiry submits one account-free lead with business/service context.");
+  console.log("PASS: mobile business enquiry submits one account-free lead with business/service context and one Supabase client.");
 } finally {
   await browser.close();
 }
