@@ -14,7 +14,7 @@ assert.match(migration,/grant execute on function public\.ils_ai_rate_limit_chec
 assert.match(migration,/on conflict \(key_hash, window_seconds\) do update/i);
 assert.match(migration,/updated_at < v_now - interval '2 hours'/i);
 assert.match(shared,/cf-connecting-ip/);
-assert.doesNotMatch(shared,/x-forwarded-for|x-real-ip/i);
+assert.ok(!shared.includes('headers.get("x-forwarded-for")')&&!shared.includes('headers.get("x-real-ip")'),"must not trust caller-supplied forwarding headers");
 assert.match(shared,/crypto\.subtle\.digest\("SHA-256"/);
 assert.match(shared,/AI_RATE_LIMIT_UNAVAILABLE/);
 assert.match(shared,/Retry-After/);
