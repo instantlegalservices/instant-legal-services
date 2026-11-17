@@ -2,6 +2,78 @@
 -- Edge handlers must independently validate gateway signature/payment status before invoking.
 BEGIN;
 
+CREATE OR REPLACE FUNCTION public.ils_reserve_razorpay_attempt(p_order_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $function$
+DECLARE
+  v_order public.orders%rowtype;
+  v_payment public.payments%rowtype;
+BEGIN
+  IF p_order_id IS NULL THEN RAISE EXCEPTION 'ORDER_ID_REQUIRED'; END IF;
+  SELECT * INTO v_order FROM public.orders WHERE id=p_order_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'ORDER_NOT_FOUND'; END IF;
+  IF v_order.status<>'pending' THEN RAISE EXCEPTION 'ORDER_NOT_PAYABLE'; END IF;
+
+  IF EXISTS (SELECT 1 FROM public.payment_proofs pp
+             WHERE pp.order_id=v_order.id AND pp.status='pending') THEN
+    RAISE EXCEPTION 'UPI_PROOF_PENDING';
+  END IF;
+
+  SELECT * INTO v_payment FROM public.payments
+  WHERE order_id=v_order.id AND gateway='razorpay' AND status='created'
+  ORDER BY created_at DESC LIMIT 1 FOR UPDATE;
+  IF FOUND THEN
+    RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
+      'gateway_order_id',v_payment.gateway_order_id,'amount',v_order.total,
+      'currency',v_order.currency,'order_number',v_order.order_number);
+  END IF;
+
+  INSERT INTO public.payments(order_id,gateway,amount,currency,status)
+  VALUES(v_order.id,'razorpay',v_order.total,v_order.currency,'created')
+  RETURNING * INTO v_payment;
+  RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
+    'gateway_order_id',NULL,'amount',v_order.total,
+    'currency',v_order.currency,'order_number',v_order.order_number);
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.ils_attach_razorpay_order(
+  p_payment_id uuid,
+  p_gateway_order_id text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $function$
+DECLARE v_payment public.payments%rowtype;
+BEGIN
+  IF p_payment_id IS NULL OR nullif(trim(p_gateway_order_id),'') IS NULL THEN
+    RAISE EXCEPTION 'PAYMENT_IDENTIFIERS_REQUIRED';
+  END IF;
+  SELECT * INTO v_payment FROM public.payments
+  WHERE id=p_payment_id AND gateway='razorpay' FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'RAZORPAY_PAYMENT_NOT_FOUND'; END IF;
+  IF v_payment.status<>'created' THEN RAISE EXCEPTION 'PAYMENT_NOT_ATTACHABLE'; END IF;
+  IF v_payment.gateway_order_id IS NOT NULL
+     AND v_payment.gateway_order_id<>p_gateway_order_id THEN
+    RAISE EXCEPTION 'GATEWAY_ORDER_ALREADY_ATTACHED';
+  END IF;
+  UPDATE public.payments SET gateway_order_id=p_gateway_order_id
+  WHERE id=v_payment.id;
+  RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
+    'gateway_order_id',p_gateway_order_id);
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.ils_reserve_razorpay_attempt(uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.ils_reserve_razorpay_attempt(uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.ils_attach_razorpay_order(uuid,text) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.ils_attach_razorpay_order(uuid,text) TO service_role;
+
 CREATE OR REPLACE FUNCTION public.ils_finalize_razorpay_payment(
   p_payment_id uuid,
   p_gateway_payment_id text,
