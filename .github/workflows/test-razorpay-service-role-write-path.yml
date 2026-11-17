@@ -14,5 +14,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Verify TypeScript function
+        run: deno check supabase/functions/razorpay-payments/index.ts
       - name: Verify Razorpay privilege separation and payment checks
         run: node scripts/test-razorpay-service-role-write-path.js
