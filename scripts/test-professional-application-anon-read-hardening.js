@@ -3,16 +3,19 @@ import assert from "node:assert/strict";
 
 const migrationPath = "supabase/migrations/20261117183000_restrict_anon_professional_join_request_reads.sql";
 const sql = fs.readFileSync(migrationPath, "utf8");
+const normalized = sql.toLowerCase();
 
-assert.match(sql, /REVOKE SELECT ON TABLE public\\.professional_join_requests FROM anon, PUBLIC;/i);
-const columnRevoke = sql.match(/REVOKE SELECT \\(([\\s\\S]*?)\\) ON TABLE public\\.professional_join_requests FROM anon, PUBLIC;/i);
-assert.ok(columnRevoke, "Expected explicit column-level SELECT revoke");
+assert.ok(normalized.includes("revoke select on table public.professional_join_requests from anon, public;"));
+const start = normalized.indexOf("revoke select (");
+const end = normalized.indexOf(") on table public.professional_join_requests from anon, public;", start);
+assert.ok(start >= 0 && end > start, "Expected explicit column-level SELECT revoke");
+const columnRevoke = normalized.slice(start, end);
 for (const column of ["aadhaar_hash", "aadhaar_last4", "admin_notes", "auth_user_id"]) {
-  assert.match(columnRevoke[1], new RegExp(\\b${column}\\b, "i"), `Missing protected column in revoke: ${column}`);
+  assert.ok(columnRevoke.includes(column), "Missing protected column in revoke: " + column);
 }
-assert.match(sql, /has_table_privilege\\('anon', 'public\\.professional_join_requests', 'SELECT'\\)/i);
-assert.match(sql, /has_column_privilege\\('anon', 'public\\.professional_join_requests', v_column, 'SELECT'\\)/i);
-assert.doesNotMatch(sql, /REVOKE\\s+(?:ALL|INSERT|UPDATE|DELETE)\\b/i);
-assert.doesNotMatch(sql, /DROP\\s+POLICY|CREATE\\s+POLICY|ALTER\\s+VIEW|DROP\\s+VIEW/i);
+assert.ok(normalized.includes("has_table_privilege('anon', 'public.professional_join_requests', 'select')"));
+assert.ok(normalized.includes("has_column_privilege('anon', 'public.professional_join_requests', v_column, 'select')"));
+assert.doesNotMatch(normalized, /revoke\s+(?:all|insert|update|delete)\b/);
+assert.doesNotMatch(normalized, /drop\s+policy|create\s+policy|alter\s+view|drop\s+view/);
 
 console.log("Professional application anonymous-read hardening static checks passed.");
