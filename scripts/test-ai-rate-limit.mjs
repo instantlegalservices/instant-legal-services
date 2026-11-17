@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const migration=await readFile("supabase/migrations/20261117070000_ils_ai_rate_limit_shared.sql","utf8");
+const migration=await readFile("supabase/migrations/20261117063714_ils_ai_rate_limit_shared.sql","utf8");
 const shared=await readFile("supabase/functions/_shared/ai-rate-limit.ts","utf8");
 const files=[
   "supabase/functions/ai-assistant/index.ts",
