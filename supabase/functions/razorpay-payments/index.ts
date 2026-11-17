@@ -54,6 +54,8 @@ Deno.serve(async req=>{
   if(pe)return json({ok:false,error:"PAYMENT_LOOKUP_FAILED"},500);
   if(!p?.gateway_order_id)return json({ok:false,error:"PAYMENT_RECORD_NOT_FOUND"},404);
   if(Number(p.amount)!==Number(o.total)||String(p.currency||"").toUpperCase()!==String(o.currency||"").toUpperCase())return json({ok:false,error:"PAYMENT_ORDER_AMOUNT_CURRENCY_MISMATCH"},409);
+  let paidGatewayAmount:number;
+  let paidGatewayCurrency:string;
   if(p.status!=="paid"||!p.gateway_payment_id){
    const expected=await hmac(secret,p.gateway_order_id+"|"+pid);
    if(!safeEqual(expected,sig))return json({ok:false,error:"SIGNATURE_VERIFICATION_FAILED"},400);
@@ -61,12 +63,12 @@ Deno.serve(async req=>{
    const gp=await gr.json().catch(()=>({}));
    if(!gr.ok||gp?.order_id!==p.gateway_order_id||Number(gp?.amount)!==Math.round(Number(o.total)*100)||String(gp?.currency||"").toUpperCase()!==String(o.currency||"").toUpperCase()||gp?.status!=="captured")return json({ok:false,error:"GATEWAY_PAYMENT_NOT_CONFIRMED"},409);
    if(p.gateway_payment_id&&p.gateway_payment_id!==pid)return json({ok:false,error:"PAYMENT_ID_MISMATCH"},409);
-   var paidGatewayAmount=gp.amount;
-   var paidGatewayCurrency=gp.currency;
+   paidGatewayAmount=Number(gp.amount);
+   paidGatewayCurrency=String(gp.currency);
   }else if(p.gateway_payment_id&&p.gateway_payment_id!==pid)return json({ok:false,error:"PAYMENT_ID_MISMATCH"},409);
   if(p.status==="paid"){
-   var paidGatewayAmount=Math.round(Number(p.amount)*100);
-   var paidGatewayCurrency=p.currency;
+   paidGatewayAmount=Math.round(Number(p.amount)*100);
+   paidGatewayCurrency=String(p.currency);
   }
   // One database transaction settles payment, order, request and entitlement.
   const {data:finalized,error:finalizeError}=await admin.rpc("ils_finalize_razorpay_payment",{
