@@ -31,6 +31,8 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:4173/business-compliance.html > /dev/null
       - name: Validate anonymous lead privilege allowlist
         run: node scripts/test-public-lead-privileges.js
+      - name: Validate Admin CRM and client portal security migrations
+        run: node scripts/test-admin-crm-security-migrations.js
       - name: Run business enquiry browser regression
         env:
           BASE_URL: http://127.0.0.1:4173/
