@@ -104,22 +104,34 @@ DECLARE
   v_order public.orders%rowtype;
   v_request public.service_requests%rowtype;
   v_service_id uuid;
+  v_order_id uuid;
 BEGIN
   IF p_payment_id IS NULL OR nullif(trim(p_gateway_payment_id),'') IS NULL THEN
     RAISE EXCEPTION 'PAYMENT_IDENTIFIERS_REQUIRED';
   END IF;
+
+  -- Establish the order/payment lock sequence used by reservation: order -> payment.
+  -- Read the immutable linkage first, then lock the order before locking the payment.
+  SELECT order_id INTO v_order_id
+  FROM public.payments
+  WHERE id=p_payment_id AND gateway='razorpay';
+  IF NOT FOUND THEN RAISE EXCEPTION 'RAZORPAY_PAYMENT_NOT_FOUND'; END IF;
+
+  SELECT * INTO v_order
+  FROM public.orders
+  WHERE id=v_order_id
+  FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'ORDER_NOT_FOUND'; END IF;
 
   SELECT * INTO v_payment
   FROM public.payments
   WHERE id=p_payment_id AND gateway='razorpay'
   FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'RAZORPAY_PAYMENT_NOT_FOUND'; END IF;
-
-  SELECT * INTO v_order
-  FROM public.orders
-  WHERE id=v_payment.order_id
-  FOR UPDATE;
-  IF NOT FOUND THEN RAISE EXCEPTION 'ORDER_NOT_FOUND'; END IF;
+  -- Revalidate linkage after acquiring both locks.
+  IF v_payment.order_id IS DISTINCT FROM v_order.id THEN
+    RAISE EXCEPTION 'PAYMENT_ORDER_LINK_CHANGED';
+  END IF;
 
   IF v_payment.amount IS DISTINCT FROM v_order.total
      OR upper(v_payment.currency) IS DISTINCT FROM upper(v_order.currency) THEN
