@@ -35,6 +35,13 @@ async function concurrent(fn){return Promise.all([fn(),fn()]);}
 async function main(){
   try {
     await setup();
+    // Confirm service-role-only execution grants on the migration RPCs.
+    for(const fn of ["ils_reserve_razorpay_attempt(uuid)","ils_attach_razorpay_order(uuid,text)","ils_finalize_razorpay_payment(uuid,text,bigint,text)"]){
+      assert.equal((await pool.query("SELECT has_function_privilege('anon',$1,'EXECUTE') anon_exec,has_function_privilege('authenticated',$1,'EXECUTE') auth_exec,has_function_privilege('service_role',$1,'EXECUTE') service_exec",[ "public."+fn ])).rows[0].anon_exec,false,fn+" must not be executable by anon");
+      const perms=(await pool.query("SELECT has_function_privilege('anon',$1,'EXECUTE') anon_exec,has_function_privilege('authenticated',$1,'EXECUTE') auth_exec,has_function_privilege('service_role',$1,'EXECUTE') service_exec",[ "public."+fn ])).rows[0];
+      assert.equal(perms.auth_exec,false,fn+" must not be executable by authenticated");
+      assert.equal(perms.service_exec,true,fn+" must be executable by service_role");
+    }
     // Parallel reservations must return the same payment attempt.
     const reserve=()=>pool.query("SELECT public.ils_reserve_razorpay_attempt($1) AS result",[U.order]).then(r=>r.rows[0].result);
     const reserved=await concurrent(reserve);
