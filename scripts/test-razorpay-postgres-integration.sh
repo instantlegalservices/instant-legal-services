@@ -75,7 +75,15 @@ psql -v ON_ERROR_STOP=1 -c "select ils_reserve_razorpay_attempt('$RACE_ORDER')" 
 RESERVE_PID=$!
 
 wait "$FINALIZE_PID"
-wait "$RESERVE_PID" || true
+if wait "$RESERVE_PID"; then
+  : # Reservation completed before/after settlement and returned successfully.
+else
+  if ! grep -q "ORDER_NOT_PAYABLE" /tmp/race-reserve.log; then
+    echo "FAIL: reservation race returned an unexpected error"
+    cat /tmp/race-reserve.log
+    exit 1
+  fi
+fi
 psql -v ON_ERROR_STOP=1 <<SQL
 DO \$\$
 BEGIN
