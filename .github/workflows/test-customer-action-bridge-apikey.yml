@@ -1,0 +1,19 @@
+name: TEST Customer Action Bridge API Key Regression
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20260923_ils_invoke_edge_function_customer_action_e2e_real_v4.sql"
+      - "supabase/migrations/20261118195500_fix_test_customer_action_http_apikey.sql"
+      - "scripts/test-customer-action-bridge-apikey.js"
+      - ".github/workflows/test-customer-action-bridge-apikey.yml"
+  workflow_dispatch:
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate TEST gateway API key patch
+        run: node scripts/test-customer-action-bridge-apikey.js

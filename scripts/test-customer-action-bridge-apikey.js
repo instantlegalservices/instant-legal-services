@@ -1,0 +1,15 @@
+"use strict";
+const fs = require("node:fs");
+const assert = require("node:assert/strict");
+const migration = fs.readFileSync("supabase/migrations/20261118195500_fix_test_customer_action_http_apikey.sql", "utf8");
+const bridgeSql = fs.readFileSync("supabase/migrations/20260923_ils_invoke_edge_function_customer_action_e2e_real_v4.sql", "utf8");
+const testKey = "sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2";
+assert.ok(migration.includes(testKey), "corrective migration must use the verified TEST publishable key");
+assert.match(migration, /http_header\(''apikey'', ''sb_publishable_[^']+''\)/, "corrective migration must inject apikey header");
+assert.match(migration, /pg_get_functiondef\([\s\S]*ils_invoke_edge_function_customer_action_e2e_real_v4/, "migration must patch only the fixed invoke RPC");
+assert.match(migration, /Expected exactly one outbound header block[\s\S]*refusing migration/, "migration must fail closed if source definition drifted");
+assert.match(bridgeSql, /http_header\('Authorization', 'Bearer ' \|\| trim\(p_user_jwt\)\)/, "original user Authorization must remain");
+assert.match(bridgeSql, /http_header\('Content-Type', 'application\/json'\)/, "original content-type must remain");
+assert.doesNotMatch(migration, /odqebkdzkjfxzyzbrndt/, "must not mention production project");
+assert.doesNotMatch(migration, /service_role_key|SUPABASE_SERVICE_ROLE_KEY/i, "must not add server secret to SQL");
+console.log("PASS: TEST Edge Function invoke corrective migration adds required apikey header using TEST publishable key and fail-closed source guard.");
