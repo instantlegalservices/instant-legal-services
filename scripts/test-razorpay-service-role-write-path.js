@@ -79,10 +79,11 @@ for(const marker of [
 
 
 // Webhook event-order guards: captured/failure events must be idempotent and log only after state handling.
-assert.match(webhook,/eventType === "payment\\.captured" \\|\\| eventType === "order\\.paid"/);
-assert.match(webhook,/eventType === "payment\\.failed"/);
-assert.match(webhook,/\.in\("status",\\s*\\["created",\\s*"pending"\\]\\)/);
-assert.match(webhook,/\.is\("gateway_payment_id",\\s*null\\)/);
-assert.match(webhook,/from\("payment_events"\)\.insert\(\{[\\s\\S]*event_type:\s*eventType,[\\s\\S]*payload:s*event/);
+assert.ok(webhook.includes('if (eventType === "payment.captured" || eventType === "order.paid")'));
+assert.ok(webhook.includes('} else if (eventType === "payment.failed")'));
+assert.ok(webhook.includes('.in("status", ["created", "pending"])'));
+assert.ok(webhook.includes('.is("gateway_payment_id", null)'));
+assert.ok(webhook.includes('from("payment_events").insert({'));
+assert.ok(web.includes('event_type: eventType,') && webhook.includes('payload: event,'));
 
 console.log("PASS: Razorpay verify and webhook use one atomic, idempotent finalizer; gateway amount/currency, order/request ownership and service mapping are checked; delayed failure cannot downgrade paid state.");
