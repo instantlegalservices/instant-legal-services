@@ -45,6 +45,7 @@ assert.match(webhook,/safeEqual\(expected,\s*signature\)/);
 assert.match(webhook,/payment\.status !== "captured"/);
 assert.match(webhook,/ils_finalize_razorpay_payment/);
 assert.match(webhook,/\.in\("status",\s*\["created",\s*"pending"\]\)/);
+assert.match(webhook,/\.is\("gateway_payment_id",\s*null\)/);
 assert.doesNotMatch(webhook,/from\("orders"\)\.update\(\{\s*status:\s*"paid"/);
 assert.match(webhook,/if \(row\.status !== "paid" && !row\.gateway_payment_id\)/);
 assert.doesNotMatch(webhook,/from\("orders"\)\.update\(\{\s*status:\s*"failed"/);
