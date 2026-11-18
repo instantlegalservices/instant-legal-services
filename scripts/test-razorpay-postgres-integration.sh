@@ -106,7 +106,7 @@ INSERT INTO service_requests(id,user_id,service_id,status) VALUES ('$LATE_REQUES
 INSERT INTO orders(id,order_number,user_id,service_request_id,total,currency,status) VALUES ('$LATE_ORDER','CI-ORDER-LATE-CAPTURE','$USER_ID','$LATE_REQUEST',100,'INR','pending');
 INSERT INTO order_items(order_id,service_id,quantity,unit_price,line_total) VALUES ('$LATE_ORDER','$SERVICE_ID',1,100,100);
 INSERT INTO payments(id,order_id,gateway,gateway_payment_id,gateway_order_id,amount,currency,status) VALUES
- ('$LATE_PAYMENT_A','$LATE_ORDER','razorpay',NULL,'gw-order-old','$100'::numeric,'INR','failed'),
+ ('$LATE_PAYMENT_A','$LATE_ORDER','razorpay',NULL,'gw-order-old',100,'INR','failed'),
  ('$LATE_PAYMENT_B','$LATE_ORDER','razorpay',NULL,'gw-order-retry',100,'INR','created');
 SQL
 # The old attempt captures late; the newer attempt's capture must not settle this order too.
