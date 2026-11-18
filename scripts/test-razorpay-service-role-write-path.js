@@ -33,7 +33,7 @@ assert.doesNotMatch(endpoint,/update\(\{status:"failed"\}\)\.eq\("id",reservatio
 assert.match(migration,/created_at.*extract\(epoch from v_payment\.created_at\)/);
 const finalizer=migration.slice(migration.indexOf("create or replace function public.ils_finalize_razorpay_payment"));
 const orderLock=finalizer.match(/from public\.orders\s*where id=v_order_id\s*for update/);
-const paymentLock=finalizer.match(/from public\.payments\s*where id=p_payment_id and gateway='razorpay'\s*for update/);
+const paymentLock=finalizer.match(/from public\.payments\s*where id=p_payment_id and gateway='razorpay' and order_id=v_order\.id\s*for update/);
 assert.ok(orderLock && paymentLock && orderLock.index < paymentLock.index,"finalizer must lock order before payment");
 assert.match(finalizer,/payment_order_link_changed/);
 assert.match(endpoint,/ils_attach_razorpay_order/);
@@ -84,6 +84,6 @@ assert.ok(webhook.includes('} else if (eventType === "payment.failed")'));
 assert.ok(webhook.includes('.in("status", ["created", "pending"])'));
 assert.ok(webhook.includes('.is("gateway_payment_id", null)'));
 assert.ok(webhook.includes('from("payment_events").insert({'));
-assert.ok(web.includes('event_type: eventType,') && webhook.includes('payload: event,'));
+assert.ok(webhook.includes('event_type: eventType,') && webhook.includes('payload: event,'));
 
 console.log("PASS: Razorpay verify and webhook use one atomic, idempotent finalizer; gateway amount/currency, order/request ownership and service mapping are checked; delayed failure cannot downgrade paid state.");
