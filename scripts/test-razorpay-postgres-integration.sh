@@ -17,7 +17,7 @@ INSERT INTO order_items(order_id,service_id,quantity,unit_price,line_total) VALU
 SQL
 
 # Two parallel reservations should converge to the same payment attempt.
-reserve() { psql -v ON_ERROR_STOP=1 -Atc "select payment_id from ils_reserve_razorpay_attempt('$ORDER_ID')" ; }
+reserve() { psql -v ON_ERROR_STOP=1 -Atc "select ils_reserve_razorpay_attempt('$ORDER_ID')->>'payment_id'" ; }
 reserve > /tmp/reserve-a &
 PID_A=$!
 reserve > /tmp/reserve-b &
