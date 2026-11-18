@@ -84,6 +84,6 @@ assert.ok(webhook.includes('} else if (eventType === "payment.failed")'));
 assert.ok(webhook.includes('.in("status", ["created", "pending"])'));
 assert.ok(webhook.includes('.is("gateway_payment_id", null)'));
 assert.ok(webhook.includes('from("payment_events").insert({'));
-assert.ok(web.includes('event_type: eventType,') && webhook.includes('payload: event,'));
+assert.ok(webhook.includes('event_type: eventType,') && webhook.includes('payload: event,'));
 
 console.log("PASS: Razorpay verify and webhook use one atomic, idempotent finalizer; gateway amount/currency, order/request ownership and service mapping are checked; delayed failure cannot downgrade paid state.");
