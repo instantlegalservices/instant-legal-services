@@ -82,6 +82,7 @@ Deno.serve(async (req) => {
         .update({ status: "failed" })
         .eq("id", row.id)
         .in("status", ["created", "pending"]);
+        .is("gateway_payment_id", null);
       if (paymentError) return new Response("Payment update failed", { status: 500 });
 
     }
