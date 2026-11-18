@@ -103,22 +103,30 @@ DECLARE
   v_order public.orders%rowtype;
   v_request public.service_requests%rowtype;
   v_service_id uuid;
+  v_order_id uuid;
 BEGIN
   IF p_payment_id IS NULL OR nullif(trim(p_gateway_payment_id),'') IS NULL THEN
     RAISE EXCEPTION 'PAYMENT_IDENTIFIERS_REQUIRED';
   END IF;
 
-  SELECT * INTO v_payment
+  -- Lock order before payment: reservations use this same lock order.
+  -- Read the immutable order_id first without locking the payment row.
+  SELECT order_id INTO v_order_id
   FROM public.payments
-  WHERE id=p_payment_id AND gateway='razorpay'
-  FOR UPDATE;
+  WHERE id=p_payment_id AND gateway='razorpay';
   IF NOT FOUND THEN RAISE EXCEPTION 'RAZORPAY_PAYMENT_NOT_FOUND'; END IF;
 
   SELECT * INTO v_order
   FROM public.orders
-  WHERE id=v_payment.order_id
+  WHERE id=v_order_id
   FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'ORDER_NOT_FOUND'; END IF;
+
+  SELECT * INTO v_payment
+  FROM public.payments
+  WHERE id=p_payment_id AND gateway='razorpay' AND order_id=v_order.id
+  FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'RAZORPAY_PAYMENT_NOT_FOUND'; END IF;
 
   IF v_payment.amount IS DISTINCT FROM v_order.total
      OR upper(v_payment.currency) IS DISTINCT FROM upper(v_order.currency) THEN
