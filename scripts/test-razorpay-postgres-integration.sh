@@ -46,7 +46,6 @@ SQL
 if psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$ID_A','gw-payment-conflict',10000,'INR')" >/dev/null 2>&1; then
  echo "FAIL: conflicting payment ID accepted"; exit 1
 fi
-echo "PASS: migration, concurrent reservation, finalization replay, conflicting payment ID, and entitlement idempotency"
 
 # Verify out-of-order failure webhook transition cannot downgrade paid state.
 psql -v ON_ERROR_STOP=1 -c "update payments set status='failed' where id='$ID_A' and status in ('created','pending') and gateway_payment_id is null" >/dev/null
@@ -86,3 +85,6 @@ BEGIN
 END
 \$\$;
 SQL
+
+# Report success only after every regression test above and below has completed.
+echo "PASS: migration, reservation concurrency, replay/conflict checks, delayed-failure protection, and reservation/settlement race assertions"
