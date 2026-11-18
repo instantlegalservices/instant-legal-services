@@ -49,7 +49,19 @@ async function main(){
     assert.equal((await pool.query("SELECT status,gateway_payment_id FROM payments WHERE id=$1",[pid])).rows[0].status,"paid");
     assert.equal((await pool.query("SELECT count(*)::int n FROM entitlements WHERE order_id=$1",[U.order])).rows[0].n,1,"only one entitlement");
     await assert.rejects(()=>finalize("rzp_test_payment_conflict"),/PAYMENT_ALREADY_SETTLED_DIFFERENTLY|PAYMENT_ID_MISMATCH/,"conflicting gateway payment ID must be rejected");
-    console.log("PASS: PostgreSQL migration applies; concurrent reservations share one attempt; concurrent settlement is idempotent; duplicate entitlement is prevented; conflicting payment ID rejected.");
+    // Race reservation against settlement for a separate order; both contend on order first.
+    const U2={request:"77777777-7777-4777-8777-777777777777",order:"66666666-6666-4666-8666-666666666666",item:"88888888-8888-4888-8888-888888888888"};
+    await pool.query("INSERT INTO service_requests(id,user_id,service_id,status) VALUES($1,$2,$3,'pending')",[U2.request,U.user,U.service]);
+    await pool.query("INSERT INTO orders(id,order_number,user_id,service_request_id,total,currency,status) VALUES($1,'ILS-TEST-2',$2,$3,1234,'INR','pending')",[U2.order,U.user,U2.request]);
+    await pool.query("INSERT INTO order_items(id,order_id,service_id,quantity,unit_price,line_total) VALUES($1,$2,$3,1,1234,1234)",[U2.item,U2.order,U.service]);
+    const p2=(await pool.query("INSERT INTO payments(order_id,gateway,amount,currency,status) VALUES($1,'razorpay',1234,'INR','pending') RETURNING id",[U2.order])).rows[0].id;
+    const raceReserve=()=>pool.query("SELECT public.ils_reserve_razorpay_attempt($1) AS result",[U2.order]).then(r=>r.rows[0].result);
+    const raceFinalize=()=>pool.query("SELECT public.ils_finalize_razorpay_payment($1,$2,$3,$4) result",[p2,"rzp_test_payment_2",123400,"INR"]).then(r=>r.rows[0].result);
+    const race=await Promise.allSettled([raceReserve(),raceFinalize()]);
+    assert.equal(race[1].status,"fulfilled","finalizer should complete despite concurrent reservation");
+    assert.equal((await pool.query("SELECT status FROM orders WHERE id=$1",[U2.order])).rows[0].status,"paid");
+    assert.equal((await pool.query("SELECT count(*)::int n FROM payments WHERE order_id=$1 AND gateway='razorpay'",[U2.order])).rows[0].n,1);
+    console.log("PASS: migration applies; duplicate reservations, concurrent finalization/replay, reservation-vs-finalization contention, entitlement uniqueness, and conflicting payment IDs checked.");
   } finally { await pool.end(); }
 }
 main().catch(e=>{console.error(e);process.exit(1);});
