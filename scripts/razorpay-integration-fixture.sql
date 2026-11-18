@@ -1,4 +1,13 @@
 -- Disposable minimal schema fixture for the Razorpay atomic finalization migration.
+-- Supabase role names needed by the migration's privilege grants/revokes.
+DO $roles$
+BEGIN
+ IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon NOLOGIN; END IF;
+ IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN CREATE ROLE authenticated NOLOGIN; END IF;
+ IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN CREATE ROLE service_role NOLOGIN; END IF;
+END
+$roles$;
+
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE public.orders (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), order_number text NOT NULL UNIQUE,
