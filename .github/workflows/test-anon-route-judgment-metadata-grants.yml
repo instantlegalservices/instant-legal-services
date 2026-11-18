@@ -1,0 +1,22 @@
+name: Route and Judgment Metadata Anonymous Grant Hardening
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261117185500_restrict_anon_route_and_judgment_metadata_grants.sql"
+      - "scripts/test-anon-route-judgment-metadata-grants.js"
+      - ".github/workflows/test-anon-route-judgment-metadata-grants.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify route and judgment metadata grants
+        run: node scripts/test-anon-route-judgment-metadata-grants.js
