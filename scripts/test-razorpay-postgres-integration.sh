@@ -95,4 +95,35 @@ END
 SQL
 
 # Report success only after every regression test above and below has completed.
-echo "PASS: migration, reservation concurrency, replay/conflict checks, delayed-failure protection, and reservation/settlement race assertions"
+
+# Late capture from an older failed gateway attempt must settle at most once.
+LATE_ORDER='40000000-0000-0000-0000-000000000004'
+LATE_REQUEST='30000000-0000-0000-0000-000000000004'
+LATE_PAYMENT_A='50000000-0000-0000-0000-000000000004'
+LATE_PAYMENT_B='50000000-0000-0000-0000-000000000005'
+psql -v ON_ERROR_STOP=1 <<SQL
+INSERT INTO service_requests(id,user_id,service_id,status) VALUES ('$LATE_REQUEST','$USER_ID','$SERVICE_ID','pending');
+INSERT INTO orders(id,order_number,user_id,service_request_id,total,currency,status) VALUES ('$LATE_ORDER','CI-ORDER-LATE-CAPTURE','$USER_ID','$LATE_REQUEST',100,'INR','pending');
+INSERT INTO order_items(order_id,service_id,quantity,unit_price,line_total) VALUES ('$LATE_ORDER','$SERVICE_ID',1,100,100);
+INSERT INTO payments(id,order_id,gateway,gateway_payment_id,gateway_order_id,amount,currency,status) VALUES
+ ('$LATE_PAYMENT_A','$LATE_ORDER','razorpay',NULL,'gw-order-old','$100'::numeric,'INR','failed'),
+ ('$LATE_PAYMENT_B','$LATE_ORDER','razorpay',NULL,'gw-order-retry',100,'INR','created');
+SQL
+# The old attempt captures late; the newer attempt's capture must not settle this order too.
+psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$LATE_PAYMENT_A','gw-payment-old-captured',10000,'INR')" >/dev/null
+if psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$LATE_PAYMENT_B','gw-payment-retry-captured',10000,'INR')" >/dev/null 2>&1; then
+ echo "FAIL: second gateway attempt settled an already-paid order"; exit 1
+fi
+psql -v ON_ERROR_STOP=1 <<SQL
+DO \$\$
+BEGIN
+ IF (SELECT status FROM orders WHERE id='$LATE_ORDER') <> 'paid' THEN RAISE EXCEPTION 'late capture did not settle order'; END IF;
+ IF (SELECT count(*) FROM payments WHERE order_id='$LATE_ORDER' AND status='paid') <> 1 THEN RAISE EXCEPTION 'late capture settled more than one payment'; END IF;
+ IF (SELECT status FROM payments WHERE id='$LATE_PAYMENT_A') <> 'paid' THEN RAISE EXCEPTION 'old attempt was not settled'; END IF;
+ IF (SELECT status FROM payments WHERE id='$LATE_PAYMENT_B') <> 'created' THEN RAISE EXCEPTION 'second attempt changed unexpectedly'; END IF;
+ IF (SELECT count(*) FROM entitlements WHERE order_id='$LATE_ORDER') <> 1 THEN RAISE EXCEPTION 'late capture duplicate/missing entitlement'; END IF;
+END
+\$\$;
+SQL
+
+echo "PASS: migration, reservation concurrency, replay/conflict checks, delayed-failure protection, reservation/settlement race, and late-capture double-settlement regression"
