@@ -125,7 +125,7 @@ BEGIN
 
   SELECT * INTO v_payment
   FROM public.payments
-  WHERE id=p_payment_id AND gateway='razorpay'
+  WHERE id=p_payment_id AND gateway='razorpay' AND order_id=v_order.id
   FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'RAZORPAY_PAYMENT_NOT_FOUND'; END IF;
   -- Revalidate linkage after acquiring both locks.
