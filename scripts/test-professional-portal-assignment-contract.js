@@ -15,6 +15,10 @@ assert.match(edge, /\.from\("client_requirements"\)[\s\S]*?\.select\("id,client_
   "client lookup must be limited to assigned lead IDs and minimum portal display fields");
 assert.doesNotMatch(edge, /select\("id,client_name,legal_matter,state,district_city,brief_requirement,mobile/,
   "assignment hydration must not add client mobile to the portal response");
+assert.match(edge, /assignment_id:assignment.id[\\s\\S]*?client_can_see_contact:assignment.client_can_see_contact===true[\\s\\S]*?client:lead/,
+  "assignment response must preserve deployed metadata and full matter object shape");
+assert.doesNotMatch(edge, /\\.eq\\("assigned_advocate_id",a\\.id\\)/,
+  "multi-assignee rows must not be filtered by the single primary advocate pointer");
 assert.match(edge, /const assignments=await loadAdvocateAssignments\([\s\S]*?return json\(\{[\s\S]*?role:"advocate",[\s\S]*?assignments,/,
   "advocate response must expose the assignments property expected by portal.html");
 assert.match(portal, /Array\.isArray\(p\.assignments\)\?p\.assignments:\[\]/,
