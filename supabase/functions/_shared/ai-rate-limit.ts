@@ -1,4 +1,4 @@
-const CORS={ "Access-Control-Allow-Origin":"*", "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods":"POST, OPTIONS" };
+const CORS={ "Access-Control-Allow-Origin":"*", "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods":"POST, OPTIONS", "Access-Control-Expose-Headers":"Retry-After" };
 
 function unavailable(){
   return new Response(JSON.stringify({ok:false,code:"AI_RATE_LIMIT_UNAVAILABLE",reply:"AI service is temporarily unavailable. Please try again shortly."}),{
