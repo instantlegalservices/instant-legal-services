@@ -15,6 +15,7 @@ on:
       - "supabase/test-only/20261123040000_assignment_mutation_channel_freeze_guard.sql"
       - "supabase/test-only/tests/assignment-mutation-freeze-fixture.sql"
       - "supabase/test-only/tests/assignment-mutation-freeze.test.sql"
+      - "supabase/test-only/tests/assignment-mutation-freeze-concurrency.sh"
       - ".github/workflows/test-assignment-mutation-freeze.yml"
 
 jobs:
