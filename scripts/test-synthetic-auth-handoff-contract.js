@@ -8,6 +8,8 @@ assert.ok(confirm.includes('select("id,synthetic_user_id,operator_user_id,status
 assert.ok(confirm.includes('"ils_test_get_provision_operator"'));
 assert.ok(confirm.includes('"ils_test_consume_synthetic_auth_handoff"'));
 assert.ok(confirm.includes("p_operator_user_id: handoff.operator_user_id"));
+assert.ok(confirm.indexOf('"ils_test_get_provision_operator"') < confirm.indexOf('client.auth.verifyOtp'),"operator must be checked before consuming the magic-link token");
+assert.ok(confirm.indexOf('"ils_test_consume_synthetic_auth_handoff"') > confirm.indexOf('client.auth.verifyOtp'),"atomic consume must occur only after successful OTP verification");
 assert.ok(!confirm.includes('.update({ status: "CONSUMED"'),"handoff must not be consumed by a client-side check-then-update");
 assert.ok(migration.includes("FOR UPDATE"),"operator row must be locked during final consumption");
 assert.ok(migration.includes("o.role = 'TEST_PROVISION_OPERATOR'"));
