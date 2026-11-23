@@ -150,7 +150,13 @@ AS $function$
                 )
                 AND EXISTS (
                   SELECT 1 FROM public.ils_notification_e2e_preflight nf
-                  WHERE nf.path_code='NOTIFICATION_E2E'
+                  WHERE nf.id = (
+                    SELECT nf_latest.id
+                    FROM public.ils_notification_e2e_preflight nf_latest
+                    WHERE nf_latest.path_code='NOTIFICATION_E2E'
+                    ORDER BY nf_latest.created_at DESC, nf_latest.id DESC
+                    LIMIT 1
+                  )
                     AND nf.status='READY'
                     AND nf.synthetic_only IS FALSE
                     AND nf.real_recipient_data_allowed IS TRUE
