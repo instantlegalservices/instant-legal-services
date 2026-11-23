@@ -122,6 +122,7 @@ DECLARE
   rule_rec record;
   snap text;
   did_execute boolean := false;
+  v_authorized_at timestamptz := clock_timestamp();
 BEGIN
   IF p_binding_id IS NULL
      OR nullif(trim(p_execution_nonce),'') IS NULL
