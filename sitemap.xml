@@ -145,6 +145,12 @@
     <loc>https://instantlegalservices.in/court/district-and-sessions-court-chhindwara/</loc>
   </url>
   <url>
+    <loc>https://instantlegalservices.in/court/district-and-sessions-court-family-court/</loc>
+  </url>
+  <url>
+    <loc>https://instantlegalservices.in/court/district-and-sessions-court-high-court/</loc>
+  </url>
+  <url>
     <loc>https://instantlegalservices.in/court/district-and-sessions-court-jhansi/</loc>
   </url>
   <url>
@@ -160,6 +166,9 @@
     <loc>https://instantlegalservices.in/court/high-court/</loc>
   </url>
   <url>
+    <loc>https://instantlegalservices.in/court/tehsil-court-munsif-court-civil-judge-junior-division-adj-court-junnardeo/</loc>
+  </url>
+  <url>
     <loc>https://instantlegalservices.in/district/aonla/</loc>
   </url>
   <url>
@@ -167,6 +176,9 @@
   </url>
   <url>
     <loc>https://instantlegalservices.in/district/bareilly/</loc>
+  </url>
+  <url>
+    <loc>https://instantlegalservices.in/district/chhindwara-tehsil-court/</loc>
   </url>
   <url>
     <loc>https://instantlegalservices.in/district/chhindwara/</loc>
@@ -238,13 +250,7 @@
     <loc>https://instantlegalservices.in/government/udyam-registration/</loc>
   </url>
   <url>
-    <loc>https://instantlegalservices.in/government/samadhan-labour-disputes/</loc>
-  </url>
-  <url>
     <loc>https://instantlegalservices.in/government/up-jansunwai/</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/government/up-labour-department/</loc>
   </url>
   <url>
     <loc>https://instantlegalservices.in/government/up-property-registration/</loc>
@@ -425,17 +431,5 @@
   </url>
   <url>
     <loc>https://instantlegalservices.in/tools.html</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/court/district-and-sessions-court-family-court/</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/court/district-and-sessions-court-high-court/</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/court/tehsil-court-munsif-court-civil-judge-junior-division-adj-court-junnardeo/</loc>
-  </url>
-  <url>
-    <loc>https://instantlegalservices.in/district/chhindwara-tehsil-court/</loc>
   </url>
 </urlset>
