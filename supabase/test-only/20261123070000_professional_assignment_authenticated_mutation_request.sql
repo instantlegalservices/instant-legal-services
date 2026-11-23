@@ -12,8 +12,9 @@ SECURITY DEFINER
 SET search_path TO ''
 AS $function$
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'authenticated'
-     OR auth.uid() IS NULL
+  -- EXECUTE is granted only to authenticated; the signed JWT subject is
+  -- independently required here and again by the internal ownership gate.
+  IF auth.uid() IS NULL
      OR p_assignment_link_id IS NULL
      OR p_operation IS NULL
      OR p_operation NOT IN ('ACTIVATE','PAUSE','REVOKE','COMPLETE')
