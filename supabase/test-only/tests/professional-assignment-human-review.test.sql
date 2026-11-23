@@ -251,10 +251,10 @@ BEGIN
   FROM public.ils_professional_assignment_mutation_alert_escalations
   WHERE decision='STOP' AND action_code='FREEZE_MUTATION_CHANNEL'
     AND source_failure_code='AUTH_REQUIRED'
-    AND status='PENDING_REVIEW'
+    AND status='ACKNOWLEDGED'
     AND human_approval_required=true
     AND destructive_action_executed=false;
-  IF v_escalations<>1 THEN RAISE EXCEPTION 'STOP must remain a pending human-approved proposal'; END IF;
+  IF v_escalations<>1 THEN RAISE EXCEPTION 'Approved STOP must be acknowledged but not auto-executed'; END IF;
 
   IF to_regclass('public.ils_professional_assignment_mutation_channel_control') IS NOT NULL THEN
     RAISE EXCEPTION 'This alert evaluator must not create or auto-freeze a mutation channel';
