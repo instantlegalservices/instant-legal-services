@@ -2,6 +2,7 @@ import {
   HANDOFF_REISSUE_GRACE_MS,
   HANDOFF_TTL_MS,
   isUniqueViolation,
+  isMatchingIssuedHandoff,
   newHandoffExpiry,
   sha256Hex,
   staleIssuedHandoffCutoff,
@@ -45,3 +46,45 @@ function assertEquals<T>(actual: T, expected: T): void {
     throw new Error(`Expected ${String(expected)}, received ${String(actual)}`);
   }
 }
+
+Deno.test("a token for handoff A cannot be substituted with handoff B", () => {
+  const now = Date.parse("2026-11-23T06:00:00.000Z");
+  const handoffB = {
+    synthetic_user_id: "synthetic-user",
+    status: "ISSUED",
+    expires_at: new Date(now + 60_000).toISOString(),
+    token_hash_sha256: "b".repeat(64),
+  };
+  assertEquals(
+    isMatchingIssuedHandoff(handoffB, "synthetic-user", "a".repeat(64), now),
+    false,
+  );
+  assertEquals(
+    isMatchingIssuedHandoff(handoffB, "synthetic-user", "b".repeat(64), now),
+    true,
+  );
+});
+
+Deno.test("superseded, consumed, expired, or wrong-user handoffs cannot be confirmed", () => {
+  const now = Date.parse("2026-11-23T06:00:00.000Z");
+  const base = {
+    synthetic_user_id: "synthetic-user",
+    status: "ISSUED",
+    expires_at: new Date(now + 60_000).toISOString(),
+    token_hash_sha256: "a".repeat(64),
+  };
+  for (const status of ["SUPERSEDED", "CONSUMED", "EXPIRED"]) {
+    assertEquals(
+      isMatchingIssuedHandoff({ ...base, status }, "synthetic-user", "a".repeat(64), now),
+      false,
+    );
+  }
+  assertEquals(
+    isMatchingIssuedHandoff({ ...base, expires_at: new Date(now).toISOString() }, "synthetic-user", "a".repeat(64), now),
+    false,
+  );
+  assertEquals(
+    isMatchingIssuedHandoff(base, "different-user", "a".repeat(64), now),
+    false,
+  );
+});
