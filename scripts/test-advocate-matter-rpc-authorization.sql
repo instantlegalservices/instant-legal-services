@@ -308,3 +308,5 @@ $tests$;
 RESET ROLE;
 
 SELECT 'ADVOCATE_MATTER_RPC_POSTGRES_INTEGRATION=PASS' AS result;
+
+\\ir test-admin-storage-policy-contract.sql
