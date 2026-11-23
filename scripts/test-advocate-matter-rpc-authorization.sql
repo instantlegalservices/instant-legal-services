@@ -228,6 +228,22 @@ BEGIN
   END;
   IF NOT v_denied THEN RAISE EXCEPTION 'Cross-advocate matter read was not denied'; END IF;
 
+  v_denied := false;
+  BEGIN
+    PERFORM public.advocate_send_client_message(100, 'unauthorized');
+  EXCEPTION WHEN OTHERS THEN
+    v_denied := true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'Cross-advocate chat write was not denied'; END IF;
+
+  v_denied := false;
+  BEGIN
+    PERFORM public.advocate_add_work_progress(100, 'In Progress', 'unauthorized', 'unauthorized', true);
+  EXCEPTION WHEN OTHERS THEN
+    v_denied := true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'Cross-advocate progress write was not denied'; END IF;
+
   -- A linked but suspended profile must not fall back to an approved legacy row
   -- sharing the same email.
   PERFORM set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000003', true);
