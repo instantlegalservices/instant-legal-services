@@ -41,6 +41,8 @@ BEGIN
      OR position('v_now := clock_timestamp()' in admin_definition) < position('WHERE r.user_id=p_subject_user_id' in admin_definition)
      OR position('v_actor_auth.valid_until<v_now' in admin_definition) < position('v_now := clock_timestamp()' in admin_definition)
      OR position('v_actor_auth.valid_from>v_now' in admin_definition) < position('v_now := clock_timestamp()' in admin_definition)
+     OR position('pg_advisory_xact_lock(hashtextextended(p_subject_user_id::text, 0))' in admin_definition)=0
+     OR position('pg_advisory_xact_lock(hashtextextended(p_subject_user_id::text, 0))' in admin_definition) > position('WHERE r.user_id=p_subject_user_id' in admin_definition)
      OR position('v_now timestamptz:=' in admin_definition)>0 THEN
     RAISE EXCEPTION 'Reviewer administration must revalidate SECURITY_ADMIN validity after target locks';
   END IF;
