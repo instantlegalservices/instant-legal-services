@@ -6,7 +6,7 @@ on:
       - "supabase/test-only/20261123040000_professional_assignment_human_review_escalation.sql"
       - "supabase/test-only/tests/professional-assignment-human-review-fixture.sql"
       - "supabase/test-only/tests/professional-assignment-human-review.test.sql"
-      - ".github/workflows/test-assignment-mutation-freeze.yml"
+      - ".github/workflows/test-professional-assignment-human-review.yml"
   push:
     branches:
       - "feat/assignment-mutation-freeze-guard-20261123"
@@ -14,10 +14,10 @@ on:
       - "supabase/test-only/20261123040000_professional_assignment_human_review_escalation.sql"
       - "supabase/test-only/tests/professional-assignment-human-review-fixture.sql"
       - "supabase/test-only/tests/professional-assignment-human-review.test.sql"
-      - ".github/workflows/test-assignment-mutation-freeze.yml"
+      - ".github/workflows/test-professional-assignment-human-review.yml"
 
 jobs:
-  assignment-mutation-freeze:
+  professional-assignment-human-review:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -51,12 +51,12 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -U postgres -d ils_assignment_freeze -v ON_ERROR_STOP=1 -f supabase/test-only/tests/professional-assignment-human-review-fixture.sql
-      - name: Apply TEST-only freeze guard migration
+      - name: Apply TEST-only human-review escalation migration
         env:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -U postgres -d ils_assignment_freeze -v ON_ERROR_STOP=1 -f supabase/test-only/20261123040000_professional_assignment_human_review_escalation.sql
-      - name: Run rollback-only freeze contract tests
+      - name: Run rollback-only human-review contract tests
         env:
           PGPASSWORD: postgres
         run: |
