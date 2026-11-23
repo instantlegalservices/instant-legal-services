@@ -68,6 +68,9 @@ for (const ambiguous of ['"labour complaint"', '"labour grievance"', '"श्र
   assert.ok(!genericLabourRule.includes(ambiguous), "ambiguous labour query must not be forced to the UP government portal: " + ambiguous);
 }
 
+assert.ok(homepage.includes("const explicitLabourIntent=["), "labour ambiguity guard must exist before generic government-grievance routing");
+assert.ok(homepage.includes("if(isLabourQuery&&!explicitLabourIntent.some(term=>n.includes(term)))"), "generic labour complaints must request clarification before generic government routing");
+
 const routeMapStart = homepage.indexOf("const routeMap=");
 for (const locale of ["hi-IN", "en-IN", "hinglish", "ur-IN", "bn-IN"]) {
   const localeStart = homepage.indexOf('  "' + locale + '":{', routeMapStart);
