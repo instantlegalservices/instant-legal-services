@@ -45,13 +45,17 @@ async function getAssignedAdvocate(user: any, clientId: number) {
 
   let { data: advocate, error: advocateError } = await selectProfile()
     .eq("auth_user_id", user.id)
-    .ilike("status", "Approved")
-    .ilike("verification_status", "Approved")
     .maybeSingle();
 
   if (advocateError) return null;
 
-  if (!advocate && user.email) {
+  // A linked but unapproved/suspended profile must not fall through to a
+  // different legacy row that happens to share the same email address.
+  if (advocate) {
+    const approved = String(advocate.status || "").trim().toLowerCase() === "approved"
+      && String(advocate.verification_status || "").trim().toLowerCase() === "approved";
+    if (!approved) return null;
+  } else if (user.email) {
     const legacy = await selectProfile()
       .is("auth_user_id", null)
       .ilike("email", String(user.email).trim())
