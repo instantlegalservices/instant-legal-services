@@ -74,6 +74,8 @@ for(const marker of [
  "order_service_mapping_mismatch",
  "payments_razorpay_gateway_order_id_uidx",
  "payments_one_razorpay_created_per_order_uidx",
+ "payments_one_unresolved_razorpay_attempt_per_order_uidx",
+ "razorpay_multiple_active_attempts_reconciliation_required",
  "revoke all on function public.ils_finalize_razorpay_payment",
  "grant execute on function public.ils_finalize_razorpay_payment(uuid,text,bigint,text) to service_role"
 ]) assert.ok(migration.includes(marker),"missing atomic finalizer requirement: "+marker);
