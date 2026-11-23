@@ -66,6 +66,7 @@ BEGIN
      OR position('SNAPSHOT_TAMPER' in v_release_def)=0
      OR position('EXPIRED_BINDING' in v_release_def)=0
      OR position('DESTRUCTIVE_ACTION' in v_release_def)=0
+     OR position('g.hostile_tests_passed>=7' in v_release_def)=0
      OR position('g.hostile_tests_failed=0' in v_release_def)=0
      OR position('g.production_touch_detected IS FALSE' in v_release_def)=0 THEN
     RAISE EXCEPTION 'Overall release gate is missing a mandatory independent gate';
