@@ -64,7 +64,9 @@ const samadhanRule = homepage.indexOf('keys:["samadhan labour"');
 const labourRule = homepage.indexOf('keys:["up labour"');
 assert.ok(legalAssistanceRule >= 0 && samadhanRule > legalAssistanceRule && labourRule > samadhanRule, "specific legal-assistance and SAMADHAN claims must be classified before generic labour queries");
 const genericLabourRule = homepage.slice(labourRule, homepage.indexOf('title:"UP Labour Department"', labourRule));
-assert.ok(!genericLabourRule.includes('"labour","labor","labour law"'), "ambiguous single-word labour queries must not be forced to the UP government portal");
+for (const ambiguous of ['"labour complaint"', '"labour grievance"', '"श्रम"', '"श्रमिक शिकायत"', '"मजदूर शिकायत"', '"कर्मचारी शिकायत"']) {
+  assert.ok(!genericLabourRule.includes(ambiguous), "ambiguous labour query must not be forced to the UP government portal: " + ambiguous);
+}
 
 const routeMapStart = homepage.indexOf("const routeMap=");
 for (const locale of ["hi-IN", "en-IN", "hinglish", "ur-IN", "bn-IN"]) {
