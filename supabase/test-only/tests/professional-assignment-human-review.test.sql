@@ -134,8 +134,7 @@ BEGIN
 
   -- Null decisions are invalid, not an implicit rejection.
   IF public.ils_professional_security_review_decide(
-       (SELECT id FROM public.ils_professional_assignment_security_review_queue
-        WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'),
+       v_stop_queue_id,
        NULL,'FREEZE_MUTATION_CHANNEL','Null decision attempt') THEN
     RAISE EXCEPTION 'Null approval decision was accepted';
   END IF;
@@ -144,8 +143,7 @@ BEGIN
   -- the exact action recorded on the escalation.
   PERFORM set_config('request.jwt.claim.sub',v_reviewer_id::text,true);
   IF public.ils_professional_security_review_decide(
-       (SELECT id FROM public.ils_professional_assignment_security_review_queue
-        WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'),
+       v_stop_queue_id,
        'APPROVE','CREATE_SECURITY_REVIEW','Action substitution attempt') THEN
     RAISE EXCEPTION 'Reviewer action substitution was accepted';
   END IF;
@@ -175,8 +173,7 @@ BEGIN
   -- configured non-destructive proposal; the audit must retain the subject.
   PERFORM set_config('request.jwt.claim.sub',v_reviewer_id::text,true);
   IF public.ils_professional_security_review_decide(
-       (SELECT id FROM public.ils_professional_assignment_security_review_queue
-        WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'),
+       v_stop_queue_id,
        'APPROVE','FREEZE_MUTATION_CHANNEL','Independent security review') IS DISTINCT FROM true THEN
     RAISE EXCEPTION 'Independent authorized reviewer could not approve exact action';
   END IF;
