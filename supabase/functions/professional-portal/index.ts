@@ -49,9 +49,6 @@ async function resolveIdentityBoundProfile(
   return legacy||null;
 }
 
-async function loadAdvocateAssignments(");
-}
-
 async function resolveIdentityBoundProfile(
   admin:any,
   table:"advocate_registrations"|"professional_join_requests",
@@ -157,8 +154,8 @@ Deno.serve(async(req)=>{
       email
     );
 
-    if(adv?.[0]){
-      const a=adv[0];
+    if(adv){
+      const a=adv;
       const assignments=await loadAdvocateAssignments(
         admin,a.id,a.status,a.verification_status
       );
@@ -198,8 +195,8 @@ Deno.serve(async(req)=>{
       email
     );
 
-    if(prof?.[0]){
-      const p=prof[0];
+    if(prof){
+      const p=prof;
       return json({
         ok:true,
         role:p.professional_type,
