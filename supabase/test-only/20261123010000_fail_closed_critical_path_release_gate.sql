@@ -84,8 +84,9 @@ AS $function$
               AND s.authority_match IS TRUE
               AND s.https_ok IS TRUE
               AND s.final_url ~* '^https://'
-              AND lower(split_part(split_part(s.final_url,'/',3),':',1))
-                    = lower(r.official_domain)
+              AND regexp_replace(lower(split_part(split_part(s.final_url,'/',3),':',1)),'^www\\.','')
+                    = regexp_replace(lower(r.official_domain),'^www\\.','')
+              AND jsonb_typeof(s.source_snapshot)='object'
               AND s.source_snapshot <> '{}'::jsonb
               AND s.next_check_at > now()
           )
