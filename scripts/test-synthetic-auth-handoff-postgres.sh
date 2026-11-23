@@ -10,8 +10,8 @@ for n in 1 2; do
   pids+=("$!")
 done
 for pid in "${pids[@]}"; do wait "$pid"; done
-true_count=$(grep -h -c '^t$' "$tmp_dir"/*.out | awk '{sum += $1} END {print sum+0}')
-false_count=$(grep -h -c '^f$' "$tmp_dir"/*.out | awk '{sum += $1} END {print sum+0}')
+true_count=$(awk '$0=="t" {n++} END {print n+0}' "$tmp_dir"/*.out)
+false_count=$(awk '$0=="f" {n++} END {print n+0}' "$tmp_dir"/*.out)
 if [[ "$true_count" != "1" || "$false_count" != "1" ]]; then
   echo "FAIL: expected one consume and one replay denial, got true=$true_count false=$false_count" >&2
   exit 1
