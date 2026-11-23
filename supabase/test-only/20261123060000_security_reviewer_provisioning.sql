@@ -114,6 +114,10 @@ BEGIN
     RAISE EXCEPTION 'SECURITY_REVIEWER_TARGET_IDENTITY_UNVERIFIED';
   END IF;
 
+  -- Serialize all provisioning transitions for this subject, including the
+  -- absent-row case where SELECT FOR UPDATE alone cannot prevent a race.
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_subject_user_id::text, 0));
+
   SELECT r.id,r.reviewer_role,r.authorization_status,r.valid_from,r.valid_until
     INTO v_existing
   FROM public.ils_professional_security_reviewer_authorizations r
