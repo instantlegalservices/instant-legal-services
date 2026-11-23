@@ -28,4 +28,15 @@ assert.ok(migration.includes("ils_public_approved_advocate_photo_read"));
 assert.ok(migration.includes("ils_public_advocate_pending_insert"));
 assert.ok(migration.includes("Legacy overbroad advocate-photo policy remains active"));
 assert.doesNotMatch(migration, /DROP TABLE|TRUNCATE|DELETE FROM|UPDATE public\./i);
+
+const edgeSource = fs.readFileSync(
+  "supabase/functions/create-advocate-user/index.ts",
+  "utf8"
+);
+assert.ok(edgeSource.includes('.from("ils_admin_users")'));
+assert.ok(edgeSource.includes('.eq("user_id", userData.user.id)'));
+assert.ok(edgeSource.includes("if (adminIdentityError || !adminIdentity)"));
+assert.ok(!edgeSource.includes("fahat29@gmail.com"));
+assert.ok(!edgeSource.includes("callerEmail"));
+
 console.log("ADMIN_STORAGE_IDENTITY_CONTRACT=PASS");
