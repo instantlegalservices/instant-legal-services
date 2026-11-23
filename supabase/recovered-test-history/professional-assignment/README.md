@@ -58,3 +58,9 @@ See `manifest.json` for machine-readable inventory.
 
 ## Additional recovered privilege and E2E history
 Also recovered the TEST-ledger source for Actions 525–527 (Professional Assignment E2E preflight/synthetic harness/release gate, including duplicate version entries) and Actions 607, 610, 611, 613 and 615 (assignment privilege lockdown and associate identity binding). These exact SQL snapshots explain why internal mutation RPCs remain unavailable to direct authenticated callers.
+
+
+## Integrity verification
+- Each manifest item records the SHA-256 of the exact UTF-8 bytes in the original TEST ledger `statements[1]` value.
+- The archive CI recomputes each file's SHA-256 and checks it against that source checksum, in addition to file length, inventory, ordering, scope and non-replayability checks.
+- A matching hash proves the archived file bytes match the recorded TEST ledger statement; it does not authorize replay or deployment.
