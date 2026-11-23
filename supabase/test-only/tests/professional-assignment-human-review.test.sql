@@ -638,6 +638,9 @@ SELECT set_config('request.jwt.claim.role','authenticated',true);
 SET LOCAL ROLE authenticated;
 DO $authenticated_rpc$
 BEGIN
+  IF auth.uid() IS DISTINCT FROM 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid THEN
+    RAISE EXCEPTION 'Authenticated JWT subject was not preserved after SET ROLE';
+  END IF;
   IF NOT has_function_privilege(current_user,
        'public.ils_professional_assignment_mutation_request(uuid,text,text)','EXECUTE') THEN
     RAISE EXCEPTION 'Authenticated role cannot execute the public mutation request';
