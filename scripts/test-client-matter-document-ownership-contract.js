@@ -3,6 +3,10 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const source = fs.readFileSync("supabase/functions/client-matter-documents/index.ts", "utf8");
 
+assert.match(source, /async function isAdmin\(user: any\)[\s\S]*?if \(!user\?\.id\) return false[\s\S]*?from\("ils_admin_users"\)[\s\S]*?\.eq\("user_id", user\.id\)[\s\S]*?return !error && !!data/,
+  "admin document access must be bound to an explicitly configured auth user ID");
+assert.doesNotMatch(source, /user\?\.email\s*===\s*["']fahat29@gmail\.com["']/,
+  "admin access must not rely on an email-only hardcoded identity");
 assert.match(source, /async function getAssignedAdvocate\(user: any, clientId: number\)/,
   "document authorization must resolve the authenticated advocate server-side");
 assert.match(source, /\.eq\("auth_user_id", user\.id\)[\s\S]*?if \(advocate\) \{[\s\S]*?advocate\.status[\s\S]*?advocate\.verification_status[\s\S]*?if \(!approved\) return null/,
