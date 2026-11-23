@@ -20,7 +20,7 @@ async function loadAdvocateAssignments(admin:any,advocateId:number,status:unknow
 
   const {data:links,error:linksError}=await admin
     .from("advocate_assignments")
-    .select("lead_id,status,assigned_at")
+    .select("id,lead_id,status,assigned_at,client_can_see_contact")
     .eq("advocate_id",advocateId)
     .in("status",["Assigned","Active"])
     .order("assigned_at",{ascending:false});
@@ -34,7 +34,7 @@ async function loadAdvocateAssignments(admin:any,advocateId:number,status:unknow
 
   const {data:leads,error:leadsError}=await admin
     .from("client_requirements")
-    .select("id,client_name,legal_matter,state,district_city,brief_requirement")
+    .select("id,client_name,legal_matter,brief_requirement,state,district_city,status,priority,assigned_advocate_id,assigned_advocate,created_at")
     .in("id",leadIds);
   if(leadsError) throw leadsError;
 
@@ -46,16 +46,12 @@ async function loadAdvocateAssignments(admin:any,advocateId:number,status:unknow
     const lead=leadById.get(String(leadId));
     if(!lead) return [];
     return [{
+      assignment_id:assignment.id,
       lead_id:leadId,
-      status:assignment.status,
       assigned_at:assignment.assigned_at,
-      client:{
-        client_name:lead.client_name,
-        legal_matter:lead.legal_matter,
-        state:lead.state,
-        district_city:lead.district_city,
-        brief_requirement:lead.brief_requirement
-      }
+      status:assignment.status,
+      client_can_see_contact:assignment.client_can_see_contact===true,
+      client:lead
     }];
   });
 };
