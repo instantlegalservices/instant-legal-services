@@ -30,7 +30,11 @@ const { chromium } = require("playwright");
       { query: "labour registration UP", expected: "UP Labour Department", official: "https://uplabour.gov.in/" },
       { query: "unpaid wages claim", expected: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" },
       { query: "industrial dispute", expected: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" },
-      { query: "labour court lawyer", expected: "Labour & Employment Legal Assistance", official: "https://instantlegalservices.in/practice/labour-and-employment-law/" }
+      { query: "labour court lawyer", expected: "Labour & Employment Legal Assistance", official: "https://instantlegalservices.in/practice/labour-and-employment-law/" },
+      { query: "उत्तर प्रदेश श्रम विभाग", expected: "UP Labour Department", official: "https://uplabour.gov.in/" },
+      { query: "बकाया वेतन", expected: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" },
+      { query: "श्रम वकील", expected: "Labour & Employment Legal Assistance", official: "https://instantlegalservices.in/practice/labour-and-employment-law/" },
+      { query: "labour", expected: "No official route selected yet", noRoute: true }
     ];
 
     for (const item of cases) {
@@ -41,10 +45,17 @@ const { chromium } = require("playwright");
       if (!result.includes(item.expected)) {
         throw new Error('Query "' + item.query + '" expected route "' + item.expected + '"; actual result: ' + result.slice(0, 800));
       }
-      const expectedOfficial = item.official || "https://echallan.parivahan.gov.in/index/accused-challan";
-      const officialLink = page.locator('#result a[href="' + expectedOfficial + '"]');
-      if (await officialLink.count() < 1) {
-        throw new Error('Official link "' + expectedOfficial + '" missing for query "' + item.query + '"');
+      if (item.noRoute) {
+        const officialLinks = page.locator('#result a[href^="http"]');
+        if (await officialLinks.count() > 0) {
+          throw new Error('Ambiguous query "' + item.query + '" was assigned an official route unexpectedly');
+        }
+      } else {
+        const expectedOfficial = item.official || "https://echallan.parivahan.gov.in/index/accused-challan";
+        const officialLink = page.locator('#result a[href="' + expectedOfficial + '"]');
+        if (await officialLink.count() < 1) {
+          throw new Error('Official link "' + expectedOfficial + '" missing for query "' + item.query + '"');
+        }
       }
       await page.locator("#close").click();
       await page.locator("#modal").waitFor({ state: "hidden" });
