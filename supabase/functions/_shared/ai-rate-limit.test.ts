@@ -55,9 +55,12 @@ Deno.test("AI rate limiter fails closed and returns 429 with a safe hashed ident
 
     windows.length = 0;
     let advocateBody = "";
+    const advocateLimits: number[] = [];
     globalThis.fetch = async (_input, init) => {
       advocateBody = String(init?.body || "");
-      windows.push(JSON.parse(advocateBody).p_window_seconds);
+      const requestBody = JSON.parse(advocateBody);
+      windows.push(requestBody.p_window_seconds);
+      advocateLimits.push(requestBody.p_limit);
       return new Response(JSON.stringify({ allowed: true, retry_after_seconds: 30 }), { status: 200 });
     };
     const advocateId = "00000000-0000-4000-8000-000000000001";
@@ -66,7 +69,7 @@ Deno.test("AI rate limiter fails closed and returns 429 with a safe hashed ident
       throw new Error("advocate requests must check minute and hour windows without requiring a public IP");
     }
     const advocatePayload = JSON.parse(advocateBody);
-    if (advocatePayload.p_limit !== 20) throw new Error("advocate minute quota must be 20");
+    if (advocateLimits.join(",") !== "20,200") throw new Error("advocate quotas must be 20/minute and 200/hour");
     if (advocateBody.includes(advocateId) || !/^[0-9a-f]{64}$/.test(advocatePayload.p_key_hash)) {
       throw new Error("raw advocate UUID must not be sent to RPC");
     }
