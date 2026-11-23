@@ -32,7 +32,7 @@ for(const s of [
 ]) assert.ok(sql.includes(s),"missing hardening requirement: "+s);
 assert.match(sql,/foreach v_privilege in array array\['insert','update','references'\]/);
 assert.ok(sql.includes("execute format('revoke %s (%i) on table public.payment_proofs from anon, authenticated, public'"),"column-level direct write grants must be revoked");
-assert.match(sql,/if p_amount is distinct from v_order\\.total then/);
+assert.match(sql,/if p_amount is distinct from v_order\.total then/);
 assert.match(sql,/if v_proof\.amount is distinct from v_order\.total then/);
 assert.doesNotMatch(sql,/abs\(p_amount-v_order\.total\)\s*>\s*0\.01/);
 assert.doesNotMatch(sql,/abs\(v_proof\.amount-v_order\.total\)\s*>\s*0\.01/);
