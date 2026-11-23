@@ -1,0 +1,22 @@
+name: Professional Portal Identity Contract
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/professional-portal/index.ts"
+      - "scripts/test-professional-portal-identity-contract.js"
+      - ".github/workflows/test-professional-portal-identity-contract.yml"
+  workflow_dispatch:
+
+jobs:
+  professional-portal-identity-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify professional portal identity contract
+        run: node scripts/test-professional-portal-identity-contract.js
