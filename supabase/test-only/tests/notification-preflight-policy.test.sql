@@ -1,5 +1,5 @@
 -- TEST ONLY. Run in the TEST SQL editor after applying
--- 20261123001000_notification_preflight_gate_alignment.sql.
+-- 20261123000000, 20261123001000, and 20261123003000 TEST-only SQL files.
 -- Every data change is rolled back at the end. Do not run in Production.
 
 BEGIN;
@@ -47,15 +47,15 @@ BEGIN
     END IF;
 
     INSERT INTO public.ils_test_synthetic_auth_handoffs
-      (synthetic_user_id,operator_user_id,status,correlation_id,expires_at)
+      (synthetic_user_id,operator_user_id,status,correlation_id,expires_at,token_hash_sha256)
     VALUES
-      (v_synthetic,v_operator,'ISSUED',gen_random_uuid()::text,now()+interval '10 minutes');
+      (v_synthetic,v_operator,'ISSUED',gen_random_uuid()::text,now()+interval '10 minutes',repeat('a',64));
 
     BEGIN
       INSERT INTO public.ils_test_synthetic_auth_handoffs
-        (synthetic_user_id,operator_user_id,status,correlation_id,expires_at)
+        (synthetic_user_id,operator_user_id,status,correlation_id,expires_at,token_hash_sha256)
       VALUES
-        (v_synthetic,v_operator,'ISSUED',gen_random_uuid()::text,now()+interval '10 minutes');
+        (v_synthetic,v_operator,'ISSUED',gen_random_uuid()::text,now()+interval '10 minutes',repeat('b',64));
     EXCEPTION WHEN unique_violation THEN
       v_duplicate_rejected := true;
     END;
