@@ -9,6 +9,7 @@ DECLARE
   ambiguous_queue_id uuid:=gen_random_uuid();
   mismatch_queue_id uuid:=gen_random_uuid();
   mismatch_escalation_id uuid:=gen_random_uuid();
+  v_stop_queue_id uuid;
   ambiguous_escalation_id uuid:=gen_random_uuid();
   v_approval_log_id uuid;
   v_count integer;
@@ -110,14 +111,18 @@ BEGIN
     WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'
       AND affected_professional_user_id=actor
   ) THEN RAISE EXCEPTION 'Affected professional identity was not bound to review queue'; END IF;
+  SELECT id INTO v_stop_queue_id
+  FROM public.ils_professional_assignment_security_review_queue
+  WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'
+    AND affected_professional_user_id=actor;
+  IF v_stop_queue_id IS NULL THEN RAISE EXCEPTION 'Canonical STOP queue not found'; END IF;
 
   -- The affected professional is independently authorized as a reviewer,
   -- but must still be prevented from approving their own assignment action.
   PERFORM set_config('request.jwt.claim.sub',actor::text,true);
   PERFORM set_config('request.jwt.claim.role','authenticated',true);
   IF public.ils_professional_security_review_decide(
-       (SELECT id FROM public.ils_professional_assignment_security_review_queue
-        WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'),
+       v_stop_queue_id,
        'APPROVE','FREEZE_MUTATION_CHANNEL','Self approval attempt') THEN
     RAISE EXCEPTION 'Affected professional was allowed to self-approve';
   END IF;
@@ -186,8 +191,7 @@ BEGIN
   SELECT id INTO v_approval_log_id
   FROM public.ils_professional_assignment_security_review_approval_log
   WHERE reviewer_id=v_reviewer_id
-    AND queue_id=(SELECT id FROM public.ils_professional_assignment_security_review_queue
-                  WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED')
+    AND queue_id=v_stop_queue_id
     AND approval_decision='APPROVE';
   IF v_approval_log_id IS NULL THEN RAISE EXCEPTION 'Approval audit row missing'; END IF;
   IF has_table_privilege('service_role',
