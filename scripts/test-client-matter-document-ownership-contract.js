@@ -27,7 +27,7 @@ assert.match(source, /const assignedAdvocate = await getAssignedAdvocate\(user, 
   "request authorization must use the strict identity resolver");
 assert.match(source, /uploaderName = assignedAdvocate\?\.advocate_name \|\| "Assigned Advocate"/,
   "uploader attribution must use the already-authorized advocate identity");
-const escapeLikePattern = value => value.replace(/[\\%_]/g, "\\console.log("CLIENT_MATTER_DOCUMENT_OWNERSHIP_CONTRACT=PASS");");
+const escapeLikePattern = value => value.replace(/[\\%_]/g, "\\$&");
 assert.equal(escapeLikePattern("user_name@example.com"), "user\\_name@example.com");
 assert.equal(escapeLikePattern("user%name@example.com"), "user\\%name@example.com");
 assert.equal(escapeLikePattern("user\\\\name@example.com"), "user\\\\\\\\name@example.com");
