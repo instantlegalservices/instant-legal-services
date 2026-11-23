@@ -263,7 +263,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 3123,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907190239_action_486_live_mutation_telemetry_aggregation.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907190239_action_486_live_mutation_telemetry_aggregation.sql",
+      "source_sha256": "754b0e8bce479853aa76456eaf64e606502bcb9d150d6aa8f5e1966c526d0b89"
     },
     {
       "version": "20260907190444",
@@ -271,7 +272,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 4264,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907190444_action_487_automatic_mutation_alert_evaluation.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907190444_action_487_automatic_mutation_alert_evaluation.sql",
+      "source_sha256": "19488aa5cf9dde3ff953d18797e06170e04f8f17dd67dee1be52c7b165047d6f"
     },
     {
       "version": "20260907190651",
@@ -279,7 +281,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 3888,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907190651_action_488_mutation_alert_escalation_auto_response_guard.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907190651_action_488_mutation_alert_escalation_auto_response_guard.sql",
+      "source_sha256": "67e17e331a4e2605f9152153ca9205504f399448a48209995334d0afaca4895f"
     },
     {
       "version": "20260907190848",
@@ -287,7 +290,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 3695,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907190848_action_489_human_security_review_queue_approval_gate.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907190848_action_489_human_security_review_queue_approval_gate.sql",
+      "source_sha256": "18ad37cf36fa1d58e49ca08abfd400d237c3fe0c1df856e378e5b05dd1c82085"
     },
     {
       "version": "20260907191030",
@@ -295,7 +299,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 2819,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191030_action_490_reviewer_identity_authorization_gate.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191030_action_490_reviewer_identity_authorization_gate.sql",
+      "source_sha256": "a692e751534ff9eda637efe7034880397d97a979964fa96fb747d3151bca69d0"
     },
     {
       "version": "20260907191037",
@@ -303,7 +308,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 779,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191037_action_490_reviewer_authorization_function.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191037_action_490_reviewer_authorization_function.sql",
+      "source_sha256": "edfc2ac3826996df5fc3959e121a0d39f95a8205700dd51a3fb4568d98a08ca9"
     },
     {
       "version": "20260907191304",
@@ -311,7 +317,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 2246,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191304_action_491_reviewer_authorization_hardening.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191304_action_491_reviewer_authorization_hardening.sql",
+      "source_sha256": "d7c6b56bd385a954f9905698c1ce583f4d4310c7d04c9f18901e23927c7e6071"
     },
     {
       "version": "20260907191539",
@@ -319,7 +326,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 4409,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191539_action_492_security_review_approval_function.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191539_action_492_security_review_approval_function.sql",
+      "source_sha256": "5ef93256409fe57c20185caadd4db69e5798622d2e5486db6219ec742449b75c"
     },
     {
       "version": "20260907191800",
@@ -327,7 +335,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 2952,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191800_action_493_approval_mutation_execution_binding.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907191800_action_493_approval_mutation_execution_binding.sql",
+      "source_sha256": "e777f4b8645e5dc5aef2efcb4ee94602df46d6ec86fae02a6ae657cc7208e76c"
     },
     {
       "version": "20260907192016",
@@ -335,7 +344,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 2418,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192016_action_494_execution_binding_replay_guard.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192016_action_494_execution_binding_replay_guard.sql",
+      "source_sha256": "adcdbce2dfeaf6bc357153153307e16a6ac04f7a077cb7a47727a4bff8fd1021"
     },
     {
       "version": "20260907192252",
@@ -343,7 +353,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 5361,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192252_action_495_execution_guard_atomic_consume.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192252_action_495_execution_guard_atomic_consume.sql",
+      "source_sha256": "168fbc93b763e2a666525cbd4562781df25beed8716d8ced430f60e9fca9fe36"
     },
     {
       "version": "20260907192453",
@@ -351,7 +362,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 3120,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192453_action_496_execution_audit_receipt.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192453_action_496_execution_audit_receipt.sql",
+      "source_sha256": "85b8bb04c07c026be48108c13db19c7368e658bca9cc39bbc10786d8b9d22ee5"
     },
     {
       "version": "20260907192643",
@@ -359,7 +371,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 3389,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192643_action_497_execution_audit_hash_verifier.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192643_action_497_execution_audit_hash_verifier.sql",
+      "source_sha256": "70210adb91ccd8281c7561e78b23a44017933e06de3f2c3aafec3ac6e477fae8"
     },
     {
       "version": "20260907192844",
@@ -367,7 +380,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 2808,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192844_action_498_execution_lifecycle_stress_test.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192844_action_498_execution_lifecycle_stress_test.sql",
+      "source_sha256": "1e952796a411df990e94b1c38783e14b60ac040f108cf187092f583b899b0feb"
     },
     {
       "version": "20260908165632",
