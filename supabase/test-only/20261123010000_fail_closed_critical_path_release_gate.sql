@@ -344,7 +344,9 @@ BEGIN
         AND g.destructive_attempts=0
         AND g.created_at >= greatest(
           coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='DOCUMENT_E2E'),'-infinity'::timestamptz),
-          coalesce((SELECT max(h.created_at) FROM public.ils_document_e2e_harness_runs h),'-infinity'::timestamptz)
+          coalesce((SELECT max(h.created_at) FROM public.ils_document_e2e_harness_runs h),'-infinity'::timestamptz),
+          coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz),
+          coalesce((SELECT max(c.created_at) FROM public.ils_critical_path_evidence_contracts c),'-infinity'::timestamptz)
         )
       FROM public.ils_document_e2e_release_gate_decisions g
       ORDER BY g.created_at DESC LIMIT 1
@@ -359,7 +361,9 @@ BEGIN
         AND g.created_at >= greatest(
           coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='NOTIFICATION_E2E'),'-infinity'::timestamptz),
           coalesce((SELECT max(h.started_at) FROM public.ils_notification_e2e_harness_runs h),'-infinity'::timestamptz),
-          coalesce((SELECT max(n.created_at) FROM public.ils_notification_e2e_preflight n WHERE n.path_code='NOTIFICATION_E2E'),'-infinity'::timestamptz)
+          coalesce((SELECT max(n.created_at) FROM public.ils_notification_e2e_preflight n WHERE n.path_code='NOTIFICATION_E2E'),'-infinity'::timestamptz),
+          coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz),
+          coalesce((SELECT max(c.created_at) FROM public.ils_critical_path_evidence_contracts c),'-infinity'::timestamptz)
         )
       FROM public.ils_notification_e2e_release_gate_decisions g
       ORDER BY g.created_at DESC LIMIT 1
@@ -373,7 +377,9 @@ BEGIN
         AND g.destructive_attempts=0
         AND g.created_at >= greatest(
           coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='PROFESSIONAL_ASSIGNMENT_E2E'),'-infinity'::timestamptz),
-          coalesce((SELECT max(h.created_at) FROM public.ils_professional_assignment_e2e_harness_runs h),'-infinity'::timestamptz)
+          coalesce((SELECT max(h.created_at) FROM public.ils_professional_assignment_e2e_harness_runs h),'-infinity'::timestamptz),
+          coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz),
+          coalesce((SELECT max(c.created_at) FROM public.ils_critical_path_evidence_contracts c),'-infinity'::timestamptz)
         )
       FROM public.ils_professional_assignment_e2e_release_gate_decisions g
       ORDER BY g.created_at DESC LIMIT 1
@@ -388,7 +394,9 @@ BEGIN
         AND g.production_touch_detected IS FALSE
         AND g.created_at >= greatest(
           coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='SECURITY_EXECUTION_E2E'),'-infinity'::timestamptz),
-          coalesce((SELECT max(h.created_at) FROM public.ils_security_execution_e2e_hostile_runs h),'-infinity'::timestamptz)
+          coalesce((SELECT max(h.created_at) FROM public.ils_security_execution_e2e_hostile_runs h),'-infinity'::timestamptz),
+          coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz),
+          coalesce((SELECT max(c.created_at) FROM public.ils_critical_path_evidence_contracts c),'-infinity'::timestamptz)
         )
       FROM public.ils_security_execution_e2e_release_gate_decisions g
       ORDER BY g.created_at DESC LIMIT 1
@@ -412,6 +420,7 @@ BEGIN
          FROM public.ils_security_execution_e2e_hostile_run_results x
          WHERE x.run_id=r.id
            AND x.test_method='RUNTIME_ATTACK'
+           AND x.created_at >= r.created_at
            AND x.observed_status='PASS'
            AND x.passed IS TRUE
            AND x.destructive_attempted IS FALSE
@@ -426,6 +435,7 @@ BEGIN
          FROM public.ils_security_execution_e2e_hostile_run_results x
          WHERE x.run_id=r.id
            AND x.test_method='RUNTIME_ATTACK'
+           AND x.created_at >= r.created_at
            AND x.observed_status='PASS'
            AND x.passed IS TRUE
            AND x.destructive_attempted IS FALSE
@@ -476,7 +486,8 @@ BEGIN
        AND a.created_at >= greatest(
          coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e),'-infinity'::timestamptz),
          coalesce((SELECT max(r.created_at) FROM public.ils_critical_path_evidence_registry r),'-infinity'::timestamptz),
-         coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz)
+         coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz),
+         coalesce((SELECT max(c.created_at) FROM public.ils_critical_path_evidence_contracts c),'-infinity'::timestamptz)
        )
     FROM public.ils_critical_path_evidence_binding_integrity_audit a
     ORDER BY a.created_at DESC
