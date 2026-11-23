@@ -3,7 +3,7 @@ const fs=require("node:fs");
 const assert=require("node:assert/strict");
 const sql=fs.readFileSync("supabase/migrations/20261118190000_harden_upi_payment_proof_flow.sql","utf8").toLowerCase();
 for(const s of [
- "revoke insert on table public.payment_proofs from authenticated, public",
+ "revoke insert, update, delete, truncate, references, trigger\n  on table public.payment_proofs from anon, authenticated, public",
  "drop policy if exists payment_proofs_insert_own",
  "payment_proofs_active_utr_uidx",
  "payment_proofs_utr_order_history_uidx",
@@ -30,7 +30,7 @@ for(const s of [
  "revoke all on function public.ils_submit_upi_payment_proof",
  "grant execute on function public.ils_submit_upi_payment_proof"
 ]) assert.ok(sql.includes(s),"missing hardening requirement: "+s);
-assert.match(sql,/if p_amount is distinct from v_order\.total then/);
+assert.match(sql,/foreach v_privilege in array array\['insert','update','references'\]/);\nassert.match(sql,/revoke %s \\(%i\\) on table public\\.payment_proofs from anon, authenticated, public/);\nassert.match(sql,/if p_amount is distinct from v_order\\.total then/);
 assert.match(sql,/if v_proof\.amount is distinct from v_order\.total then/);
 assert.doesNotMatch(sql,/abs\(p_amount-v_order\.total\)\s*>\s*0\.01/);
 assert.doesNotMatch(sql,/abs\(v_proof\.amount-v_order\.total\)\s*>\s*0\.01/);
