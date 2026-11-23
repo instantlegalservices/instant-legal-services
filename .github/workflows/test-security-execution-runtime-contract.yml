@@ -12,6 +12,7 @@ on:
       - ".github/workflows/test-security-execution-runtime-contract.yml"
   pull_request:
     paths:
+      - "supabase/test-only/20261123030000_revalidate_security_reviewer_at_bind_and_consume.sql"
       - "supabase/test-only/tests/security-execution-runtime-fixture.sql"
       - "supabase/test-only/tests/security-execution-runtime.test.sql"
       - ".github/workflows/test-security-execution-runtime-contract.yml"
