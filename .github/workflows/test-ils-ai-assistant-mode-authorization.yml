@@ -1,0 +1,22 @@
+name: ILS AI Assistant Mode Authorization
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/ils-ai-assistant/index.ts"
+      - "scripts/test-ils-ai-assistant-mode-authorization.js"
+      - ".github/workflows/test-ils-ai-assistant-mode-authorization.yml"
+  workflow_dispatch:
+
+jobs:
+  ai-assistant-mode-authorization:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify AI mode authorization contract
+        run: node scripts/test-ils-ai-assistant-mode-authorization.js
