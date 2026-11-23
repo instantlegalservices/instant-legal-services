@@ -1,6 +1,12 @@
 name: Test critical-path release-gate SQL policy
 
 on:
+  push:
+    branches:
+      - "fix/test-critical-path-release-gates-20261123"
+    paths:
+      - "supabase/test-only/**"
+      - ".github/workflows/test-critical-path-release-gate-sql.yml"
   pull_request:
     paths:
       - "supabase/test-only/20261123010000_fail_closed_critical_path_release_gate.sql"
