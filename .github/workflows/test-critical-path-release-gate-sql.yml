@@ -1,0 +1,51 @@
+name: Test critical-path release-gate SQL policy
+
+on:
+  pull_request:
+    paths:
+      - "supabase/test-only/20261123010000_fail_closed_critical_path_release_gate.sql"
+      - "supabase/test-only/tests/critical-path-release-gate-policy.test.sql"
+      - "supabase/test-only/tests/critical-path-release-gate-fixture.sql"
+      - ".github/workflows/test-critical-path-release-gate-sql.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-policy-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ils_test_policy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ils_test_policy"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Build isolated schema fixture
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_test_policy -v ON_ERROR_STOP=1 -f supabase/test-only/tests/critical-path-release-gate-fixture.sql
+      - name: Apply TEST-only migration to disposable PostgreSQL
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_test_policy -v ON_ERROR_STOP=1 -f supabase/test-only/20261123010000_fail_closed_critical_path_release_gate.sql
+      - name: Run read-only release-gate policy assertions
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_test_policy -v ON_ERROR_STOP=1 -f supabase/test-only/tests/critical-path-release-gate-policy.test.sql
