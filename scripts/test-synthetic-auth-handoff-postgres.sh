@@ -34,12 +34,14 @@ SELECT pg_sleep(1);
 COMMIT;
 SQL
 revoke_pid=$!
-sleep 0.2
+sleep 0.5
 revoked=$(psql -Atq -v ON_ERROR_STOP=1 -c "SET ROLE service_role; SELECT public.ils_test_consume_synthetic_auth_handoff('20000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001',repeat('d',64));" 2>/dev/null || true)
 wait "$revoke_pid"
 if [[ "$revoked" != "f" ]]; then
   echo "FAIL: callback was not denied after operator revocation: $revoked" >&2
   exit 1
 fi
+remaining=$(psql -Atq -v ON_ERROR_STOP=1 -c "SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000004';")
+if [[ "$remaining" != "ISSUED" ]]; then echo "FAIL: revoked operator consumed handoff"; exit 1; fi
 
 echo "PASS: concurrent callback replay and operator-revocation race are denied atomically."
