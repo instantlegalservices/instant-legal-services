@@ -4,8 +4,16 @@ BEGIN;
 DO $test$
 DECLARE
   actor uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  target_professional_id uuid:='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
   v_reviewer_id uuid:='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
   assignment_id uuid:=gen_random_uuid();
+  telemetry_assignment_1 uuid:=gen_random_uuid();
+  telemetry_assignment_2 uuid:=gen_random_uuid();
+  telemetry_assignment_3 uuid:=gen_random_uuid();
+  telemetry_assignment_4 uuid:=gen_random_uuid();
+  v_event_id uuid;
+  v_event_id_retry uuid;
+  v_telemetry_count integer;
   ambiguous_queue_id uuid:=gen_random_uuid();
   mismatch_queue_id uuid:=gen_random_uuid();
   mismatch_escalation_id uuid:=gen_random_uuid();
@@ -35,7 +43,7 @@ BEGIN
   INSERT INTO public.ils_professional_assignment_mutation_alert_thresholds
     (failure_code,window_minutes,review_threshold,stop_threshold,action,active)
   VALUES
-    ('AUTH_REQUIRED',15,2,4,'STOP_MUTATION_CHANNEL',true),
+    ('CROSS_USER_ASSIGNMENT',15,2,4,'STOP_MUTATION_CHANNEL',true),
     ('INVALID_OPERATION',5,2,3,'REVIEW',true);
 
   INSERT INTO public.ils_professional_assignment_mutation_alert_escalation_rules
@@ -46,7 +54,12 @@ BEGIN
 
   INSERT INTO public.ils_professional_work_assignment_links
     (id,work_item_id,work_stream,professional_user_id,link_status)
-  VALUES(assignment_id,gen_random_uuid(),'LEGAL',actor,'PENDING');
+  VALUES
+    (assignment_id,gen_random_uuid(),'LEGAL',actor,'PENDING'),
+    (telemetry_assignment_1,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
+    (telemetry_assignment_2,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
+    (telemetry_assignment_3,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
+    (telemetry_assignment_4,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING');
 
   INSERT INTO public.ils_professional_security_reviewer_authorizations
     (user_id,reviewer_role,authorization_status,identity_verified,security_training_verified)
@@ -55,8 +68,12 @@ BEGIN
     (v_reviewer_id,'SECURITY_REVIEWER','ACTIVE',true,true);
 
   -- A REVIEW-only threshold reaching STOP is a configuration contradiction.
-  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code,professional_user_id)
-  SELECT 'INVALID_OPERATION',actor FROM generate_series(1,3);
+  PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
+    actor,telemetry_assignment_1,'UNKNOWN',NULL,'INVALID_OPERATION');
+  PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
+    actor,telemetry_assignment_2,'UNKNOWN',NULL,'INVALID_OPERATION');
+  PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
+    actor,telemetry_assignment_3,'UNKNOWN',NULL,'INVALID_OPERATION');
   PERFORM set_config('request.jwt.claim.role','service_role',true);
   BEGIN
     PERFORM public.ils_professional_assignment_evaluate_mutation_alerts(5);
@@ -75,8 +92,10 @@ BEGIN
   END IF;
 
   -- REVIEW threshold creates a pending queue, not a mutation-channel action.
-  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code,professional_user_id)
-  SELECT 'AUTH_REQUIRED',actor FROM generate_series(1,2);
+  PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
+    actor,telemetry_assignment_1,'ACTIVATE','ACTIVE','CROSS_USER_ASSIGNMENT');
+  PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
+    actor,telemetry_assignment_2,'ACTIVATE','ACTIVE','CROSS_USER_ASSIGNMENT');
   v_count:=public.ils_professional_assignment_evaluate_mutation_alerts(15);
   IF v_count<>1 THEN RAISE EXCEPTION 'Expected one REVIEW evaluation, got %',v_count; END IF;
   SELECT count(*) INTO v_queues
