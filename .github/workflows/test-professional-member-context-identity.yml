@@ -1,0 +1,45 @@
+name: Professional Member Context Identity Contract
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261123200000_harden_professional_member_context_identity.sql"
+      - "scripts/test-professional-member-context-identity.js"
+      - "scripts/test-professional-member-context-identity.sql"
+      - ".github/workflows/test-professional-member-context-identity.yml"
+  push:
+    branches:
+      - "fix/professional-member-context-identity-20261123"
+    paths:
+      - "supabase/migrations/20261123200000_harden_professional_member_context_identity.sql"
+      - "scripts/test-professional-member-context-identity.js"
+      - "scripts/test-professional-member-context-identity.sql"
+      - ".github/workflows/test-professional-member-context-identity.yml"
+jobs:
+  identity-contract:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ils_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ils_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Run PostgreSQL identity regression suite
+        run: psql "postgres://postgres:postgres@127.0.0.1:5432/ils_test" -v ON_ERROR_STOP=1 -f scripts/test-professional-member-context-identity.sql
+      - name: Run static migration contract
+        run: node scripts/test-professional-member-context-identity.js
