@@ -263,17 +263,46 @@ BEGIN
 
   -- Dedicated path decisions must exist and the latest decision must be GO.
   SELECT
-    coalesce((SELECT decision FROM public.ils_document_e2e_release_gate_decisions
-              ORDER BY created_at DESC LIMIT 1),'HOLD')='GO'
+    coalesce((
+      SELECT g.decision='GO'
+        AND g.created_at >= greatest(
+          coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='DOCUMENT_E2E'),'-infinity'::timestamptz),
+          coalesce((SELECT max(h.created_at) FROM public.ils_document_e2e_harness_runs h),'-infinity'::timestamptz)
+        )
+      FROM public.ils_document_e2e_release_gate_decisions g
+      ORDER BY g.created_at DESC LIMIT 1
+    ),false)
     AND
-    coalesce((SELECT decision FROM public.ils_notification_e2e_release_gate_decisions
-              ORDER BY created_at DESC LIMIT 1),'HOLD')='GO'
+    coalesce((
+      SELECT g.decision='GO'
+        AND g.created_at >= greatest(
+          coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='NOTIFICATION_E2E'),'-infinity'::timestamptz),
+          coalesce((SELECT max(h.started_at) FROM public.ils_notification_e2e_harness_runs h),'-infinity'::timestamptz),
+          coalesce((SELECT max(n.created_at) FROM public.ils_notification_e2e_preflight n WHERE n.path_code='NOTIFICATION_E2E'),'-infinity'::timestamptz)
+        )
+      FROM public.ils_notification_e2e_release_gate_decisions g
+      ORDER BY g.created_at DESC LIMIT 1
+    ),false)
     AND
-    coalesce((SELECT decision FROM public.ils_professional_assignment_e2e_release_gate_decisions
-              ORDER BY created_at DESC LIMIT 1),'HOLD')='GO'
+    coalesce((
+      SELECT g.decision='GO'
+        AND g.created_at >= greatest(
+          coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='PROFESSIONAL_ASSIGNMENT_E2E'),'-infinity'::timestamptz),
+          coalesce((SELECT max(h.created_at) FROM public.ils_professional_assignment_e2e_harness_runs h),'-infinity'::timestamptz)
+        )
+      FROM public.ils_professional_assignment_e2e_release_gate_decisions g
+      ORDER BY g.created_at DESC LIMIT 1
+    ),false)
     AND
-    coalesce((SELECT status FROM public.ils_security_execution_e2e_release_gate_decisions
-              ORDER BY created_at DESC LIMIT 1),'HOLD')='GO'
+    coalesce((
+      SELECT g.status='GO'
+        AND g.created_at >= greatest(
+          coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='SECURITY_EXECUTION_E2E'),'-infinity'::timestamptz),
+          coalesce((SELECT max(h.created_at) FROM public.ils_security_execution_e2e_hostile_runs h),'-infinity'::timestamptz)
+        )
+      FROM public.ils_security_execution_e2e_release_gate_decisions g
+      ORDER BY g.created_at DESC LIMIT 1
+    ),false)
   INTO v_dedicated_ok;
 
   -- Historical expected-outcome rows are not observed hostile assertions.
@@ -296,6 +325,11 @@ BEGIN
        AND a.duplicate_evidence_bindings=0
        AND a.cross_path_conflicts=0
        AND a.orphan_evidence=0
+       AND a.created_at >= greatest(
+         coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e),'-infinity'::timestamptz),
+         coalesce((SELECT max(r.created_at) FROM public.ils_critical_path_evidence_registry r),'-infinity'::timestamptz),
+         coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz)
+       )
     FROM public.ils_critical_path_evidence_binding_integrity_audit a
     ORDER BY a.created_at DESC
     LIMIT 1
@@ -320,6 +354,12 @@ BEGIN
        AND p.held_paths=0
        AND p.failed_paths=0
        AND p.destructive_attempts=0
+       AND p.created_at >= greatest(
+         coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e),'-infinity'::timestamptz),
+         coalesce((SELECT max(r.created_at) FROM public.ils_critical_path_evidence_registry r),'-infinity'::timestamptz),
+         coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz),
+         coalesce((SELECT max(c.created_at) FROM public.ils_critical_path_evidence_contracts c),'-infinity'::timestamptz)
+       )
     FROM public.ils_critical_path_release_proof_runs p
     ORDER BY p.created_at DESC
     LIMIT 1
