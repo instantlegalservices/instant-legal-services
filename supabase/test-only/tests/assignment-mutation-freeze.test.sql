@@ -12,6 +12,22 @@ DECLARE
   v_audit integer;
   err text;
 BEGIN
+  -- Authenticated clients must not execute the internal gate/commit RPCs.
+  -- The disposable test connection is the database owner for behavioral
+  -- assertions below; these privilege checks independently verify the grants.
+  IF has_function_privilege('authenticated',
+       'public.ils_professional_assignment_mutation_gate(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'Authenticated role unexpectedly has internal mutation-gate EXECUTE';
+  END IF;
+  IF has_function_privilege('authenticated',
+       'public.ils_professional_assignment_mutation_commit(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'Authenticated role unexpectedly has internal mutation-commit EXECUTE';
+  END IF;
+  IF NOT has_function_privilege('service_role',
+       'public.ils_professional_assignment_mutation_commit(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'service_role lacks internal mutation-commit EXECUTE';
+  END IF;
+
   INSERT INTO public.ils_professional_assignment_mutation_alert_thresholds
     (failure_code,window_minutes,review_threshold,stop_threshold,action,active)
   VALUES
