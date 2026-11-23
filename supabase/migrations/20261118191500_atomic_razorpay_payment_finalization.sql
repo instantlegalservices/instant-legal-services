@@ -47,9 +47,9 @@ BEGIN
     AND (status IN ('created','pending') OR (status='failed' AND gateway_order_id IS NOT NULL))
   ORDER BY created_at DESC LIMIT 1 FOR UPDATE;
   IF FOUND THEN
-    -- Return the same unattached reservation to the caller. The Edge Function
-    -- must reconcile the deterministic receipt before it can create or attach
-    -- another gateway order; never strand a timed-out attempt behind an exception.
+    -- Return the same unresolved reservation to the caller. If a gateway order
+    -- is already attached, the Edge Function reuses it; otherwise it reconciles
+    -- the deterministic receipt before any further create attempt.
     RETURN jsonb_build_object('ok',true,'payment_id',v_payment.id,
       'gateway_order_id',v_payment.gateway_order_id,'existing_attempt',true,
       'amount',v_order.total,'currency',v_order.currency,
