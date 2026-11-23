@@ -339,6 +339,7 @@ BEGIN
     coalesce((
       SELECT g.decision='GO'
         AND g.genuine_verified_evidence_count>=1
+        AND g.hostile_tests_passed>=7
         AND g.hostile_tests_failed=0
         AND g.destructive_attempts=0
         AND g.created_at >= greatest(
@@ -352,6 +353,7 @@ BEGIN
     coalesce((
       SELECT g.decision='GO'
         AND g.genuine_verified_evidence_count>=1
+        AND g.hostile_tests_passed>=7
         AND g.hostile_tests_failed=0
         AND g.destructive_attempts=0
         AND g.created_at >= greatest(
@@ -366,6 +368,7 @@ BEGIN
     coalesce((
       SELECT g.decision='GO'
         AND g.genuine_verified_evidence_count>=1
+        AND g.hostile_tests_passed>=7
         AND g.hostile_tests_failed=0
         AND g.destructive_attempts=0
         AND g.created_at >= greatest(
