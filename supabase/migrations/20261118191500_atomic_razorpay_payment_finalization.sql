@@ -15,6 +15,7 @@ AS $function$
 DECLARE
   v_order public.orders%rowtype;
   v_payment public.payments%rowtype;
+  v_unresolved_count integer;
 BEGIN
   IF p_order_id IS NULL THEN RAISE EXCEPTION 'ORDER_ID_REQUIRED'; END IF;
   SELECT * INTO v_order FROM public.orders WHERE id=p_order_id FOR UPDATE;
@@ -30,8 +31,20 @@ BEGIN
   -- may have succeeded despite a network timeout. Keep other payment methods blocked
   -- until reconciliation confirms the external order outcome.
 
+  -- A failed webhook does not make an attached Razorpay order terminal: the
+  -- customer can retry against that same gateway order and a capture can arrive late.
+  -- Reuse that order instead of creating a second externally chargeable order.
+  SELECT count(*) INTO v_unresolved_count
+  FROM public.payments
+  WHERE order_id=v_order.id AND gateway='razorpay'
+    AND (status IN ('created','pending') OR (status='failed' AND gateway_order_id IS NOT NULL));
+  IF v_unresolved_count > 1 THEN
+    RAISE EXCEPTION 'RAZORPAY_MULTIPLE_ACTIVE_ATTEMPTS_RECONCILIATION_REQUIRED';
+  END IF;
+
   SELECT * INTO v_payment FROM public.payments
-  WHERE order_id=v_order.id AND gateway='razorpay' AND status IN ('created','pending')
+  WHERE order_id=v_order.id AND gateway='razorpay'
+    AND (status IN ('created','pending') OR (status='failed' AND gateway_order_id IS NOT NULL))
   ORDER BY created_at DESC LIMIT 1 FOR UPDATE;
   IF FOUND THEN
     -- Return the same unattached reservation to the caller. The Edge Function
@@ -216,5 +229,12 @@ WHERE gateway='razorpay' AND gateway_order_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS payments_one_razorpay_created_per_order_uidx
 ON public.payments(order_id)
 WHERE gateway='razorpay' AND status IN ('created','pending');
+
+-- A failed payment event with an attached gateway order remains retryable and
+-- may still capture. Permit only one unresolved external order per ILS order.
+CREATE UNIQUE INDEX IF NOT EXISTS payments_one_unresolved_razorpay_attempt_per_order_uidx
+ON public.payments(order_id)
+WHERE gateway='razorpay'
+  AND (status IN ('created','pending') OR (status='failed' AND gateway_order_id IS NOT NULL));
 
 COMMIT;
