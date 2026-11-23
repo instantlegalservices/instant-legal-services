@@ -125,7 +125,7 @@ BEGIN
      producer_version,dedupe_key)
   VALUES
     (v_event_id,v_assignment.id,v_assignment.work_item_id,v_assignment.work_stream,
-     p_actor_user_id,p_operation,p_requested_status,p_failure_code,v_failure_class,
+     v_assignment.professional_user_id,p_operation,p_requested_status,p_failure_code,v_failure_class,
      v_safe_message,'TRUSTED_SERVER_ASSIGNMENT_HANDLER_V1',v_now,
      'SERVER_VERIFIED_MUTATION',v_event_id,p_actor_user_id,
      'trusted-assignment-telemetry-v1',v_dedupe_key)
