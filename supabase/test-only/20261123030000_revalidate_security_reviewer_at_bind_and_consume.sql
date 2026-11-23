@@ -11,6 +11,7 @@ DECLARE
   q record;
   a record;
   r record;
+  rule_rec record;
   b_id uuid;
   snap text;
 BEGIN
@@ -56,12 +57,14 @@ BEGIN
     RAISE EXCEPTION 'EXECUTION_BINDING_REVIEWER_NOT_AUTHORIZED';
   END IF;
 
-  PERFORM 1
+  SELECT * INTO rule_rec
   FROM public.ils_professional_assignment_mutation_alert_escalation_rules
   WHERE decision = q.decision
     AND action_code = p_approved_action
     AND active = true
-    AND destructive_action_allowed = false;
+    AND requires_human_approval = true
+    AND destructive_action_allowed = false
+  FOR SHARE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'EXECUTION_BINDING_ACTION_NOT_ALLOWED';
   END IF;
@@ -87,7 +90,9 @@ BEGIN
     r.reviewer_role, r.authorization_status,
     r.identity_verified::text, r.security_training_verified::text,
     coalesce(r.valid_from::text,''), coalesce(r.valid_until::text,''),
-    r.updated_at::text), 'sha256'), 'hex');
+    r.updated_at::text,
+    rule_rec.id::text, rule_rec.severity, rule_rec.requires_human_approval::text,
+    rule_rec.destructive_action_allowed::text, rule_rec.active::text), 'sha256'), 'hex');
 
   INSERT INTO public.ils_professional_security_approval_execution_bindings
     (queue_id, approval_log_id, approved_action, execution_status,
@@ -113,6 +118,7 @@ DECLARE
   q record;
   a record;
   r record;
+  rule_rec record;
   snap text;
   did_execute boolean := false;
 BEGIN
@@ -183,6 +189,21 @@ BEGIN
     RETURN false;
   END IF;
 
+  SELECT * INTO rule_rec
+  FROM public.ils_professional_assignment_mutation_alert_escalation_rules
+  WHERE decision = q.decision
+    AND action_code = b.approved_action
+    AND active = true
+    AND requires_human_approval = true
+    AND destructive_action_allowed = false
+  FOR SHARE;
+  IF NOT FOUND THEN
+    UPDATE public.ils_professional_security_approval_execution_bindings
+    SET execution_status = 'BLOCKED'
+    WHERE id = b.id AND execution_status = 'READY';
+    RETURN false;
+  END IF;
+
   snap := encode(digest(concat_ws('|',
     q.id::text, q.review_status, q.decision, q.source_failure_code,
     q.assigned_reviewer_id::text,
@@ -191,7 +212,9 @@ BEGIN
     r.reviewer_role, r.authorization_status,
     r.identity_verified::text, r.security_training_verified::text,
     coalesce(r.valid_from::text,''), coalesce(r.valid_until::text,''),
-    r.updated_at::text), 'sha256'), 'hex');
+    r.updated_at::text,
+    rule_rec.id::text, rule_rec.severity, rule_rec.requires_human_approval::text,
+    rule_rec.destructive_action_allowed::text, rule_rec.active::text), 'sha256'), 'hex');
 
   IF snap <> b.approval_snapshot_hash OR snap <> p_approval_snapshot_hash THEN
     RAISE EXCEPTION 'EXECUTION_CONSUME_SNAPSHOT_MISMATCH';
