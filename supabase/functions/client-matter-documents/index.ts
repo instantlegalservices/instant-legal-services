@@ -34,7 +34,14 @@ async function getClientById(clientId: number) {
     .select("id, client_name, assigned_advocate_id").eq("id", clientId).maybeSingle();
   return error || !data ? null : data;
 }
-async function isAdmin(user: any) { return user?.email === "fahat29@gmail.com"; }
+async function isAdmin(user: any) {
+  if (!user?.id) return false;
+  const { data, error } = await supabaseAdmin.from("ils_admin_users")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return !error && !!data;
+}
 async function getAssignedAdvocate(user: any, clientId: number) {
   if (!user?.id) return null;
 
