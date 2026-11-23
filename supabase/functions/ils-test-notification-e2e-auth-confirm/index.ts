@@ -1,6 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { sha256Hex } from "../_shared/synthetic-auth-handoff-policy.ts";
+import {
+  isMatchingIssuedHandoff,
+  sha256Hex,
+} from "../_shared/synthetic-auth-handoff-policy.ts";
 
 const REF = "bgsbuepolooybdqrzmoa";
 const SYN = "82de1b27-5939-4f9e-bdce-313ed59ee7b1";
@@ -38,9 +41,8 @@ Deno.serve(async (req: Request) => {
     .single();
 
   if (
-    handoffError || !handoff || handoff.synthetic_user_id !== SYN ||
-    handoff.status !== "ISSUED" || new Date(handoff.expires_at) <= new Date() ||
-    !handoff.token_hash_sha256 || handoff.token_hash_sha256 !== tokenDigest
+    handoffError || !handoff ||
+    !isMatchingIssuedHandoff(handoff, SYN, tokenDigest)
   ) {
     return json({ error: "HANDOFF_INVALID_OR_EXPIRED" }, 400);
   }
