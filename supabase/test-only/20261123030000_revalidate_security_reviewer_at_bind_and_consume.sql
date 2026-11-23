@@ -14,6 +14,7 @@ DECLARE
   rule_rec record;
   b_id uuid;
   snap text;
+  v_authorized_at timestamptz := clock_timestamp();
 BEGIN
   IF p_queue_id IS NULL OR p_approval_log_id IS NULL
      OR nullif(trim(p_approved_action),'') IS NULL
@@ -50,8 +51,8 @@ BEGIN
     AND reviewer_role IN ('SECURITY_REVIEWER','SECURITY_ADMIN')
     AND identity_verified = true
     AND security_training_verified = true
-    AND (valid_from IS NULL OR valid_from <= now())
-    AND (valid_until IS NULL OR valid_until >= now())
+    AND (valid_from IS NULL OR valid_from <= v_authorized_at)
+    AND (valid_until IS NULL OR valid_until >= v_authorized_at)
   FOR SHARE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'EXECUTION_BINDING_REVIEWER_NOT_AUTHORIZED';
@@ -179,8 +180,8 @@ BEGIN
     AND reviewer_role IN ('SECURITY_REVIEWER','SECURITY_ADMIN')
     AND identity_verified = true
     AND security_training_verified = true
-    AND (valid_from IS NULL OR valid_from <= now())
-    AND (valid_until IS NULL OR valid_until >= now())
+    AND (valid_from IS NULL OR valid_from <= v_authorized_at)
+    AND (valid_until IS NULL OR valid_until >= v_authorized_at)
   FOR SHARE;
   IF NOT FOUND THEN
     UPDATE public.ils_professional_security_approval_execution_bindings
