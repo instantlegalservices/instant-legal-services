@@ -9,13 +9,9 @@ assert.doesNotMatch(source, /user\?\.email\s*===\s*["']fahat29@gmail\.com["']/,
   "admin access must not rely on an email-only hardcoded identity");
 assert.ok(source.includes("function escapeLikePattern(value: string) {"),
   "legacy email fallback must use a literal LIKE-pattern escaper");
-assert.ok(source.includes(String.raw\`return value.replace(/[\\\\%_]/g, "\\\\$&");\`),
+assert.ok(source.includes('return value.replace(/[\\\\%_]/g, "\\\\$&");'),
   "LIKE metacharacters must be escaped before querying");
 assert.ok(source.includes('.ilike("email", escapeLikePattern(String(user.email).trim()))'),
-  "legacy email lookup must compare the supplied email literally");
-assert.match(source, /async function getAssignedAdvocate"\)/,
-  "legacy email fallback must escape SQL LIKE wildcards before case-insensitive matching");
-assert.match(source, /\.ilike\("email", escapeLikePattern\(String\(user\.email\)\.trim\(\)\)\)/,
   "legacy email lookup must compare the supplied email literally");
 assert.match(source, /async function getAssignedAdvocate\(user: any, clientId: number\)/,
   "document authorization must resolve the authenticated advocate server-side");
