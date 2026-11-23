@@ -379,7 +379,7 @@ BEGIN
   -- The assignment can still proceed while a REVIEW item is pending.
   PERFORM set_config('request.jwt.claim.sub',actor::text,true);
   PERFORM set_config('request.jwt.claim.role','authenticated',true);
-  IF public.ils_professional_assignment_mutation_commit(assignment_id,'ACTIVATE','ACTIVE') IS DISTINCT FROM true THEN
+  IF public.ils_professional_assignment_mutation_request(assignment_id,'ACTIVATE','ACTIVE') IS DISTINCT FROM true THEN
     RAISE EXCEPTION 'Assignment mutation failed while only REVIEW is pending';
   END IF;
   SELECT link_status INTO v_status FROM public.ils_professional_work_assignment_links WHERE id=assignment_id;
@@ -559,7 +559,7 @@ BEGIN
   -- the prior reviewer call deliberately switched the JWT subject.
   PERFORM set_config('request.jwt.claim.sub',actor::text,true);
   PERFORM set_config('request.jwt.claim.role','authenticated',true);
-  IF public.ils_professional_assignment_mutation_commit(assignment_id,'PAUSE','PAUSED') IS DISTINCT FROM true THEN
+  IF public.ils_professional_assignment_mutation_request(assignment_id,'PAUSE','PAUSED') IS DISTINCT FROM true THEN
     RAISE EXCEPTION 'Pending STOP unexpectedly froze assignment mutation';
   END IF;
   SELECT link_status INTO v_status FROM public.ils_professional_work_assignment_links WHERE id=assignment_id;
@@ -620,4 +620,94 @@ BEGIN
   END;
 END;
 $test$;
+
+-- Exercise the real SQL privilege boundary as the authenticated database role,
+-- not merely by setting JWT claims while the test session remains postgres.
+INSERT INTO public.ils_professional_work_assignment_links
+  (id,work_item_id,work_stream,professional_user_id,link_status)
+VALUES
+  ('11111111-1111-4111-8111-111111111111',
+   '22222222-2222-4222-8222-222222222222','PROFESSIONAL',
+   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','ACTIVE'),
+  ('33333333-3333-4333-8333-333333333333',
+   '44444444-4444-4444-8444-444444444444','PROFESSIONAL',
+   'cccccccc-cccc-4ccc-8ccc-cccccccccccc','ACTIVE');
+
+SELECT set_config('request.jwt.claim.sub','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',true);
+SELECT set_config('request.jwt.claim.role','authenticated',true);
+SET LOCAL ROLE authenticated;
+DO $authenticated_rpc$
+BEGIN
+  IF auth.uid() IS DISTINCT FROM 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid THEN
+    RAISE EXCEPTION 'Authenticated JWT subject was not preserved after SET ROLE';
+  END IF;
+  IF NOT has_function_privilege(current_user,
+       'public.ils_professional_assignment_mutation_request(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'Authenticated role cannot execute the public mutation request';
+  END IF;
+  IF has_function_privilege('anon',
+       'public.ils_professional_assignment_mutation_request(uuid,text,text)','EXECUTE')
+     OR has_function_privilege('service_role',
+       'public.ils_professional_assignment_mutation_request(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'Unauthenticated or service role can execute the public mutation request';
+  END IF;
+  IF has_function_privilege(current_user,
+       'public.ils_professional_assignment_mutation_commit(uuid,text,text)','EXECUTE')
+     OR has_function_privilege(current_user,
+       'public.ils_professional_assignment_mutation_gate(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'Authenticated role can execute an internal mutation RPC';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p
+    WHERE p.oid='public.ils_professional_assignment_mutation_request(uuid,text,text)'::regprocedure
+      AND p.prosecdef=true
+      AND 'search_path=""'=ANY(p.proconfig)
+  ) THEN
+    RAISE EXCEPTION 'Public mutation request must be SECURITY DEFINER with an empty search_path';
+  END IF;
+
+  IF public.ils_professional_assignment_mutation_request(
+       '11111111-1111-4111-8111-111111111111','PAUSE','ACTIVE') IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'Mutation request accepted a mismatched operation and target status';
+  END IF;
+  PERFORM set_config('request.jwt.claim.sub','',true);
+  IF public.ils_professional_assignment_mutation_request(
+       '11111111-1111-4111-8111-111111111111','PAUSE','PAUSED') IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'Mutation request accepted a missing authenticated subject';
+  END IF;
+  PERFORM set_config('request.jwt.claim.sub','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',true);
+
+  IF public.ils_professional_assignment_mutation_request(
+       '11111111-1111-4111-8111-111111111111','PAUSE','PAUSED') IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'Authenticated wrapper could not invoke the owner-checked internal mutation';
+  END IF;
+
+  IF public.ils_professional_assignment_mutation_request(
+       '33333333-3333-4333-8333-333333333333','PAUSE','PAUSED') IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'Authenticated wrapper allowed cross-user assignment mutation';
+  END IF;
+
+  BEGIN
+    PERFORM public.ils_professional_assignment_mutation_commit(
+      '11111111-1111-4111-8111-111111111111','REVOKE','REVOKED');
+    RAISE EXCEPTION 'ASSERT_EXPECTED_INTERNAL_RPC_PERMISSION_DENIED';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+END;
+$authenticated_rpc$;
+RESET ROLE;
+
+DO $verify_mutation$
+BEGIN
+  IF (SELECT link_status FROM public.ils_professional_work_assignment_links
+      WHERE id='11111111-1111-4111-8111-111111111111') IS DISTINCT FROM 'PAUSED' THEN
+    RAISE EXCEPTION 'Authenticated wrapper mutation did not persist';
+  END IF;
+  IF (SELECT link_status FROM public.ils_professional_work_assignment_links
+      WHERE id='33333333-3333-4333-8333-333333333333') IS DISTINCT FROM 'ACTIVE' THEN
+    RAISE EXCEPTION 'Cross-user mutation changed another professional assignment';
+  END IF;
+END;
+$verify_mutation$;
 ROLLBACK;
