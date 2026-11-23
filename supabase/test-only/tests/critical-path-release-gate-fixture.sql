@@ -206,3 +206,46 @@ FROM unnest(ARRAY[
   'CP_RELEASE_REVOKED_BINDING','CP_RELEASE_SYNTHETIC_RACE',
   'CP_RELEASE_MISSING_PROVENANCE_RACE'
 ]) AS code;
+
+CREATE TABLE public.orders (
+  id uuid PRIMARY KEY,
+  total numeric NOT NULL,
+  currency text NOT NULL,
+  status text NOT NULL
+);
+CREATE TABLE public.payments (
+  id uuid PRIMARY KEY,
+  order_id uuid NOT NULL,
+  gateway text NOT NULL,
+  gateway_payment_id text,
+  amount numeric NOT NULL,
+  currency text NOT NULL,
+  status text NOT NULL,
+  paid_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE public.payment_events (
+  id uuid PRIMARY KEY,
+  payment_id uuid NOT NULL,
+  event_type text NOT NULL,
+  data jsonb,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE public.ils_upi_submissions (
+  id uuid PRIMARY KEY,
+  order_id uuid NOT NULL,
+  submitted_amount numeric NOT NULL,
+  currency text NOT NULL,
+  utr_reference text NOT NULL,
+  status text NOT NULL,
+  verified_by uuid,
+  verified_at timestamptz
+);
+CREATE TABLE public.ils_upi_verification_events (
+  id uuid PRIMARY KEY,
+  submission_id uuid NOT NULL,
+  actor_id uuid NOT NULL,
+  actor_role text NOT NULL,
+  action text NOT NULL,
+  new_status text NOT NULL
+);
