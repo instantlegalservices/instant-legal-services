@@ -82,7 +82,7 @@ BEGIN
   IF p_subject_user_id IS NULL OR p_subject_user_id=v_actor THEN
     RAISE EXCEPTION 'SECURITY_REVIEWER_SELF_ADMINISTRATION_BLOCKED';
   END IF;
-  IF p_operation NOT IN ('GRANT','SUSPEND','REVOKE') THEN
+  IF p_operation IS NULL OR p_operation NOT IN ('GRANT','SUSPEND','REVOKE') THEN
     RAISE EXCEPTION 'SECURITY_REVIEWER_OPERATION_INVALID';
   END IF;
   IF p_reason IS NULL OR length(trim(p_reason))<20 OR length(trim(p_reason))>1000 THEN
