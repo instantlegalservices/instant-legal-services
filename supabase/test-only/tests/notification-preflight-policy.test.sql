@@ -31,6 +31,40 @@ BEGIN
     RAISE EXCEPTION 'Synthetic-only safe mode should be READY/0; got %/%', v.status, v.violations;
   END IF;
 
+  -- Verify the TEST-only partial unique index enforces one active ISSUED row.
+  DECLARE
+    v_synthetic uuid := gen_random_uuid();
+    v_operator uuid := gen_random_uuid();
+    v_duplicate_rejected boolean := false;
+  BEGIN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_indexes
+      WHERE schemaname='public'
+        AND indexname='ils_test_synthetic_auth_handoffs_one_issued_per_user_uidx'
+        AND indexdef ILIKE '%WHERE (status = ''ISSUED''::text)%'
+    ) THEN
+      RAISE EXCEPTION 'One-active-issued partial unique index is missing';
+    END IF;
+
+    INSERT INTO public.ils_test_synthetic_auth_handoffs
+      (synthetic_user_id,operator_user_id,status,correlation_id,expires_at)
+    VALUES
+      (v_synthetic,v_operator,'ISSUED',gen_random_uuid()::text,now()+interval '10 minutes');
+
+    BEGIN
+      INSERT INTO public.ils_test_synthetic_auth_handoffs
+        (synthetic_user_id,operator_user_id,status,correlation_id,expires_at)
+      VALUES
+        (v_synthetic,v_operator,'ISSUED',gen_random_uuid()::text,now()+interval '10 minutes');
+    EXCEPTION WHEN unique_violation THEN
+      v_duplicate_rejected := true;
+    END;
+
+    IF NOT v_duplicate_rejected THEN
+      RAISE EXCEPTION 'Duplicate active ISSUED handoff was not rejected';
+    END IF;
+  END;
+
   -- Real in-app path without explicit operator approval must fail closed.
   UPDATE public.ils_notification_e2e_preflight
   SET synthetic_only=false,
