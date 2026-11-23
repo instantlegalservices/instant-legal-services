@@ -23,8 +23,8 @@ const expectedFiles = new Set();
 
 for (const item of manifest.items) {
   assert.equal(item.statement_count, 1, `Unexpected statement count for ${item.version}`);
-  assert.match(item.version, /^\\d{14}$/);
-  assert.match(item.archive_path, /^supabase\\/recovered-test-history\\/professional-assignment\\/[\\w.-]+\\.sql$/);
+  assert.match(item.version, /^\d{14}$/);
+  assert.match(item.archive_path, /^supabase\/recovered-test-history\/professional-assignment\/[\w.-]+\.sql$/);
   assert.ok(!item.archive_path.startsWith("supabase/migrations/"), "Archive must remain outside deployable migrations");
   assert.ok(!item.archive_path.split("/").includes(".."), "Archive path traversal is forbidden");
 
@@ -38,7 +38,7 @@ for (const item of manifest.items) {
   assert.equal(Array.from(sql).length, item.source_length, `Source length mismatch: ${item.version}`);
   expectedFiles.add(item.archive_path);
 
-  const action = Number(item.name.match(/action_(\\d+)/)?.[1]);
+  const action = Number(item.name.match(/action_(\d+)/)?.[1]);
   if (action === 458 || (action >= 460 && action <= 498)) coreCount += 1;
   else if ([525, 526, 527, 607, 610, 611, 613, 615].includes(action)) relatedCount += 1;
   else assert.fail(`Out-of-scope migration action in archive: ${item.name}`);
