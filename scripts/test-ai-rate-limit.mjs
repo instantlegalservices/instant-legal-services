@@ -25,7 +25,9 @@ for (const file of files) {
   assert.match(edge, /\.\.\/_shared\/ai-rate-limit\.ts/);
   assert.match(edge, /enforceAiRateLimit/);
   const limiter = edge.indexOf("enforceAiRateLimit(");
-  const provider = edge.lastIndexOf("https://openrouter.ai/api/v1/chat/completions");
+  const provider = file.includes("/ai-assistant/index.ts") && !file.includes("/ils-ai-assistant/")
+    ? edge.indexOf("for(const m of models)")
+    : edge.indexOf('const r=await fetch("https://openrouter.ai/api/v1/chat/completions"');
   assert.ok(limiter >= 0 && provider > limiter, file + ": limiter must precede provider invocation");
 }
 const ai = await readFile(files[0], "utf8");
