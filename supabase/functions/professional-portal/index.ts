@@ -49,38 +49,6 @@ async function resolveIdentityBoundProfile(
   return legacy||null;
 }
 
-async function resolveIdentityBoundProfile(
-  admin:any,
-  table:"advocate_registrations"|"professional_join_requests",
-  columns:string,
-  userId:string,
-  email:string
-){
-  if(!userId) return null;
-
-  // A profile linked to this auth user always wins. Query errors and duplicate
-  // linked identities fail closed instead of silently falling back to email.
-  const {data:linked,error:linkedError}=await admin
-    .from(table)
-    .select(columns)
-    .eq("auth_user_id",userId)
-    .maybeSingle();
-  if(linkedError) throw linkedError;
-  if(linked) return linked;
-
-  // Transitional compatibility is limited to profiles not linked to ANY auth user.
-  // Escape LIKE metacharacters so the authenticated email is compared literally.
-  if(!email) return null;
-  const {data:legacy,error:legacyError}=await admin
-    .from(table)
-    .select(columns)
-    .is("auth_user_id",null)
-    .ilike("email",escapeLikePattern(email))
-    .maybeSingle();
-  if(legacyError) throw legacyError;
-  return legacy||null;
-}
-
 async function loadAdvocateAssignments(admin:any,advocateId:number,status:unknown,verificationStatus:unknown){
   const approved=String(status||"").trim().toLowerCase()==="approved"
     && String(verificationStatus||"").trim().toLowerCase()==="approved";
