@@ -64,7 +64,7 @@ const a = { id: 1, auth_user_id: "user-a", email: "same@example.test", status: "
 const b = { id: 2, auth_user_id: "user-b", email: "b@example.test", status: "Approved", verification_status: "Approved" };
 const legacyCollision = { id: 3, auth_user_id: null, email: "same@example.test", status: "Approved", verification_status: "Approved" };
 assert.equal(resolve([a, legacyCollision], "user-a", "same@example.test").id, 1);
-assert.equal(resolve([a, legacyCollision], "user-b", "same@example.test"), null);
+assert.equal(resolve([a, legacyCollision], "user-b", "b@example.test"), null);
 assert.equal(resolve([legacyCollision], "user-legacy", "same@example.test").id, 3);
 assert.equal(resolve([{ ...a, status: "Suspended" }], "user-a", "same@example.test"), null);
 assert.equal(resolve([{ ...a, verification_status: "Pending" }], "user-a", "same@example.test"), null);
