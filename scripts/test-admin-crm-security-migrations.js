@@ -8,7 +8,7 @@ const admin = fs.readFileSync("supabase/migrations/20261117182100_align_admin_cr
 assert.ok(portal.includes("'public.get_client_portal(text,text)'::regprocedure"));
 assert.ok(portal.includes("regexp_matches(v_definition, v_mobile_pattern, 'g')"));
 assert.ok(portal.includes("if v_mobile_count <> 2 then"));
-const expectedMobilePattern = "v_mobile_pattern text := E'case\\s+when coalesce\\(\\s*c\\.release_advocate_contact,\\s*false\\s*\\)\\s*then ar\\.mobile\\s*else null\\s*end';";
+const expectedMobilePattern = "v_mobile_pattern text := 'case[[:space:]]+when coalesce\\\\([[:space:]]*c\\\\.release_advocate_contact,[[:space:]]*false[[:space:]]*\\\\)[[:space:]]*then ar\\\\.mobile[[:space:]]*else null[[:space:]]*end';";
 assert.ok(portal.includes(expectedMobilePattern), "portal migration regex must retain valid PostgreSQL E-string escaping");
 assert.ok(portal.includes("coalesce(aa.client_can_see_contact,false) then ar.mobile else null end"));
 assert.ok(portal.includes("coalesce(ar.verification_status, ar.status, ''Pending'') = ''Approved''"));
