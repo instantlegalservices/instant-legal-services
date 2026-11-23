@@ -25,7 +25,7 @@ fi
 
 # Operator revocation holds its row lock first; a concurrent callback must wait
 # and then observe active=false instead of consuming the still-issued handoff.
-psql -v ON_ERROR_STOP=1 <<'SQL' &
+PGAPPNAME=operator-revocation-lock psql -v ON_ERROR_STOP=1 <<'SQL' &
 BEGIN;
 UPDATE public.ils_test_synthetic_provision_operators
 SET active=false
@@ -36,7 +36,7 @@ SQL
 revoke_pid=$!
 locked=false
 for attempt in $(seq 1 40); do
-  active_sleep=$(psql -Atq -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ILIKE '%pg_sleep(1)%';")
+  active_sleep=$(psql -Atq -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM pg_stat_activity WHERE application_name='operator-revocation-lock' AND state='active' AND query ILIKE '%pg_sleep(1)%';")
   if [[ "$active_sleep" -ge 1 ]]; then locked=true; break; fi
   sleep 0.05
 done
