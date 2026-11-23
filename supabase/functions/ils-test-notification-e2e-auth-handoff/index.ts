@@ -11,6 +11,7 @@ const SYN = "82de1b27-5939-4f9e-bdce-313ed59ee7b1";
 const H = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization,apikey,content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json",
   "Cache-Control": "no-store",
 };
