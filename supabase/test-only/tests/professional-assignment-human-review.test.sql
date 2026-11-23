@@ -73,8 +73,8 @@ BEGIN
     RAISE EXCEPTION 'AUTH_REQUIRED threshold must be inactive';
   END IF;
   INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry
-    (failure_code,professional_user_id)
-  VALUES ('AUTH_REQUIRED',actor);
+    (professional_user_id,failure_code,failure_class,safe_message,source_gate)
+  VALUES (actor,'AUTH_REQUIRED','AUTHENTICATION','Unauthenticated request rejected.','UNTRUSTED_EDGE_AUTH');
   IF EXISTS(SELECT 1 FROM public.ils_professional_assignment_mutation_telemetry_aggregate(15)
             WHERE failure_code='AUTH_REQUIRED' AND observed_count>0) THEN
     RAISE EXCEPTION 'Legacy AUTH_REQUIRED telemetry influenced trusted aggregation';
