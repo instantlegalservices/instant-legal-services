@@ -7,6 +7,10 @@ assert.match(source, /async function isAdmin\(user: any\)[\s\S]*?if \(!user\?\.i
   "admin document access must be bound to an explicitly configured auth user ID");
 assert.doesNotMatch(source, /user\?\.email\s*===\s*["']fahat29@gmail\.com["']/,
   "admin access must not rely on an email-only hardcoded identity");
+assert.match(source, /function escapeLikePattern\(value: string\)[\s\S]*?value\.replace\(\/\[\\\\%_\]\/g, "\\\\\\assert.match(source, /async function getAssignedAdvocate"\)/,
+  "legacy email fallback must escape SQL LIKE wildcards before case-insensitive matching");
+assert.match(source, /\.ilike\("email", escapeLikePattern\(String\(user\.email\)\.trim\(\)\)\)/,
+  "legacy email lookup must compare the supplied email literally");
 assert.match(source, /async function getAssignedAdvocate\(user: any, clientId: number\)/,
   "document authorization must resolve the authenticated advocate server-side");
 assert.match(source, /\.eq\("auth_user_id", user\.id\)[\s\S]*?if \(advocate\) \{[\s\S]*?advocate\.status[\s\S]*?advocate\.verification_status[\s\S]*?if \(!approved\) return null/,
