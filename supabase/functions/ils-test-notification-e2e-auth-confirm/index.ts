@@ -36,7 +36,7 @@ Deno.serve(async (req: Request) => {
   });
   const { data: handoff, error: handoffError } = await admin
     .from("ils_test_synthetic_auth_handoffs")
-    .select("id,synthetic_user_id,status,correlation_id,expires_at,token_hash_sha256")
+    .select("id,synthetic_user_id,operator_user_id,status,correlation_id,expires_at,token_hash_sha256")
     .eq("id", handoffId)
     .single();
 
@@ -62,22 +62,22 @@ Deno.serve(async (req: Request) => {
     }, 401);
   }
 
-  // Atomic compare-and-set: exactly one callback can consume this bound handoff.
-  // Consume before invoking downstream work so a concurrent replay cannot race it.
-  const { data: claimed, error: claimError } = await admin
-    .from("ils_test_synthetic_auth_handoffs")
-    .update({ status: "CONSUMED", consumed_at: new Date().toISOString() })
-    .eq("id", handoffId)
-    .eq("synthetic_user_id", SYN)
-    .eq("status", "ISSUED")
-    .eq("token_hash_sha256", tokenDigest)
-    .gt("expires_at", new Date().toISOString())
-    .select("id")
-    .maybeSingle();
+  // Atomically revalidate the issuing operator and consume this exact handoff.
+  // The database RPC locks the operator row before the handoff row, so revocation
+  // cannot race a stale authorization check and concurrent callbacks cannot replay.
+  const { data: consumed, error: consumeError } = await admin.rpc(
+    "ils_test_consume_synthetic_auth_handoff",
+    {
+      p_handoff_id: handoffId,
+      p_synthetic_user_id: SYN,
+      p_operator_user_id: handoff.operator_user_id,
+      p_token_hash_sha256: tokenDigest,
+    },
+  );
 
-  if (claimError || !claimed) {
+  if (consumeError || consumed !== true) {
     await client.auth.signOut();
-    return json({ error: "HANDOFF_ALREADY_CONSUMED_OR_INVALID" }, 409);
+    return json({ error: "HANDOFF_ALREADY_CONSUMED_INVALID_OR_OPERATOR_REVOKED" }, 409);
   }
 
   const response = await fetch(url + "/functions/v1/ils-notification-e2e-real", {
