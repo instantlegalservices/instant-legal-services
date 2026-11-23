@@ -166,10 +166,13 @@ AS $function$
 DECLARE
   q record;
   reviewer record;
+  escalation record;
+  approved_rule record;
   u uuid;
 BEGIN
   u:=auth.uid();
   IF u IS NULL OR p_queue_id IS NULL
+     OR p_approval_decision IS NULL
      OR p_approval_decision NOT IN ('APPROVE','REJECT')
      OR p_reason IS NULL OR length(trim(p_reason))<5 THEN
     RETURN false;
@@ -187,11 +190,34 @@ BEGIN
   FOR SHARE;
   IF NOT FOUND THEN RETURN false; END IF;
 
+  -- Read the queue to obtain the escalation key, then lock in the same
+  -- escalation-before-queue order used by the evaluator's upsert path.
+  SELECT * INTO q
+  FROM public.ils_professional_assignment_security_review_queue
+  WHERE id=p_queue_id;
+  IF NOT FOUND OR q.escalation_id IS NULL THEN RETURN false; END IF;
+
+  SELECT * INTO escalation
+  FROM public.ils_professional_assignment_mutation_alert_escalations e
+  WHERE e.id=q.escalation_id
+  FOR UPDATE;
+  IF NOT FOUND
+     OR escalation.decision IS DISTINCT FROM q.decision
+     OR escalation.source_failure_code IS DISTINCT FROM q.source_failure_code
+     OR escalation.affected_professional_user_id IS DISTINCT FROM q.affected_professional_user_id
+     OR escalation.status NOT IN ('PENDING_REVIEW','ACKNOWLEDGED')
+     OR escalation.human_approval_required IS DISTINCT FROM true
+     OR escalation.destructive_action_executed IS DISTINCT FROM false THEN
+    RETURN false;
+  END IF;
+
   SELECT * INTO q
   FROM public.ils_professional_assignment_security_review_queue
   WHERE id=p_queue_id
   FOR UPDATE;
-  IF NOT FOUND OR q.review_status NOT IN ('PENDING','IN_REVIEW') THEN
+  IF NOT FOUND
+     OR q.escalation_id IS DISTINCT FROM escalation.id
+     OR q.review_status NOT IN ('PENDING','IN_REVIEW') THEN
     RETURN false;
   END IF;
   IF q.assigned_reviewer_id IS NOT NULL AND q.assigned_reviewer_id<>u THEN
@@ -202,22 +228,24 @@ BEGIN
   END IF;
 
   IF p_approval_decision='APPROVE' THEN
-    -- Unknown/ambiguous subject or self-approval is a hard denial.
+    -- Unknown/ambiguous subject, self-approval or action-scope expansion
+    -- is a hard denial. The proposed action must match the exact escalation.
     IF q.affected_professional_user_id IS NULL
-       OR q.affected_professional_user_id=u THEN
+       OR q.affected_professional_user_id=u
+       OR p_approved_action IS NULL
+       OR p_approved_action IS DISTINCT FROM escalation.action_code THEN
       RETURN false;
     END IF;
-    IF p_approved_action IS NULL OR NOT EXISTS(
-      SELECT 1
-      FROM public.ils_professional_assignment_mutation_alert_escalation_rules r
-      WHERE r.decision=q.decision
-        AND r.action_code=p_approved_action
-        AND r.active=true
-        AND r.requires_human_approval=true
-        AND r.destructive_action_allowed=false
-    ) THEN
-      RETURN false;
-    END IF;
+
+    SELECT * INTO approved_rule
+    FROM public.ils_professional_assignment_mutation_alert_escalation_rules r
+    WHERE r.decision=q.decision
+      AND r.action_code=p_approved_action
+      AND r.active=true
+      AND r.requires_human_approval=true
+      AND r.destructive_action_allowed=false
+    FOR SHARE;
+    IF NOT FOUND THEN RETURN false; END IF;
   END IF;
 
   UPDATE public.ils_professional_assignment_security_review_queue
@@ -226,6 +254,12 @@ BEGIN
       reviewer_note=trim(p_reason),
       reviewed_at=clock_timestamp()
   WHERE id=p_queue_id;
+
+  UPDATE public.ils_professional_assignment_mutation_alert_escalations
+  SET status='ACKNOWLEDGED',
+      resolved_at=clock_timestamp()
+  WHERE id=escalation.id
+    AND status IN ('PENDING_REVIEW','ACKNOWLEDGED');
 
   INSERT INTO public.ils_professional_assignment_security_review_approval_log
     (queue_id,reviewer_id,approval_decision,approved_action,approval_reason,
@@ -237,6 +271,37 @@ BEGIN
   RETURN true;
 END;
 $function$;
+
+-- Action 489 requires an immutable approval audit. Protect it at both the
+-- privilege and trigger layers, including against privileged API roles.
+CREATE OR REPLACE FUNCTION public.ils_professional_assignment_security_review_approval_log_reject_mutation()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO ''
+AS $function$
+BEGIN
+  RAISE EXCEPTION 'SECURITY_REVIEW_APPROVAL_LOG_APPEND_ONLY';
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS ils_professional_security_review_approval_log_no_row_mutation
+  ON public.ils_professional_assignment_security_review_approval_log;
+CREATE TRIGGER ils_professional_security_review_approval_log_no_row_mutation
+  BEFORE UPDATE OR DELETE ON public.ils_professional_assignment_security_review_approval_log
+  FOR EACH ROW
+  EXECUTE FUNCTION public.ils_professional_assignment_security_review_approval_log_reject_mutation();
+
+DROP TRIGGER IF EXISTS ils_professional_security_review_approval_log_no_truncate
+  ON public.ils_professional_assignment_security_review_approval_log;
+CREATE TRIGGER ils_professional_security_review_approval_log_no_truncate
+  BEFORE TRUNCATE ON public.ils_professional_assignment_security_review_approval_log
+  FOR EACH STATEMENT
+  EXECUTE FUNCTION public.ils_professional_assignment_security_review_approval_log_reject_mutation();
+
+REVOKE UPDATE,DELETE,TRUNCATE ON public.ils_professional_assignment_security_review_approval_log
+  FROM PUBLIC,anon,authenticated,service_role;
+REVOKE ALL ON FUNCTION public.ils_professional_assignment_security_review_approval_log_reject_mutation()
+  FROM PUBLIC,anon,authenticated,service_role;
 
 REVOKE ALL ON FUNCTION public.ils_professional_assignment_evaluate_mutation_alerts(integer)
   FROM PUBLIC,anon,authenticated;
