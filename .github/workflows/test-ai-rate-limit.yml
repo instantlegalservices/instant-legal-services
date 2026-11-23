@@ -1,0 +1,61 @@
+name: Test Shared AI Rate Limit Contract
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/ai-assistant/**"
+      - "supabase/functions/ils-ai-assistant/**"
+      - "supabase/functions/_shared/ai-rate-limit.ts"
+      - "supabase/functions/_shared/ai-rate-limit.test.ts"
+      - "supabase/migrations/20261117063714_ils_ai_rate_limit_shared.sql"
+      - "supabase/migrations/20261123193000_harden_ils_ai_rate_limit_security.sql"
+      - "scripts/test-ai-rate-limit.mjs"
+      - "scripts/test-ai-rate-limit-postgres.sql"
+      - "scripts/test-ai-rate-limit-postgres.sh"
+      - ".github/workflows/test-ai-rate-limit.yml"
+  push:
+    branches:
+      - "fix/ils-shared-ai-rate-limit-20261123"
+    paths:
+      - "supabase/functions/ai-assistant/**"
+      - "supabase/functions/ils-ai-assistant/**"
+      - "supabase/functions/_shared/ai-rate-limit.ts"
+      - "supabase/migrations/20261117063714_ils_ai_rate_limit_shared.sql"
+      - "supabase/migrations/20261123193000_harden_ils_ai_rate_limit_security.sql"
+      - "scripts/test-ai-rate-limit.mjs"
+      - "scripts/test-ai-rate-limit-postgres.sql"
+      - "scripts/test-ai-rate-limit-postgres.sh"
+      - ".github/workflows/test-ai-rate-limit.yml"
+jobs:
+  static-contract:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ils_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ils_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Execute migration and concurrency tests on disposable PostgreSQL 16
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/ils_test
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/test-ai-rate-limit-postgres.sql
+          bash scripts/test-ai-rate-limit-postgres.sh
+      - run: node scripts/test-ai-rate-limit.mjs
+      - uses: denoland/setup-deno@v2
+      - run: deno test --allow-env supabase/functions/_shared/ai-rate-limit.test.ts
