@@ -20,6 +20,8 @@ assert.match(migration, /v_legacy_count <> 1/);
 assert.match(migration, /v_advocate\.status[\s\S]*?v_advocate\.verification_status/);
 assert.match(migration, /lower\(btrim\(coalesce\(v_advocate\.status, ''\)\)\) <> 'approved'[\s\S]*?lower\(btrim\(coalesce\(v_advocate\.verification_status, ''\)\)\) <> 'approved'/);
 assert.match(migration, /REVOKE ALL ON FUNCTION public\.ils_current_approved_advocate\(\)[\s\S]*?FROM PUBLIC, anon, authenticated, service_role/);
+assert.match(migration, /DO \\$helper_acl\\$[\\s\\S]*?pg_get_userbyid\\(p\\.proowner\\)[\\s\\S]*?GRANT EXECUTE ON FUNCTION public\\.ils_current_approved_advocate\\(\\) TO %I/);
+assert.match(migration, /One or more SECURITY DEFINER RPC owners cannot execute the internal resolver/);
 assert.match(migration, /Reviewed identity block mismatch/);
 assert.match(migration, /Reviewed active-assignment ownership check missing/);
 assert.match(migration, /public\.advocate_assignments/);
