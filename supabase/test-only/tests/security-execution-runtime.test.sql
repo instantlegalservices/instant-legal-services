@@ -18,6 +18,7 @@ DECLARE
   snap2 text;
   err text;
   consumed boolean;
+  consume_definition text;
 BEGIN
   -- Bind function remains byte-for-byte equivalent to the inspected TEST
   -- catalog definition. The consume function must expose persisted expiry handling.
@@ -26,14 +27,12 @@ BEGIN
      ),'sha256'),'hex') <> '5cfd7a1b93ce0232b28749fb0d32cd0c25e3e71c7f72f8526cc65baee2f8c04f' THEN
     RAISE EXCEPTION 'Bind fixture differs from inspected TEST catalog definition';
   END IF;
-  IF position('RETURN false' in pg_get_functiondef(
-       'public.ils_professional_security_approval_execution_consume(uuid,text,text,text)'::regprocedure
-     ))=0
-     OR position('RETURN false' in pg_get_functiondef(
-       'public.ils_professional_security_approval_execution_consume(uuid,text,text,text)'::regprocedure
-     ))>position('EXECUTION_CONSUME_EXPIRED' in pg_get_functiondef(
-       'public.ils_professional_security_approval_execution_consume(uuid,text,text,text)'::regprocedure
-     )) THEN
+  consume_definition:=pg_get_functiondef(
+    'public.ils_professional_security_approval_execution_consume(uuid,text,text,text)'::regprocedure
+  );
+  IF position('SET execution_status = ''BLOCKED''' in consume_definition)=0
+     OR position('RETURN false' in consume_definition)=0
+     OR position('RAISE EXCEPTION ''EXECUTION_CONSUME_EXPIRED''' in consume_definition)>0 THEN
     RAISE EXCEPTION 'Consume function does not persist expiry block and return false';
   END IF;
 
