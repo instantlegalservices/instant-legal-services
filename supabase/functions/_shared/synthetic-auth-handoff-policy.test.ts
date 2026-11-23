@@ -5,6 +5,7 @@ import {
   isMatchingIssuedHandoff,
   newHandoffExpiry,
   sha256Hex,
+  constantTimeEqual,
   staleIssuedHandoffCutoff,
 } from "./synthetic-auth-handoff-policy.ts";
 
@@ -87,4 +88,10 @@ Deno.test("superseded, consumed, expired, or wrong-user handoffs cannot be confi
     isMatchingIssuedHandoff(base, "different-user", "a".repeat(64), now),
     false,
   );
+});
+
+Deno.test("token digest comparison checks every byte for equal-length values", () => {
+  assertEquals(constantTimeEqual("a".repeat(64), "a".repeat(64)), true);
+  assertEquals(constantTimeEqual("a".repeat(64), "b".repeat(64)), false);
+  assertEquals(constantTimeEqual("a".repeat(64), "a".repeat(63)), false);
 });
