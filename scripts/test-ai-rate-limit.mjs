@@ -34,5 +34,5 @@ const ai = await readFile(files[0], "utf8");
 assert.match(ai, /enforceAiRateLimit\(req,\s*isAdv\s*\?\s*authUserId\s*:\s*undefined\)/);
 const ils = await readFile(files[1], "utf8");
 assert.match(ils, /enforceAiRateLimit\(req,\s*advocateMode\s*\?\s*advocateUserId\s*:\s*undefined\)/);
-assert.match(ils, /\.eq\("auth_user_id", userData\.user\.id\)/);
+assert.match(ils, /\.eq\("auth_user_id",\s*userData\.user\.id\)/);
 console.log("ILS_SHARED_AI_RATE_LIMIT_CONTRACT=PASS");
