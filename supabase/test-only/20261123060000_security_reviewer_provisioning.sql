@@ -77,7 +77,7 @@ DECLARE
   v_authorization_id uuid;
   v_prior_status text;
   v_new_status text;
-  v_now timestamptz:=clock_timestamp();
+  v_now timestamptz;
 BEGIN
   IF auth.role() IS DISTINCT FROM 'authenticated' OR v_actor IS NULL THEN
     RAISE EXCEPTION 'SECURITY_REVIEWER_ADMIN_AUTH_REQUIRED';
@@ -92,7 +92,7 @@ BEGIN
     RAISE EXCEPTION 'SECURITY_REVIEWER_REASON_INVALID';
   END IF;
 
-  SELECT r.user_id
+  SELECT r.*
     INTO v_actor_auth
   FROM public.ils_professional_security_reviewer_authorizations r
   WHERE r.user_id=v_actor
@@ -100,8 +100,6 @@ BEGIN
     AND r.authorization_status='ACTIVE'
     AND r.identity_verified=true
     AND r.security_training_verified=true
-    AND (r.valid_from IS NULL OR r.valid_from<=v_now)
-    AND (r.valid_until IS NULL OR r.valid_until>=v_now)
   FOR SHARE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'SECURITY_ADMIN_REQUIRED';
@@ -122,6 +120,14 @@ BEGIN
   WHERE r.user_id=p_subject_user_id
   FOR UPDATE;
   v_prior_status:=CASE WHEN FOUND THEN v_existing.authorization_status ELSE NULL END;
+
+  -- Capture wall-clock time only after all authorization/subject/target locks
+  -- are acquired. The function-entry timestamp can become stale while waiting.
+  v_now := clock_timestamp();
+  IF (v_actor_auth.valid_from IS NOT NULL AND v_actor_auth.valid_from>v_now)
+     OR (v_actor_auth.valid_until IS NOT NULL AND v_actor_auth.valid_until<v_now) THEN
+    RAISE EXCEPTION 'SECURITY_ADMIN_REQUIRED';
+  END IF;
 
   IF FOUND AND v_existing.reviewer_role='SECURITY_ADMIN' THEN
     RAISE EXCEPTION 'SECURITY_ADMIN_ROLE_REQUIRES_OWNER_BOOTSTRAP';
