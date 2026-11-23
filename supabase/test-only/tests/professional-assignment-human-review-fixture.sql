@@ -134,10 +134,55 @@ CREATE TABLE public.ils_professional_assignment_security_review_approval_log (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE TABLE public.ils_associate_trust_profiles (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE,
+  associate_id text NOT NULL,
+  role_type text NOT NULL,
+  display_name text NOT NULL,
+  profile_status text NOT NULL DEFAULT 'PENDING',
+  identity_verified boolean NOT NULL DEFAULT false,
+  qualification_verified boolean NOT NULL DEFAULT false,
+  professional_registration_verified boolean NOT NULL DEFAULT false,
+  capability_verified boolean NOT NULL DEFAULT false
+);
+CREATE TABLE public.ils_professional_work_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  professional_user_id uuid NOT NULL,
+  matter_reference text NOT NULL,
+  client_brief jsonb NOT NULL DEFAULT '{}'::jsonb,
+  assigned_scope jsonb NOT NULL DEFAULT '{}'::jsonb,
+  checklist jsonb NOT NULL DEFAULT '[]'::jsonb,
+  self_qa jsonb NOT NULL DEFAULT '{}'::jsonb,
+  reviewer_qa jsonb NOT NULL DEFAULT '{}'::jsonb,
+  status text NOT NULL DEFAULT 'ASSIGNED',
+  client_update_status text NOT NULL DEFAULT 'PENDING',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  completed_at timestamptz
+);
+CREATE TABLE public.ils_b2b_work_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  professional_user_id uuid
+);
+CREATE TABLE public.ils_unified_assignment_decisions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  work_code text NOT NULL,
+  associate_user_id uuid NOT NULL,
+  selected_role_code text NOT NULL,
+  decision text NOT NULL DEFAULT 'ELIGIBLE',
+  reason_code text NOT NULL,
+  evidence_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb,
+  requires_supervision boolean NOT NULL DEFAULT true,
+  requires_professional_review boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
 CREATE TABLE public.ils_professional_work_assignment_links (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   work_item_id uuid NOT NULL,
   work_stream text NOT NULL,
+  assignment_decision_id uuid,
+  work_code text,
   professional_user_id uuid NOT NULL,
   link_status text NOT NULL DEFAULT 'PENDING',
   updated_at timestamptz NOT NULL DEFAULT now()
@@ -184,8 +229,51 @@ RETURNS boolean LANGUAGE sql IMMUTABLE AS $function$
     ELSE false
   END;
 $function$;
-CREATE OR REPLACE FUNCTION public.ils_professional_assignment_is_current(p_work_item_id uuid,p_work_stream text,p_professional_user_id uuid)
-RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT true $$;
+CREATE OR REPLACE FUNCTION public.ils_professional_assignment_is_current(
+  p_work_item_id uuid,p_work_stream text,p_professional_user_id uuid
+)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+  SELECT CASE
+    WHEN auth.uid() IS NULL OR auth.uid()<>p_professional_user_id
+      OR p_work_item_id IS NULL OR p_work_stream NOT IN ('PROFESSIONAL','B2B') THEN false
+    WHEN NOT EXISTS(
+      SELECT 1 FROM public.ils_associate_trust_profiles t
+      WHERE t.user_id=p_professional_user_id AND t.profile_status='ACTIVE'
+        AND t.identity_verified=true AND t.qualification_verified=true
+        AND t.professional_registration_verified=true AND t.capability_verified=true
+    ) THEN false
+    WHEN p_work_stream='PROFESSIONAL' THEN EXISTS(
+      SELECT 1
+      FROM public.ils_professional_work_items w
+      JOIN public.ils_professional_work_assignment_links l
+        ON l.work_item_id=w.id AND l.work_stream='PROFESSIONAL'
+       AND l.professional_user_id=p_professional_user_id AND l.link_status='APPROVED'
+      JOIN public.ils_unified_assignment_decisions u
+        ON u.id=l.assignment_decision_id AND u.associate_user_id=p_professional_user_id
+       AND u.decision='ALLOW' AND u.requires_supervision=false
+       AND u.requires_professional_review=false
+      WHERE w.id=p_work_item_id AND w.professional_user_id=p_professional_user_id
+    )
+    WHEN p_work_stream='B2B' THEN EXISTS(
+      SELECT 1
+      FROM public.ils_b2b_work_items w
+      JOIN public.ils_professional_work_assignment_links l
+        ON l.work_item_id=w.id AND l.work_stream='B2B'
+       AND l.professional_user_id=p_professional_user_id AND l.link_status='APPROVED'
+      JOIN public.ils_unified_assignment_decisions u
+        ON u.id=l.assignment_decision_id AND u.associate_user_id=p_professional_user_id
+       AND u.decision='ALLOW' AND u.requires_supervision=false
+       AND u.requires_professional_review=false
+      WHERE w.id=p_work_item_id AND w.professional_user_id=p_professional_user_id
+    )
+    ELSE false
+  END;
+$function$;
 
 CREATE OR REPLACE FUNCTION public.ils_professional_assignment_mutation_telemetry_aggregate(p_window_minutes integer DEFAULT 15)
 RETURNS TABLE(failure_code text,observed_count bigint,decision text,threshold_type text)
