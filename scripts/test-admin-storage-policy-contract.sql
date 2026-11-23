@@ -151,12 +151,18 @@ RESET ROLE;
 -- Anonymous users may still submit pending photos, but cannot read private pending data.
 SET ROLE anon;
 DO $anon_tests$
-DECLARE v_count integer;
+DECLARE v_count integer; v_denied boolean;
 BEGIN
   PERFORM set_config('request.jwt.claim.sub','',true);
   PERFORM set_config('request.jwt.claim.email','',true);
   INSERT INTO storage.objects(bucket_id,name) VALUES ('advocate-photo-pending','pending/anon-upload.jpg');
-  INSERT INTO storage.objects(bucket_id,name) VALUES ('advocate-photo','pending/anon-public-upload.jpg');
+  v_denied := false;
+  BEGIN
+    INSERT INTO storage.objects(bucket_id,name) VALUES ('advocate-photo','pending/anon-public-upload.jpg');
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_denied := true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'Anonymous user can still upload into the public photo bucket pending folder'; END IF;
   SELECT count(*) INTO v_count FROM storage.objects WHERE bucket_id='advocate-photo-pending';
   IF v_count <> 0 THEN RAISE EXCEPTION 'Anonymous user can read private pending photos'; END IF;
   SELECT count(*) INTO v_count FROM storage.objects WHERE bucket_id='advocate-photo' AND name LIKE 'pending/%';
