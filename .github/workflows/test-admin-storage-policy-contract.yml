@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "supabase/migrations/20261123180000_harden_admin_storage_identity.sql"
+      - "supabase/functions/create-advocate-user/index.ts"
       - "scripts/test-admin-storage-policy-contract.js"
       - "scripts/test-admin-storage-policy-contract.sql"
       - ".github/workflows/test-admin-storage-policy-contract.yml"
