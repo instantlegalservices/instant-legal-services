@@ -79,6 +79,7 @@ BEGIN
             WHERE failure_code='AUTH_REQUIRED' AND observed_count>0) THEN
     RAISE EXCEPTION 'Legacy AUTH_REQUIRED telemetry influenced trusted aggregation';
   END IF;
+  PERFORM set_config('request.jwt.claim.role','service_role',true);
   BEGIN
     PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
       actor,telemetry_assignment_1,'ACTIVATE','ACTIVE','AUTH_REQUIRED');
@@ -88,8 +89,14 @@ BEGIN
     IF err<>'MUTATION_TELEMETRY_FAILURE_CODE_NOT_ALLOWED' THEN RAISE; END IF;
   END;
   IF has_table_privilege('service_role',
-       'public.ils_professional_assignment_mutation_failure_telemetry','INSERT') THEN
-    RAISE EXCEPTION 'service_role can bypass the trusted telemetry producer';
+       'public.ils_professional_assignment_mutation_failure_telemetry','INSERT')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_assignment_mutation_failure_telemetry','UPDATE')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_assignment_mutation_failure_telemetry','DELETE')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_assignment_mutation_failure_telemetry','TRUNCATE') THEN
+    RAISE EXCEPTION 'service_role can bypass the trusted append-only telemetry producer';
   END IF;
   IF NOT has_function_privilege('service_role',
        'public.ils_professional_assignment_record_trusted_mutation_failure(uuid,uuid,text,text,text)','EXECUTE')
@@ -158,8 +165,10 @@ BEGIN
 
   -- Crossing STOP creates an escalation/queue for human approval only.
   PERFORM set_config('request.jwt.claim.role','service_role',true);
-  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code,professional_user_id)
-  SELECT 'CROSS_USER_ASSIGNMENT',actor FROM generate_series(1,2);
+  PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
+    actor,telemetry_assignment_3,'ACTIVATE','ACTIVE','CROSS_USER_ASSIGNMENT');
+  PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
+    actor,telemetry_assignment_4,'ACTIVATE','ACTIVE','CROSS_USER_ASSIGNMENT');
   v_count:=public.ils_professional_assignment_evaluate_mutation_alerts(15);
   IF v_count<>1 THEN RAISE EXCEPTION 'Expected one STOP evaluation, got %',v_count; END IF;
 
@@ -350,6 +359,33 @@ BEGIN
                   AND status='ACKNOWLEDGED') THEN
     RAISE EXCEPTION 'Reviewed escalation was not acknowledged';
   END IF;
+
+  -- Telemetry is append-only even for privileged API roles.
+  PERFORM set_config('request.jwt.claim.role','service_role',true);
+  BEGIN
+    UPDATE public.ils_professional_assignment_mutation_failure_telemetry
+    SET safe_message='tampered'
+    WHERE failure_code='CROSS_USER_ASSIGNMENT';
+    RAISE EXCEPTION 'ASSERT_EXPECTED_TELEMETRY_UPDATE_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'ASSIGNMENT_FAILURE_TELEMETRY_APPEND_ONLY' THEN RAISE; END IF;
+  END;
+  BEGIN
+    DELETE FROM public.ils_professional_assignment_mutation_failure_telemetry
+    WHERE failure_code='CROSS_USER_ASSIGNMENT';
+    RAISE EXCEPTION 'ASSERT_EXPECTED_TELEMETRY_DELETE_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'ASSIGNMENT_FAILURE_TELEMETRY_APPEND_ONLY' THEN RAISE; END IF;
+  END;
+  BEGIN
+    TRUNCATE public.ils_professional_assignment_mutation_failure_telemetry;
+    RAISE EXCEPTION 'ASSERT_EXPECTED_TELEMETRY_TRUNCATE_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'ASSIGNMENT_FAILURE_TELEMETRY_APPEND_ONLY' THEN RAISE; END IF;
+  END;
 
   -- Authenticated callers cannot execute the internal evaluator.
   PERFORM set_config('request.jwt.claim.role','authenticated',true);
