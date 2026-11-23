@@ -53,7 +53,11 @@ jobs:
           sudo apt-get install -y postgresql-client
       - name: Run isolated atomic handoff consume tests on PostgreSQL 16
         env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: handoff_test
           PGPASSWORD: postgres
         run: |
-          psql -h 127.0.0.1 -U postgres -d handoff_test -v ON_ERROR_STOP=1 -f scripts/test-synthetic-auth-handoff-postgres.sql
+          psql -v ON_ERROR_STOP=1 -f scripts/test-synthetic-auth-handoff-postgres.sql
           bash scripts/test-synthetic-auth-handoff-postgres.sh
