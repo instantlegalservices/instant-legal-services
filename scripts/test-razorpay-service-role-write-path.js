@@ -34,7 +34,7 @@ assert.doesNotMatch(endpoint,/update\(\{status:"failed"\}\)\.eq\("id",reservatio
 assert.match(migration,/created_at.*extract\(epoch from v_payment\.created_at\)/);
 const finalizer=migration.slice(migration.indexOf("create or replace function public.ils_finalize_razorpay_payment"));
 const orderLock=finalizer.match(/from public\.orders\s*where id=v_order_id\s*for update/);
-const paymentLock=finalizer.match(/from public\.payments\s*where id=p_payment_id and gateway='razorpay'\s*for update/);
+const paymentLock=finalizer.match(/from public\.payments\s*where id=p_payment_id and gateway='razorpay' and order_id=v_order\.id\s*for update/);
 assert.ok(orderLock && paymentLock && orderLock.index < paymentLock.index,"finalizer must lock order before payment");
 assert.match(finalizer,/payment_order_link_changed/);
 assert.match(endpoint,/ils_attach_razorpay_order/);
