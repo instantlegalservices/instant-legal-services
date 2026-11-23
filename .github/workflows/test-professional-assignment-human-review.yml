@@ -1,4 +1,5 @@
 name: Test Professional Assignment human-review escalation
+# Keep authenticated mutation boundary diagnostics covered by this workflow.
 
 on:
   pull_request:
