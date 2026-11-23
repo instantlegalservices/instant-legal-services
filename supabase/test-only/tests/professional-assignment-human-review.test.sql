@@ -67,6 +67,39 @@ BEGIN
     (actor,'SECURITY_ADMIN','ACTIVE',true,true),
     (v_reviewer_id,'SECURITY_REVIEWER','ACTIVE',true,true);
 
+  -- Unauthenticated events are legacy/untrusted and cannot trigger escalation.
+  IF EXISTS(SELECT 1 FROM public.ils_professional_assignment_mutation_alert_thresholds
+            WHERE failure_code='AUTH_REQUIRED' AND active) THEN
+    RAISE EXCEPTION 'AUTH_REQUIRED threshold must be inactive';
+  END IF;
+  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry
+    (failure_code,professional_user_id)
+  VALUES ('AUTH_REQUIRED',actor);
+  IF EXISTS(SELECT 1 FROM public.ils_professional_assignment_mutation_telemetry_aggregate(15)
+            WHERE failure_code='AUTH_REQUIRED' AND observed_count>0) THEN
+    RAISE EXCEPTION 'Legacy AUTH_REQUIRED telemetry influenced trusted aggregation';
+  END IF;
+  BEGIN
+    PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
+      actor,telemetry_assignment_1,'ACTIVATE','ACTIVE','AUTH_REQUIRED');
+    RAISE EXCEPTION 'ASSERT_EXPECTED_AUTH_REQUIRED_REJECTION';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'MUTATION_TELEMETRY_FAILURE_CODE_NOT_ALLOWED' THEN RAISE; END IF;
+  END;
+  IF has_table_privilege('service_role',
+       'public.ils_professional_assignment_mutation_failure_telemetry','INSERT') THEN
+    RAISE EXCEPTION 'service_role can bypass the trusted telemetry producer';
+  END IF;
+  IF NOT has_function_privilege('service_role',
+       'public.ils_professional_assignment_record_trusted_mutation_failure(uuid,uuid,text,text,text)','EXECUTE')
+     OR has_function_privilege('authenticated',
+       'public.ils_professional_assignment_record_trusted_mutation_failure(uuid,uuid,text,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'Trusted telemetry producer privilege boundary is incorrect';
+  END IF;
+
+  -- Producer requires the service-role context and emits server-classified events.
+  PERFORM set_config('request.jwt.claim.role','service_role',true);
   -- A REVIEW-only threshold reaching STOP is a configuration contradiction.
   PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
     actor,telemetry_assignment_1,'UNKNOWN',NULL,'INVALID_OPERATION');
@@ -74,7 +107,18 @@ BEGIN
     actor,telemetry_assignment_2,'UNKNOWN',NULL,'INVALID_OPERATION');
   PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
     actor,telemetry_assignment_3,'UNKNOWN',NULL,'INVALID_OPERATION');
-  PERFORM set_config('request.jwt.claim.role','service_role',true);
+  SELECT id INTO v_event_id
+  FROM public.ils_professional_assignment_mutation_failure_telemetry
+  WHERE assignment_link_id=telemetry_assignment_1 AND failure_code='INVALID_OPERATION';
+  v_event_id_retry:=public.ils_professional_assignment_record_trusted_mutation_failure(
+    actor,telemetry_assignment_1,'UNKNOWN',NULL,'INVALID_OPERATION');
+  IF v_event_id IS NULL OR v_event_id_retry IS DISTINCT FROM v_event_id THEN
+    RAISE EXCEPTION 'Telemetry retry did not return the existing idempotent event';
+  END IF;
+  SELECT count(*) INTO v_telemetry_count
+  FROM public.ils_professional_assignment_mutation_failure_telemetry
+  WHERE failure_code='INVALID_OPERATION' AND source_type='SERVER_VERIFIED_MUTATION';
+  IF v_telemetry_count<>3 THEN RAISE EXCEPTION 'Telemetry retry created a duplicate event'; END IF;
   BEGIN
     PERFORM public.ils_professional_assignment_evaluate_mutation_alerts(5);
     RAISE EXCEPTION 'ASSERT_EXPECTED_THRESHOLD_ACTION_CONFLICT';
@@ -100,7 +144,7 @@ BEGIN
   IF v_count<>1 THEN RAISE EXCEPTION 'Expected one REVIEW evaluation, got %',v_count; END IF;
   SELECT count(*) INTO v_queues
   FROM public.ils_professional_assignment_security_review_queue
-  WHERE decision='REVIEW' AND source_failure_code='AUTH_REQUIRED' AND review_status='PENDING';
+  WHERE decision='REVIEW' AND source_failure_code='CROSS_USER_ASSIGNMENT' AND review_status='PENDING';
   IF v_queues<>1 THEN RAISE EXCEPTION 'Expected one pending REVIEW queue'; END IF;
 
   -- The assignment can still proceed while a REVIEW item is pending.
@@ -115,24 +159,24 @@ BEGIN
   -- Crossing STOP creates an escalation/queue for human approval only.
   PERFORM set_config('request.jwt.claim.role','service_role',true);
   INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code,professional_user_id)
-  SELECT 'AUTH_REQUIRED',actor FROM generate_series(1,2);
+  SELECT 'CROSS_USER_ASSIGNMENT',actor FROM generate_series(1,2);
   v_count:=public.ils_professional_assignment_evaluate_mutation_alerts(15);
   IF v_count<>1 THEN RAISE EXCEPTION 'Expected one STOP evaluation, got %',v_count; END IF;
 
   SELECT count(*) INTO v_queues
   FROM public.ils_professional_assignment_security_review_queue
-  WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'
+  WHERE decision='STOP' AND source_failure_code='CROSS_USER_ASSIGNMENT'
     AND review_status='PENDING' AND required_approval_level='HUMAN';
   IF v_queues<>1 THEN RAISE EXCEPTION 'Expected one pending STOP human-review queue'; END IF;
 
   IF NOT EXISTS(
     SELECT 1 FROM public.ils_professional_assignment_security_review_queue
-    WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'
+    WHERE decision='STOP' AND source_failure_code='CROSS_USER_ASSIGNMENT'
       AND affected_professional_user_id=actor
   ) THEN RAISE EXCEPTION 'Affected professional identity was not bound to review queue'; END IF;
   SELECT id INTO v_stop_queue_id
   FROM public.ils_professional_assignment_security_review_queue
-  WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'
+  WHERE decision='STOP' AND source_failure_code='CROSS_USER_ASSIGNMENT'
     AND affected_professional_user_id=actor;
   IF v_stop_queue_id IS NULL THEN RAISE EXCEPTION 'Canonical STOP queue not found'; END IF;
 
@@ -147,7 +191,7 @@ BEGIN
   END IF;
   IF NOT EXISTS(
     SELECT 1 FROM public.ils_professional_assignment_security_review_queue
-    WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'
+    WHERE decision='STOP' AND source_failure_code='CROSS_USER_ASSIGNMENT'
       AND review_status='PENDING'
   ) THEN RAISE EXCEPTION 'Self-approval attempt changed review status'; END IF;
 
@@ -178,7 +222,7 @@ BEGIN
     (id,escalation_id,decision,severity,source_failure_code,observed_count,
      review_status,required_approval_level,affected_professional_user_id)
   VALUES(mismatch_queue_id,mismatch_escalation_id,'STOP','CRITICAL',
-         'AUTH_REQUIRED',4,'PENDING','HUMAN',actor);
+         'CROSS_USER_ASSIGNMENT',4,'PENDING','HUMAN',actor);
   IF public.ils_professional_security_review_decide(
        mismatch_queue_id,'APPROVE','FREEZE_MUTATION_CHANNEL','Mismatched escalation') THEN
     RAISE EXCEPTION 'Mismatched queue/escalation identity was approved';
@@ -269,7 +313,7 @@ BEGIN
   SELECT count(*) INTO v_escalations
   FROM public.ils_professional_assignment_mutation_alert_escalations
   WHERE decision='STOP' AND action_code='FREEZE_MUTATION_CHANNEL'
-    AND source_failure_code='AUTH_REQUIRED'
+    AND source_failure_code='CROSS_USER_ASSIGNMENT'
     AND status='ACKNOWLEDGED'
     AND human_approval_required=true
     AND destructive_action_executed=false;
@@ -295,14 +339,14 @@ BEGIN
   PERFORM public.ils_professional_assignment_evaluate_mutation_alerts(15);
   SELECT count(*) INTO v_queues
   FROM public.ils_professional_assignment_security_review_queue
-  WHERE source_failure_code='AUTH_REQUIRED' AND id<>mismatch_queue_id;
+  WHERE source_failure_code='CROSS_USER_ASSIGNMENT' AND id<>mismatch_queue_id;
   IF v_queues<>2 THEN RAISE EXCEPTION 'Repeated evaluation duplicated a review queue'; END IF;
   SELECT count(*) INTO v_escalations
   FROM public.ils_professional_assignment_mutation_alert_escalations
-  WHERE source_failure_code='AUTH_REQUIRED' AND status IN ('PENDING_REVIEW','ACKNOWLEDGED');
+  WHERE source_failure_code='CROSS_USER_ASSIGNMENT' AND status IN ('PENDING_REVIEW','ACKNOWLEDGED');
   IF v_escalations<>2 THEN RAISE EXCEPTION 'Repeated evaluation duplicated an open escalation'; END IF;
   IF NOT EXISTS(SELECT 1 FROM public.ils_professional_assignment_mutation_alert_escalations
-                WHERE source_failure_code='AUTH_REQUIRED' AND decision='STOP'
+                WHERE source_failure_code='CROSS_USER_ASSIGNMENT' AND decision='STOP'
                   AND status='ACKNOWLEDGED') THEN
     RAISE EXCEPTION 'Reviewed escalation was not acknowledged';
   END IF;
