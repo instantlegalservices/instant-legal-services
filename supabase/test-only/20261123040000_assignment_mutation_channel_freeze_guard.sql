@@ -246,10 +246,12 @@ BEGIN
 END;
 $function$;
 
+-- Preserve the Action 615 internal-RPC lockdown: callers must use a
+-- separately reviewed authenticated wrapper, not invoke this internal gate.
 REVOKE ALL ON FUNCTION public.ils_professional_assignment_mutation_gate(uuid,text,text)
-  FROM PUBLIC,anon;
+  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.ils_professional_assignment_mutation_gate(uuid,text,text)
-  TO authenticated,service_role;
+  TO service_role;
 REVOKE ALL ON FUNCTION public.ils_professional_assignment_evaluate_mutation_alerts(integer)
   FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.ils_professional_assignment_evaluate_mutation_alerts(integer)
