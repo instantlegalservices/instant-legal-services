@@ -276,13 +276,12 @@ BEGIN
     RAISE EXCEPTION 'Binding that expired during the open transaction was not blocked';
   END IF;
 
-  -- Reviewer valid_from is in the future relative to wall clock, even though
-  -- transaction-start now() predates it. Waiting past valid_from must not
-  -- allow a bind based on the stale transaction timestamp.
+  -- Reviewer valid_from is still in the future at bind time, while transaction-
+  -- start now() predates it. The stale transaction timestamp must not authorize
+  -- a reviewer whose wall-clock validity has not started yet.
   UPDATE public.ils_professional_security_reviewer_authorizations
-  SET valid_from=clock_timestamp()+interval '0.15 second'
+  SET valid_from=clock_timestamp()+interval '0.5 second'
   WHERE user_id=r9;
-  PERFORM pg_sleep(0.2);
   BEGIN
     PERFORM public.ils_professional_security_approval_execution_bind(
       q9,a9,'CREATE_SECURITY_REVIEW','nonce-reviewer-not-yet-valid-ci',15
