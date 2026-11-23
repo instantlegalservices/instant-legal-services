@@ -18,33 +18,64 @@ $preflight$;
 -- the existing RPC uses it as audit attribution in advocate_assignments.
 DO $rpc_hardening$
 DECLARE
-  v_signature text := 'public.ils_admin_save_lead_multi(bigint,text,text,text,jsonb,boolean,date,text)';
+  v_signature text;
   v_oid regprocedure;
   v_definition text;
-  v_old_guard text := E'  if v_email <> \'fahat29@gmail.com\' then';
-  v_new_guard text := '  if not public.ils_is_admin() then';
+  v_old_guard text;
+  v_new_guard text;
+  v_expected_decl text;
   v_count integer;
 BEGIN
-  v_oid := to_regprocedure(v_signature);
-  v_definition := replace(pg_get_functiondef(v_oid), E'\r\n', E'\n');
-  v_count := (length(v_definition) - length(replace(v_definition, v_old_guard, '')))
-             / length(v_old_guard);
+  FOREACH v_signature IN ARRAY ARRAY[
+    'public.get_admin_client_portal(bigint)',
+    'public.admin_send_client_message(bigint,text)',
+    'public.ils_admin_save_lead(bigint,text,text,text,bigint,boolean,date,text)',
+    'public.ils_admin_save_lead_multi(bigint,text,text,text,jsonb,boolean,date,text)'
+  ] LOOP
+    v_oid := to_regprocedure(v_signature);
 
-  IF v_count <> 1
-     OR position(E'  v_email text := lower(coalesce(auth.jwt()->>\'email\',\'\'));' in v_definition) = 0
-     OR position(E'SET search_path TO \'public\'' in v_definition) = 0 THEN
-    RAISE EXCEPTION 'Reviewed ils_admin_save_lead_multi source mismatch; refusing to rewrite';
-  END IF;
+    -- TEST's recovered schema currently lacks three Production RPCs. Skip only
+    -- those absent functions; any present function must match the reviewed body.
+    IF v_oid IS NULL THEN
+      RAISE NOTICE 'Skipping absent TEST-baseline admin RPC: %', v_signature;
+      CONTINUE;
+    END IF;
 
-  v_definition := replace(v_definition, v_old_guard, v_new_guard);
-  IF position('fahat29@gmail.com' in v_definition) > 0
-     OR position('if not public.ils_is_admin() then' in v_definition) = 0 THEN
-    RAISE EXCEPTION 'Admin identity guard postcondition failed for ils_admin_save_lead_multi';
-  END IF;
+    v_definition := replace(pg_get_functiondef(v_oid), E'\r\n', E'\n');
 
-  EXECUTE v_definition;
+    IF v_signature IN (
+      'public.get_admin_client_portal(bigint)',
+      'public.admin_send_client_message(bigint,text)'
+    ) THEN
+      v_old_guard := E'    IF (auth.jwt() ->> \\'email\\') <> \\'fahat29@gmail.com\\' THEN';
+      v_new_guard := '    IF NOT public.ils_is_admin() THEN';
+      v_expected_decl := NULL;
+    ELSE
+      v_old_guard := E'  if v_email <> \\'fahat29@gmail.com\\' then';
+      v_new_guard := '  if not public.ils_is_admin() then';
+      v_expected_decl := E'  v_email text := lower(coalesce(auth.jwt()->>\\'email\\',\\'\\'));';
+    END IF;
+
+    v_count := (length(v_definition) - length(replace(v_definition, v_old_guard, '')))
+               / length(v_old_guard);
+
+    IF v_count <> 1
+       OR position(E'SET search_path TO \\'public\\'' in v_definition) = 0
+       OR (v_expected_decl IS NOT NULL AND position(v_expected_decl in v_definition) = 0) THEN
+      RAISE EXCEPTION 'Reviewed admin RPC source mismatch in %; refusing to rewrite', v_signature;
+    END IF;
+
+    v_definition := replace(v_definition, v_old_guard, v_new_guard);
+
+    IF position('fahat29@gmail.com' in v_definition) > 0
+       OR position(v_new_guard in v_definition) = 0 THEN
+      RAISE EXCEPTION 'Admin identity guard postcondition failed for %', v_signature;
+    END IF;
+
+    EXECUTE v_definition;
+  END LOOP;
 END
-$rpc_hardening$;
+$rpc_hardening$
 
 -- Remove legacy policies that accidentally grant every authenticated user access
 -- to pending advocate photos or permission to move pending/approved photo objects.
@@ -101,17 +132,46 @@ WITH CHECK (
 -- Preserve the intended public surface: pending-only uploads and approved-only reads.
 DO $verify$
 DECLARE
-  v_rpc regprocedure := to_regprocedure('public.ils_admin_save_lead_multi(bigint,text,text,text,jsonb,boolean,date,text)');
+  v_signature text;
+  v_oid regprocedure;
 BEGIN
-  IF has_function_privilege('anon', v_rpc, 'EXECUTE')
-     OR NOT has_function_privilege('authenticated', v_rpc, 'EXECUTE')
-     OR NOT has_function_privilege('service_role', v_rpc, 'EXECUTE') THEN
-    RAISE EXCEPTION 'Unexpected ils_admin_save_lead_multi execute grants';
+  FOREACH v_signature IN ARRAY ARRAY[
+    'public.get_admin_client_portal(bigint)',
+    'public.admin_send_client_message(bigint,text)',
+    'public.ils_admin_save_lead(bigint,text,text,text,bigint,boolean,date,text)',
+    'public.ils_admin_save_lead_multi(bigint,text,text,text,jsonb,boolean,date,text)'
+  ] LOOP
+    v_oid := to_regprocedure(v_signature);
+    IF v_oid IS NULL THEN
+      CONTINUE;
+    END IF;
+
+    IF has_function_privilege('anon', v_oid, 'EXECUTE')
+       OR NOT has_function_privilege('authenticated', v_oid, 'EXECUTE')
+       OR NOT has_function_privilege('service_role', v_oid, 'EXECUTE') THEN
+      RAISE EXCEPTION 'Unexpected admin RPC execute grants: %', v_signature;
+    END IF;
+
+    IF position('public.ils_is_admin()' in pg_get_functiondef(v_oid)) = 0
+       OR position('fahat29@gmail.com' in pg_get_functiondef(v_oid)) > 0 THEN
+      RAISE EXCEPTION 'Admin RPC still contains an email-only authorization guard: %', v_signature;
+    END IF;
+  END LOOP;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+      AND policyname IN ('Admin can move advocate photos', 'Admin can read advocate photos', 'Admin can view advocate photos')
+  ) THEN
+    RAISE EXCEPTION 'Legacy overbroad advocate-photo policy remains active';
   END IF;
 
-  IF position('public.ils_is_admin()' in pg_get_functiondef(v_rpc)) = 0
-     OR position('fahat29@gmail.com' in pg_get_functiondef(v_rpc)) > 0 THEN
-    RAISE EXCEPTION 'Admin RPC still contains an email-only authorization guard';
+  IF EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+      AND policyname IN ('Public can upload advocate photos')
+  ) THEN
+    RAISE EXCEPTION 'Legacy public-bucket pending-photo upload policy remains active';
   END IF;
 
   IF NOT EXISTS (
@@ -125,23 +185,7 @@ BEGIN
       AND policyname = 'ils_public_advocate_pending_insert'
       AND cmd = 'INSERT'
   ) THEN
-    RAISE EXCEPTION 'Expected public approved-photo read or pending-photo upload policy is missing';
-  END IF;
-
-  IF EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects'
-      AND policyname IN ('Admin can move advocate photos', 'Admin can read advocate photos', 'Admin can view advocate photos')
-  ) THEN
-    RAISE EXCEPTION 'Legacy overbroad advocate-photo policy remains active';
-  END IF;
-
-  IF EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects'
-      AND policyname = 'Public can upload advocate photos'
-  ) THEN
-    RAISE EXCEPTION 'Legacy public-bucket pending-photo upload policy remains active';
+    RAISE EXCEPTION 'Expected public approved-photo read or private pending-photo upload policy is missing';
   END IF;
 END
-$verify$;
+$verify$
