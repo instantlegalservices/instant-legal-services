@@ -12,6 +12,8 @@ DECLARE
   q6 uuid:=gen_random_uuid();
   q7 uuid:=gen_random_uuid();
   q8 uuid:=gen_random_uuid();
+  q9 uuid:=gen_random_uuid();
+  q10 uuid:=gen_random_uuid();
   a1 uuid:=gen_random_uuid();
   a2 uuid:=gen_random_uuid();
   a3 uuid:=gen_random_uuid();
@@ -20,6 +22,8 @@ DECLARE
   a6 uuid:=gen_random_uuid();
   a7 uuid:=gen_random_uuid();
   a8 uuid:=gen_random_uuid();
+  a9 uuid:=gen_random_uuid();
+  a10 uuid:=gen_random_uuid();
   r1 uuid:=gen_random_uuid();
   r2 uuid:=gen_random_uuid();
   r3 uuid:=gen_random_uuid();
@@ -28,16 +32,20 @@ DECLARE
   r6 uuid:=gen_random_uuid();
   r7 uuid:=gen_random_uuid();
   r8 uuid:=gen_random_uuid();
+  r9 uuid:=gen_random_uuid();
+  r10 uuid:=gen_random_uuid();
   b1 uuid;
   b4 uuid;
   b5 uuid;
   b7 uuid;
   b8 uuid;
+  b10 uuid;
   snap1 text;
   snap4 text;
   snap5 text;
   snap7 text;
   snap8 text;
+  snap10 text;
   err text;
   consumed boolean;
   bind_definition text;
@@ -78,7 +86,9 @@ BEGIN
     (r5,'SECURITY_ADMIN','ACTIVE',true,true,now()-interval '1 day',now()),
     (r6,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now()),
     (r7,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now()),
-    (r8,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now());
+    (r8,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now()),
+    (r9,'SECURITY_REVIEWER','ACTIVE',true,true,clock_timestamp()+interval '0.15 second',now()),
+    (r10,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now());
 
   INSERT INTO public.ils_professional_assignment_security_review_queue
     (id,decision,severity,review_status,source_failure_code,assigned_reviewer_id)
@@ -91,7 +101,9 @@ BEGIN
     (q5,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_FIVE',r5),
     (q6,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_SIX',r6),
     (q7,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_SEVEN',r7),
-    (q8,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_EIGHT',r8);
+    (q8,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_EIGHT',r8),
+    (q9,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_NINE',r9),
+    (q10,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_TEN',r10);
 
   INSERT INTO public.ils_professional_assignment_security_review_approval_log
     (id,queue_id,reviewer_id,approval_decision,approved_action,approval_reason)
@@ -103,7 +115,9 @@ BEGIN
     (a5,q5,r5,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval five'),
     (a6,q6,r6,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval six'),
     (a7,q7,r7,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval seven'),
-    (a8,q8,r8,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval eight');
+    (a8,q8,r8,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval eight'),
+    (a9,q9,r9,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI future-start reviewer'),
+    (a10,q10,r10,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI expiring reviewer');
 
   -- Pending review cannot be bound.
   BEGIN
@@ -260,6 +274,39 @@ BEGIN
   IF consumed IS DISTINCT FROM false OR
      (SELECT execution_status FROM public.ils_professional_security_approval_execution_bindings WHERE id=b8)<>'BLOCKED' THEN
     RAISE EXCEPTION 'Binding that expired during the open transaction was not blocked';
+  END IF;
+
+  -- Reviewer valid_from is in the future relative to wall clock, even though
+  -- transaction-start now() predates it. Waiting past valid_from must not
+  -- allow a bind based on the stale transaction timestamp.
+  PERFORM pg_sleep(0.2);
+  BEGIN
+    PERFORM public.ils_professional_security_approval_execution_bind(
+      q9,a9,'CREATE_SECURITY_REVIEW','nonce-reviewer-not-yet-valid-ci',15
+    );
+    RAISE EXCEPTION 'ASSERT_EXPECTED_REVIEWER_NOT_YET_VALID';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'EXECUTION_BINDING_REVIEWER_NOT_AUTHORIZED' THEN RAISE; END IF;
+  END;
+
+  -- Reviewer valid_until expires after bind while this outer transaction is
+  -- still open. Consume must use wall-clock time and persist BLOCKED.
+  UPDATE public.ils_professional_security_reviewer_authorizations
+  SET valid_until=clock_timestamp()+interval '0.15 second'
+  WHERE user_id=r10;
+  b10:=public.ils_professional_security_approval_execution_bind(
+    q10,a10,'CREATE_SECURITY_REVIEW','nonce-reviewer-validity-expiry-ci',15
+  );
+  SELECT approval_snapshot_hash INTO snap10
+  FROM public.ils_professional_security_approval_execution_bindings WHERE id=b10;
+  PERFORM pg_sleep(0.2);
+  consumed:=public.ils_professional_security_approval_execution_consume(
+    b10,'nonce-reviewer-validity-expiry-ci','CREATE_SECURITY_REVIEW',snap10
+  );
+  IF consumed IS DISTINCT FROM false OR
+     (SELECT execution_status FROM public.ils_professional_security_approval_execution_bindings WHERE id=b10)<>'BLOCKED' THEN
+    RAISE EXCEPTION 'Reviewer validity expiry during open transaction was not blocked';
   END IF;
 
   IF has_function_privilege('anon',
