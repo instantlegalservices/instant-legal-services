@@ -47,6 +47,20 @@ Deno.serve(async (req: Request) => {
     return json({ error: "HANDOFF_INVALID_OR_EXPIRED" }, 400);
   }
 
+  // Reject a revoked operator before consuming the one-time Auth token.
+  // The atomic consume RPC below rechecks under a row lock to close the revocation race.
+  const { data: operator, error: operatorError } = await admin.rpc(
+    "ils_test_get_provision_operator",
+    { p_operator_user_id: handoff.operator_user_id },
+  );
+  const op = Array.isArray(operator) ? operator[0] : operator;
+  if (
+    operatorError || !op || op.role !== "TEST_PROVISION_OPERATOR" ||
+    op.active !== true
+  ) {
+    return json({ error: "TEST_PROVISION_OPERATOR_REVOKED" }, 403);
+  }
+
   const client = createClient(url, anon, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
