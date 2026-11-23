@@ -274,6 +274,10 @@ AS $function$
     ELSE false
   END;
 $function$;
+REVOKE ALL ON FUNCTION public.ils_professional_assignment_is_current(uuid,text,uuid)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.ils_professional_assignment_is_current(uuid,text,uuid)
+  TO service_role;
 
 CREATE OR REPLACE FUNCTION public.ils_professional_assignment_mutation_telemetry_aggregate(p_window_minutes integer DEFAULT 15)
 RETURNS TABLE(failure_code text,observed_count bigint,decision text,threshold_type text)
