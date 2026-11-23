@@ -1,0 +1,71 @@
+name: Test synthetic auth handoff policy
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/_shared/synthetic-auth-handoff-policy.ts"
+      - "supabase/functions/_shared/synthetic-auth-handoff-policy.test.ts"
+      - "supabase/functions/ils-test-notification-e2e-auth-handoff/**"
+      - "supabase/functions/ils-test-notification-e2e-auth-confirm/**"
+      - "supabase/test-only/**"
+      - "scripts/test-synthetic-auth-handoff-contract.js"
+      - "scripts/test-synthetic-auth-handoff-postgres.sql"
+      - "scripts/test-synthetic-auth-handoff-postgres.sh"
+      - ".github/workflows/test-synthetic-auth-handoff.yml"
+  push:
+    branches:
+      - "fix/test-synthetic-auth-handoff-race-20261123"
+    paths:
+      - "supabase/functions/_shared/synthetic-auth-handoff-policy.ts"
+      - "supabase/functions/_shared/synthetic-auth-handoff-policy.test.ts"
+      - "supabase/functions/ils-test-notification-e2e-auth-handoff/**"
+      - "supabase/functions/ils-test-notification-e2e-auth-confirm/**"
+      - "supabase/test-only/**"
+      - "scripts/test-synthetic-auth-handoff-contract.js"
+      - "scripts/test-synthetic-auth-handoff-postgres.sql"
+      - "scripts/test-synthetic-auth-handoff-postgres.sh"
+      - ".github/workflows/test-synthetic-auth-handoff.yml"
+
+jobs:
+  policy-tests:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: handoff_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d handoff_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check restored TEST Edge Functions
+        run: |
+          deno check supabase/functions/ils-test-notification-e2e-auth-handoff/index.ts
+          deno check supabase/functions/ils-test-notification-e2e-auth-confirm/index.ts
+      - name: Run policy tests
+        run: deno test supabase/functions/_shared/synthetic-auth-handoff-policy.test.ts
+      - name: Verify atomic operator-bound handoff contract
+        run: node scripts/test-synthetic-auth-handoff-contract.js
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Run isolated atomic handoff consume tests on PostgreSQL 16
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: handoff_test
+          PGPASSWORD: postgres
+        run: |
+          psql -v ON_ERROR_STOP=1 -f scripts/test-synthetic-auth-handoff-postgres.sql
+          bash scripts/test-synthetic-auth-handoff-postgres.sh
