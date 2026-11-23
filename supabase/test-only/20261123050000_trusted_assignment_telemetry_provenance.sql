@@ -66,6 +66,7 @@ DECLARE
   v_now timestamptz:=clock_timestamp();
   v_dedupe_key text;
   v_event_id uuid:=gen_random_uuid();
+  v_inserted_id uuid;
   v_safe_message text;
   v_failure_class text;
 BEGIN
@@ -129,9 +130,11 @@ BEGIN
      'SERVER_VERIFIED_MUTATION',v_event_id,p_actor_user_id,
      'trusted-assignment-telemetry-v1',v_dedupe_key)
   ON CONFLICT (dedupe_key) WHERE dedupe_key IS NOT NULL DO NOTHING
-  RETURNING id INTO v_event_id;
+  RETURNING id INTO v_inserted_id;
 
-  IF v_event_id IS NULL THEN
+  IF v_inserted_id IS NOT NULL THEN
+    v_event_id:=v_inserted_id;
+  ELSE
     SELECT id INTO v_event_id
     FROM public.ils_professional_assignment_mutation_failure_telemetry
     WHERE dedupe_key=v_dedupe_key;
