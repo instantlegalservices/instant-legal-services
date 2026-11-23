@@ -73,7 +73,7 @@ BEGIN
                )) THEN
     RAISE EXCEPTION 'RAZORPAY_PAYMENT_ATTEMPT_EXISTS';
   END IF;
-  IF p_amount IS NULL OR abs(p_amount-v_order.total) > 0.01 THEN
+  IF p_amount IS DISTINCT FROM v_order.total THEN
     RAISE EXCEPTION 'PAYMENT_AMOUNT_MISMATCH';
   END IF;
   IF v_upi <> v_expected_upi THEN RAISE EXCEPTION 'UPI_ID_MISMATCH'; END IF;
@@ -190,7 +190,7 @@ BEGIN
   END IF;
 
   IF v_order.status<>'pending' THEN RAISE EXCEPTION 'ORDER_NOT_PENDING'; END IF;
-  IF v_proof.amount IS NULL OR abs(v_proof.amount-v_order.total)>0.01 THEN
+  IF v_proof.amount IS DISTINCT FROM v_order.total THEN
     RAISE EXCEPTION 'PROOF_ORDER_AMOUNT_MISMATCH';
   END IF;
   IF upper(v_proof.currency)<>upper(v_order.currency) THEN
