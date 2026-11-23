@@ -91,6 +91,7 @@ DECLARE
   v_fail integer := 0;
   v_dest integer := 0;
   v_run uuid;
+  v_run_completed_at timestamptz;
   v_preflight record;
   v_decision text;
   v_reason text;
@@ -129,6 +130,15 @@ BEGIN
     AND nullif(trim(e.function_slug),'') IS NOT NULL
     AND e.function_version IS NOT NULL
     AND nullif(trim(e.function_sha256),'') IS NOT NULL
+    AND EXISTS (
+      SELECT 1
+      FROM public.ils_e2e_function_deployment_registry d
+      WHERE d.critical_path_code=r.critical_path_code
+        AND d.function_slug=e.function_slug
+        AND d.function_version=e.function_version
+        AND lower(d.deployment_sha256)=lower(e.function_sha256)
+        AND d.active=true
+    )
     AND position(lower(c.expected_function_pattern) in lower(e.function_slug))>0
     AND position(lower(c.expected_source_pattern) in lower(e.source_type))>0
     AND (
@@ -148,13 +158,14 @@ BEGIN
   ORDER BY created_at DESC
   LIMIT 1;
 
-  SELECT id INTO v_run
+  -- Select the latest started run first. An incomplete newer run must not
+  -- be hidden by falling back to an older completed PASS.
+  SELECT id, completed_at INTO v_run, v_run_completed_at
   FROM public.ils_notification_e2e_harness_runs
-  WHERE completed_at IS NOT NULL
-  ORDER BY completed_at DESC
+  ORDER BY started_at DESC
   LIMIT 1;
 
-  IF v_run IS NOT NULL THEN
+  IF v_run IS NOT NULL AND v_run_completed_at IS NOT NULL THEN
     SELECT count(*) FILTER (WHERE passed),
            count(*) FILTER (WHERE NOT passed),
            count(*) FILTER (WHERE destructive_attempted)
