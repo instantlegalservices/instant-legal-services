@@ -29,4 +29,18 @@ assert.equal(escapeLikePattern("user_name@example.com"), "user\\_name@example.co
 assert.equal(escapeLikePattern("user%name@example.com"), "user\\%name@example.com");
 assert.equal(escapeLikePattern("user\\\\name@example.com"), "user\\\\\\\\name@example.com");
 
+
+assert.match(source, /if\(adv\)\{\s*const a=adv;/,
+  "the resolver returns one row, and the advocate response must consume that row directly");
+assert.match(source, /if\(prof\)\{\s*const p=prof;/,
+  "the resolver returns one row, and the professional response must consume that row directly");
+assert.doesNotMatch(source, /if\((?:adv|prof)\?\.\[0\]\)/,
+  "single-row resolver results must not be treated as arrays");
+assert.equal((source.match(/async function resolveIdentityBoundProfile\(/g)||[]).length, 1,
+  "the identity resolver must be defined exactly once");
+assert.match(source, /async function loadAdvocateAssignments\(admin:any/,
+  "assignment hydration helper must remain syntactically intact");
+assert.doesNotMatch(source, /loadAdvocateAssignments\("\);/,
+  "no malformed duplicate helper declaration may remain");
+
 console.log("PROFESSIONAL_PORTAL_IDENTITY_CONTRACT=PASS");
