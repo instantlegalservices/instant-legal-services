@@ -1,4 +1,4 @@
-\\set ON_ERROR_STOP on
+\set ON_ERROR_STOP on
 DO $roles$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon NOLOGIN; END IF;
@@ -78,7 +78,7 @@ VALUES ('payment-proofs','10000000-0000-0000-0000-000000000001/40000000-0000-000
        ('payment-proofs','10000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-000000000002/proof.jpg','10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','{"size":"1024","mimetype":"image/jpeg"}'),
        ('payment-proofs','10000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-000000000003/proof.jpg','10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','{"size":"1024","mimetype":"image/jpeg"}');
 
-\\i supabase/migrations/20261118190000_harden_upi_payment_proof_flow.sql
+\i supabase/migrations/20261118190000_harden_upi_payment_proof_flow.sql
 
 DO $privileges$
 DECLARE v_privilege text;
@@ -111,7 +111,7 @@ SELECT set_config('test.is_admin','false',false);
 SELECT (public.ils_submit_upi_payment_proof(
  '40000000-0000-0000-0000-000000000001',100,'8445609837@axl','UTR-12345678','ILS TEST',
  '10000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-000000000001/proof.jpg',
- repeat('a',64),'image/jpeg',1024)->>'proof_id') AS first_proof_id \\gset
+ repeat('a',64),'image/jpeg',1024)->>'proof_id') AS first_proof_id \gset
 
 DO $negative$
 BEGIN
@@ -136,11 +136,12 @@ BEGIN
 END
 $negative$;
 
+SELECT set_config('test.is_admin','true',false);
 SELECT public.ils_admin_verify_upi_payment_proof(:'first_proof_id'::uuid,'rejected','test rejection');
 SELECT (public.ils_submit_upi_payment_proof(
  '40000000-0000-0000-0000-000000000001',100,'8445609837@axl','UTR-87654321','ILS TEST',
  '10000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-000000000001/proof.jpg',
- repeat('d',64),'image/jpeg',1024)->>'proof_id') AS second_proof_id \\gset
+ repeat('d',64),'image/jpeg',1024)->>'proof_id') AS second_proof_id \gset
 
 SELECT set_config('test.is_admin','true',false);
 SELECT public.ils_admin_verify_upi_payment_proof(:'second_proof_id'::uuid,'verified','test approval');
@@ -148,7 +149,7 @@ RESET ROLE;
 
 DO $assert$
 BEGIN
-  IF (SELECT status FROM public.payment_proofs WHERE id=:'second_proof_id'::uuid) <> 'verified' THEN
+  IF (SELECT status FROM public.payment_proofs WHERE transaction_ref='UTR87654321') <> 'verified' THEN
     RAISE EXCEPTION 'proof not verified';
   END IF;
   IF (SELECT status FROM public.orders WHERE id='40000000-0000-0000-0000-000000000001') <> 'paid' THEN
@@ -163,4 +164,4 @@ BEGIN
 END
 $assert$;
 
-\\echo PASS: UPI proof privilege hardening, Storage ownership/metadata checks, UTR replay protection, rejection/resubmission and transactional Admin verification verified on PostgreSQL 16.
+\echo PASS: UPI proof privilege hardening, Storage ownership/metadata checks, UTR replay protection, rejection/resubmission and transactional Admin verification verified on PostgreSQL 16.
