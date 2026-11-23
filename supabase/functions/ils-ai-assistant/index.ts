@@ -20,7 +20,9 @@ Deno.serve(async(req)=>{
  try{
   const body=await req.json();
   const question=String(body?.question||"").trim();
-  const mode="public";
+  const mode=String(body?.mode||"public").trim().toLowerCase();
+  const advocateMode=mode==="advocate"||mode==="research";
+  if(mode!=="public"&&!advocateMode)return json({ok:false,message:"Unsupported AI mode."},400);
   if(!question)return json({ok:false,message:"Question is required."},400);
   if(question.length>6000)return json({ok:false,message:"Question is too long."},400);
   const openKey=Deno.env.get("OPENROUTER_API_KEY");
@@ -28,22 +30,31 @@ Deno.serve(async(req)=>{
 
   const supabaseUrl=Deno.env.get("SUPABASE_URL")||"";
   const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||Deno.env.get("SUPABASE_SECRET_KEY")||"";
-  if(mode==="advocate"){
+  if(advocateMode){
     const auth=req.headers.get("Authorization")||"";
-    if(!auth.startsWith("Bearer "))return json({ok:false,message:"Advocate Research AI requires login."},401);
-    if(!serviceKey)return json({ok:false,message:"Secure advocate verification is not configured."},503);
-    const userClient=createClient(supabaseUrl,serviceKey);
-    const token=auth.slice(7);
+    if(!auth.toLowerCase().startsWith("bearer "))return json({ok:false,message:"Advocate Research AI requires login."},401);
+    if(!supabaseUrl||!serviceKey)return json({ok:false,message:"Secure advocate verification is not configured."},503);
+    const userClient=createClient(supabaseUrl,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
+    const token=auth.slice(7).trim();
+    if(!token)return json({ok:false,message:"Advocate Research AI requires login."},401);
     const {data:userData,error:userError}=await userClient.auth.getUser(token);
     if(userError||!userData.user)return json({ok:false,message:"Your login session is invalid or expired."},401);
-    const email=String(userData.user.email||"").toLowerCase();
-    const {data:adv,error:advError}=await userClient.from("advocate_registrations").select("id,advocate_name,status,verification_status").eq("email",email).maybeSingle();
-    if(advError||!adv)return json({ok:false,message:"This account is not registered as an ILS advocate."},403);
-    if(String(adv.status).toLowerCase()!=="approved"||String(adv.verification_status).toLowerCase()!=="approved")return json({ok:false,message:"Advocate Research AI is available only to approved and verified ILS advocates."},403);
+    const {data:adv,error:advError}=await userClient
+      .from("advocate_registrations")
+      .select("id,advocate_name,status,verification_status")
+      .eq("auth_user_id",userData.user.id)
+      .eq("status","Approved")
+      .eq("verification_status","Approved")
+      .maybeSingle();
+    if(advError)return json({ok:false,message:"Advocate verification could not be completed."},503);
+    if(!adv)return json({ok:false,message:"Advocate Research AI is available only to approved and verified ILS advocates."},403);
   }
 
-  const system=`You are Instant Legal Services (ILS) Public Legal AI for Indian law. Produce professional, natural, precise work product, but never claim to be a human, lawyer, advocate, or eyewitness. The objective is human-quality usefulness, not imitation or concealment of AI authorship.\n\nEVIDENCE-FIRST RULES:\n1. Treat user-supplied facts, documents and evidence as the factual record; never add facts that are not supplied or verified.\n2. For current or legally material propositions, use authoritative-source search before stating them as fact.\n3. Prefer Indian primary/official sources: Supreme Court, relevant High Courts, India Code, Legislative Department/Gazette, Department of Justice, official eCourts and official tax/GST/MCA authorities where applicable.\n4. Never invent or guess a section, case name, citation, date, quotation, ratio, limitation period, procedural rule, evidence or factual circumstance.\n5. Separate FACTS, EVIDENCE, LAW, INFERENCE and UNCERTAINTY. Never present an inference as an established fact.\n6. Cross-check material legal propositions against the retrieved source before including them. If sources conflict, explicitly identify the conflict instead of choosing silently.\n7. If a material proposition cannot be verified, state: 'No verified answer is available from the authoritative sources searched.' Do not fill the gap from model memory.\n8. For drafting, preserve supplied facts exactly; do not fabricate names, dates, amounts, events, admissions, exhibits or citations. Use [VERIFY] markers where a required fact is missing.\n9. For evidence analysis, explain what the supplied evidence supports, what it does not establish, and what additional evidence would be needed.\n10. Do not guarantee a legal outcome or create an advocate-client relationship.\n11. Cite authoritative sources using the exact URLs returned by search.\n12. If authoritative verification is unavailable for a material legal conclusion, abstain from that conclusion.\n\nWrite naturally and professionally, with clear Indian legal drafting style. Do not use generic AI filler, exaggerated certainty, invented confidence, or unnecessary disclaimers. Answer structure: Issue; Facts/Evidence; Applicable law; Verified analysis; Draft/Action; Gaps to verify; Sources.`;
-  const user=`Indian-law question:\n${question}\n\n${String(body?.context||"").slice(0,8000)}`;
+  const baseSystem=`You are Instant Legal Services (ILS) Public Legal AI for Indian law. Produce professional, natural, precise work product, but never claim to be a human, lawyer, advocate, or eyewitness. The objective is human-quality usefulness, not imitation or concealment of AI authorship.\n\nEVIDENCE-FIRST RULES:\n1. Treat user-supplied facts, documents and evidence as the factual record; never add facts that are not supplied or verified.\n2. For current or legally material propositions, use authoritative-source search before stating them as fact.\n3. Prefer Indian primary/official sources: Supreme Court, relevant High Courts, India Code, Legislative Department/Gazette, Department of Justice, official eCourts and official tax/GST/MCA authorities where applicable.\n4. Never invent or guess a section, case name, citation, date, quotation, ratio, limitation period, procedural rule, evidence or factual circumstance.\n5. Separate FACTS, EVIDENCE, LAW, INFERENCE and UNCERTAINTY. Never present an inference as an established fact.\n6. Cross-check material legal propositions against the retrieved source before including them. If sources conflict, explicitly identify the conflict instead of choosing silently.\n7. If a material proposition cannot be verified, state: 'No verified answer is available from the authoritative sources searched.' Do not fill the gap from model memory.\n8. For drafting, preserve supplied facts exactly; do not fabricate names, dates, amounts, events, admissions, exhibits or citations. Use [VERIFY] markers where a required fact is missing.\n9. For evidence analysis, explain what the supplied evidence supports, what it does not establish, and what additional evidence would be needed.\n10. Do not guarantee a legal outcome or create an advocate-client relationship.\n11. Cite authoritative sources using the exact URLs returned by search.\n12. If authoritative verification is unavailable for a material legal conclusion, abstain from that conclusion.\n\nWrite naturally and professionally, with clear Indian legal drafting style. Do not use generic AI filler, exaggerated certainty, invented confidence, or unnecessary disclaimers. Answer structure: Issue; Facts/Evidence; Applicable law; Verified analysis; Draft/Action; Gaps to verify; Sources.`;
+  const system=advocateMode
+    ? `You are Instant Legal Services Advocate Research AI for approved Indian advocates. Provide structured, careful legal research. Distinguish verified law, facts, evidence, inference and uncertainty. Include adverse authorities and counter-arguments where relevant. Never invent case citations, statutory text, dates or quotations. Never guarantee an outcome.\n\n${baseSystem}`
+    : baseSystem;
+  const user=`${advocateMode?"Advocate research question":"Indian-law question"}:\n${question}\n\n${String(body?.context||"").slice(0,8000)}`;
   const model=Deno.env.get("ILS_AI_MODEL")||"openai/gpt-4.1";
   const payload={model,messages:[{role:"system",content:system},{role:"user",content:user}],temperature:0.05,max_tokens:2200,tools:[{type:"openrouter:web_search",parameters:{max_results:8,allowed_domains:OFFICIAL_DOMAINS}}]};
   const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{"Authorization":`Bearer ${openKey}`,"Content-Type":"application/json","HTTP-Referer":"https://instantlegalservices.in","X-Title":"Instant Legal Services"},body:JSON.stringify(payload)});
