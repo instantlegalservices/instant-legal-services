@@ -86,6 +86,7 @@ BEGIN
     (telemetry_assignment_3,gen_random_uuid(),'PROFESSIONAL',NULL,target_professional_id,'PENDING'),
     (telemetry_assignment_4,gen_random_uuid(),'PROFESSIONAL',NULL,target_professional_id,'PENDING');
 
+  PERFORM set_config('request.jwt.claim.sub',actor::text,true);
   IF NOT public.ils_professional_assignment_is_current(work_item_id,'PROFESSIONAL',actor) THEN
     RAISE EXCEPTION 'Synthetic approved assignment fixture does not satisfy live current-eligibility contract';
   END IF;
