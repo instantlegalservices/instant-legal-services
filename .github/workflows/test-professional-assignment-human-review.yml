@@ -21,6 +21,7 @@ on:
       - "supabase/test-only/20261123060000_security_reviewer_provisioning.sql"
       - "supabase/test-only/tests/professional-assignment-human-review-fixture.sql"
       - "supabase/test-only/tests/professional-assignment-human-review.test.sql"
+      - "docs/security/ils-security-reviewer-bootstrap.md"
       - ".github/workflows/test-professional-assignment-human-review.yml"
 
 jobs:
