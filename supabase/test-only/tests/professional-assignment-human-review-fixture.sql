@@ -15,9 +15,22 @@ $$ SELECT nullif(current_setting('request.jwt.claim.role',true),'') $$;
 
 CREATE TABLE public.ils_professional_assignment_mutation_failure_telemetry (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  failure_code text NOT NULL,
+  assignment_link_id uuid,
+  work_item_id uuid,
+  work_stream text,
   professional_user_id uuid,
-  occurred_at timestamptz NOT NULL DEFAULT clock_timestamp()
+  operation text,
+  requested_status text,
+  failure_code text NOT NULL,
+  failure_class text,
+  safe_message text,
+  source_gate text,
+  occurred_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  source_type text NOT NULL DEFAULT 'LEGACY_UNTRUSTED',
+  source_event_id uuid,
+  actor_user_id uuid,
+  producer_version text,
+  dedupe_key text
 );
 CREATE TABLE public.ils_professional_assignment_mutation_alert_thresholds (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -29,6 +42,9 @@ CREATE TABLE public.ils_professional_assignment_mutation_alert_thresholds (
   active boolean NOT NULL DEFAULT true,
   UNIQUE(failure_code,window_minutes)
 );
+INSERT INTO public.ils_professional_assignment_mutation_alert_thresholds
+  (failure_code,window_minutes,review_threshold,stop_threshold,action,active)
+VALUES ('AUTH_REQUIRED',15,2,4,'STOP_MUTATION_CHANNEL',true);
 CREATE TABLE public.ils_professional_assignment_mutation_alert_evaluations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   failure_code text NOT NULL,
