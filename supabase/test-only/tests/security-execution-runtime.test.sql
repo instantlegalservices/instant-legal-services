@@ -279,6 +279,9 @@ BEGIN
   -- Reviewer valid_from is in the future relative to wall clock, even though
   -- transaction-start now() predates it. Waiting past valid_from must not
   -- allow a bind based on the stale transaction timestamp.
+  UPDATE public.ils_professional_security_reviewer_authorizations
+  SET valid_from=clock_timestamp()+interval '0.15 second'
+  WHERE user_id=r9;
   PERFORM pg_sleep(0.2);
   BEGIN
     PERFORM public.ils_professional_security_approval_execution_bind(
