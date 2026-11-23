@@ -32,10 +32,10 @@ Deno.serve(async(req)=>{
   const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||Deno.env.get("SUPABASE_SECRET_KEY")||"";
   if(advocateMode){
     const auth=req.headers.get("Authorization")||"";
-    if(!/^Bearer\\s/i.test(auth))return json({ok:false,message:"Advocate Research AI requires login."},401);
+    if(!auth.toLowerCase().startsWith("bearer "))return json({ok:false,message:"Advocate Research AI requires login."},401);
     if(!supabaseUrl||!serviceKey)return json({ok:false,message:"Secure advocate verification is not configured."},503);
     const userClient=createClient(supabaseUrl,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
-    const token=auth.replace(/^Bearer\\s+/i,"").trim();
+    const token=auth.slice(7).trim();
     if(!token)return json({ok:false,message:"Advocate Research AI requires login."},401);
     const {data:userData,error:userError}=await userClient.auth.getUser(token);
     if(userError||!userData.user)return json({ok:false,message:"Your login session is invalid or expired."},401);
