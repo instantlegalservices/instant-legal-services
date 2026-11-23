@@ -61,6 +61,11 @@ BEGIN
     RAISE EXCEPTION 'Expected 8 critical paths, observed %',v_summary.total_paths;
   END IF;
 
+  IF regexp_replace('www.example.gov','^www[.]','') <> 'example.gov'
+     OR regexp_replace('example.gov','^www[.]','') <> 'example.gov' THEN
+    RAISE EXCEPTION 'Official host normalization must handle www and bare host';
+  END IF;
+
   -- The corrected legacy runner is non-mutating and must not claim PASS.
   SELECT * INTO v_hostile
   FROM public.ils_run_critical_path_release_proof_hostile_matrix();
