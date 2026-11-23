@@ -19,6 +19,21 @@ DECLARE
   v_verifier_id uuid := gen_random_uuid();
   v_summary_after_payment record;
 BEGIN
+  IF has_function_privilege('anon','public.ils_release_critical_path_summary()','EXECUTE')
+     OR has_function_privilege('authenticated','public.ils_release_critical_path_summary()','EXECUTE')
+     OR NOT has_function_privilege('service_role','public.ils_release_critical_path_summary()','EXECUTE') THEN
+    RAISE EXCEPTION 'release summary function grants are not service-role-only';
+  END IF;
+  IF has_function_privilege('anon','public.ils_e2e_release_gate_evaluate()','EXECUTE')
+     OR has_function_privilege('authenticated','public.ils_e2e_release_gate_evaluate()','EXECUTE')
+     OR NOT has_function_privilege('service_role','public.ils_e2e_release_gate_evaluate()','EXECUTE') THEN
+    RAISE EXCEPTION 'release evaluator grants are not service-role-only';
+  END IF;
+  IF has_function_privilege('anon','public.ils_run_critical_path_release_proof_hostile_matrix()','EXECUTE')
+     OR has_function_privilege('authenticated','public.ils_run_critical_path_release_proof_hostile_matrix()','EXECUTE')
+     OR NOT has_function_privilege('service_role','public.ils_run_critical_path_release_proof_hostile_matrix()','EXECUTE') THEN
+    RAISE EXCEPTION 'legacy hostile runner grants are not service-role-only';
+  END IF;
   SELECT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema='public'
