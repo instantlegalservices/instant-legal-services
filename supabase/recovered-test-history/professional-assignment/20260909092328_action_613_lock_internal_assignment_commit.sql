@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.ils_professional_assignment_mutation_commit(uuid,text,text) FROM PUBLIC, authenticated;
