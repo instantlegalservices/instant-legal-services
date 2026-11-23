@@ -338,6 +338,9 @@ BEGIN
   SELECT
     coalesce((
       SELECT g.decision='GO'
+        AND g.genuine_verified_evidence_count>=1
+        AND g.hostile_tests_failed=0
+        AND g.destructive_attempts=0
         AND g.created_at >= greatest(
           coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='DOCUMENT_E2E'),'-infinity'::timestamptz),
           coalesce((SELECT max(h.created_at) FROM public.ils_document_e2e_harness_runs h),'-infinity'::timestamptz)
@@ -348,6 +351,9 @@ BEGIN
     AND
     coalesce((
       SELECT g.decision='GO'
+        AND g.genuine_verified_evidence_count>=1
+        AND g.hostile_tests_failed=0
+        AND g.destructive_attempts=0
         AND g.created_at >= greatest(
           coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='NOTIFICATION_E2E'),'-infinity'::timestamptz),
           coalesce((SELECT max(h.started_at) FROM public.ils_notification_e2e_harness_runs h),'-infinity'::timestamptz),
@@ -359,6 +365,9 @@ BEGIN
     AND
     coalesce((
       SELECT g.decision='GO'
+        AND g.genuine_verified_evidence_count>=1
+        AND g.hostile_tests_failed=0
+        AND g.destructive_attempts=0
         AND g.created_at >= greatest(
           coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='PROFESSIONAL_ASSIGNMENT_E2E'),'-infinity'::timestamptz),
           coalesce((SELECT max(h.created_at) FROM public.ils_professional_assignment_e2e_harness_runs h),'-infinity'::timestamptz)
@@ -369,6 +378,11 @@ BEGIN
     AND
     coalesce((
       SELECT g.status='GO'
+        AND g.genuine_verified_evidence>=1
+        AND g.hostile_tests_passed>=7
+        AND g.hostile_tests_failed=0
+        AND g.destructive_attempts=0
+        AND g.production_touch_detected IS FALSE
         AND g.created_at >= greatest(
           coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e WHERE e.critical_path_code='SECURITY_EXECUTION_E2E'),'-infinity'::timestamptz),
           coalesce((SELECT max(h.created_at) FROM public.ils_security_execution_e2e_hostile_runs h),'-infinity'::timestamptz)
