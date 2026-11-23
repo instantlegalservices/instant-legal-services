@@ -34,16 +34,62 @@ async function getClientById(clientId: number) {
     .select("id, client_name, assigned_advocate_id").eq("id", clientId).maybeSingle();
   return error || !data ? null : data;
 }
-async function isAdmin(user: any) { return user?.email === "fahat29@gmail.com"; }
-async function isAssignedAdvocate(user: any, clientId: number) {
-  if (!user?.email) return false;
-  const { data: advocate } = await supabaseAdmin.from("advocate_registrations")
-    .select("id, email").eq("email", user.email).eq("verification_status", "Approved").maybeSingle();
-  if (!advocate) return false;
-  const { data: assignment } = await supabaseAdmin.from("advocate_assignments")
-    .select("id").eq("lead_id", clientId).eq("advocate_id", advocate.id)
-    .in("status", ["Assigned", "Active"]).maybeSingle();
-  return !!assignment;
+async function isAdmin(user: any) {
+  if (!user?.id) return false;
+  const { data, error } = await supabaseAdmin.from("ils_admin_users")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return !error && !!data;
+}
+function escapeLikePattern(value: string) {
+  // PostgREST forwards this as a SQL LIKE pattern; escape metacharacters so an
+  // email containing %, _ or \ is compared literally rather than as a wildcard.
+  return value.replace(/[\\%_]/g, "\\$&");
+}
+
+async function getAssignedAdvocate(user: any, clientId: number) {
+  if (!user?.id) return null;
+
+  // Bind the authenticated Supabase identity first. Email fallback is allowed
+  // only for legacy registrations that have not yet been linked to an auth user.
+  const selectProfile = () => supabaseAdmin.from("advocate_registrations")
+    .select("id, advocate_name, email, auth_user_id, status, verification_status");
+
+  let { data: advocate, error: advocateError } = await selectProfile()
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (advocateError) return null;
+
+  // A linked but unapproved/suspended profile must not fall through to a
+  // different legacy row that happens to share the same email address.
+  if (advocate) {
+    const approved = String(advocate.status || "").trim().toLowerCase() === "approved"
+      && String(advocate.verification_status || "").trim().toLowerCase() === "approved";
+    if (!approved) return null;
+  } else if (user.email) {
+    const legacy = await selectProfile()
+      .is("auth_user_id", null)
+      .ilike("email", escapeLikePattern(String(user.email).trim()))
+      .ilike("status", "Approved")
+      .ilike("verification_status", "Approved")
+      .maybeSingle();
+    if (legacy.error) return null;
+    advocate = legacy.data;
+  }
+
+  if (!advocate) return null;
+
+  const { data: assignment, error: assignmentError } = await supabaseAdmin.from("advocate_assignments")
+    .select("id")
+    .eq("lead_id", clientId)
+    .eq("advocate_id", advocate.id)
+    .in("status", ["Assigned", "Active"])
+    .maybeSingle();
+
+  if (assignmentError || !assignment) return null;
+  return advocate;
 }
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -79,7 +125,8 @@ Deno.serve(async (req) => {
     }
     if (!targetClient) return json({ ok: false, message: "Client matter could not be identified." }, 400);
     const adminAccess = await isAdmin(user);
-    const advocateAccess = await isAssignedAdvocate(user, targetClient.id);
+    const assignedAdvocate = await getAssignedAdvocate(user, targetClient.id);
+    const advocateAccess = !!assignedAdvocate;
     const clientAccess = !!(accessToken && mobile);
     if (!adminAccess && !advocateAccess && !clientAccess) return json({ ok: false, message: "You are not authorized for this matter." }, 403);
 
@@ -104,8 +151,7 @@ Deno.serve(async (req) => {
       if (adminAccess) { uploaderRole = "admin"; uploaderName = "Instant Legal Services"; }
       else if (advocateAccess) {
         uploaderRole = "advocate";
-        const { data: advocate } = await supabaseAdmin.from("advocate_registrations").select("advocate_name").eq("email", user.email).maybeSingle();
-        uploaderName = advocate?.advocate_name || "Assigned Advocate";
+        uploaderName = assignedAdvocate?.advocate_name || "Assigned Advocate";
       }
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 150);
       const storagePath = `${targetClient.id}/${crypto.randomUUID()}-${safeName}`;
