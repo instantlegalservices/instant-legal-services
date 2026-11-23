@@ -16,6 +16,7 @@ $$ SELECT nullif(current_setting('request.jwt.claim.role',true),'') $$;
 CREATE TABLE public.ils_professional_assignment_mutation_failure_telemetry (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   failure_code text NOT NULL,
+  professional_user_id uuid,
   occurred_at timestamptz NOT NULL DEFAULT clock_timestamp()
 );
 CREATE TABLE public.ils_professional_assignment_mutation_alert_thresholds (
@@ -86,6 +87,27 @@ CREATE TABLE public.ils_professional_assignment_security_review_queue (
   reviewer_note text,
   created_at timestamptz NOT NULL DEFAULT now(),
   reviewed_at timestamptz
+);
+
+CREATE TABLE public.ils_professional_security_reviewer_authorizations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE,
+  reviewer_role text NOT NULL,
+  authorization_status text NOT NULL,
+  identity_verified boolean NOT NULL,
+  security_training_verified boolean NOT NULL,
+  valid_from timestamptz,
+  valid_until timestamptz
+);
+CREATE TABLE public.ils_professional_assignment_security_review_approval_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  queue_id uuid NOT NULL,
+  reviewer_id uuid,
+  approval_decision text NOT NULL,
+  approved_action text,
+  approval_reason text NOT NULL,
+  affected_professional_user_id uuid,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE public.ils_professional_work_assignment_links (
