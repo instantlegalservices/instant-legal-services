@@ -147,6 +147,39 @@ LANGUAGE sql STABLE AS $function$
   GROUP BY t.failure_code,t.review_threshold,t.stop_threshold;
 $function$;
 
+-- Original Action 478 gate, with the Action 615 internal-RPC ACL applied below.
+CREATE OR REPLACE FUNCTION public.ils_professional_assignment_mutation_gate(
+  p_assignment_link_id uuid,p_operation text,p_to_status text DEFAULT NULL
+)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE v record;
+BEGIN
+  IF auth.uid() IS NULL OR p_assignment_link_id IS NULL
+     OR p_operation NOT IN ('ACTIVATE','PAUSE','REVOKE','COMPLETE') THEN
+    RETURN false;
+  END IF;
+  SELECT l.id,l.work_item_id,l.work_stream,l.professional_user_id,l.link_status
+    INTO v
+  FROM public.ils_professional_work_assignment_links l
+  WHERE l.id=p_assignment_link_id AND l.professional_user_id=auth.uid();
+  IF NOT FOUND THEN RETURN false; END IF;
+  IF p_operation='ACTIVATE' AND p_to_status IS DISTINCT FROM 'ACTIVE' THEN RETURN false; END IF;
+  IF p_operation='PAUSE' AND p_to_status IS DISTINCT FROM 'PAUSED' THEN RETURN false; END IF;
+  IF p_operation='REVOKE' AND p_to_status IS DISTINCT FROM 'REVOKED' THEN RETURN false; END IF;
+  IF p_operation='COMPLETE' AND p_to_status IS DISTINCT FROM 'COMPLETED' THEN RETURN false; END IF;
+  IF NOT public.ils_professional_assignment_transition_allowed(v.link_status,p_to_status) THEN RETURN false; END IF;
+  IF p_operation='ACTIVATE' AND NOT public.ils_professional_assignment_is_current(v.work_item_id,v.work_stream,v.professional_user_id) THEN
+    RETURN false;
+  END IF;
+  RETURN true;
+END;
+$function$;
+
 CREATE OR REPLACE FUNCTION public.ils_professional_assignment_mutation_commit(
   p_assignment_link_id uuid,p_operation text,p_to_status text
 )
@@ -182,4 +215,8 @@ $function$;
 REVOKE ALL ON FUNCTION public.ils_professional_assignment_mutation_commit(uuid,text,text)
   FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.ils_professional_assignment_mutation_commit(uuid,text,text)
+  TO service_role;
+REVOKE ALL ON FUNCTION public.ils_professional_assignment_mutation_gate(uuid,text,text)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.ils_professional_assignment_mutation_gate(uuid,text,text)
   TO service_role;
