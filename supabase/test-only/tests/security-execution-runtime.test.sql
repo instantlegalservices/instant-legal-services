@@ -11,6 +11,7 @@ DECLARE
   q5 uuid:=gen_random_uuid();
   q6 uuid:=gen_random_uuid();
   q7 uuid:=gen_random_uuid();
+  q8 uuid:=gen_random_uuid();
   a1 uuid:=gen_random_uuid();
   a2 uuid:=gen_random_uuid();
   a3 uuid:=gen_random_uuid();
@@ -18,6 +19,7 @@ DECLARE
   a5 uuid:=gen_random_uuid();
   a6 uuid:=gen_random_uuid();
   a7 uuid:=gen_random_uuid();
+  a8 uuid:=gen_random_uuid();
   r1 uuid:=gen_random_uuid();
   r2 uuid:=gen_random_uuid();
   r3 uuid:=gen_random_uuid();
@@ -25,14 +27,17 @@ DECLARE
   r5 uuid:=gen_random_uuid();
   r6 uuid:=gen_random_uuid();
   r7 uuid:=gen_random_uuid();
+  r8 uuid:=gen_random_uuid();
   b1 uuid;
   b4 uuid;
   b5 uuid;
   b7 uuid;
+  b8 uuid;
   snap1 text;
   snap4 text;
   snap5 text;
   snap7 text;
+  snap8 text;
   err text;
   consumed boolean;
   bind_definition text;
@@ -54,6 +59,7 @@ BEGIN
   IF position('FOR SHARE' in consume_definition)=0
      OR position('SET execution_status = ''BLOCKED''' in consume_definition)=0
      OR position('RETURN false' in consume_definition)=0
+     OR position('clock_timestamp() >= b.expires_at' in consume_definition)=0
      OR position('rule_rec.id::text' in consume_definition)=0 THEN
     RAISE EXCEPTION 'Consume function does not revalidate reviewer and persist blocked state';
   END IF;
@@ -71,7 +77,8 @@ BEGIN
     (r4,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now()),
     (r5,'SECURITY_ADMIN','ACTIVE',true,true,now()-interval '1 day',now()),
     (r6,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now()),
-    (r7,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now());
+    (r7,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now()),
+    (r8,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now());
 
   INSERT INTO public.ils_professional_assignment_security_review_queue
     (id,decision,severity,review_status,source_failure_code,assigned_reviewer_id)
@@ -83,7 +90,8 @@ BEGIN
     (q4,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_FOUR',r4),
     (q5,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_FIVE',r5),
     (q6,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_SIX',r6),
-    (q7,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_SEVEN',r7);
+    (q7,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_SEVEN',r7),
+    (q8,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_EIGHT',r8);
 
   INSERT INTO public.ils_professional_assignment_security_review_approval_log
     (id,queue_id,reviewer_id,approval_decision,approved_action,approval_reason)
@@ -94,7 +102,8 @@ BEGIN
     (a4,q4,r4,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval four'),
     (a5,q5,r5,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval five'),
     (a6,q6,r6,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval six'),
-    (a7,q7,r7,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval seven');
+    (a7,q7,r7,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval seven'),
+    (a8,q8,r8,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval eight');
 
   -- Pending review cannot be bound.
   BEGIN
@@ -230,6 +239,27 @@ BEGIN
   IF consumed IS DISTINCT FROM false OR
      (SELECT execution_status FROM public.ils_professional_security_approval_execution_bindings WHERE id=b7)<>'BLOCKED' THEN
     RAISE EXCEPTION 'Changed action policy did not persist BLOCKED';
+  END IF;
+
+  -- now() is fixed at transaction start. A binding expiring while this
+  -- transaction is already open must still be rejected using wall-clock time.
+  UPDATE public.ils_professional_assignment_mutation_alert_escalation_rules
+  SET destructive_action_allowed=false
+  WHERE decision='REVIEW' AND action_code='CREATE_SECURITY_REVIEW';
+  b8:=public.ils_professional_security_approval_execution_bind(
+    q8,a8,'CREATE_SECURITY_REVIEW','nonce-wall-clock-expiry-ci',15
+  );
+  SELECT approval_snapshot_hash INTO snap8
+  FROM public.ils_professional_security_approval_execution_bindings WHERE id=b8;
+  UPDATE public.ils_professional_security_approval_execution_bindings
+  SET expires_at=clock_timestamp()+interval '0.1 second' WHERE id=b8;
+  PERFORM pg_sleep(0.2);
+  consumed:=public.ils_professional_security_approval_execution_consume(
+    b8,'nonce-wall-clock-expiry-ci','CREATE_SECURITY_REVIEW',snap8
+  );
+  IF consumed IS DISTINCT FROM false OR
+     (SELECT execution_status FROM public.ils_professional_security_approval_execution_bindings WHERE id=b8)<>'BLOCKED' THEN
+    RAISE EXCEPTION 'Binding that expired during the open transaction was not blocked';
   END IF;
 
   IF has_function_privilege('anon',
