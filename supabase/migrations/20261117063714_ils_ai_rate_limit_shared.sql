@@ -51,8 +51,8 @@ begin
         updated_at = v_now
   returning window_started_at, request_count into v_started, v_count;
 
-  -- Opportunistic bounded-retention sweep: 1/256 of requests, indexed by updated_at.
-  if get_byte(decode(substr(p_key_hash, 1, 2), 'hex'), 0) = 0 then
+  -- Opportunistic bounded-retention sweep: once per 256 calls in each key/window, indexed by updated_at.
+  if v_count % 256 = 0 then
     delete from public.ils_ai_rate_limits
      where updated_at < v_now - interval '2 hours';
   end if;
