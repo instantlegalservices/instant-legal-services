@@ -16,7 +16,11 @@ $roles$;
 CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS
 $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS
-$$ SELECT nullif(current_setting('request.jwt.claim.role',true),'') $$;
+$ SELECT nullif(current_setting('request.jwt.claim.role',true),'') $;
+-- Match Supabase's normal API-role access to auth.uid()/auth.role().
+GRANT USAGE ON SCHEMA auth TO anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION auth.uid() TO anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION auth.role() TO anon,authenticated,service_role;
 
 CREATE TABLE public.ils_professional_assignment_mutation_failure_telemetry (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
