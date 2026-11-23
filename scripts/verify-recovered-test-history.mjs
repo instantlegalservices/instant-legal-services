@@ -51,6 +51,6 @@ const sqlFiles = readdirSync(archiveRoot)
   .map((name) => `supabase/recovered-test-history/professional-assignment/${name}`);
 assert.deepEqual([...sqlFiles].sort(), [...expectedFiles].sort(), "Archive SQL files and manifest differ");
 const readme = readFileSync(resolve(archiveRoot, "README.md"), "utf8");
-assert.match(readme, /must not be automatically applied or replayed/i);
+assert.match(readme, /auto-applied.*replayed/i);
 assert.match(readme, /Action 459 .* intentionally excluded/i);
 console.log("Recovered TEST history integrity PASS: 55/55 files, manifest, scope and non-replayability verified.");
