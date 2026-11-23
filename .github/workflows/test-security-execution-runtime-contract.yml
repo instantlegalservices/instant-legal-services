@@ -1,0 +1,52 @@
+name: Test security execution approval binding runtime contract
+
+on:
+  push:
+    branches:
+      - "test/security-execution-runtime-contract-20261123"
+    paths:
+      - "supabase/test-only/tests/security-execution-runtime-fixture.sql"
+      - "supabase/test-only/tests/security-execution-runtime.test.sql"
+      - ".github/workflows/test-security-execution-runtime-contract.yml"
+  pull_request:
+    paths:
+      - "supabase/test-only/tests/security-execution-runtime-fixture.sql"
+      - "supabase/test-only/tests/security-execution-runtime.test.sql"
+      - ".github/workflows/test-security-execution-runtime-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-runtime-contract:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ils_security_runtime
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ils_security_runtime"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Build disposable approval-binding schema and functions
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_security_runtime -v ON_ERROR_STOP=1 -f supabase/test-only/tests/security-execution-runtime-fixture.sql
+      - name: Execute rollback-only runtime contract tests
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_security_runtime -v ON_ERROR_STOP=1 -f supabase/test-only/tests/security-execution-runtime.test.sql
