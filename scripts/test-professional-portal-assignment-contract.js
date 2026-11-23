@@ -11,10 +11,8 @@ assert.match(edge, /String\(status\|\|""\)[\s\S]*?toLowerCase\(\)==="approved"[\
   "assignment data must be withheld unless both advocate status and verification are approved");
 assert.match(edge, /\.from\("advocate_assignments"\)[\s\S]*?\.select\("id,lead_id,status,assigned_at,client_can_see_contact"\)[\s\S]*?\.eq\("advocate_id",advocateId\)[\s\S]*?\.in\("status",\["Assigned","Active"\]\)/,
   "assignment lookup must be scoped to this advocate and active assignment states");
-assert.match(edge, /\.from\("client_requirements"\)[\s\S]*?\.select\("id,client_name,legal_matter,brief_requirement,state,district_city,status,priority,assigned_advocate_id,assigned_advocate,created_at"\)[\s\S]*?\.in\("id",leadIds\)/,
-  "client lookup must be limited to assigned lead IDs and preserve deployed matter fields");
-assert.doesNotMatch(edge, /\.from\("client_requirements"\)[\s\S]*?\.select\("[^"]*mobile[^"]*"\)/,
-  "assignment hydration must not retrieve client mobile numbers");
+assert.match(edge, /\.from\("client_requirements"\)\s*\.select\("id,client_name,legal_matter,brief_requirement,state,district_city,status,priority,assigned_advocate_id,assigned_advocate,created_at"\)\s*\.in\("id",leadIds\)/,
+  "client lookup must be limited to assigned lead IDs and preserve deployed matter fields without mobile");
 assert.match(edge, /assignment_id:assignment.id[\s\S]*?client_can_see_contact:assignment.client_can_see_contact===true[\s\S]*?client:lead/,
   "assignment response must preserve deployed metadata and full matter object shape");
 assert.doesNotMatch(edge, /\.eq\("assigned_advocate_id",a\.id\)/,
