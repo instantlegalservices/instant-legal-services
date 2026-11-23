@@ -10,24 +10,29 @@ DECLARE
   q4 uuid:=gen_random_uuid();
   q5 uuid:=gen_random_uuid();
   q6 uuid:=gen_random_uuid();
+  q7 uuid:=gen_random_uuid();
   a1 uuid:=gen_random_uuid();
   a2 uuid:=gen_random_uuid();
   a3 uuid:=gen_random_uuid();
   a4 uuid:=gen_random_uuid();
   a5 uuid:=gen_random_uuid();
   a6 uuid:=gen_random_uuid();
+  a7 uuid:=gen_random_uuid();
   r1 uuid:=gen_random_uuid();
   r2 uuid:=gen_random_uuid();
   r3 uuid:=gen_random_uuid();
   r4 uuid:=gen_random_uuid();
   r5 uuid:=gen_random_uuid();
   r6 uuid:=gen_random_uuid();
+  r7 uuid:=gen_random_uuid();
   b1 uuid;
   b4 uuid;
   b5 uuid;
+  b7 uuid;
   snap1 text;
   snap4 text;
   snap5 text;
+  snap7 text;
   err text;
   consumed boolean;
   bind_definition text;
@@ -42,12 +47,14 @@ BEGIN
 
   IF position('FOR SHARE' in bind_definition)=0
      OR position('EXECUTION_BINDING_REVIEWER_NOT_AUTHORIZED' in bind_definition)=0
+     OR position('rule_rec.id::text' in bind_definition)=0
      OR position('q.assigned_reviewer_id IS DISTINCT FROM a.reviewer_id' in bind_definition)=0 THEN
     RAISE EXCEPTION 'Bind function does not lock and validate reviewer authorization';
   END IF;
   IF position('FOR SHARE' in consume_definition)=0
      OR position('SET execution_status = ''BLOCKED''' in consume_definition)=0
-     OR position('RETURN false' in consume_definition)=0 THEN
+     OR position('RETURN false' in consume_definition)=0
+     OR position('rule_rec.id::text' in consume_definition)=0 THEN
     RAISE EXCEPTION 'Consume function does not revalidate reviewer and persist blocked state';
   END IF;
 
@@ -63,7 +70,8 @@ BEGIN
     (r3,'SECURITY_REVIEWER','REVOKED',true,true,now()-interval '1 day',now()),
     (r4,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now()),
     (r5,'SECURITY_ADMIN','ACTIVE',true,true,now()-interval '1 day',now()),
-    (r6,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now());
+    (r6,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now()),
+    (r7,'SECURITY_REVIEWER','ACTIVE',true,true,now()-interval '1 day',now());
 
   INSERT INTO public.ils_professional_assignment_security_review_queue
     (id,decision,severity,review_status,source_failure_code,assigned_reviewer_id)
@@ -74,7 +82,8 @@ BEGIN
     (q3,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_THREE',r3),
     (q4,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_FOUR',r4),
     (q5,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_FIVE',r5),
-    (q6,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_SIX',r6);
+    (q6,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_SIX',r6),
+    (q7,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_SEVEN',r7);
 
   INSERT INTO public.ils_professional_assignment_security_review_approval_log
     (id,queue_id,reviewer_id,approval_decision,approved_action,approval_reason)
@@ -84,7 +93,8 @@ BEGIN
     (a3,q3,r3,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval revoked reviewer'),
     (a4,q4,r4,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval four'),
     (a5,q5,r5,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval five'),
-    (a6,q6,r6,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval six');
+    (a6,q6,r6,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval six'),
+    (a7,q7,r7,'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval seven');
 
   -- Pending review cannot be bound.
   BEGIN
@@ -200,6 +210,27 @@ BEGIN
     GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
     IF err<>'EXECUTION_BINDING_ACTION_NOT_ALLOWED' THEN RAISE; END IF;
   END;
+
+  -- A policy change after bind must block consumption; the policy row is
+  -- locked during consume so a concurrent policy change cannot race execution.
+  UPDATE public.ils_professional_assignment_mutation_alert_escalation_rules
+  SET destructive_action_allowed=false
+  WHERE decision='REVIEW' AND action_code='CREATE_SECURITY_REVIEW';
+  b7:=public.ils_professional_security_approval_execution_bind(
+    q7,a7,'CREATE_SECURITY_REVIEW','nonce-policy-change-ci',15
+  );
+  SELECT approval_snapshot_hash INTO snap7
+  FROM public.ils_professional_security_approval_execution_bindings WHERE id=b7;
+  UPDATE public.ils_professional_assignment_mutation_alert_escalation_rules
+  SET destructive_action_allowed=true
+  WHERE decision='REVIEW' AND action_code='CREATE_SECURITY_REVIEW';
+  consumed:=public.ils_professional_security_approval_execution_consume(
+    b7,'nonce-policy-change-ci','CREATE_SECURITY_REVIEW',snap7
+  );
+  IF consumed IS DISTINCT FROM false OR
+     (SELECT execution_status FROM public.ils_professional_security_approval_execution_bindings WHERE id=b7)<>'BLOCKED' THEN
+    RAISE EXCEPTION 'Changed action policy did not persist BLOCKED';
+  END IF;
 
   IF has_function_privilege('anon',
        'public.ils_professional_security_approval_execution_bind(uuid,uuid,text,text,integer)','EXECUTE')
