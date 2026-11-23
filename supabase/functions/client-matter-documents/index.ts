@@ -42,6 +42,12 @@ async function isAdmin(user: any) {
     .maybeSingle();
   return !error && !!data;
 }
+function escapeLikePattern(value: string) {
+  // PostgREST forwards this as a SQL LIKE pattern; escape metacharacters so an
+  // email containing %, _ or \\ is compared literally rather than as a wildcard.
+  return value.replace(/[\\%_]/g, "\\\\async function getAssignedAdvocate(user: any, clientId: number) {");
+}
+
 async function getAssignedAdvocate(user: any, clientId: number) {
   if (!user?.id) return null;
 
@@ -65,7 +71,7 @@ async function getAssignedAdvocate(user: any, clientId: number) {
   } else if (user.email) {
     const legacy = await selectProfile()
       .is("auth_user_id", null)
-      .ilike("email", String(user.email).trim())
+      .ilike("email", escapeLikePattern(String(user.email).trim()))
       .ilike("status", "Approved")
       .ilike("verification_status", "Approved")
       .maybeSingle();
