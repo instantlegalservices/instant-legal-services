@@ -2,14 +2,14 @@
 -- Customer writes remain through SECURITY DEFINER RPC; direct table INSERT is closed.
 BEGIN;
 
-REVOKE INSERT ON TABLE public.payment_proofs FROM authenticated, PUBLIC;
+REVOKE INSERT ON TABLE public.payment_proofs FROM authenticated, anon, PUBLIC;
 DO $columns$
 DECLARE c text;
 BEGIN
   FOR c IN SELECT column_name FROM information_schema.columns
            WHERE table_schema='public' AND table_name='payment_proofs'
   LOOP
-    EXECUTE format('REVOKE INSERT (%I) ON TABLE public.payment_proofs FROM authenticated, PUBLIC', c);
+    EXECUTE format('REVOKE INSERT (%I) ON TABLE public.payment_proofs FROM authenticated, anon, PUBLIC', c);
   END LOOP;
 END
 $columns$;

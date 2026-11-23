@@ -3,7 +3,8 @@ const fs=require("node:fs");
 const assert=require("node:assert/strict");
 const sql=fs.readFileSync("supabase/migrations/20261118190000_harden_upi_payment_proof_flow.sql","utf8").toLowerCase();
 for(const s of [
- "revoke insert on table public.payment_proofs from authenticated, public",
+ "revoke insert on table public.payment_proofs from authenticated, anon, public",
+ "revoke insert (%i) on table public.payment_proofs from authenticated, anon, public",
  "drop policy if exists payment_proofs_insert_own",
  "payment_proofs_active_utr_uidx",
  "payment_proofs_utr_order_history_uidx",
