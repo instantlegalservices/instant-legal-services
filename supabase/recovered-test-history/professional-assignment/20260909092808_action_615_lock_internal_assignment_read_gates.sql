@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.ils_professional_assignment_mutation_gate(uuid,text,text) FROM PUBLIC, authenticated;
+REVOKE EXECUTE ON FUNCTION public.ils_professional_assignment_transition_gate(uuid,text) FROM PUBLIC, authenticated;

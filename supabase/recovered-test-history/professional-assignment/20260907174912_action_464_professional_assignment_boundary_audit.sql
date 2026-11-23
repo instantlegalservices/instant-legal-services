@@ -1,0 +1,9 @@
+create table if not exists public.ils_professional_assignment_boundary_audit (id uuid primary key default gen_random_uuid(), resource_code text unique not null, ownership_field text not null, allowed_principal text not null, customer_data_exposure text not null, payment_data_exposure text not null, decision text not null, rationale text not null, created_at timestamptz not null default now());
+alter table public.ils_professional_assignment_boundary_audit enable row level security;
+revoke all on public.ils_professional_assignment_boundary_audit from anon, authenticated;
+insert into public.ils_professional_assignment_boundary_audit (resource_code,ownership_field,allowed_principal,customer_data_exposure,payment_data_exposure,decision,rationale) values
+('PROFESSIONAL_WORK_ITEM','professional_user_id','assigned professional only','assigned scope/client brief only','NONE','HOLD_REVIEW','RLS is enabled but no authenticated policy is added until eligibility + assignment predicate is wired.'),
+('B2B_WORK_ITEM','professional_user_id','assigned professional only','assigned scope only; matter access separately controlled','NONE','HOLD_REVIEW','RLS is enabled but matter/customer boundary requires exact ownership predicate.'),
+('PROFESSIONAL_WORK_EVENT','actor_user_id/work_item_id','assigned professional acting on assigned work','EVENT METADATA ONLY','NONE','HOLD_REVIEW','Event access must follow assigned work item ownership.'),
+('B2B_WORK_EVENT','actor_user_id/work_item_id','assigned professional acting on assigned work','EVENT METADATA ONLY','NONE','HOLD_REVIEW','Event access must follow assigned B2B work item ownership.'),
+('PROFESSIONAL_GUIDE_ACCESS','professional_user_id','eligible professional with explicit guide access','NONE','NONE','HOLD_REVIEW','Guide access must additionally require active access_status and eligibility.');

@@ -1,0 +1,5 @@
+create table if not exists public.ils_professional_eligibility_gate_audit (id uuid primary key default gen_random_uuid(), user_id uuid, work_code text, role_code text, capability_code text, decision text not null, reason_code text not null, checks jsonb not null default '{}'::jsonb, created_at timestamptz not null default now());
+create index if not exists idx_ils_prof_elig_gate_user_work on public.ils_professional_eligibility_gate_audit(user_id,work_code,created_at desc);
+alter table public.ils_professional_eligibility_gate_audit enable row level security;
+revoke all on public.ils_professional_eligibility_gate_audit from anon, authenticated;
+comment on table public.ils_professional_eligibility_gate_audit is 'ACTION 462 audit-only eligibility decisions; backend/service role only until authenticated professional assignment boundary is fully verified.';

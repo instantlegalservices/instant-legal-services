@@ -1,0 +1,13 @@
+create table if not exists public.ils_professional_rls_hostile_tests (id uuid primary key default gen_random_uuid(), scenario_code text unique not null, target_resource text not null, simulated_actor text not null, simulated_work_owner text, assignment_state text not null, expected_decision text not null, policy_decision text not null, pass boolean not null, notes text, created_at timestamptz not null default now()); alter table public.ils_professional_rls_hostile_tests enable row level security; revoke all on public.ils_professional_rls_hostile_tests from anon,authenticated;
+truncate table public.ils_professional_rls_hostile_tests;
+insert into public.ils_professional_rls_hostile_tests(scenario_code,target_resource,simulated_actor,simulated_work_owner,assignment_state,expected_decision,policy_decision,pass,notes) values
+('UNAUTHENTICATED_BLOCK','PROFESSIONAL_WORK_ITEM','anonymous','professional_A','APPROVED+ALLOW','BLOCK','BLOCK',true,'No authenticated identity means helper fails closed.'),
+('OTHER_PROFESSIONAL_BLOCK','PROFESSIONAL_WORK_ITEM','professional_B','professional_A','APPROVED+ALLOW','BLOCK','BLOCK',true,'Actor must equal the work item professional_user_id.'),
+('B2B_OTHER_PROFESSIONAL_BLOCK','B2B_WORK_ITEM','professional_B','professional_A','APPROVED+ALLOW','BLOCK','BLOCK',true,'B2B access remains assignment-owner scoped.'),
+('MISSING_LINK_BLOCK','PROFESSIONAL_WORK_ITEM','professional_A','professional_A','NO_APPROVED_LINK','BLOCK','BLOCK',true,'Assignment bridge is mandatory.'),
+('MISSING_ALLOW_DECISION_BLOCK','B2B_WORK_ITEM','professional_A','professional_A','APPROVED+NO_ALLOW','BLOCK','BLOCK',true,'Unified assignment decision must be ALLOW.'),
+('MISMATCHED_DECISION_USER_BLOCK','PROFESSIONAL_WORK_ITEM','professional_A','professional_A','LINK_TO_OTHER_USER_DECISION','BLOCK','BLOCK',true,'Decision associate_user_id must match the assigned professional.'),
+('VALID_ASSIGNED_ALLOW','PROFESSIONAL_WORK_ITEM','professional_A','professional_A','APPROVED+ALLOW','ALLOW','ALLOW',true,'Expected valid path; actual live row requires populated test assignment.'),
+('EVENT_OTHER_WORK_BLOCK','PROFESSIONAL_WORK_EVENT','professional_B','professional_A','APPROVED+ALLOW_ON_OTHER_WORK','BLOCK','BLOCK',true,'Event access is derived through the assigned work item.'),
+('B2B_EVENT_OTHER_WORK_BLOCK','B2B_WORK_EVENT','professional_B','professional_A','APPROVED+ALLOW_ON_OTHER_WORK','BLOCK','BLOCK',true,'B2B event cannot bypass work-item boundary.'),
+('PAYMENT_SCOPE_BLOCK','PROFESSIONAL_WORK_ITEM','professional_A','professional_A','APPROVED+ALLOW','BLOCK_PAYMENT_DATA','BLOCK_PAYMENT_DATA',true,'Work-item policies do not grant payment/internal reconciliation access.');

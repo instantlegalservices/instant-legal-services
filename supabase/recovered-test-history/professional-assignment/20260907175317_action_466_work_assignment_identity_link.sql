@@ -1,0 +1,6 @@
+create table if not exists public.ils_professional_work_assignment_links (id uuid primary key default gen_random_uuid(), work_item_id uuid not null, work_stream text not null, assignment_decision_id uuid, work_code text, professional_user_id uuid not null, link_status text not null default 'PENDING', created_at timestamptz not null default now(), updated_at timestamptz not null default now(), unique(work_stream,work_item_id));
+create index if not exists idx_ils_prof_work_assignment_links_user on public.ils_professional_work_assignment_links(professional_user_id,link_status);
+create index if not exists idx_ils_prof_work_assignment_links_workcode on public.ils_professional_work_assignment_links(work_code);
+alter table public.ils_professional_work_assignment_links enable row level security;
+revoke all on public.ils_professional_work_assignment_links from anon, authenticated;
+comment on table public.ils_professional_work_assignment_links is 'ACTION 466 identity bridge: binds professional work item to explicit assignment decision/work code. Backend-only until eligibility and assignment are verified.';

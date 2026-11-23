@@ -1,0 +1,1 @@
+alter table public.ils_professional_assignment_mutation_stress_tests force row level security; revoke all on public.ils_professional_assignment_mutation_stress_tests from public,anon,authenticated;
