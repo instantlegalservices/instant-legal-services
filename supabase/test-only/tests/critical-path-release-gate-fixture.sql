@@ -194,6 +194,25 @@ CREATE TABLE public.ils_professional_assignment_e2e_harness_runs (
 );
 CREATE TABLE public.ils_security_execution_e2e_hostile_runs (
   id uuid PRIMARY KEY,
+  harness_version text NOT NULL DEFAULT 'fixture',
+  status text NOT NULL DEFAULT 'HOLD',
+  runtime_checks_passed integer NOT NULL DEFAULT 0,
+  runtime_checks_failed integer NOT NULL DEFAULT 0,
+  source_assertions_passed integer NOT NULL DEFAULT 0,
+  source_assertions_failed integer NOT NULL DEFAULT 0,
+  checks_not_executed integer NOT NULL DEFAULT 0,
+  destructive_attempts integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE public.ils_security_execution_e2e_hostile_run_results (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  run_id uuid NOT NULL,
+  test_code text NOT NULL,
+  test_method text NOT NULL,
+  observed_status text NOT NULL,
+  passed boolean,
+  destructive_attempted boolean NOT NULL DEFAULT false,
+  reason text NOT NULL DEFAULT '',
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
