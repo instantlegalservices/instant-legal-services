@@ -5,9 +5,6 @@ on:
     paths:
       - "supabase/functions/client-matter-documents/index.ts"
       - "scripts/test-client-matter-document-ownership-contract.js"
-      - "supabase/migrations/20261123170000_harden_advocate_matter_rpc_identity.sql"
-      - "scripts/test-advocate-matter-rpc-authorization-contract.js"
-      - ".github/workflows/test-advocate-matter-rpc-authorization-contract.yml"
       - ".github/workflows/test-client-matter-document-ownership-contract.yml"
   workflow_dispatch:
 
@@ -23,5 +20,3 @@ jobs:
           node-version: 20
       - name: Verify document ownership contract
         run: node scripts/test-client-matter-document-ownership-contract.js
-      - name: Verify advocate matter RPC authorization contract
-        run: node scripts/test-advocate-matter-rpc-authorization-contract.js
