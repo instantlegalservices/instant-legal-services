@@ -21,7 +21,7 @@ assert.match(endpoint,/RAZORPAY_ORDER_ATTACH_RECONCILIATION_REQUIRED/);
 assert.match(endpoint,/async function reconcileRazorpayOrder/);
 assert.match(endpoint,/RAZORPAY_ORDER_RECONCILIATION_REQUIRED/);
 assert.match(endpoint,/ORDER_LOOKUP_WINDOW_INCOMPLETE/);
-assert.match(endpoint,/candidate\?\.receipt===receipt/);
+assert.match(endpoint,/new URLSearchParams\(\{receipt,from:String\(from\)/);\nassert.match(endpoint,/candidate\?\.receipt===receipt/);
 assert.match(endpoint,/candidate\?\.notes\?\.payment_attempt_id/);
 assert.match(endpoint,/candidate\?\.notes\?\.ils_order_id/);
 assert.match(endpoint,/reservation\.created_at/);
@@ -45,6 +45,7 @@ assert.match(webhook,/safeEqual\(expected,\s*signature\)/);
 assert.match(webhook,/payment\.status !== "captured"/);
 assert.match(webhook,/ils_finalize_razorpay_payment/);
 assert.match(webhook,/\.in\("status",\s*\["created",\s*"pending"\]\)/);
+assert.match(webhook,/\.in\("status",\s*\["created",\s*"pending"\]\)\s*\.is\("gateway_payment_id",\s*null\)/);
 assert.match(webhook,/\.is\("gateway_payment_id",\s*null\)/);
 assert.doesNotMatch(webhook,/from\("orders"\)\.update\(\{\s*status:\s*"paid"/);
 assert.match(webhook,/if \(row\.status !== "paid" && !row\.gateway_payment_id\)/);
@@ -75,5 +76,14 @@ for(const marker of [
  "revoke all on function public.ils_finalize_razorpay_payment",
  "grant execute on function public.ils_finalize_razorpay_payment(uuid,text,bigint,text) to service_role"
 ]) assert.ok(migration.includes(marker),"missing atomic finalizer requirement: "+marker);
+
+
+// Webhook event-order guards: captured/failure events must be idempotent and log only after state handling.
+assert.ok(webhook.includes('if (eventType === "payment.captured" || eventType === "order.paid")'));
+assert.ok(webhook.includes('} else if (eventType === "payment.failed")'));
+assert.ok(webhook.includes('.in("status", ["created", "pending"])'));
+assert.ok(webhook.includes('.is("gateway_payment_id", null)'));
+assert.ok(webhook.includes('from("payment_events").insert({'));
+assert.ok(web.includes('event_type: eventType,') && webhook.includes('payload: event,'));
 
 console.log("PASS: Razorpay verify and webhook use one atomic, idempotent finalizer; gateway amount/currency, order/request ownership and service mapping are checked; delayed failure cannot downgrade paid state.");
