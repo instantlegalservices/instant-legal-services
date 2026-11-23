@@ -1,10 +1,10 @@
-\\set ON_ERROR_STOP on
+\set ON_ERROR_STOP on
 CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticated NOLOGIN;
 CREATE ROLE service_role NOLOGIN BYPASSRLS;
 GRANT USAGE ON SCHEMA public TO service_role;
 
-\\i supabase/migrations/20261117063714_ils_ai_rate_limit_shared.sql
+\i supabase/migrations/20261117063714_ils_ai_rate_limit_shared.sql
 
 DO $privileges$
 BEGIN
@@ -60,4 +60,4 @@ $behavior$;
 RESET ROLE;
 
 DELETE FROM public.ils_ai_rate_limits WHERE key_hash = repeat('c',64);
-\\echo PASS: migration grants, rate-limit thresholds, expiry reset and invalid-input rejection verified on PostgreSQL 16.
+\echo PASS: migration grants, rate-limit thresholds, expiry reset and invalid-input rejection verified on PostgreSQL 16.
