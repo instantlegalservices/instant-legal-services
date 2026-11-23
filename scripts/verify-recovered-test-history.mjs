@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { resolve, relative, sep } from "node:path";
 
@@ -36,6 +37,9 @@ for (const item of manifest.items) {
   const sql = readFileSync(absolutePath, "utf8");
   assert.ok(sql.trim().length > 0, `Empty recovered SQL: ${item.archive_path}`);
   assert.equal(Array.from(sql).length, item.source_length, `Source length mismatch: ${item.version}`);
+  assert.match(item.source_sha256, /^[a-f0-9]{64}$/, `Missing TEST-ledger SHA-256: ${item.version}`);
+  const archiveSha256 = createHash("sha256").update(sql, "utf8").digest("hex");
+  assert.equal(archiveSha256, item.source_sha256, `TEST-ledger SHA-256 mismatch: ${item.version}`);
   expectedFiles.add(item.archive_path);
 
   const action = Number(item.name.match(/action_(\d+)/)?.[1]);
@@ -53,4 +57,4 @@ assert.deepEqual([...sqlFiles].sort(), [...expectedFiles].sort(), "Archive SQL f
 const readme = readFileSync(resolve(archiveRoot, "README.md"), "utf8");
 assert.match(readme, /auto-applied.*replayed/i);
 assert.match(readme, /Action 459 .* intentionally excluded/i);
-console.log("Recovered TEST history integrity PASS: 55/55 files, manifest, scope and non-replayability verified.");
+console.log("Recovered TEST history integrity PASS: 55/55 files match TEST-ledger SHA-256, manifest, scope and non-replayability.");
