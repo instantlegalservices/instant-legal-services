@@ -65,6 +65,7 @@ BEGIN
     (user_id,reviewer_role,authorization_status,identity_verified,security_training_verified)
   VALUES
     (actor,'SECURITY_ADMIN','ACTIVE',true,true),
+    (target_professional_id,'SECURITY_REVIEWER','ACTIVE',true,true),
     (v_reviewer_id,'SECURITY_REVIEWER','ACTIVE',true,true);
 
   -- Unauthenticated events are legacy/untrusted and cannot trigger escalation.
@@ -177,7 +178,7 @@ BEGIN
   IF NOT EXISTS(
     SELECT 1 FROM public.ils_professional_assignment_security_review_queue
     WHERE decision='REVIEW' AND source_failure_code='CROSS_USER_ASSIGNMENT'
-      AND affected_professional_user_id=actor
+      AND affected_professional_user_id=target_professional_id
   ) THEN
     RAISE EXCEPTION 'Legacy untrusted telemetry influenced review subject attribution';
   END IF;
@@ -214,12 +215,12 @@ BEGIN
   SELECT id INTO v_stop_queue_id
   FROM public.ils_professional_assignment_security_review_queue
   WHERE decision='STOP' AND source_failure_code='CROSS_USER_ASSIGNMENT'
-    AND affected_professional_user_id=actor;
+    AND affected_professional_user_id=target_professional_id;
   IF v_stop_queue_id IS NULL THEN RAISE EXCEPTION 'Canonical STOP queue not found'; END IF;
 
   -- The affected professional is independently authorized as a reviewer,
   -- but must still be prevented from approving their own assignment action.
-  PERFORM set_config('request.jwt.claim.sub',actor::text,true);
+  PERFORM set_config('request.jwt.claim.sub',target_professional_id::text,true);
   PERFORM set_config('request.jwt.claim.role','authenticated',true);
   IF public.ils_professional_security_review_decide(
        v_stop_queue_id,
@@ -280,7 +281,7 @@ BEGIN
   IF NOT EXISTS(
     SELECT 1 FROM public.ils_professional_assignment_security_review_approval_log
     WHERE reviewer_id=v_reviewer_id
-      AND affected_professional_user_id=actor
+      AND affected_professional_user_id=target_professional_id
       AND approval_decision='APPROVE'
       AND approved_action='FREEZE_MUTATION_CHANNEL'
   ) THEN RAISE EXCEPTION 'Approval audit omitted affected professional identity'; END IF;
