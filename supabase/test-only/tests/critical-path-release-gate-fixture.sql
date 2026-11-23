@@ -65,7 +65,8 @@ CREATE TABLE public.ils_critical_path_evidence_registry (
   id uuid PRIMARY KEY,
   evidence_id uuid NOT NULL,
   critical_path_code text NOT NULL,
-  binding_status text NOT NULL
+  binding_status text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_e2e_evidence (
   id uuid PRIMARY KEY,
@@ -78,6 +79,7 @@ CREATE TABLE public.ils_e2e_evidence (
   function_version integer,
   function_sha256 text,
   details text,
+  critical_path_code text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_e2e_function_deployment_registry (
@@ -85,7 +87,8 @@ CREATE TABLE public.ils_e2e_function_deployment_registry (
   function_version integer NOT NULL,
   deployment_sha256 text NOT NULL,
   critical_path_code text NOT NULL,
-  active boolean NOT NULL
+  active boolean NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_e2e_historical_event_quarantine (
   evidence_id uuid PRIMARY KEY
