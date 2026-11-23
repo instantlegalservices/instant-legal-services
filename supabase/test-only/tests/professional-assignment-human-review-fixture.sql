@@ -15,9 +15,22 @@ $$ SELECT nullif(current_setting('request.jwt.claim.role',true),'') $$;
 
 CREATE TABLE public.ils_professional_assignment_mutation_failure_telemetry (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  failure_code text NOT NULL,
+  assignment_link_id uuid,
+  work_item_id uuid,
+  work_stream text,
   professional_user_id uuid,
-  occurred_at timestamptz NOT NULL DEFAULT clock_timestamp()
+  operation text,
+  requested_status text,
+  failure_code text NOT NULL,
+  failure_class text NOT NULL,
+  safe_message text NOT NULL,
+  source_gate text NOT NULL,
+  occurred_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  source_type text NOT NULL DEFAULT 'LEGACY_UNTRUSTED',
+  source_event_id uuid,
+  actor_user_id uuid,
+  producer_version text,
+  dedupe_key text
 );
 CREATE TABLE public.ils_professional_assignment_mutation_alert_thresholds (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -29,6 +42,9 @@ CREATE TABLE public.ils_professional_assignment_mutation_alert_thresholds (
   active boolean NOT NULL DEFAULT true,
   UNIQUE(failure_code,window_minutes)
 );
+INSERT INTO public.ils_professional_assignment_mutation_alert_thresholds
+  (failure_code,window_minutes,review_threshold,stop_threshold,action,active)
+VALUES ('AUTH_REQUIRED',15,2,4,'STOP_MUTATION_CHANNEL',true);
 CREATE TABLE public.ils_professional_assignment_mutation_alert_evaluations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   failure_code text NOT NULL,
@@ -148,8 +164,18 @@ CREATE TABLE public.ils_professional_assignment_mutation_event_chain (
 );
 
 CREATE OR REPLACE FUNCTION public.ils_professional_assignment_transition_allowed(p_from text,p_to text)
-RETURNS boolean LANGUAGE sql IMMUTABLE AS
-$$ SELECT (p_from,p_to) IN (('PENDING','ACTIVE'),('ACTIVE','PAUSED'),('PAUSED','ACTIVE'),('ACTIVE','REVOKED'),('ACTIVE','COMPLETED')) $$;
+RETURNS boolean LANGUAGE sql IMMUTABLE AS $function$
+  SELECT CASE
+    WHEN p_from IS NULL AND p_to='PENDING' THEN true
+    WHEN p_from='PENDING' AND p_to='APPROVED' THEN true
+    WHEN p_from='APPROVED' AND p_to='ACTIVE' THEN true
+    WHEN p_from='ACTIVE' AND p_to IN ('PAUSED','REVOKED','COMPLETED') THEN true
+    WHEN p_from='PAUSED' AND p_to IN ('ACTIVE','REVOKED') THEN true
+    WHEN p_from='REVOKED' AND p_to='PENDING' THEN false
+    WHEN p_from='COMPLETED' AND p_to='ACTIVE' THEN false
+    ELSE false
+  END;
+$function$;
 CREATE OR REPLACE FUNCTION public.ils_professional_assignment_is_current(p_work_item_id uuid,p_work_stream text,p_professional_user_id uuid)
 RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT true $$;
 

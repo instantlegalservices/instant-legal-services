@@ -4,14 +4,17 @@ on:
   pull_request:
     paths:
       - "supabase/test-only/20261123040000_professional_assignment_human_review_escalation.sql"
+      - "supabase/test-only/20261123050000_trusted_assignment_telemetry_provenance.sql"
       - "supabase/test-only/tests/professional-assignment-human-review-fixture.sql"
       - "supabase/test-only/tests/professional-assignment-human-review.test.sql"
       - ".github/workflows/test-professional-assignment-human-review.yml"
   push:
     branches:
       - "feat/assignment-mutation-freeze-guard-20261123"
+      - "fix/trusted-assignment-telemetry-provenance-20261123"
     paths:
       - "supabase/test-only/20261123040000_professional_assignment_human_review_escalation.sql"
+      - "supabase/test-only/20261123050000_trusted_assignment_telemetry_provenance.sql"
       - "supabase/test-only/tests/professional-assignment-human-review-fixture.sql"
       - "supabase/test-only/tests/professional-assignment-human-review.test.sql"
       - ".github/workflows/test-professional-assignment-human-review.yml"
@@ -56,6 +59,11 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -U postgres -d ils_assignment_freeze -v ON_ERROR_STOP=1 -f supabase/test-only/20261123040000_professional_assignment_human_review_escalation.sql
+      - name: Apply trusted telemetry provenance migration
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_assignment_freeze -v ON_ERROR_STOP=1 -f supabase/test-only/20261123050000_trusted_assignment_telemetry_provenance.sql
       - name: Run rollback-only human-review contract tests
         env:
           PGPASSWORD: postgres
