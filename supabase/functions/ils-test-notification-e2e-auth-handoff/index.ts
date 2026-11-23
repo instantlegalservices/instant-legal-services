@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   isUniqueViolation,
   newHandoffExpiry,
+  sha256Hex,
   staleIssuedHandoffCutoff,
 } from "../_shared/synthetic-auth-handoff-policy.ts";
 
@@ -56,8 +57,6 @@ Deno.serve(async (req: Request) => {
   }
 
   const now = new Date().toISOString();
-  // Preserve the deployed 90-second replacement policy. It rotates an old
-  // outstanding link only when a replacement is requested; it is not the TTL.
   await admin.from("ils_test_synthetic_auth_handoffs")
     .update({ status: "SUPERSEDED" })
     .eq("synthetic_user_id", SYN)
@@ -78,8 +77,23 @@ Deno.serve(async (req: Request) => {
     }, 409);
   }
 
+  // Generate first, then persist the digest in the same INSERT as the ISSUED row.
+  // No issued handoff can exist without being cryptographically bound to its token.
+  const { data: link, error: linkError } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email: synthetic.user.email,
+    options: {
+      redirectTo:
+        "https://" + REF + ".supabase.co/functions/v1/ils-test-notification-e2e-auth-confirm",
+    },
+  });
+  if (linkError || !link?.properties?.hashed_token) {
+    return json({ error: "MAGICLINK_GENERATION_FAILED" }, 500);
+  }
+
   const correlation = crypto.randomUUID();
   const expires = newHandoffExpiry();
+  const tokenDigest = await sha256Hex(link.properties.hashed_token);
   const { data: handoff, error: insertError } = await admin
     .from("ils_test_synthetic_auth_handoffs")
     .insert({
@@ -88,6 +102,7 @@ Deno.serve(async (req: Request) => {
       status: "ISSUED",
       correlation_id: correlation,
       expires_at: expires,
+      token_hash_sha256: tokenDigest,
     })
     .select("id")
     .single();
@@ -109,22 +124,6 @@ Deno.serve(async (req: Request) => {
       }
     }
     return json({ error: "HANDOFF_INSERT_FAILED" }, 500);
-  }
-
-  const { data: link, error: linkError } = await admin.auth.admin.generateLink({
-    type: "magiclink",
-    email: synthetic.user.email,
-    options: {
-      redirectTo:
-        "https://" + REF + ".supabase.co/functions/v1/ils-test-notification-e2e-auth-confirm",
-    },
-  });
-
-  if (linkError || !link?.properties?.hashed_token) {
-    await admin.from("ils_test_synthetic_auth_handoffs")
-      .update({ status: "SUPERSEDED" })
-      .eq("id", handoff.id);
-    return json({ error: "MAGICLINK_GENERATION_FAILED" }, 500);
   }
 
   return json({
