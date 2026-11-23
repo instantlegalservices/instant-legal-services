@@ -2,7 +2,7 @@
   "source_project": "TEST",
   "source_table": "supabase_migrations.schema_migrations",
   "source_column": "statements",
-  "recovery_scope": "Action 458 and Actions 460–498; Action 459 excluded",
+  "recovery_scope": "Action 458 and Actions 460–498; Action 459 excluded; plus related Actions 607, 610, 611, 613, 615 and Professional Assignment Actions 525–527",
   "replayable": false,
   "items": [
     {
@@ -340,6 +340,110 @@
       "statement_count": 1,
       "source_length": 2808,
       "archive_path": "supabase/recovered-test-history/professional-assignment/20260907192844_action_498_execution_lifecycle_stress_test.sql"
+    },
+    {
+      "version": "20260908165632",
+      "name": "action_525_professional_assignment_e2e_safety_gate_preflight",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 2720,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260908165632_action_525_professional_assignment_e2e_safety_gate_preflight.sql"
+    },
+    {
+      "version": "20260908175235",
+      "name": "action_525_professional_assignment_e2e_safety_gate_preflight",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 2720,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260908175235_action_525_professional_assignment_e2e_safety_gate_preflight.sql"
+    },
+    {
+      "version": "20260908180039",
+      "name": "action_526_professional_assignment_synthetic_hostile_tests",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 5915,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260908180039_action_526_professional_assignment_synthetic_hostile_tests.sql"
+    },
+    {
+      "version": "20260908180112",
+      "name": "action_526_professional_assignment_synthetic_hostile_tests",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 5915,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260908180112_action_526_professional_assignment_synthetic_hostile_tests.sql"
+    },
+    {
+      "version": "20260908180427",
+      "name": "action_527_professional_assignment_release_gate",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 2833,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260908180427_action_527_professional_assignment_release_gate.sql"
+    },
+    {
+      "version": "20260908180602",
+      "name": "action_527_professional_assignment_release_gate",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 2833,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260908180602_action_527_professional_assignment_release_gate.sql"
+    },
+    {
+      "version": "20260908180653",
+      "name": "action_527_professional_assignment_release_gate",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 2833,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260908180653_action_527_professional_assignment_release_gate.sql"
+    },
+    {
+      "version": "20260908180712",
+      "name": "action_527_professional_assignment_release_gate",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 2833,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260908180712_action_527_professional_assignment_release_gate.sql"
+    },
+    {
+      "version": "20260909090843",
+      "name": "action_607_record_assignment_public_grant_lockdown",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 567,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260909090843_action_607_record_assignment_public_grant_lockdown.sql"
+    },
+    {
+      "version": "20260909091550",
+      "name": "action_610_dynamic_authenticated_privilege_hardening",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 813,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260909091550_action_610_dynamic_authenticated_privilege_hardening.sql"
+    },
+    {
+      "version": "20260909091759",
+      "name": "action_611_bind_associate_application_identity",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 2253,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260909091759_action_611_bind_associate_application_identity.sql"
+    },
+    {
+      "version": "20260909092328",
+      "name": "action_613_lock_internal_assignment_commit",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 121,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260909092328_action_613_lock_internal_assignment_commit.sql"
+    },
+    {
+      "version": "20260909092808",
+      "name": "action_615_lock_internal_assignment_read_gates",
+      "created_by": "islegalservices5@gmail.com",
+      "statement_count": 1,
+      "source_length": 236,
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260909092808_action_615_lock_internal_assignment_read_gates.sql"
     }
   ]
 }
