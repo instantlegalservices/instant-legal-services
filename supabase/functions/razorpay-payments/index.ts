@@ -13,7 +13,7 @@ async function reconcileRazorpayOrder(paymentAttemptId:string,orderId:string,amo
  const matches:any[]=[];
  let complete=false;
  for(let skip=0;skip<1000;skip+=100){
-  const query=new URLSearchParams({from:String(from),to:String(to),count:"100",skip:String(skip)});
+  const query=new URLSearchParams({receipt,from:String(from),to:String(to),count:"100",skip:String(skip)});
   let response:Response;
   try{response=await fetch("https://api.razorpay.com/v1/orders?"+query.toString(),{headers:{Authorization:"Basic "+btoa(kid+":"+secret)},signal:AbortSignal.timeout(10000)});}
   catch{return {ok:false,reason:"ORDER_LOOKUP_UNAVAILABLE"};}
