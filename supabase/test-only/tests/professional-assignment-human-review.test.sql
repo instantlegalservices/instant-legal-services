@@ -210,8 +210,8 @@ BEGIN
   IF NOT EXISTS(
     SELECT 1 FROM public.ils_professional_assignment_security_review_queue
     WHERE decision='STOP' AND source_failure_code='CROSS_USER_ASSIGNMENT'
-      AND affected_professional_user_id=actor
-  ) THEN RAISE EXCEPTION 'Affected professional identity was not bound to review queue'; END IF;
+      AND affected_professional_user_id=target_professional_id
+  ) THEN RAISE EXCEPTION 'Assignment owner identity was not bound to review queue'; END IF;
   SELECT id INTO v_stop_queue_id
   FROM public.ils_professional_assignment_security_review_queue
   WHERE decision='STOP' AND source_failure_code='CROSS_USER_ASSIGNMENT'
