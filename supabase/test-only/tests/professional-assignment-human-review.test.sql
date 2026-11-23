@@ -7,6 +7,7 @@ DECLARE
   target_professional_id uuid:='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
   v_reviewer_id uuid:='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
   new_reviewer_id uuid:='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+  second_admin_id uuid:='ffffffff-ffff-4fff-8fff-ffffffffffff';
   unverified_reviewer_id uuid:='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
   v_admin_result jsonb;
   v_admin_audit_count integer;
@@ -70,13 +71,15 @@ BEGIN
     (actor,'security-admin-fixture@example.invalid',clock_timestamp()),
     (v_reviewer_id,'reviewer-fixture@example.invalid',clock_timestamp()),
     (new_reviewer_id,'new-reviewer-fixture@example.invalid',clock_timestamp()),
+    (second_admin_id,'second-admin-fixture@example.invalid',clock_timestamp()),
     (unverified_reviewer_id,'unverified-reviewer-fixture@example.invalid',NULL);
 
   INSERT INTO public.ils_professional_security_reviewer_authorizations
     (user_id,reviewer_role,authorization_status,identity_verified,security_training_verified)
   VALUES
     (actor,'SECURITY_ADMIN','ACTIVE',true,true),
-    (v_reviewer_id,'SECURITY_REVIEWER','ACTIVE',true,true);
+    (v_reviewer_id,'SECURITY_REVIEWER','ACTIVE',true,true),
+    (second_admin_id,'SECURITY_ADMIN','ACTIVE',true,true);
 
   -- Only a different, active SECURITY_ADMIN may grant SECURITY_REVIEWER.
   PERFORM set_config('request.jwt.claim.sub',actor::text,true);
@@ -131,6 +134,26 @@ BEGIN
   EXCEPTION WHEN OTHERS THEN
     GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
     IF err<>'SECURITY_REVIEWER_ALREADY_ACTIVE' THEN RAISE; END IF;
+  END;
+
+  BEGIN
+    PERFORM public.ils_professional_security_reviewer_administer(
+      new_reviewer_id,NULL,'Null operation must be rejected.',
+      'ILS-SEC-ID-TEST-0005','ILS-SEC-TRAIN-TEST-0005',
+      clock_timestamp()+interval '90 days');
+    RAISE EXCEPTION 'ASSERT_EXPECTED_REVIEWER_NULL_OPERATION_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEWER_OPERATION_INVALID' THEN RAISE; END IF;
+  END;
+
+  BEGIN
+    PERFORM public.ils_professional_security_reviewer_administer(
+      second_admin_id,'SUSPEND','Security Admin role cannot be administered through reviewer RPC.');
+    RAISE EXCEPTION 'ASSERT_EXPECTED_SECURITY_ADMIN_ROLE_CEILING';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_ADMIN_ROLE_REQUIRES_OWNER_BOOTSTRAP' THEN RAISE; END IF;
   END;
 
   -- An ordinary reviewer cannot administer another reviewer.
