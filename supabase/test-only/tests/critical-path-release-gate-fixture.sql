@@ -174,3 +174,31 @@ FROM unnest(ARRAY[
   'CUSTOMER_ACTION_E2E','DOCUMENT_E2E','GOV_ROUTE_E2E','NOTIFICATION_E2E',
   'PAYMENT_E2E','PROFESSIONAL_ASSIGNMENT_E2E','RELEASE_E2E','SECURITY_EXECUTION_E2E'
 ]) AS p;
+
+CREATE TABLE public.ils_document_e2e_harness_runs (
+  id uuid PRIMARY KEY,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE public.ils_notification_e2e_harness_runs (
+  id uuid PRIMARY KEY,
+  started_at timestamptz NOT NULL,
+  completed_at timestamptz
+);
+CREATE TABLE public.ils_professional_assignment_e2e_harness_runs (
+  id uuid PRIMARY KEY,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE public.ils_security_execution_e2e_hostile_runs (
+  id uuid PRIMARY KEY,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+INSERT INTO public.ils_critical_path_release_proof_hostile_tests
+  (id,test_code,attack_class,expected_decision)
+SELECT gen_random_uuid(),code,code,'BLOCK'
+FROM unnest(ARRAY[
+  'CP_RELEASE_REPLAY','CP_RELEASE_CROSS_PATH_RACE','CP_RELEASE_DUPLICATE_BIND',
+  'CP_RELEASE_CONCURRENT_PROMOTION','CP_RELEASE_STALE_CONTRACT',
+  'CP_RELEASE_REVOKED_BINDING','CP_RELEASE_SYNTHETIC_RACE',
+  'CP_RELEASE_MISSING_PROVENANCE_RACE'
+]) AS code;
