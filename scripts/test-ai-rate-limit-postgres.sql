@@ -5,6 +5,7 @@ CREATE ROLE service_role NOLOGIN BYPASSRLS;
 GRANT USAGE ON SCHEMA public TO service_role;
 
 \i supabase/migrations/20261117063714_ils_ai_rate_limit_shared.sql
+\i supabase/migrations/20261123193000_harden_ils_ai_rate_limit_security.sql
 
 DO $privileges$
 BEGIN
