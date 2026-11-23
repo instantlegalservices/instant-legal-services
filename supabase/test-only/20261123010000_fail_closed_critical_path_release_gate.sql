@@ -288,6 +288,11 @@ AS $function$
   FROM path_status;
 $function$;
 
+REVOKE ALL ON FUNCTION public.ils_release_critical_path_summary()
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.ils_release_critical_path_summary()
+  TO service_role;
+
 CREATE OR REPLACE FUNCTION public.ils_e2e_release_gate_evaluate()
 RETURNS uuid
 LANGUAGE plpgsql
