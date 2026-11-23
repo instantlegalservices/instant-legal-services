@@ -12,6 +12,8 @@ DECLARE
   v_admin_result jsonb;
   v_admin_audit_count integer;
   assignment_id uuid:=gen_random_uuid();
+  work_item_id uuid:=gen_random_uuid();
+  assignment_decision_id uuid:=gen_random_uuid();
   telemetry_assignment_1 uuid:=gen_random_uuid();
   telemetry_assignment_2 uuid:=gen_random_uuid();
   telemetry_assignment_3 uuid:=gen_random_uuid();
@@ -57,14 +59,39 @@ BEGIN
     ('REVIEW','CREATE_SECURITY_REVIEW','MEDIUM',true,false,true),
     ('STOP','FREEZE_MUTATION_CHANNEL','CRITICAL',true,false,true);
 
-  INSERT INTO public.ils_professional_work_assignment_links
-    (id,work_item_id,work_stream,professional_user_id,link_status)
+  INSERT INTO public.ils_associate_trust_profiles
+    (user_id,associate_id,role_type,display_name,profile_status,
+     identity_verified,qualification_verified,professional_registration_verified,capability_verified)
   VALUES
-    (assignment_id,gen_random_uuid(),'PROFESSIONAL',actor,'APPROVED'),
-    (telemetry_assignment_1,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
-    (telemetry_assignment_2,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
-    (telemetry_assignment_3,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
-    (telemetry_assignment_4,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING');
+    (actor,'fixture-associate-001','ADVOCATE','Fixture Advocate','ACTIVE',true,true,true,true);
+
+  INSERT INTO public.ils_professional_work_items
+    (id,professional_user_id,matter_reference,client_brief,assigned_scope,checklist,self_qa,reviewer_qa)
+  VALUES
+    (work_item_id,actor,'FIXTURE-MATTER-001','{}'::jsonb,'{}'::jsonb,'[]'::jsonb,'{}'::jsonb,'{}'::jsonb);
+
+  INSERT INTO public.ils_unified_assignment_decisions
+    (id,work_code,associate_user_id,selected_role_code,decision,reason_code,
+     evidence_snapshot,requires_supervision,requires_professional_review)
+  VALUES
+    (assignment_decision_id,'FIXTURE-WORK-001',actor,'ADVOCATE','ALLOW',
+     'VERIFIED_CAPABILITY','{}'::jsonb,false,false);
+
+  INSERT INTO public.ils_professional_work_assignment_links
+    (id,work_item_id,work_stream,assignment_decision_id,professional_user_id,link_status)
+  VALUES
+    (assignment_id,work_item_id,'PROFESSIONAL',assignment_decision_id,actor,'APPROVED'),
+    (telemetry_assignment_1,gen_random_uuid(),'PROFESSIONAL',NULL,target_professional_id,'PENDING'),
+    (telemetry_assignment_2,gen_random_uuid(),'PROFESSIONAL',NULL,target_professional_id,'PENDING'),
+    (telemetry_assignment_3,gen_random_uuid(),'PROFESSIONAL',NULL,target_professional_id,'PENDING'),
+    (telemetry_assignment_4,gen_random_uuid(),'PROFESSIONAL',NULL,target_professional_id,'PENDING');
+
+  IF NOT public.ils_professional_assignment_is_current(work_item_id,'PROFESSIONAL',actor) THEN
+    RAISE EXCEPTION 'Synthetic approved assignment fixture does not satisfy live current-eligibility contract';
+  END IF;
+  IF public.ils_professional_assignment_is_current(work_item_id,'PROFESSIONAL',target_professional_id) THEN
+    RAISE EXCEPTION 'Current-eligibility function accepted a different professional identity';
+  END IF;
 
   INSERT INTO auth.users(id,email,email_confirmed_at)
   VALUES
