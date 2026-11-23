@@ -6,6 +6,7 @@ on:
       - "supabase/test-only/20261123040000_assignment_mutation_channel_freeze_guard.sql"
       - "supabase/test-only/tests/assignment-mutation-freeze-fixture.sql"
       - "supabase/test-only/tests/assignment-mutation-freeze.test.sql"
+      - "supabase/test-only/tests/assignment-mutation-freeze-concurrency.sh"
       - ".github/workflows/test-assignment-mutation-freeze.yml"
   push:
     branches:
@@ -61,3 +62,6 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -U postgres -d ils_assignment_freeze -v ON_ERROR_STOP=1 -f supabase/test-only/tests/assignment-mutation-freeze.test.sql
+      - name: Run two-session freeze/mutation concurrency test
+        run: |
+          bash supabase/test-only/tests/assignment-mutation-freeze-concurrency.sh
