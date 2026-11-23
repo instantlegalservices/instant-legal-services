@@ -22,3 +22,24 @@ export async function sha256Hex(value: string): Promise<string> {
     byte.toString(16).padStart(2, "0")
   ).join("");
 }
+
+export function isMatchingIssuedHandoff(
+  handoff: {
+    synthetic_user_id: string;
+    status: string;
+    expires_at: string;
+    token_hash_sha256: string | null;
+  },
+  expectedSyntheticUserId: string,
+  presentedTokenDigest: string,
+  nowMs = Date.now(),
+): boolean {
+  const expiresAt = Date.parse(handoff.expires_at);
+  return handoff.synthetic_user_id === expectedSyntheticUserId &&
+    handoff.status === "ISSUED" &&
+    Number.isFinite(expiresAt) &&
+    expiresAt > nowMs &&
+    typeof handoff.token_hash_sha256 === "string" &&
+    handoff.token_hash_sha256.length === 64 &&
+    handoff.token_hash_sha256 === presentedTokenDigest;
+}
