@@ -7,6 +7,10 @@ DECLARE
   v_reviewer_id uuid:='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
   assignment_id uuid:=gen_random_uuid();
   ambiguous_queue_id uuid:=gen_random_uuid();
+  mismatch_queue_id uuid:=gen_random_uuid();
+  mismatch_escalation_id uuid:=gen_random_uuid();
+  ambiguous_escalation_id uuid:=gen_random_uuid();
+  v_approval_log_id uuid;
   v_count integer;
   v_status text;
   v_queues integer;
@@ -123,6 +127,45 @@ BEGIN
       AND review_status='PENDING'
   ) THEN RAISE EXCEPTION 'Self-approval attempt changed review status'; END IF;
 
+  -- Null decisions are invalid, not an implicit rejection.
+  IF public.ils_professional_security_review_decide(
+       (SELECT id FROM public.ils_professional_assignment_security_review_queue
+        WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'),
+       NULL,'FREEZE_MUTATION_CHANNEL','Null decision attempt') THEN
+    RAISE EXCEPTION 'Null approval decision was accepted';
+  END IF;
+
+  -- An otherwise valid reviewer cannot expand the approved action beyond
+  -- the exact action recorded on the escalation.
+  PERFORM set_config('request.jwt.claim.sub',v_reviewer_id::text,true);
+  IF public.ils_professional_security_review_decide(
+       (SELECT id FROM public.ils_professional_assignment_security_review_queue
+        WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'),
+       'APPROVE','CREATE_SECURITY_REVIEW','Action substitution attempt') THEN
+    RAISE EXCEPTION 'Reviewer action substitution was accepted';
+  END IF;
+
+  -- Queue and escalation must agree on subject and source, not merely share
+  -- a decision label. A deliberately mismatched pair must remain pending.
+  INSERT INTO public.ils_professional_assignment_mutation_alert_escalations
+    (id,decision,action_code,severity,source_failure_code,observed_count,status,
+     human_approval_required,destructive_action_executed,affected_professional_user_id)
+  VALUES(mismatch_escalation_id,'STOP','FREEZE_MUTATION_CHANNEL','CRITICAL',
+         'DIFFERENT_SOURCE',4,'PENDING_REVIEW',true,false,v_reviewer_id);
+  INSERT INTO public.ils_professional_assignment_security_review_queue
+    (id,escalation_id,decision,severity,source_failure_code,observed_count,
+     review_status,required_approval_level,affected_professional_user_id)
+  VALUES(mismatch_queue_id,mismatch_escalation_id,'STOP','CRITICAL',
+         'AUTH_REQUIRED',4,'PENDING','HUMAN',actor);
+  IF public.ils_professional_security_review_decide(
+       mismatch_queue_id,'APPROVE','FREEZE_MUTATION_CHANNEL','Mismatched escalation') THEN
+    RAISE EXCEPTION 'Mismatched queue/escalation identity was approved';
+  END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.ils_professional_assignment_security_review_queue
+                WHERE id=mismatch_queue_id AND review_status='PENDING') THEN
+    RAISE EXCEPTION 'Mismatched queue changed state';
+  END IF;
+
   -- A different active, verified, trained reviewer may approve the exact
   -- configured non-destructive proposal; the audit must retain the subject.
   PERFORM set_config('request.jwt.claim.sub',v_reviewer_id::text,true);
@@ -140,11 +183,60 @@ BEGIN
       AND approved_action='FREEZE_MUTATION_CHANNEL'
   ) THEN RAISE EXCEPTION 'Approval audit omitted affected professional identity'; END IF;
 
+  SELECT id INTO v_approval_log_id
+  FROM public.ils_professional_assignment_security_review_approval_log
+  WHERE reviewer_id=v_reviewer_id
+    AND queue_id=(SELECT id FROM public.ils_professional_assignment_security_review_queue
+                  WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED')
+    AND approval_decision='APPROVE';
+  IF v_approval_log_id IS NULL THEN RAISE EXCEPTION 'Approval audit row missing'; END IF;
+  IF has_table_privilege('service_role',
+       'public.ils_professional_assignment_security_review_approval_log','UPDATE')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_assignment_security_review_approval_log','DELETE')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_assignment_security_review_approval_log','TRUNCATE') THEN
+    RAISE EXCEPTION 'service_role can mutate append-only approval audit';
+  END IF;
+  BEGIN
+    UPDATE public.ils_professional_assignment_security_review_approval_log
+    SET approval_reason='tampered' WHERE id=v_approval_log_id;
+    RAISE EXCEPTION 'ASSERT_EXPECTED_APPEND_ONLY_UPDATE_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEW_APPROVAL_LOG_APPEND_ONLY' THEN RAISE; END IF;
+  END;
+  BEGIN
+    DELETE FROM public.ils_professional_assignment_security_review_approval_log
+    WHERE id=v_approval_log_id;
+    RAISE EXCEPTION 'ASSERT_EXPECTED_APPEND_ONLY_DELETE_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEW_APPROVAL_LOG_APPEND_ONLY' THEN RAISE; END IF;
+  END;
+  BEGIN
+    TRUNCATE public.ils_professional_assignment_security_review_approval_log;
+    RAISE EXCEPTION 'ASSERT_EXPECTED_APPEND_ONLY_TRUNCATE_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEW_APPROVAL_LOG_APPEND_ONLY' THEN RAISE; END IF;
+  END;
+  IF NOT EXISTS(SELECT 1 FROM public.ils_professional_assignment_security_review_approval_log
+                WHERE id=v_approval_log_id) THEN
+    RAISE EXCEPTION 'Approval audit row was not preserved after mutation attempts';
+  END IF;
+
   -- Unknown/ambiguous subject identity must never be approved.
+  INSERT INTO public.ils_professional_assignment_mutation_alert_escalations
+    (id,decision,action_code,severity,source_failure_code,observed_count,status,
+     human_approval_required,destructive_action_executed,affected_professional_user_id)
+  VALUES(ambiguous_escalation_id,'STOP','FREEZE_MUTATION_CHANNEL','CRITICAL',
+         'AMBIGUOUS_SUBJECT',4,'PENDING_REVIEW',true,false,NULL);
   INSERT INTO public.ils_professional_assignment_security_review_queue
-    (id,decision,severity,source_failure_code,observed_count,review_status,
-     required_approval_level,affected_professional_user_id)
-  VALUES(ambiguous_queue_id,'STOP','CRITICAL','AMBIGUOUS_SUBJECT',4,'PENDING','HUMAN',NULL);
+    (id,escalation_id,decision,severity,source_failure_code,observed_count,
+     review_status,required_approval_level,affected_professional_user_id)
+  VALUES(ambiguous_queue_id,ambiguous_escalation_id,'STOP','CRITICAL',
+         'AMBIGUOUS_SUBJECT',4,'PENDING','HUMAN',NULL);
   IF public.ils_professional_security_review_decide(
        ambiguous_queue_id,'APPROVE','FREEZE_MUTATION_CHANNEL','Ambiguous subject') THEN
     RAISE EXCEPTION 'Approval with unknown subject identity was allowed';
@@ -187,8 +279,13 @@ BEGIN
   IF v_queues<>2 THEN RAISE EXCEPTION 'Repeated evaluation duplicated a review queue'; END IF;
   SELECT count(*) INTO v_escalations
   FROM public.ils_professional_assignment_mutation_alert_escalations
-  WHERE source_failure_code='AUTH_REQUIRED' AND status='PENDING_REVIEW';
+  WHERE source_failure_code='AUTH_REQUIRED' AND status IN ('PENDING_REVIEW','ACKNOWLEDGED');
   IF v_escalations<>2 THEN RAISE EXCEPTION 'Repeated evaluation duplicated an open escalation'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.ils_professional_assignment_mutation_alert_escalations
+                WHERE source_failure_code='AUTH_REQUIRED' AND decision='STOP'
+                  AND status='ACKNOWLEDGED') THEN
+    RAISE EXCEPTION 'Reviewed escalation was not acknowledged';
+  END IF;
 
   -- Authenticated callers cannot execute the internal evaluator.
   PERFORM set_config('request.jwt.claim.role','authenticated',true);
