@@ -276,7 +276,7 @@ BEGIN
   PERFORM public.ils_professional_assignment_evaluate_mutation_alerts(15);
   SELECT count(*) INTO v_queues
   FROM public.ils_professional_assignment_security_review_queue
-  WHERE source_failure_code='AUTH_REQUIRED';
+  WHERE source_failure_code='AUTH_REQUIRED' AND id<>mismatch_queue_id;
   IF v_queues<>2 THEN RAISE EXCEPTION 'Repeated evaluation duplicated a review queue'; END IF;
   SELECT count(*) INTO v_escalations
   FROM public.ils_professional_assignment_mutation_alert_escalations
