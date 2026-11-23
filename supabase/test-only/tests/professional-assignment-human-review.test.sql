@@ -4,7 +4,7 @@ BEGIN;
 DO $test$
 DECLARE
   actor uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-  reviewer_id uuid:='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  v_reviewer_id uuid:='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
   assignment_id uuid:=gen_random_uuid();
   ambiguous_queue_id uuid:=gen_random_uuid();
   v_count integer;
@@ -47,7 +47,7 @@ BEGIN
     (user_id,reviewer_role,authorization_status,identity_verified,security_training_verified)
   VALUES
     (actor,'SECURITY_ADMIN','ACTIVE',true,true),
-    (reviewer_id,'SECURITY_REVIEWER','ACTIVE',true,true);
+    (v_reviewer_id,'SECURITY_REVIEWER','ACTIVE',true,true);
 
   -- A REVIEW-only threshold reaching STOP is a configuration contradiction.
   INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code,professional_user_id)
@@ -125,7 +125,7 @@ BEGIN
 
   -- A different active, verified, trained reviewer may approve the exact
   -- configured non-destructive proposal; the audit must retain the subject.
-  PERFORM set_config('request.jwt.claim.sub',reviewer_id::text,true);
+  PERFORM set_config('request.jwt.claim.sub',v_reviewer_id::text,true);
   IF public.ils_professional_security_review_decide(
        (SELECT id FROM public.ils_professional_assignment_security_review_queue
         WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'),
@@ -134,7 +134,7 @@ BEGIN
   END IF;
   IF NOT EXISTS(
     SELECT 1 FROM public.ils_professional_assignment_security_review_approval_log
-    WHERE reviewer_id=reviewer_id
+    WHERE reviewer_id=v_reviewer_id
       AND affected_professional_user_id=actor
       AND approval_decision='APPROVE'
       AND approved_action='FREEZE_MUTATION_CHANNEL'
