@@ -138,6 +138,20 @@ $negative$;
 
 SELECT set_config('test.is_admin','true',false);
 SELECT public.ils_admin_verify_upi_payment_proof(:'first_proof_id'::uuid,'rejected','test rejection');
+
+DO $history$
+BEGIN
+  BEGIN
+    PERFORM public.ils_submit_upi_payment_proof(
+      '40000000-0000-0000-0000-000000000002',100,'8445609837@axl','UTR12345678','ILS TEST',
+      '10000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-000000000002/proof.jpg',
+      repeat('e',64),'image/jpeg',1024);
+    RAISE EXCEPTION 'rejected UTR was reused on another order';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM<>'TRANSACTION_REFERENCE_ALREADY_USED' THEN RAISE; END IF;
+  END;
+END
+$history$;
 SELECT (public.ils_submit_upi_payment_proof(
  '40000000-0000-0000-0000-000000000001',100,'8445609837@axl','UTR-87654321','ILS TEST',
  '10000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-000000000001/proof.jpg',
