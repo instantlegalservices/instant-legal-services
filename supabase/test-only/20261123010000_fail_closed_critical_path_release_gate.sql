@@ -9,6 +9,42 @@ ALTER TABLE public.ils_critical_path_release_proof_hostile_results
 COMMENT ON COLUMN public.ils_critical_path_release_proof_hostile_results.assertion_verified IS
   'True only when the hostile scenario was actually executed and its observed decision was independently asserted. Historical expected-outcome rows default false.';
 
+CREATE OR REPLACE FUNCTION public.ils_e2e_detail_uuid(p_details text, p_key text)
+RETURNS uuid
+LANGUAGE plpgsql
+IMMUTABLE
+STRICT
+PARALLEL SAFE
+SET search_path TO ''
+AS $function$
+DECLARE
+  v_value text;
+BEGIN
+  IF p_key NOT IN ('payment_id','order_id','submission_id') THEN
+    RETURN NULL;
+  END IF;
+
+  v_value := substring(
+    p_details
+    FROM ('"' || p_key || '"[[:space:]]*:[[:space:]]*"([0-9a-fA-F-]{36})"')
+  );
+  IF v_value IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  BEGIN
+    RETURN v_value::uuid;
+  EXCEPTION WHEN invalid_text_representation THEN
+    RETURN NULL;
+  END;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.ils_e2e_detail_uuid(text,text)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.ils_e2e_detail_uuid(text,text)
+  TO service_role;
+
 CREATE OR REPLACE FUNCTION public.ils_run_critical_path_release_proof_hostile_matrix()
 RETURNS TABLE(
   total_tests integer,
@@ -173,30 +209,65 @@ AS $function$
             )
             AND (
               i.path_code <> 'PAYMENT_E2E'
-              OR (
-                (
-                  (
-                    (e.details ~* '"gateway_signature_verified"[[:space:]]*:[[:space:]]*true'
-                     OR e.details ~* 'gateway_signature_verified[[:space:]]*=[[:space:]]*true')
-                    AND
-                    (e.details ~* '"provider_payment_verified"[[:space:]]*:[[:space:]]*true'
-                     OR e.details ~* 'provider_payment_verified[[:space:]]*=[[:space:]]*true')
+              OR EXISTS (
+                SELECT 1
+                FROM public.payments p
+                JOIN public.orders o ON o.id=p.order_id
+                WHERE p.id=public.ils_e2e_detail_uuid(e.details,'payment_id')
+                  AND o.id=public.ils_e2e_detail_uuid(e.details,'order_id')
+                  AND p.status='paid'
+                  AND p.paid_at IS NOT NULL
+                  AND o.status='paid'
+                  AND p.amount=o.total
+                  AND p.currency=o.currency
+                  AND (
+                    (
+                      p.gateway='razorpay'
+                      AND nullif(trim(p.gateway_payment_id),'') IS NOT NULL
+                      AND (
+                        e.details ~* '"gateway_signature_verified"[[:space:]]*:[[:space:]]*true'
+                        OR e.details ~* 'gateway_signature_verified[[:space:]]*=[[:space:]]*true'
+                      )
+                      AND (
+                        e.details ~* '"provider_payment_verified"[[:space:]]*:[[:space:]]*true'
+                        OR e.details ~* 'provider_payment_verified[[:space:]]*=[[:space:]]*true'
+                      )
+                    )
+                    OR
+                    (
+                      p.gateway='upi'
+                      AND EXISTS (
+                        SELECT 1
+                        FROM public.ils_upi_submissions s
+                        JOIN public.payment_events pe
+                          ON pe.payment_id=p.id
+                         AND pe.event_type='upi_payment_verified'
+                         AND pe.data->>'submission_id'=s.id::text
+                        JOIN public.ils_upi_verification_events ve
+                          ON ve.submission_id=s.id
+                         AND ve.actor_id=s.verified_by
+                         AND ve.actor_role='upi_verifier'
+                         AND ve.action='verify'
+                         AND ve.new_status='VERIFIED'
+                        WHERE s.id=public.ils_e2e_detail_uuid(e.details,'submission_id')
+                          AND s.order_id=o.id
+                          AND s.status='VERIFIED'
+                          AND s.verified_by IS NOT NULL
+                          AND s.verified_at IS NOT NULL
+                          AND s.submitted_amount=p.amount
+                          AND s.currency=p.currency
+                          AND nullif(trim(s.utr_reference),'') IS NOT NULL
+                      )
+                      AND (
+                        e.details ~* '"upi_verifier_authorized"[[:space:]]*:[[:space:]]*true'
+                        OR e.details ~* 'upi_verifier_authorized[[:space:]]*=[[:space:]]*true'
+                      )
+                      AND (
+                        e.details ~* '"utr_reference_verified"[[:space:]]*:[[:space:]]*true'
+                        OR e.details ~* 'utr_reference_verified[[:space:]]*=[[:space:]]*true'
+                      )
+                    )
                   )
-                  OR
-                  (
-                    (e.details ~* '"upi_verifier_authorized"[[:space:]]*:[[:space:]]*true'
-                     OR e.details ~* 'upi_verifier_authorized[[:space:]]*=[[:space:]]*true')
-                    AND
-                    (e.details ~* '"utr_reference_verified"[[:space:]]*:[[:space:]]*true'
-                     OR e.details ~* 'utr_reference_verified[[:space:]]*=[[:space:]]*true')
-                  )
-                )
-                AND
-                (e.details ~* '"payment_row_verified"[[:space:]]*:[[:space:]]*true'
-                 OR e.details ~* 'payment_row_verified[[:space:]]*=[[:space:]]*true')
-                AND
-                (e.details ~* '"order_state_paid"[[:space:]]*:[[:space:]]*true'
-                 OR e.details ~* 'order_state_paid[[:space:]]*=[[:space:]]*true')
               )
             )
         ) THEN 'VERIFIED'
