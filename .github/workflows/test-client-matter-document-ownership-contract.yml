@@ -1,0 +1,22 @@
+name: Client Matter Document Ownership Contract
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/client-matter-documents/index.ts"
+      - "scripts/test-client-matter-document-ownership-contract.js"
+      - ".github/workflows/test-client-matter-document-ownership-contract.yml"
+  workflow_dispatch:
+
+jobs:
+  client-matter-document-ownership-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify document ownership contract
+        run: node scripts/test-client-matter-document-ownership-contract.js
