@@ -21,7 +21,7 @@ DECLARE
   v_signature text := 'public.ils_admin_save_lead_multi(bigint,text,text,text,jsonb,boolean,date,text)';
   v_oid regprocedure;
   v_definition text;
-  v_old_guard text := E'  if v_email <> \\'fahat29@gmail.com\\' then';
+  v_old_guard text := E'  if v_email <> \'fahat29@gmail.com\' then';
   v_new_guard text := '  if not public.ils_is_admin() then';
   v_count integer;
 BEGIN
@@ -31,8 +31,8 @@ BEGIN
              / length(v_old_guard);
 
   IF v_count <> 1
-     OR position(E'  v_email text := lower(coalesce(auth.jwt()->>\\'email\\',\\'\\'));' in v_definition) = 0
-     OR position(E'SET search_path TO \\'public\\'' in v_definition) = 0 THEN
+     OR position(E'  v_email text := lower(coalesce(auth.jwt()->>\'email\',\'\'));' in v_definition) = 0
+     OR position(E'SET search_path TO \'public\'' in v_definition) = 0 THEN
     RAISE EXCEPTION 'Reviewed ils_admin_save_lead_multi source mismatch; refusing to rewrite';
   END IF;
 
