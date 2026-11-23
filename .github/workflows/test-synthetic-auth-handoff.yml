@@ -1,0 +1,32 @@
+name: Test synthetic auth handoff policy
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/_shared/synthetic-auth-handoff-policy.ts"
+      - "supabase/functions/_shared/synthetic-auth-handoff-policy.test.ts"
+      - "supabase/functions/ils-test-notification-e2e-auth-handoff/**"
+      - "supabase/functions/ils-test-notification-e2e-auth-confirm/**"
+      - "supabase/test-only/**"
+      - ".github/workflows/test-synthetic-auth-handoff.yml"
+  push:
+    branches:
+      - "fix/test-synthetic-auth-handoff-race-20261123"
+    paths:
+      - "supabase/functions/_shared/synthetic-auth-handoff-policy.ts"
+      - "supabase/functions/_shared/synthetic-auth-handoff-policy.test.ts"
+      - "supabase/functions/ils-test-notification-e2e-auth-handoff/**"
+      - "supabase/functions/ils-test-notification-e2e-auth-confirm/**"
+      - "supabase/test-only/**"
+      - ".github/workflows/test-synthetic-auth-handoff.yml"
+
+jobs:
+  policy-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Run policy tests
+        run: deno test supabase/functions/_shared/synthetic-auth-handoff-policy.test.ts
