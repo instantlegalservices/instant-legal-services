@@ -28,8 +28,19 @@ Deno.serve(async (req) => {
     const { data: userData, error: userError } = await userClient.auth.getUser(accessToken);
     if (userError || !userData.user) throw new Error("Invalid or expired admin session.");
 
-    const callerEmail = (userData.user.email || "").toLowerCase();
-    if (callerEmail !== "fahat29@gmail.com") {
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    // Bind administrative access to the authenticated Supabase user ID.
+    // Do not trust an email string as an authorization credential.
+    const { data: adminIdentity, error: adminIdentityError } = await adminClient
+      .from("ils_admin_users")
+      .select("user_id")
+      .eq("user_id", userData.user.id)
+      .maybeSingle();
+
+    if (adminIdentityError || !adminIdentity) {
       throw new Error("Administrator access required.");
     }
 
@@ -40,10 +51,6 @@ Deno.serve(async (req) => {
 
     if (!Number.isFinite(advocateId) || advocateId <= 0) throw new Error("Invalid advocate ID.");
     if (password.length < 8) throw new Error("Password must contain at least 8 characters.");
-
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
 
     const { data: advocate, error: advocateError } = await adminClient
       .from("advocate_registrations")
