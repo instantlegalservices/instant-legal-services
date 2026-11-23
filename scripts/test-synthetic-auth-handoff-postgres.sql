@@ -1,4 +1,4 @@
-\\set ON_ERROR_STOP on
+\set ON_ERROR_STOP on
 DO $roles$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon NOLOGIN; END IF;
@@ -18,7 +18,7 @@ CREATE TABLE public.ils_test_synthetic_auth_handoffs(
  consumed_at timestamptz
 );
 
-\\i supabase/test-only/20261123004000_atomic_synthetic_handoff_consume.sql
+\i supabase/test-only/20261123004000_atomic_synthetic_handoff_consume.sql
 
 DO $privileges$
 BEGIN
@@ -40,7 +40,8 @@ INSERT INTO public.ils_test_synthetic_auth_handoffs(id,synthetic_user_id,operato
 VALUES
  ('20000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','ISSUED',now()+interval '10 minutes',repeat('a',64)),
  ('20000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002','ISSUED',now()+interval '10 minutes',repeat('b',64)),
- ('20000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000003','ISSUED',now()+interval '10 minutes',repeat('c',64));
+ ('20000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000003','ISSUED',now()+interval '10 minutes',repeat('c',64)),
+ ('20000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','ISSUED',now()+interval '10 minutes',repeat('d',64));
 
 SET ROLE service_role;
 DO $negative$
@@ -60,8 +61,13 @@ BEGIN
    '10000000-0000-0000-0000-000000000003',repeat('c',64)) THEN
    RAISE EXCEPTION 'wrong operator role consumed handoff';
  END IF;
+ IF (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000001') <> 'ISSUED'
+    OR (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000002') <> 'ISSUED'
+    OR (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000003') <> 'ISSUED' THEN
+   RAISE EXCEPTION 'Denied handoff attempts must leave the handoff ISSUED';
+ END IF;
 END
 $negative$;
 RESET ROLE;
 
-\\echo PASS: operator-active and exact-token checks deny unauthorized handoff consumption; service_role is the only RPC caller.
+\echo PASS: operator-active and exact-token checks deny unauthorized handoff consumption; service_role is the only RPC caller.
