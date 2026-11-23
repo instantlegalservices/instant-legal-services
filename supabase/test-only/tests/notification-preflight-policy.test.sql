@@ -32,6 +32,7 @@ BEGIN
   END IF;
 
   -- Verify the TEST-only partial unique index enforces one active ISSUED row.
+  <<handoff_index_test>>
   DECLARE
     v_synthetic uuid := gen_random_uuid();
     v_operator uuid := gen_random_uuid();
@@ -63,7 +64,7 @@ BEGIN
     IF NOT v_duplicate_rejected THEN
       RAISE EXCEPTION 'Duplicate active ISSUED handoff was not rejected';
     END IF;
-  END;
+  END handoff_index_test;
 
   -- Real in-app path without explicit operator approval must fail closed.
   UPDATE public.ils_notification_e2e_preflight
