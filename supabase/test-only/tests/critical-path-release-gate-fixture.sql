@@ -13,7 +13,8 @@ CREATE TABLE public.ils_critical_path_release_proof_hostile_tests (
   id uuid PRIMARY KEY,
   test_code text UNIQUE NOT NULL,
   attack_class text NOT NULL,
-  expected_decision text NOT NULL
+  expected_decision text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_critical_path_release_proof_hostile_results (
   id uuid PRIMARY KEY,
