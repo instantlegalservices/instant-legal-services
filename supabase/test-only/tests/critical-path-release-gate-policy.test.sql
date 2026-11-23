@@ -49,7 +49,9 @@ BEGIN
      OR position('ils_security_execution_e2e_release_gate_decisions' in v_release_def)=0
      OR position('assertion_verified' in v_release_def)=0
      OR position('ils_critical_path_evidence_binding_integrity_audit' in v_release_def)=0
-     OR position('ils_critical_path_release_proof_runs' in v_release_def)=0 THEN
+     OR position('ils_critical_path_release_proof_runs' in v_release_def)=0
+     OR position('v_hostile_total=8' in v_release_def)=0
+     OR position('r.created_at >= greatest' in v_release_def)=0 THEN
     RAISE EXCEPTION 'Overall release gate is missing a mandatory independent gate';
   END IF;
 
