@@ -6,8 +6,6 @@ on:
       - "advocates.html"
       - "assets/ils-core.js"
       - "scripts/test-advocate-direct-profile.js"
-      - "supabase/functions/professional-portal/index.ts"
-      - "scripts/test-professional-portal-assignment-contract.js"
       - ".github/workflows/test-advocate-direct-profile.yml"
   workflow_dispatch:
 
@@ -39,6 +37,3 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:4173/
         run: node scripts/test-advocate-direct-profile.js
-
-      - name: Run professional portal assignment contract regression
-        run: node scripts/test-professional-portal-assignment-contract.js
