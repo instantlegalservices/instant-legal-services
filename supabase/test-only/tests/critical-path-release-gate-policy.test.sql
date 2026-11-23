@@ -58,7 +58,14 @@ BEGIN
      OR position('ils_critical_path_evidence_binding_integrity_audit' in v_release_def)=0
      OR position('ils_critical_path_release_proof_runs' in v_release_def)=0
      OR position('v_hostile_total=8' in v_release_def)=0
-     OR position('r.created_at >= greatest' in v_release_def)=0 THEN
+     OR position('r.created_at >= greatest' in v_release_def)=0
+     OR position('RUNTIME_ATTACK' in v_release_def)=0
+     OR position('PREFLIGHT_BYPASS' in v_release_def)=0
+     OR position('UNAUTHORIZED_EXECUTION' in v_release_def)=0
+     OR position('REPLAY_NONCE' in v_release_def)=0
+     OR position('SNAPSHOT_TAMPER' in v_release_def)=0
+     OR position('EXPIRED_BINDING' in v_release_def)=0
+     OR position('DESTRUCTIVE_ACTION' in v_release_def)=0 THEN
     RAISE EXCEPTION 'Overall release gate is missing a mandatory independent gate';
   END IF;
 
