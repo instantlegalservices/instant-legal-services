@@ -147,7 +147,7 @@ CREATE TABLE public.ils_critical_path_release_proof_runs (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_e2e_release_gate_decisions (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   gate_code text NOT NULL,
   decision text NOT NULL,
   verified_count integer NOT NULL,
