@@ -67,6 +67,11 @@ BEGIN
    '10000000-0000-0000-0000-000000000003',repeat('c',64)) THEN
    RAISE EXCEPTION 'wrong operator role consumed handoff';
  END IF;
+ IF public.ils_test_consume_synthetic_auth_handoff(
+   '20000000-0000-0000-0000-000000000005','30000000-0000-0000-0000-000000000001',
+   '10000000-0000-0000-0000-000000000001',repeat('e',64)) THEN
+   RAISE EXCEPTION 'expired handoff was consumed';
+ END IF;
 END
 $negative$;
 RESET ROLE;
@@ -75,7 +80,8 @@ DO $assert$
 BEGIN
  IF (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000001') <> 'ISSUED'
     OR (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000002') <> 'ISSUED'
-    OR (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000003') <> 'ISSUED' THEN
+    OR (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000003') <> 'ISSUED'
+    OR (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000005') <> 'ISSUED' THEN
    RAISE EXCEPTION 'Denied handoff attempts must leave the handoff ISSUED';
  END IF;
 END
