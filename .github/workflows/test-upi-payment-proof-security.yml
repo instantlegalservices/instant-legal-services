@@ -1,0 +1,18 @@
+name: UPI Payment Proof Security
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261118190000_harden_upi_payment_proof_flow.sql"
+      - "scripts/test-upi-payment-proof-security.js"
+      - ".github/workflows/test-upi-payment-proof-security.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate UPI payment proof security contract
+        run: node scripts/test-upi-payment-proof-security.js
