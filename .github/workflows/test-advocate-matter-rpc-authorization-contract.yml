@@ -1,0 +1,22 @@
+name: Advocate Matter RPC Authorization Contract
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261123170000_harden_advocate_matter_rpc_identity.sql"
+      - "scripts/test-advocate-matter-rpc-authorization-contract.js"
+      - ".github/workflows/test-advocate-matter-rpc-authorization-contract.yml"
+  workflow_dispatch:
+
+jobs:
+  advocate-matter-rpc-authorization-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify advocate matter RPC authorization contract
+        run: node scripts/test-advocate-matter-rpc-authorization-contract.js
