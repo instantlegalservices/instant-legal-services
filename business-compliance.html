@@ -10,17 +10,20 @@
 <meta property="og:title" content="Business Compliance Services | Instant Legal Services">
 <meta property="og:description" content="GST, tax, registrations, business documents and recurring compliance support for businesses.">
 <link rel="stylesheet" href="assets/ils.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2';"></script>
+<script>window.ILS_SUPABASE_URL=window.ILS_SUPABASE_URL || "https://odqebkdzkjfxzyzbrndt.supabase.co"; window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY || "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi"; // assets/ils-core.js creates and shares the single canonical Supabase client.</script>
+<script src="assets/ils-core.js?v=20260927-connfix2" defer></script>
 <meta name="theme-color" content="#07101c">
 <style>
 .bc-hero{padding:54px 0 36px;background:linear-gradient(135deg,#07111f,#10283a)}
 .bc-hero h1{font-size:clamp(34px,5vw,58px);line-height:1.08;margin:12px 0}
 .bc-hero p{max-width:760px;font-size:17px;line-height:1.7;color:#d1dbe5}
-.bc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.bc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.bc-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .bc-card{padding:22px;border:1px solid #dce3ea;border-radius:16px;background:#fff;color:#172536}
 .bc-card h2{margin:0 0 10px;font-size:20px}.bc-card p,.bc-card li{line-height:1.6;color:#465568;font-size:14px}
 .bc-card ul{padding-left:19px}.bc-note{padding:18px;border-left:4px solid #c69a45;background:#f7f4ed;line-height:1.65}
 .bc-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
-@media(max-width:760px){.bc-grid{grid-template-columns:1fr}.bc-hero{padding:38px 0 28px}}
+@media(max-width:760px){.bc-grid,.bc-form-grid{grid-template-columns:1fr}.bc-hero{padding:38px 0 28px}}
 </style>
 </head>
 <body>
@@ -29,14 +32,14 @@
 <nav class="navlinks" aria-label="Main navigation">
 <a href="/">Home</a><a href="government/">Government Services</a><a href="assistance.html">Legal Assistance</a><a class="active" href="business-compliance.html">Business Compliance</a><a href="faq.html">FAQ</a>
 </nav>
-<a class="btn btn-primary btn-small" href="assistance.html?route=Business%20Compliance">Request Assistance</a>
+<a class="btn btn-primary btn-small" href="#business-enquiry">Request Assistance</a>
 </div></header>
 <main>
 <section class="bc-hero"><div class="wrap">
 <span class="eyebrow">INSTANT LEGAL SERVICES · BUSINESS SUPPORT</span>
 <h1>Business compliance, made easier to manage.</h1>
 <p>Practical support for shopkeepers, traders, wholesalers, manufacturers and growing businesses. Tell us what your business needs; we will help clarify the service, documents, scope and applicable ILS fee before work begins.</p>
-<div class="bc-cta"><a class="btn btn-primary" href="assistance.html?route=GST">Get GST Assistance</a><a class="btn btn-ghost" href="assistance.html?route=Business%20Compliance">Describe Your Requirement</a></div>
+<div class="bc-cta"><a class="btn btn-primary" href="#business-enquiry">Get GST Assistance</a><a class="btn btn-ghost" href="#business-enquiry">Describe Your Requirement</a></div>
 </div></section>
 <section class="section"><div class="wrap">
 <div class="section-head"><div><h2>What we can help with</h2><p>Choose a service area to start an enquiry. Availability and scope are confirmed for each request.</p></div></div>
@@ -48,14 +51,52 @@
 <article class="bc-card"><h2>Payments &amp; Recovery</h2><ul><li>Outstanding-payment documentation checklist</li><li>Demand and follow-up communication support</li><li>Cheque-bounce and recovery matter enquiry</li><li>Independent legal assistance where required</li></ul></article>
 <article class="bc-card"><h2>Ongoing Compliance</h2><ul><li>Recurring filing and due-date coordination</li><li>Document collection reminders</li><li>Periodic compliance review enquiry</li><li>Service plans based on actual business requirements</li></ul></article>
 </div></div></section>
+<section class="section alt" id="business-enquiry"><div class="wrap">
+<div class="section-head"><div><h2>Start with a free business enquiry</h2><p>No account or upfront payment is required to send an enquiry. We will review the requirement, confirm availability, scope and ILS service charges before you decide whether to proceed.</p></div></div>
+<form id="businessEnquiryForm" class="bc-card" style="max-width:820px;margin:0 auto">
+<div class="bc-form-grid">
+<div><label for="bcName">Your name</label><input id="bcName" name="name" autocomplete="name" maxlength="100" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
+<div><label for="bcMobile">10-digit mobile number</label><input id="bcMobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
+<div><label for="bcBusinessType">Business type</label><select id="bcBusinessType" name="business_type" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"><option value="">Select business type</option><option>Retail shop</option><option>Wholesale / Trading</option><option>Manufacturer</option><option>Factory / Workshop</option><option>Service business</option><option>Other</option></select></div>
+<div><label for="bcService">What help do you need?</label><select id="bcService" name="service" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"><option value="">Select a service</option><option>GST registration / amendment</option><option>GST return / notice / portal issue</option><option>Income tax / ITR assistance</option><option>Business registration</option><option>Business documents / drafting</option><option>Outstanding payment / recovery</option><option>Monthly / recurring compliance</option><option>Other business requirement</option></select></div>
+<div><label for="bcState">State</label><input id="bcState" name="state" maxlength="80" autocomplete="address-level1" style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
+<div><label for="bcCity">District / City</label><input id="bcCity" name="city" maxlength="100" autocomplete="address-level2" style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
+</div><label for="bcBrief" style="display:block;margin-top:14px">Briefly describe your requirement</label>
+<textarea id="bcBrief" name="brief" maxlength="2500" required rows="4" style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px" placeholder="Example: I run a wholesale business and need monthly GST return assistance."></textarea>
+<label style="display:flex;gap:9px;align-items:flex-start;margin-top:14px;font-size:13px;font-weight:500"><input id="bcConsent" type="checkbox" required style="margin-top:3px"><span>I agree that ILS may contact me about this enquiry. I will not share passwords, OTPs, PINs or payment credentials.</span></label>
+<button id="bcSubmit" class="btn btn-primary" type="submit" style="margin-top:16px">Submit free enquiry</button>
+<p id="bcStatus" role="status" aria-live="polite" style="margin:12px 0 0;line-height:1.6"></p>
+<p style="font-size:12px;color:#536273;margin-top:10px">Submitting this form creates an enquiry only, not a paid order, professional engagement or government filing. Any ILS fee and official government charges will be disclosed separately before you commit.</p>
+</form></div></section>
 <section class="section alt"><div class="wrap">
 <div class="section-head"><div><h2>How the service works</h2><p>A clear process, with scope and charges explained before you commit.</p></div></div>
 <div class="workflow"><div class="step"><b>1. Tell us what you need</b><p>Share your business type, service and relevant deadline. Do not send passwords or OTPs.</p></div><div class="step"><b>2. Confirm the scope</b><p>We identify the documents, work involved and whether specialist professional input is needed.</p></div><div class="step"><b>3. Review the fee</b><p>ILS service charges are shown separately from government fees, taxes or statutory payments.</p></div><div class="step"><b>4. Start the service</b><p>Work begins after your confirmation and any required payment or documents.</p></div></div>
 </div></section>
 <section class="section"><div class="wrap">
 <div class="bc-note"><strong>Important:</strong> Instant Legal Services is an independent assistance platform, not a government department. Government registrations, filings, statutory payments and final decisions remain with the relevant authority. ILS charges, if any, are separate and will be disclosed before payment. Legal advice, representation and reserved professional work are handled by an appropriately qualified independent professional. Never share portal passwords, OTPs, PINs or payment credentials.</div>
-<div class="bc-cta"><a class="btn btn-primary" href="assistance.html?route=Business%20Compliance">Start a Business Enquiry</a><a class="btn btn-ghost" href="government/">Browse Official Government Portals</a></div>
+<div class="bc-cta"><a class="btn btn-primary" href="#business-enquiry">Start a Business Enquiry</a><a class="btn btn-ghost" href="government/">Browse Official Government Portals</a></div>
 </div></section>
 </main>
 <footer class="footer"><div class="wrap footer-grid"><div><strong>Instant Legal Services</strong><p>Business compliance and legal assistance pathways.</p><p>Independent assistance only; official filings and decisions remain with the relevant authority.</p></div><div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="government/">Government Services</a><a href="business-compliance.html">Business Compliance</a></div><div><strong>Resources</strong><a href="law-guide.html">Law Guide</a><a href="judgments.html">Judgments</a><a href="faq.html">FAQ</a></div><div><strong>Portals</strong><a href="customer-portal.html">Client Login</a><a href="advocate-register.html">Professional Network</a></div></div></footer>
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+ const form=document.getElementById("businessEnquiryForm"); if(!form)return;
+ const status=document.getElementById("bcStatus"); const button=document.getElementById("bcSubmit");
+ form.addEventListener("submit",async event=>{
+  event.preventDefault();
+  const mobile=document.getElementById("bcMobile").value.trim();
+  if(!/^[0-9]{10}$/.test(mobile)){status.textContent="Please enter a valid 10-digit mobile number.";return;}
+  if(!window.ILS?.submitRequirement){status.textContent="Enquiry service is loading. Please try again in a moment.";return;}
+  button.disabled=true;status.textContent="Submitting your enquiry…";
+  const businessType=document.getElementById("bcBusinessType").value;
+  const service=document.getElementById("bcService").value;
+  const details=["Business type: "+businessType,"Requested service: "+service,"Requirement: "+document.getElementById("bcBrief").value.trim()].join("\n");
+  try{
+   await window.ILS.submitRequirement({name:document.getElementById("bcName").value.trim(),mobile,state:document.getElementById("bcState").value.trim(),city:document.getElementById("bcCity").value.trim(),matter:"Business Compliance — "+service,brief:details});
+   status.textContent="Your enquiry has been submitted. The ILS team will contact you to discuss scope, availability and applicable fees. No payment has been taken."; form.reset();
+  }catch{status.textContent="We could not submit your enquiry. Your details remain on this form; please try again later or contact ILS.";}
+  finally{button.disabled=false;}
+ });
+});
+</script>
 </body></html>

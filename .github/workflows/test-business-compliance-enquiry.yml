@@ -1,0 +1,64 @@
+name: Business Compliance Enquiry E2E
+
+on:
+  pull_request:
+    paths:
+      - "business-compliance.html"
+      - "assets/ils-core.js"
+      - "scripts/test-business-compliance-enquiry.js"
+      - "scripts/test-public-lead-privileges.js"
+      - "scripts/test-admin-crm-security-migrations.js"
+      - ".github/workflows/test-business-compliance-enquiry.yml"
+      - "supabase/migrations/**"
+  workflow_dispatch:
+
+jobs:
+  business-compliance-enquiry:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ils_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ils_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Execute CRM security migrations on disposable PostgreSQL 16
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -d ils_test -v ON_ERROR_STOP=1 -f scripts/test-business-compliance-postgres.sql
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start local static site
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/ils-http.log 2>&1 &
+          echo $! > /tmp/ils-http.pid
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:4173/business-compliance.html > /dev/null
+      - name: Validate anonymous lead privilege allowlist
+        run: node scripts/test-public-lead-privileges.js
+      - name: Validate Admin CRM and client portal security migrations
+        run: node scripts/test-admin-crm-security-migrations.js
+      - name: Run business enquiry browser regression
+        env:
+          BASE_URL: http://127.0.0.1:4173/
+        run: node scripts/test-business-compliance-enquiry.js
