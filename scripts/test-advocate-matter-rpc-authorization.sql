@@ -190,7 +190,8 @@ INSERT INTO public.advocate_assignments (lead_id, advocate_id, status) VALUES
   (100, 1, 'Assigned'),
   (200, 2, 'Active'),
   (300, 1, 'Active'),
-  (300, 2, 'Assigned');
+  (300, 2, 'Assigned'),
+  (100, 6, 'Assigned');
 
 -- Invoke through the authenticated role, not as the migration owner.
 SET ROLE authenticated;
