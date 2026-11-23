@@ -24,7 +24,7 @@ window.ILS = (() => {
       .filter(Boolean);
   };
 
-  const formatDate = (v) => {
+  /* EGRESS-SAFE: optimize only public Supabase profile-photo delivery.\n     Original Storage objects and URLs remain unchanged. */\n  const profilePhotoURL = (value, width = 480, quality = 75) => {\n    const raw = String(value || "").trim();\n    if (!raw) return "";\n    try {\n      const u = new URL(raw, window.location.origin);\n      if (u.hostname !== new URL(SUPABASE_URL).hostname) return raw;\n      const prefix = "/storage/v1/object/public/advocate-photo/";\n      if (!u.pathname.startsWith(prefix)) return raw;\n      u.pathname = u.pathname.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");\n      u.searchParams.set("width", String(width));\n      u.searchParams.set("quality", String(quality));\n      u.searchParams.set("resize", "contain");\n      return u.toString();\n    } catch {\n      return raw;\n    }\n  };\n\n  const formatDate = (v) => {
     if (!v) return "Date not available";
 
     const d = new Date(
