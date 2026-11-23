@@ -55,7 +55,7 @@ BEGIN
   INSERT INTO public.ils_professional_work_assignment_links
     (id,work_item_id,work_stream,professional_user_id,link_status)
   VALUES
-    (assignment_id,gen_random_uuid(),'LEGAL',actor,'PENDING'),
+    (assignment_id,gen_random_uuid(),'LEGAL',actor,'APPROVED'),
     (telemetry_assignment_1,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
     (telemetry_assignment_2,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
     (telemetry_assignment_3,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
