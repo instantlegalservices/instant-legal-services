@@ -100,7 +100,6 @@ SQL
 LATE_ORDER='40000000-0000-0000-0000-000000000004'
 LATE_REQUEST='30000000-0000-0000-0000-000000000004'
 LATE_PAYMENT_A='50000000-0000-0000-0000-000000000004'
-LATE_PAYMENT_B='50000000-0000-0000-0000-000000000005'
 psql -v ON_ERROR_STOP=1 <<SQL
 INSERT INTO service_requests(id,user_id,service_id,status) VALUES ('$LATE_REQUEST','$USER_ID','$SERVICE_ID','pending');
 INSERT INTO orders(id,order_number,user_id,service_request_id,total,currency,status) VALUES ('$LATE_ORDER','CI-ORDER-LATE-CAPTURE','$USER_ID','$LATE_REQUEST',100,'INR','pending');
@@ -130,4 +129,4 @@ END
 \$\$;
 SQL
 
-echo "PASS: migration, reservation concurrency, replay/conflict checks, delayed-failure protection, reservation/settlement race, and late-capture double-settlement regression"
+echo "PASS: migration, reservation concurrency, replay/conflict checks, delayed-failure protection, reservation/settlement race, and failed-attached-order retry reuse regression"
