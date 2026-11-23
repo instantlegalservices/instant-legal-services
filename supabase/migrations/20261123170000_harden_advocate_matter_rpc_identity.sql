@@ -98,6 +98,35 @@ $function$;
 REVOKE ALL ON FUNCTION public.ils_current_approved_advocate()
   FROM PUBLIC, anon, authenticated, service_role;
 
+-- SECURITY DEFINER RPCs invoke the helper as their function owner. Grant only to
+-- those trusted database owners (not to API roles), so deployments remain correct
+-- even if the migration executor and existing RPC owner differ.
+DO $helper_acl$
+DECLARE
+  v_owner name;
+BEGIN
+  FOR v_owner IN
+    SELECT DISTINCT pg_get_userbyid(p.proowner)::name
+    FROM pg_proc AS p
+    JOIN pg_namespace AS n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname IN (
+        'get_advocate_client_portal',
+        'advocate_send_client_message',
+        'advocate_add_work_progress'
+      )
+  LOOP
+    IF v_owner IN ('anon', 'authenticated', 'service_role') THEN
+      RAISE EXCEPTION 'Unsafe advocate matter RPC owner for internal helper grant: %', v_owner;
+    END IF;
+    EXECUTE format(
+      'GRANT EXECUTE ON FUNCTION public.ils_current_approved_advocate() TO %I',
+      v_owner
+    );
+  END LOOP;
+END
+$helper_acl$;
+
 DO $hardening$
 DECLARE
   v_signature text;
@@ -183,6 +212,25 @@ BEGIN
      OR has_function_privilege('anon', 'public.ils_current_approved_advocate()', 'EXECUTE')
      OR has_function_privilege('service_role', 'public.ils_current_approved_advocate()', 'EXECUTE') THEN
     RAISE EXCEPTION 'Internal advocate resolver must not be directly executable by API roles';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_proc AS rpc
+    JOIN pg_namespace AS n ON n.oid = rpc.pronamespace
+    WHERE n.nspname = 'public'
+      AND rpc.proname IN (
+        'get_advocate_client_portal',
+        'advocate_send_client_message',
+        'advocate_add_work_progress'
+      )
+      AND NOT has_function_privilege(
+        pg_get_userbyid(rpc.proowner),
+        'public.ils_current_approved_advocate()',
+        'EXECUTE'
+      )
+  ) THEN
+    RAISE EXCEPTION 'One or more SECURITY DEFINER RPC owners cannot execute the internal resolver';
   END IF;
 END
 $verify$;
