@@ -14,7 +14,6 @@ DECLARE
   rule_rec record;
   b_id uuid;
   snap text;
-  v_authorized_at timestamptz := clock_timestamp();
 BEGIN
   IF p_queue_id IS NULL OR p_approval_log_id IS NULL
      OR nullif(trim(p_approved_action),'') IS NULL
@@ -51,8 +50,6 @@ BEGIN
     AND reviewer_role IN ('SECURITY_REVIEWER','SECURITY_ADMIN')
     AND identity_verified = true
     AND security_training_verified = true
-    AND (valid_from IS NULL OR valid_from <= v_authorized_at)
-    AND (valid_until IS NULL OR valid_until >= v_authorized_at)
   FOR SHARE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'EXECUTION_BINDING_REVIEWER_NOT_AUTHORIZED';
@@ -68,6 +65,13 @@ BEGIN
   FOR SHARE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'EXECUTION_BINDING_ACTION_NOT_ALLOWED';
+  END IF;
+
+  -- Recheck wall-clock validity only after both reviewer and action-rule
+  -- rows are locked; function-entry time can become stale during lock waits.
+  IF (r.valid_from IS NOT NULL AND r.valid_from > clock_timestamp())
+     OR (r.valid_until IS NOT NULL AND r.valid_until < clock_timestamp()) THEN
+    RAISE EXCEPTION 'EXECUTION_BINDING_REVIEWER_NOT_AUTHORIZED';
   END IF;
 
   IF EXISTS (
@@ -122,7 +126,6 @@ DECLARE
   rule_rec record;
   snap text;
   did_execute boolean := false;
-  v_authorized_at timestamptz := clock_timestamp();
 BEGIN
   IF p_binding_id IS NULL
      OR nullif(trim(p_execution_nonce),'') IS NULL
@@ -181,8 +184,6 @@ BEGIN
     AND reviewer_role IN ('SECURITY_REVIEWER','SECURITY_ADMIN')
     AND identity_verified = true
     AND security_training_verified = true
-    AND (valid_from IS NULL OR valid_from <= v_authorized_at)
-    AND (valid_until IS NULL OR valid_until >= v_authorized_at)
   FOR SHARE;
   IF NOT FOUND THEN
     UPDATE public.ils_professional_security_approval_execution_bindings
@@ -200,6 +201,16 @@ BEGIN
     AND destructive_action_allowed = false
   FOR SHARE;
   IF NOT FOUND THEN
+    UPDATE public.ils_professional_security_approval_execution_bindings
+    SET execution_status = 'BLOCKED'
+    WHERE id = b.id AND execution_status = 'READY';
+    RETURN false;
+  END IF;
+
+  -- Recheck wall-clock validity only after both reviewer and action-rule
+  -- rows are locked; function-entry time can become stale during lock waits.
+  IF (r.valid_from IS NOT NULL AND r.valid_from > clock_timestamp())
+     OR (r.valid_until IS NOT NULL AND r.valid_until < clock_timestamp()) THEN
     UPDATE public.ils_professional_security_approval_execution_bindings
     SET execution_status = 'BLOCKED'
     WHERE id = b.id AND execution_status = 'READY';
