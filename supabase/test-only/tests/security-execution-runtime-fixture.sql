@@ -240,7 +240,7 @@ BEGIN
   IF b.approved_action <> p_expected_action THEN
     RAISE EXCEPTION 'EXECUTION_CONSUME_ACTION_MISMATCH';
   END IF;
-  IF b.expires_at IS NULL OR now() > b.expires_at THEN
+  IF b.expires_at IS NULL OR clock_timestamp() >= b.expires_at THEN
     UPDATE public.ils_professional_security_approval_execution_bindings
     SET execution_status = 'BLOCKED'
     WHERE id = b.id AND execution_status = 'READY';
