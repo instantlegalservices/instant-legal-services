@@ -168,7 +168,9 @@ BEGIN
   END IF;
 
   -- STOP has not been approved/executed, so it must not silently block or
-  -- change an assignment. A separate approved-action executor is still absent.
+  -- change an assignment. Restore the affected professional's test identity;
+  -- the prior reviewer call deliberately switched the JWT subject.
+  PERFORM set_config('request.jwt.claim.sub',actor::text,true);
   PERFORM set_config('request.jwt.claim.role','authenticated',true);
   IF public.ils_professional_assignment_mutation_commit(assignment_id,'PAUSE','PAUSED') IS DISTINCT FROM true THEN
     RAISE EXCEPTION 'Pending STOP unexpectedly froze assignment mutation';
