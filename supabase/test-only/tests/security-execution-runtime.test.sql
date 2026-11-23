@@ -61,14 +61,20 @@ BEGIN
   IF position('FOR SHARE' in bind_definition)=0
      OR position('EXECUTION_BINDING_REVIEWER_NOT_AUTHORIZED' in bind_definition)=0
      OR position('rule_rec.id::text' in bind_definition)=0
-     OR position('q.assigned_reviewer_id IS DISTINCT FROM a.reviewer_id' in bind_definition)=0 THEN
+     OR position('q.assigned_reviewer_id IS DISTINCT FROM a.reviewer_id' in bind_definition)=0
+     OR position('r.valid_until < clock_timestamp()' in bind_definition)=0
+     OR position('r.valid_until < clock_timestamp()' in bind_definition) < position('FOR SHARE' in bind_definition)
+     OR position('v_authorized_at' in bind_definition)>0 THEN
     RAISE EXCEPTION 'Bind function does not lock and validate reviewer authorization';
   END IF;
   IF position('FOR SHARE' in consume_definition)=0
      OR position('SET execution_status = ''BLOCKED''' in consume_definition)=0
      OR position('RETURN false' in consume_definition)=0
      OR position('clock_timestamp() >= b.expires_at' in consume_definition)=0
-     OR position('rule_rec.id::text' in consume_definition)=0 THEN
+     OR position('rule_rec.id::text' in consume_definition)=0
+     OR position('r.valid_until < clock_timestamp()' in consume_definition)=0
+     OR position('r.valid_until < clock_timestamp()' in consume_definition) < position('FOR SHARE' in consume_definition)
+     OR position('v_authorized_at' in consume_definition)>0 THEN
     RAISE EXCEPTION 'Consume function does not revalidate reviewer and persist blocked state';
   END IF;
 
