@@ -13,6 +13,7 @@ assert.ok(migration.includes("if not public.ils_is_admin() then"));
 assert.ok(migration.includes('DROP POLICY IF EXISTS "Admin can move advocate photos"'));
 assert.ok(migration.includes('DROP POLICY IF EXISTS "Admin can read advocate photos"'));
 assert.ok(migration.includes('DROP POLICY IF EXISTS "Admin can view advocate photos"'));
+assert.ok(migration.includes('DROP POLICY IF EXISTS "Public can upload advocate photos"'));
 assert.ok(migration.includes("bucket_id = 'advocate-photo-pending'") && migration.includes("AND public.ils_is_admin()"));
 assert.ok(migration.includes("bucket_id = 'advocate-photo'") && migration.includes("AND public.ils_is_admin()"));
 assert.ok(migration.includes("bucket_id = 'client-matter-documents'") && migration.includes("AND public.ils_is_admin()"));
