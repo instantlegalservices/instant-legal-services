@@ -50,7 +50,7 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -U postgres -d ils_test_policy -v ON_ERROR_STOP=1 -f supabase/test-only/20261123010000_fail_closed_critical_path_release_gate.sql
-      - name: Run read-only release-gate policy assertions
+      - name: Run rollback-only release-gate policy assertions
         env:
           PGPASSWORD: postgres
         run: |
