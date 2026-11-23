@@ -169,6 +169,18 @@ BEGIN
     RAISE EXCEPTION 'Reviewer provisioning audit contains an elevated role';
   END IF;
   IF has_table_privilege('service_role',
+       'public.ils_professional_security_reviewer_authorizations','SELECT')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_security_reviewer_authorizations','INSERT')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_security_reviewer_authorizations','UPDATE')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_security_reviewer_authorizations','DELETE')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_security_reviewer_authorizations','TRUNCATE') THEN
+    RAISE EXCEPTION 'service_role can bypass the reviewer provisioning function';
+  END IF;
+  IF has_table_privilege('service_role',
        'public.ils_professional_security_reviewer_admin_audit','INSERT')
      OR has_table_privilege('service_role',
        'public.ils_professional_security_reviewer_admin_audit','UPDATE')
