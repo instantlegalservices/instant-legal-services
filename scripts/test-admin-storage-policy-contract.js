@@ -7,9 +7,16 @@ const migration = fs.readFileSync(
 );
 
 assert.ok(migration.includes("public.ils_is_admin()"));
-assert.ok(migration.includes("public.ils_admin_save_lead_multi(bigint,text,text,text,jsonb,boolean,date,text)"));
-assert.ok(migration.includes("Reviewed ils_admin_save_lead_multi source mismatch"));
+for (const signature of [
+  "public.get_admin_client_portal(bigint)",
+  "public.admin_send_client_message(bigint,text)",
+  "public.ils_admin_save_lead(bigint,text,text,text,bigint,boolean,date,text)",
+  "public.ils_admin_save_lead_multi(bigint,text,text,text,jsonb,boolean,date,text)"
+]) assert.ok(migration.includes(signature), "admin RPC signature missing: " + signature);
+assert.ok(migration.includes("Skipping absent TEST-baseline admin RPC"));
+assert.ok(migration.includes("Reviewed admin RPC source mismatch"));
 assert.ok(migration.includes("if not public.ils_is_admin() then"));
+assert.ok(migration.includes("IF NOT public.ils_is_admin() THEN"));
 assert.ok(migration.includes('DROP POLICY IF EXISTS "Admin can move advocate photos"'));
 assert.ok(migration.includes('DROP POLICY IF EXISTS "Admin can read advocate photos"'));
 assert.ok(migration.includes('DROP POLICY IF EXISTS "Admin can view advocate photos"'));
