@@ -81,6 +81,15 @@ BEGIN
     RAISE EXCEPTION 'Real in-app path without explicit approval must FAIL; got %/%', v.status, v.violations;
   END IF;
 
+  -- NULL authorization must also count as a concrete violation (not SQL UNKNOWN).
+  UPDATE public.ils_notification_e2e_preflight
+  SET authorization_level=NULL
+  WHERE path_code='NOTIFICATION_E2E';
+  SELECT * INTO v FROM public.ils_notification_e2e_preflight_check();
+  IF v.status <> 'FAIL' OR v.violations < 1 THEN
+    RAISE EXCEPTION 'Real in-app path with NULL authorization must FAIL with a violation; got %/%', v.status, v.violations;
+  END IF;
+
   -- Explicitly approved in-app path is valid without an external provider.
   UPDATE public.ils_notification_e2e_preflight
   SET authorization_level='EXPLICIT_OPERATOR_APPROVAL'
