@@ -10,6 +10,7 @@ DECLARE
   second_admin_id uuid:='ffffffff-ffff-4fff-8fff-ffffffffffff';
   unverified_reviewer_id uuid:='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
   v_admin_result jsonb;
+  admin_definition text;
   v_admin_audit_count integer;
   assignment_id uuid:=gen_random_uuid();
   work_item_id uuid:=gen_random_uuid();
@@ -33,6 +34,17 @@ DECLARE
   v_escalations integer;
   err text;
 BEGIN
+  admin_definition:=pg_get_functiondef(
+    'public.ils_professional_security_reviewer_administer(uuid,text,text,text,text,timestamptz)'::regprocedure
+  );
+  IF position('v_now := clock_timestamp()' in admin_definition)=0
+     OR position('v_now := clock_timestamp()' in admin_definition) < position('WHERE r.user_id=p_subject_user_id' in admin_definition)
+     OR position('v_actor_auth.valid_until<v_now' in admin_definition) < position('v_now := clock_timestamp()' in admin_definition)
+     OR position('v_actor_auth.valid_from>v_now' in admin_definition) < position('v_now := clock_timestamp()' in admin_definition)
+     OR position('v_now timestamptz:=' in admin_definition)>0 THEN
+    RAISE EXCEPTION 'Reviewer administration must revalidate SECURITY_ADMIN validity after target locks';
+  END IF;
+
   IF has_function_privilege('authenticated',
        'public.ils_professional_assignment_is_current(uuid,text,uuid)','EXECUTE') THEN
     RAISE EXCEPTION 'Authenticated role unexpectedly has internal current-eligibility EXECUTE';
