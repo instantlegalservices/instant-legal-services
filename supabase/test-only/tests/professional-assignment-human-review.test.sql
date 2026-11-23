@@ -4,7 +4,9 @@ BEGIN;
 DO $test$
 DECLARE
   actor uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  reviewer_id uuid:='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
   assignment_id uuid:=gen_random_uuid();
+  ambiguous_queue_id uuid:=gen_random_uuid();
   v_count integer;
   v_status text;
   v_queues integer;
@@ -41,9 +43,15 @@ BEGIN
     (id,work_item_id,work_stream,professional_user_id,link_status)
   VALUES(assignment_id,gen_random_uuid(),'LEGAL',actor,'PENDING');
 
+  INSERT INTO public.ils_professional_security_reviewer_authorizations
+    (user_id,reviewer_role,authorization_status,identity_verified,security_training_verified)
+  VALUES
+    (actor,'SECURITY_ADMIN','ACTIVE',true,true),
+    (reviewer_id,'SECURITY_REVIEWER','ACTIVE',true,true);
+
   -- A REVIEW-only threshold reaching STOP is a configuration contradiction.
-  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code)
-  SELECT 'INVALID_OPERATION' FROM generate_series(1,3);
+  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code,professional_user_id)
+  SELECT 'INVALID_OPERATION',actor FROM generate_series(1,3);
   PERFORM set_config('request.jwt.claim.role','service_role',true);
   BEGIN
     PERFORM public.ils_professional_assignment_evaluate_mutation_alerts(5);
@@ -62,8 +70,8 @@ BEGIN
   END IF;
 
   -- REVIEW threshold creates a pending queue, not a mutation-channel action.
-  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code)
-  SELECT 'AUTH_REQUIRED' FROM generate_series(1,2);
+  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code,professional_user_id)
+  SELECT 'AUTH_REQUIRED',actor FROM generate_series(1,2);
   v_count:=public.ils_professional_assignment_evaluate_mutation_alerts(15);
   IF v_count<>1 THEN RAISE EXCEPTION 'Expected one REVIEW evaluation, got %',v_count; END IF;
   SELECT count(*) INTO v_queues
@@ -82,8 +90,8 @@ BEGIN
 
   -- Crossing STOP creates an escalation/queue for human approval only.
   PERFORM set_config('request.jwt.claim.role','service_role',true);
-  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code)
-  SELECT 'AUTH_REQUIRED' FROM generate_series(1,2);
+  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry(failure_code,professional_user_id)
+  SELECT 'AUTH_REQUIRED',actor FROM generate_series(1,2);
   v_count:=public.ils_professional_assignment_evaluate_mutation_alerts(15);
   IF v_count<>1 THEN RAISE EXCEPTION 'Expected one STOP evaluation, got %',v_count; END IF;
 
@@ -92,6 +100,59 @@ BEGIN
   WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'
     AND review_status='PENDING' AND required_approval_level='HUMAN';
   IF v_queues<>1 THEN RAISE EXCEPTION 'Expected one pending STOP human-review queue'; END IF;
+
+  IF NOT EXISTS(
+    SELECT 1 FROM public.ils_professional_assignment_security_review_queue
+    WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'
+      AND affected_professional_user_id=actor
+  ) THEN RAISE EXCEPTION 'Affected professional identity was not bound to review queue'; END IF;
+
+  -- The affected professional is independently authorized as a reviewer,
+  -- but must still be prevented from approving their own assignment action.
+  PERFORM set_config('request.jwt.claim.sub',actor::text,true);
+  PERFORM set_config('request.jwt.claim.role','authenticated',true);
+  IF public.ils_professional_security_review_decide(
+       (SELECT id FROM public.ils_professional_assignment_security_review_queue
+        WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'),
+       'APPROVE','FREEZE_MUTATION_CHANNEL','Self approval attempt') THEN
+    RAISE EXCEPTION 'Affected professional was allowed to self-approve';
+  END IF;
+  IF NOT EXISTS(
+    SELECT 1 FROM public.ils_professional_assignment_security_review_queue
+    WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'
+      AND review_status='PENDING'
+  ) THEN RAISE EXCEPTION 'Self-approval attempt changed review status'; END IF;
+
+  -- A different active, verified, trained reviewer may approve the exact
+  -- configured non-destructive proposal; the audit must retain the subject.
+  PERFORM set_config('request.jwt.claim.sub',reviewer_id::text,true);
+  IF public.ils_professional_security_review_decide(
+       (SELECT id FROM public.ils_professional_assignment_security_review_queue
+        WHERE decision='STOP' AND source_failure_code='AUTH_REQUIRED'),
+       'APPROVE','FREEZE_MUTATION_CHANNEL','Independent security review') IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'Independent authorized reviewer could not approve exact action';
+  END IF;
+  IF NOT EXISTS(
+    SELECT 1 FROM public.ils_professional_assignment_security_review_approval_log
+    WHERE reviewer_id=reviewer_id
+      AND affected_professional_user_id=actor
+      AND approval_decision='APPROVE'
+      AND approved_action='FREEZE_MUTATION_CHANNEL'
+  ) THEN RAISE EXCEPTION 'Approval audit omitted affected professional identity'; END IF;
+
+  -- Unknown/ambiguous subject identity must never be approved.
+  INSERT INTO public.ils_professional_assignment_security_review_queue
+    (id,decision,severity,source_failure_code,observed_count,review_status,
+     required_approval_level,affected_professional_user_id)
+  VALUES(ambiguous_queue_id,'STOP','CRITICAL','AMBIGUOUS_SUBJECT',4,'PENDING','HUMAN',NULL);
+  IF public.ils_professional_security_review_decide(
+       ambiguous_queue_id,'APPROVE','FREEZE_MUTATION_CHANNEL','Ambiguous subject') THEN
+    RAISE EXCEPTION 'Approval with unknown subject identity was allowed';
+  END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.ils_professional_assignment_security_review_queue
+                WHERE id=ambiguous_queue_id AND review_status='PENDING') THEN
+    RAISE EXCEPTION 'Ambiguous-subject approval attempt changed queue state';
+  END IF;
 
   SELECT count(*) INTO v_escalations
   FROM public.ils_professional_assignment_mutation_alert_escalations
