@@ -1,0 +1,23 @@
+name: Professional Portal Assignment Contract
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/professional-portal/index.ts"
+      - "portal.html"
+      - "scripts/test-professional-portal-assignment-contract.js"
+      - ".github/workflows/test-professional-portal-assignment-contract.yml"
+  workflow_dispatch:
+
+jobs:
+  professional-portal-assignment-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify professional portal assignment contract
+        run: node scripts/test-professional-portal-assignment-contract.js
