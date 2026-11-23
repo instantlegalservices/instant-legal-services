@@ -23,6 +23,15 @@ export async function sha256Hex(value: string): Promise<string> {
   ).join("");
 }
 
+export function constantTimeEqual(left: string, right: string): boolean {
+  if (left.length !== right.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < left.length; i++) {
+    mismatch |= left.charCodeAt(i) ^ right.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
 export function isMatchingIssuedHandoff(
   handoff: {
     synthetic_user_id: string;
@@ -41,5 +50,5 @@ export function isMatchingIssuedHandoff(
     expiresAt > nowMs &&
     typeof handoff.token_hash_sha256 === "string" &&
     handoff.token_hash_sha256.length === 64 &&
-    handoff.token_hash_sha256 === presentedTokenDigest;
+    constantTimeEqual(handoff.token_hash_sha256, presentedTokenDigest);
 }
