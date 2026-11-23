@@ -77,7 +77,7 @@ BEGIN
      OR (p_requested_status IS NOT NULL AND p_requested_status !~ '^[A-Z_]{1,32}$') THEN
     RAISE EXCEPTION 'MUTATION_TELEMETRY_INPUT_INVALID';
   END IF;
-  IF p_failure_code NOT IN (
+  IF p_failure_code IS NULL OR p_failure_code NOT IN (
     'CROSS_USER_ASSIGNMENT','CROSS_STREAM','DUPLICATE_ASSIGNMENT',
     'INVALID_OPERATION','INVALID_TRANSITION','REPLAY_AFTER_COMPLETE',
     'REPLAY_AFTER_REVOKE','STALE_ELIGIBILITY','STATUS_MISMATCH'
@@ -176,6 +176,31 @@ AS $function$
 $function$;
 
 REVOKE ALL ON FUNCTION public.ils_professional_assignment_mutation_telemetry_aggregate(integer)
-  FROM PUBLIC,anon;
+  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.ils_professional_assignment_mutation_telemetry_aggregate(integer)
-  TO authenticated,service_role;
+  TO service_role;
+
+CREATE OR REPLACE FUNCTION public.ils_professional_assignment_telemetry_append_only_guard()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO ''
+AS $function$
+BEGIN
+  RAISE EXCEPTION 'ASSIGNMENT_FAILURE_TELEMETRY_APPEND_ONLY';
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS ils_prof_assignment_failure_telemetry_no_row_mutation
+  ON public.ils_professional_assignment_mutation_failure_telemetry;
+CREATE TRIGGER ils_prof_assignment_failure_telemetry_no_row_mutation
+  BEFORE UPDATE OR DELETE ON public.ils_professional_assignment_mutation_failure_telemetry
+  FOR EACH ROW EXECUTE FUNCTION public.ils_professional_assignment_telemetry_append_only_guard();
+
+DROP TRIGGER IF EXISTS ils_prof_assignment_failure_telemetry_no_truncate
+  ON public.ils_professional_assignment_mutation_failure_telemetry;
+CREATE TRIGGER ils_prof_assignment_failure_telemetry_no_truncate
+  BEFORE TRUNCATE ON public.ils_professional_assignment_mutation_failure_telemetry
+  FOR EACH STATEMENT EXECUTE FUNCTION public.ils_professional_assignment_telemetry_append_only_guard();
+
+REVOKE ALL ON FUNCTION public.ils_professional_assignment_telemetry_append_only_guard()
+  FROM PUBLIC,anon,authenticated,service_role;
