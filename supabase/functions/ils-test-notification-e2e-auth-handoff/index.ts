@@ -33,7 +33,7 @@ Deno.serve(async (req: Request) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
   const { data: { user }, error } = await admin.auth.getUser(
-    authorization.replace(/^Bearer\\s+/i, ""),
+    authorization.replace(/^Bearer\s+/i, ""),
   );
   if (error || !user) return json({ error: "AUTH_REQUIRED" }, 401);
 
