@@ -7,6 +7,8 @@ on:
       - "supabase/functions/_shared/ai-rate-limit.ts"
       - "supabase/migrations/20261117063714_ils_ai_rate_limit_shared.sql"
       - "scripts/test-ai-rate-limit.mjs"
+      - "scripts/test-ai-rate-limit-postgres.sql"
+      - "scripts/test-ai-rate-limit-postgres.sh"
       - ".github/workflows/test-ai-rate-limit.yml"
   push:
     branches:
