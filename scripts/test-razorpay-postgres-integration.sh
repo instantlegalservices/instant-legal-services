@@ -105,22 +105,26 @@ psql -v ON_ERROR_STOP=1 <<SQL
 INSERT INTO service_requests(id,user_id,service_id,status) VALUES ('$LATE_REQUEST','$USER_ID','$SERVICE_ID','pending');
 INSERT INTO orders(id,order_number,user_id,service_request_id,total,currency,status) VALUES ('$LATE_ORDER','CI-ORDER-LATE-CAPTURE','$USER_ID','$LATE_REQUEST',100,'INR','pending');
 INSERT INTO order_items(order_id,service_id,quantity,unit_price,line_total) VALUES ('$LATE_ORDER','$SERVICE_ID',1,100,100);
-INSERT INTO payments(id,order_id,gateway,gateway_payment_id,gateway_order_id,amount,currency,status) VALUES
- ('$LATE_PAYMENT_A','$LATE_ORDER','razorpay',NULL,'gw-order-old',100,'INR','failed'),
- ('$LATE_PAYMENT_B','$LATE_ORDER','razorpay',NULL,'gw-order-retry',100,'INR','created');
+INSERT INTO payments(id,order_id,gateway,gateway_payment_id,gateway_order_id,amount,currency,status)
+VALUES ('$LATE_PAYMENT_A','$LATE_ORDER','razorpay',NULL,'gw-order-old',100,'INR','failed');
 SQL
-# The old attempt captures late; the newer attempt's capture must not settle this order too.
-psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$LATE_PAYMENT_A','gw-payment-old-captured',10000,'INR')" >/dev/null
-if psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$LATE_PAYMENT_B','gw-payment-retry-captured',10000,'INR')" >/dev/null 2>&1; then
- echo "FAIL: second gateway attempt settled an already-paid order"; exit 1
+# A failed webhook with an attached gateway order must be reused for retry,
+# not replaced with a second externally chargeable order.
+REUSED=$(psql -v ON_ERROR_STOP=1 -Atc "SELECT (r->>'payment_id') || '|' || coalesce(r->>'gateway_order_id','') FROM (SELECT ils_reserve_razorpay_attempt('$LATE_ORDER') AS r) q")
+if [[ "$REUSED" != "$LATE_PAYMENT_A|gw-order-old" ]]; then
+ echo "FAIL: failed-but-attached Razorpay order was not reused: $REUSED"; exit 1
 fi
+if psql -v ON_ERROR_STOP=1 -c "INSERT INTO payments(order_id,gateway,gateway_order_id,amount,currency,status) VALUES ('$LATE_ORDER','razorpay','gw-order-retry',100,'INR','created')" >/dev/null 2>&1; then
+ echo "FAIL: a second unresolved Razorpay gateway order was allowed"; exit 1
+fi
+psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$LATE_PAYMENT_A','gw-payment-old-captured',10000,'INR')" >/dev/null
 psql -v ON_ERROR_STOP=1 <<SQL
 DO \$\$
 BEGIN
  IF (SELECT status FROM orders WHERE id='$LATE_ORDER') <> 'paid' THEN RAISE EXCEPTION 'late capture did not settle order'; END IF;
  IF (SELECT count(*) FROM payments WHERE order_id='$LATE_ORDER' AND status='paid') <> 1 THEN RAISE EXCEPTION 'late capture settled more than one payment'; END IF;
  IF (SELECT status FROM payments WHERE id='$LATE_PAYMENT_A') <> 'paid' THEN RAISE EXCEPTION 'old attempt was not settled'; END IF;
- IF (SELECT status FROM payments WHERE id='$LATE_PAYMENT_B') <> 'created' THEN RAISE EXCEPTION 'second attempt changed unexpectedly'; END IF;
+ IF (SELECT count(*) FROM payments WHERE order_id='$LATE_ORDER') <> 1 THEN RAISE EXCEPTION 'retry created a second internal payment attempt'; END IF;
  IF (SELECT count(*) FROM entitlements WHERE order_id='$LATE_ORDER') <> 1 THEN RAISE EXCEPTION 'late capture duplicate/missing entitlement'; END IF;
 END
 \$\$;
