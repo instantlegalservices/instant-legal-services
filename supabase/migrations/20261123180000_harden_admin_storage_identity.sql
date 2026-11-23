@@ -51,6 +51,9 @@ $rpc_hardening$;
 DROP POLICY IF EXISTS "Admin can move advocate photos" ON storage.objects;
 DROP POLICY IF EXISTS "Admin can read advocate photos" ON storage.objects;
 DROP POLICY IF EXISTS "Admin can view advocate photos" ON storage.objects;
+-- New registrations upload to the private advocate-photo-pending bucket. Stop the
+-- legacy policy from placing additional pending photos in the public advocate-photo bucket.
+DROP POLICY IF EXISTS "Public can upload advocate photos" ON storage.objects;
 
 -- Replace email-only admin policies with the canonical configured-admin predicate.
 DROP POLICY IF EXISTS "ils_admin_advocate_pending_management" ON storage.objects;
@@ -131,6 +134,14 @@ BEGIN
       AND policyname IN ('Admin can move advocate photos', 'Admin can read advocate photos', 'Admin can view advocate photos')
   ) THEN
     RAISE EXCEPTION 'Legacy overbroad advocate-photo policy remains active';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+      AND policyname = 'Public can upload advocate photos'
+  ) THEN
+    RAISE EXCEPTION 'Legacy public-bucket pending-photo upload policy remains active';
   END IF;
 END
 $verify$;
