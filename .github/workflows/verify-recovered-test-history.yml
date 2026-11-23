@@ -1,0 +1,26 @@
+name: Verify recovered TEST migration history archive
+
+on:
+  pull_request:
+    paths:
+      - "supabase/recovered-test-history/professional-assignment/**"
+      - "scripts/verify-recovered-test-history.mjs"
+      - ".github/workflows/verify-recovered-test-history.yml"
+  push:
+    branches:
+      - "recovery/professional-assignment-test-history-20261123"
+    paths:
+      - "supabase/recovered-test-history/professional-assignment/**"
+      - "scripts/verify-recovered-test-history.mjs"
+      - ".github/workflows/verify-recovered-test-history.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  archive-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify recovered archive integrity and non-replayability
+        run: node scripts/verify-recovered-test-history.mjs
