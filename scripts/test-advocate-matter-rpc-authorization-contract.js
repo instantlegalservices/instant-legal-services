@@ -91,4 +91,6 @@ assert.equal(canAccess(2, 77), true);
 assert.equal(canAccess(3, 77), false);
 assert.equal(canAccess(1, 78), false);
 
+require("./test-admin-storage-policy-contract.js");
+
 console.log("ADVOCATE_MATTER_RPC_AUTHORIZATION_CONTRACT=PASS");
