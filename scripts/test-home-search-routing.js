@@ -34,7 +34,12 @@ const { chromium } = require("playwright");
       { query: "उत्तर प्रदेश श्रम विभाग", expected: "UP Labour Department", official: "https://uplabour.gov.in/" },
       { query: "बकाया वेतन", expected: "SAMADHAN Labour Disputes", official: "https://samadhan.labour.gov.in/" },
       { query: "श्रम वकील", expected: "Labour & Employment Legal Assistance", official: "https://instantlegalservices.in/practice/labour-and-employment-law/" },
-      { query: "labour", expected: "No official route selected yet", noRoute: true }
+      { query: "labour", expected: "No official route selected yet", noRoute: true },
+      { query: "labour complaint", expected: "No official route selected yet", noRoute: true },
+      { query: "labour grievance", expected: "No official route selected yet", noRoute: true },
+      { query: "श्रमिक शिकायत", expected: "No official route selected yet", noRoute: true },
+      { query: "श्रम विभाग", expected: "No official route selected yet", noRoute: true },
+      { query: "UP labour complaint", expected: "UP Labour Department", official: "https://uplabour.gov.in/" }
     ];
 
     for (const item of cases) {
