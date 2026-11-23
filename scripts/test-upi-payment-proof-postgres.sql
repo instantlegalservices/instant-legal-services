@@ -92,15 +92,19 @@ BEGIN
   IF has_any_column_privilege('anon','public.payment_proofs','INSERT')
      OR has_any_column_privilege('anon','public.payment_proofs','UPDATE')
      OR has_any_column_privilege('authenticated','public.payment_proofs','INSERT')
-     OR has_any_column_privilege('authenticated','public.payment_proofs','UPDATE') THEN
+     OR has_any_column_privilege('authenticated','public.payment_proofs','UPDATE')
+     OR has_any_column_privilege('anon','public.payment_proofs','REFERENCES')
+     OR has_any_column_privilege('authenticated','public.payment_proofs','REFERENCES') THEN
     RAISE EXCEPTION 'direct column-level write privilege remains';
   END IF;
   IF NOT has_table_privilege('authenticated','public.payment_proofs','SELECT') THEN
     RAISE EXCEPTION 'authenticated SELECT access was not preserved';
   END IF;
   IF has_function_privilege('anon','public.ils_submit_upi_payment_proof(uuid,numeric,text,text,text,text,text,text,integer)','EXECUTE')
-     OR NOT has_function_privilege('authenticated','public.ils_submit_upi_payment_proof(uuid,numeric,text,text,text,text,text,text,integer)','EXECUTE') THEN
-    RAISE EXCEPTION 'UPI submit RPC execute grants are incorrect';
+     OR NOT has_function_privilege('authenticated','public.ils_submit_upi_payment_proof(uuid,numeric,text,text,text,text,text,text,integer)','EXECUTE')
+     OR has_function_privilege('anon','public.ils_admin_verify_upi_payment_proof(uuid,text,text)','EXECUTE')
+     OR NOT has_function_privilege('authenticated','public.ils_admin_verify_upi_payment_proof(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'UPI submit/Admin RPC execute grants are incorrect';
   END IF;
 END
 $privileges$;
