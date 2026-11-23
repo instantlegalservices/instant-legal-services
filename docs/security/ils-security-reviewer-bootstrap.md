@@ -25,7 +25,7 @@ Only an active, identity-verified, training-verified `SECURITY_ADMIN` can:
 - suspend an existing reviewer;
 - revoke an existing reviewer.
 
-The grant operation requires separate identity and training evidence references and a validity period between 1 and 365 days. The audit records the acting administrator, target Auth user, operation, prior/new status, evidence references, reason, and validity period.
+The grant operation requires separate identity and training evidence reference tokens and a validity period between 1 and 365 days. The SQL validates only the token format; it does not fetch or independently verify the underlying documents. The SECURITY_ADMIN must inspect the evidence out of band and attest to it. The audit records the acting administrator, target Auth user, operation, prior/new status, evidence references, reason, and validity period.
 
 The RPC rejects self-administration, unconfirmed Auth identities, active duplicate grants, unverified evidence references, expired/out-of-range validity, and attempts to use this reviewer RPC to grant `SECURITY_ADMIN`.
 
