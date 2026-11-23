@@ -30,7 +30,7 @@ assert.ok(compiledInlineScripts > 0, "homepage inline JavaScript should be synta
 
 const routes = [
   { slug: "up-labour-department", title: "UP Labour Department", official: "https://uplabour.gov.in/" },
-  { slug: "samadhan-labour-disputes", title: "SAMADHAN 2.0 Labour Disputes", official: "https://samadhan.labour.gov.in/", manual: "https://samadhan.labour.gov.in/documents/User_Manual_Applicants.pdf", frameworkSource: "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192463", portalVersionSource: "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2285769" }
+  { slug: "samadhan-labour-disputes", title: "SAMADHAN Portal Labour Disputes", official: "https://samadhan.labour.gov.in/", manual: "https://samadhan.labour.gov.in/documents/User_Manual_Applicants.pdf", frameworkSource: "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192463", portalVersionSource: "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2285769" }
 ];
 
 for (const route of routes) {
@@ -44,14 +44,14 @@ for (const route of routes) {
   assert.ok(page.includes("What this portal is for"), "scope guidance missing: " + route.slug);
   assert.ok(page.includes("Do not share OTPs"), "safety guidance missing: " + route.slug);
   if (route.slug === "samadhan-labour-disputes") {
-    assert.ok(page.includes("SAMADHAN 2.0"), "current portal identity missing");
+    assert.ok(page.includes("SAMADHAN Portal"), "current portal identity missing");
     assert.ok(page.includes("21 November 2025"), "current Labour Codes effective date missing");
     assert.ok(page.includes(route.manual), "applicant manual link missing");
     assert.ok(page.includes(route.frameworkSource), "official Labour Codes source missing");
-    assert.ok(page.includes(route.portalVersionSource), "official SAMADHAN Portal 2.0 source missing");
-    assert.ok(generator.includes(route.portalVersionSource), "SEO generator must preserve official SAMADHAN Portal 2.0 source");
+    assert.ok(page.includes(route.portalVersionSource), "official SAMADHAN Portal source missing");
+    assert.ok(generator.includes(route.portalVersionSource), "SEO generator must preserve official SAMADHAN Portal source");
     assert.ok(!page.includes("minimum wages, gratuity and maternity benefits"), "legacy claim list must not be represented as current filing scope");
-    assert.ok(generator.includes("SAMADHAN 2.0"), "generator must preserve current portal identity");
+    assert.ok(generator.includes("SAMADHAN Portal"), "generator must preserve SAMADHAN Portal identity");
   }
   assert.equal(sitemap.split(canonical).length - 1, 1, "sitemap must contain exactly one canonical URL: " + route.slug);
   assert.ok(navigator.includes(canonical), "navigator card missing: " + route.slug);
