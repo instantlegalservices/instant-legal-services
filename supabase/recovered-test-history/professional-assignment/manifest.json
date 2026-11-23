@@ -137,7 +137,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 1871,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907181330_action_472_gate_stress_audit.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907181330_action_472_gate_stress_audit.sql",
+      "source_sha256": "192d8a3d89e038e53b51b25e0b12ed1f75e572be59e7d322cc2c928d7190bd79"
     },
     {
       "version": "20260907182600",
@@ -145,7 +146,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 3809,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907182600_action_473_assignment_transaction_guard.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907182600_action_473_assignment_transaction_guard.sql",
+      "source_sha256": "c6c99cb5807267a39996e7c1d317d0efc76a64b55e3767dfaeab146f04170ad7"
     },
     {
       "version": "20260907182924",
@@ -153,7 +155,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 4174,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907182924_action_474_assignment_revocation_guard.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907182924_action_474_assignment_revocation_guard.sql",
+      "source_sha256": "eda7f01647fcf532076042b3b1d1a0caadf60a257952481090f22a1f2d9730f8"
     },
     {
       "version": "20260907183437",
@@ -161,7 +164,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 1634,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907183437_action_475_assignment_lifecycle_state_machine.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907183437_action_475_assignment_lifecycle_state_machine.sql",
+      "source_sha256": "a16fdabed141bd15ebf52e20d77ef61ccf8d71e63b84e37e257380f05a7a47f4"
     },
     {
       "version": "20260907183616",
@@ -169,7 +173,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 1776,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907183616_action_476_lifecycle_transition_gate.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907183616_action_476_lifecycle_transition_gate.sql",
+      "source_sha256": "f9f22ba4a87a1068b68d7287a70a1cd91f79a0b36c37e1905caeaaa128f582c3"
     },
     {
       "version": "20260907183805",
@@ -177,7 +182,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 1441,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907183805_action_477_direct_write_lockdown.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907183805_action_477_direct_write_lockdown.sql",
+      "source_sha256": "60492bbbebdbcc8efd53d4687caecf42bef1fccafeb40b83bed6490d899fd7da"
     },
     {
       "version": "20260907184014",
@@ -185,7 +191,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 2410,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907184014_action_478_assignment_mutation_gate.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907184014_action_478_assignment_mutation_gate.sql",
+      "source_sha256": "c4eb26fa69ab5da72844a84cac755cef2ba274b407f8d431486068a8977543a0"
     },
     {
       "version": "20260907184404",
@@ -193,7 +200,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 1825,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907184404_action_479_mutation_gate_hostile_stress_test.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907184404_action_479_mutation_gate_hostile_stress_test.sql",
+      "source_sha256": "bd21eb1c3758e2a74bd3121698d4e70471b3615d2277357d1e18cb755d058afd"
     },
     {
       "version": "20260907184415",
@@ -201,7 +209,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 197,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907184415_action_479_stress_test_lockdown.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907184415_action_479_stress_test_lockdown.sql",
+      "source_sha256": "a1921742313215432dc718f03019dde30a6bd00b8a1deb8ae32db71b43466007"
     },
     {
       "version": "20260907184820",
@@ -209,7 +218,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 2687,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907184820_action_481_immutable_assignment_mutation_audit_chain.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907184820_action_481_immutable_assignment_mutation_audit_chain.sql",
+      "source_sha256": "de95707106c283a0931677785f64195efaf5290abdf40ee6f96bf17d9e4265e6"
     },
     {
       "version": "20260907185106",
@@ -217,7 +227,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 3989,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907185106_action_482_mutation_event_chain_integrity_gate.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907185106_action_482_mutation_event_chain_integrity_gate.sql",
+      "source_sha256": "f619c946c34c03581325e237a2f737285445e77426fc8d084ea673411ecb83c1"
     },
     {
       "version": "20260907185255",
@@ -225,7 +236,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 2280,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907185255_action_483_mutation_commit_hostile_stress_test.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907185255_action_483_mutation_commit_hostile_stress_test.sql",
+      "source_sha256": "8498e37bf90ccdb41646dc0d0548085eb7dc5eb866b66c1338476741259887ab"
     },
     {
       "version": "20260907185453",
@@ -233,7 +245,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 3143,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907185453_action_484_assignment_mutation_observability_failure_telemetry.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907185453_action_484_assignment_mutation_observability_failure_telemetry.sql",
+      "source_sha256": "34232347cb1f45c28fddb84c7f09cc68709661d204c9d7f431fa200cfc897b13"
     },
     {
       "version": "20260907185841",
@@ -241,7 +254,8 @@
       "created_by": "islegalservices5@gmail.com",
       "statement_count": 1,
       "source_length": 3720,
-      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907185841_action_485_mutation_failure_telemetry_alert_thresholds.sql"
+      "archive_path": "supabase/recovered-test-history/professional-assignment/20260907185841_action_485_mutation_failure_telemetry_alert_thresholds.sql",
+      "source_sha256": "c39482e58878ea94bb38855c8709e5fa3364c277f28ebbefadee830714d18f6f"
     },
     {
       "version": "20260907190239",
