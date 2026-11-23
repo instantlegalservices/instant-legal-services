@@ -54,3 +54,7 @@ This directory is an archival recovery of the original SQL statements retained i
 - `20260907192844_action_498_execution_lifecycle_stress_test.sql` — 2808 characters, 1 statement(s); ledger actor: `islegalservices5@gmail.com`
 
 See `manifest.json` for machine-readable inventory.
+
+
+## Additional recovered privilege and E2E history
+Also recovered the TEST-ledger source for Actions 525–527 (Professional Assignment E2E preflight/synthetic harness/release gate, including duplicate version entries) and Actions 607, 610, 611, 613 and 615 (assignment privilege lockdown and associate identity binding). These exact SQL snapshots explain why internal mutation RPCs remain unavailable to direct authenticated callers.
