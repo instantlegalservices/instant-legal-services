@@ -22,6 +22,6 @@ assert.doesNotMatch(migration, /auth_user_id\s*=\s*uid\s+or\s+lower\(/i);
 assert.match(sqlTest, /linked identity must win over newer same-email legacy profile/i);
 assert.match(sqlTest, /rejected linked advocate profile must block legacy email fallback/i);
 assert.match(sqlTest, /pending linked advocate registration must remain eligible/i);
-assert.match(sqlTest, /app_metadata alone cannot grant member access/i);
+assert.match(sqlTest, /app_metadata alone must not grant member access/i);
 
 console.log("ILS_PROFESSIONAL_MEMBER_CONTEXT_IDENTITY=PASS");
