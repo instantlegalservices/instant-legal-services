@@ -14,8 +14,8 @@ BEGIN
 END
 $preflight$;
 
--- Replace only the reviewed email-only authorization guard. Keep v_email because
--- the existing RPC uses it as audit attribution in advocate_assignments.
+-- Replace only reviewed email-only guards. Keep v_email in assignment RPCs because
+-- the existing functions use it as audit attribution in advocate_assignments.
 DO $rpc_hardening$
 DECLARE
   v_signature text;
@@ -47,20 +47,20 @@ BEGIN
       'public.get_admin_client_portal(bigint)',
       'public.admin_send_client_message(bigint,text)'
     ) THEN
-      v_old_guard := E'    IF (auth.jwt() ->> \\'email\\') <> \\'fahat29@gmail.com\\' THEN';
+      v_old_guard := E'    IF (auth.jwt() ->> \'email\') <> \'fahat29@gmail.com\' THEN';
       v_new_guard := '    IF NOT public.ils_is_admin() THEN';
       v_expected_decl := NULL;
     ELSE
-      v_old_guard := E'  if v_email <> \\'fahat29@gmail.com\\' then';
+      v_old_guard := E'  if v_email <> \'fahat29@gmail.com\' then';
       v_new_guard := '  if not public.ils_is_admin() then';
-      v_expected_decl := E'  v_email text := lower(coalesce(auth.jwt()->>\\'email\\',\\'\\'));';
+      v_expected_decl := E'  v_email text := lower(coalesce(auth.jwt()->>\'email\',\'\'));';
     END IF;
 
     v_count := (length(v_definition) - length(replace(v_definition, v_old_guard, '')))
                / length(v_old_guard);
 
     IF v_count <> 1
-       OR position(E'SET search_path TO \\'public\\'' in v_definition) = 0
+       OR position(E'SET search_path TO \'public\'' in v_definition) = 0
        OR (v_expected_decl IS NOT NULL AND position(v_expected_decl in v_definition) = 0) THEN
       RAISE EXCEPTION 'Reviewed admin RPC source mismatch in %; refusing to rewrite', v_signature;
     END IF;
@@ -75,7 +75,7 @@ BEGIN
     EXECUTE v_definition;
   END LOOP;
 END
-$rpc_hardening$
+$rpc_hardening$;
 
 -- Remove legacy policies that accidentally grant every authenticated user access
 -- to pending advocate photos or permission to move pending/approved photo objects.
