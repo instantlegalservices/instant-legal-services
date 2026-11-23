@@ -68,7 +68,10 @@ BEGIN
      OR position('DESTRUCTIVE_ACTION' in v_release_def)=0
      OR position('g.hostile_tests_passed>=7' in v_release_def)=0
      OR position('g.hostile_tests_failed=0' in v_release_def)=0
-     OR position('g.production_touch_detected IS FALSE' in v_release_def)=0 THEN
+     OR position('g.production_touch_detected IS FALSE' in v_release_def)=0
+     OR position('x.created_at >= r.created_at' in v_release_def)=0
+     OR position('max(d.created_at) FROM public.ils_e2e_function_deployment_registry' in v_release_def)=0
+     OR position('max(c.created_at) FROM public.ils_critical_path_evidence_contracts' in v_release_def)=0 THEN
     RAISE EXCEPTION 'Overall release gate is missing a mandatory independent gate';
   END IF;
 
