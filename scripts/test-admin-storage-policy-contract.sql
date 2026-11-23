@@ -141,6 +141,7 @@ INSERT INTO storage.objects(bucket_id,name) VALUES
 SET ROLE authenticated;
 DO $tests$
 DECLARE
+  v jsonb;
   v_denied boolean;
   v_count integer;
   v_rows integer;
@@ -148,12 +149,24 @@ BEGIN
   -- Matching the old hardcoded email is not enough without an admin_users row.
   PERFORM set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000002',true);
   PERFORM set_config('request.jwt.claim.email','fahat29@gmail.com',true);
+  v := public.get_admin_client_portal(1);
+  IF v->>'ok' <> 'false' THEN RAISE EXCEPTION 'Hardcoded email bypassed get_admin_client_portal'; END IF;
+  v := public.admin_send_client_message(1,'test');
+  IF v->>'ok' <> 'false' THEN RAISE EXCEPTION 'Hardcoded email bypassed admin_send_client_message'; END IF;
+
+  v_denied := false;
+  BEGIN
+    PERFORM public.ils_admin_save_lead(1,'New','Pending','Normal',NULL,false,NULL,NULL);
+  EXCEPTION WHEN OTHERS THEN v_denied := true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'Hardcoded email bypassed ils_admin_save_lead'; END IF;
+
   v_denied := false;
   BEGIN
     PERFORM public.ils_admin_save_lead_multi(1,'New','Pending','Normal','[]'::jsonb,false,NULL,NULL);
   EXCEPTION WHEN OTHERS THEN v_denied := true;
   END;
-  IF NOT v_denied THEN RAISE EXCEPTION 'Hardcoded admin email bypass still works'; END IF;
+  IF NOT v_denied THEN RAISE EXCEPTION 'Hardcoded email bypassed ils_admin_save_lead_multi'; END IF;
 
   SELECT count(*) INTO v_count FROM storage.objects WHERE bucket_id='advocate-photo' AND name LIKE 'pending/%';
   IF v_count <> 0 THEN RAISE EXCEPTION 'Non-admin can read pending public-bucket photos'; END IF;
@@ -178,8 +191,14 @@ DECLARE v jsonb; v_rows integer;
 BEGIN
   PERFORM set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
   PERFORM set_config('request.jwt.claim.email','new-admin-address@example.test',true);
+  v := public.get_admin_client_portal(1);
+  IF v->>'ok' <> 'true' THEN RAISE EXCEPTION 'Configured admin was rejected by get_admin_client_portal'; END IF;
+  v := public.admin_send_client_message(1,'test');
+  IF v->>'ok' <> 'true' THEN RAISE EXCEPTION 'Configured admin was rejected by admin_send_client_message'; END IF;
+  v := public.ils_admin_save_lead(1,'New','Pending','Normal',NULL,false,NULL,NULL);
+  IF v->>'ok' <> 'true' THEN RAISE EXCEPTION 'Configured admin was rejected by ils_admin_save_lead'; END IF;
   v := public.ils_admin_save_lead_multi(1,'New','Pending','Normal','[]'::jsonb,false,NULL,NULL);
-  IF v->>'ok' <> 'true' THEN RAISE EXCEPTION 'Configured admin identity was rejected'; END IF;
+  IF v->>'ok' <> 'true' THEN RAISE EXCEPTION 'Configured admin was rejected by ils_admin_save_lead_multi'; END IF;
 
   SELECT count(*) INTO v_rows FROM storage.objects WHERE bucket_id='advocate-photo-pending';
   IF v_rows <> 1 THEN RAISE EXCEPTION 'Configured admin cannot read pending private photo'; END IF;
