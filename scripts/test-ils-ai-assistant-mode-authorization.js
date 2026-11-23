@@ -33,4 +33,10 @@ assert.match(source, /const token=auth\.slice\(7\)\.trim\(\)/,
 assert.match(source, /createClient\(supabaseUrl,serviceKey,\{auth:\{persistSession:false,autoRefreshToken:false\}\}\)/,
   "the service-role client must not persist or refresh a caller session");
 
+
+assert.match(source, /const system=advocateMode[\s\S]*?Advocate Research AI for approved Indian advocates/,
+  "authorized advocate mode must receive the advocate research prompt");
+assert.match(source, /advocateMode\?"Advocate research question":"Indian-law question"/,
+  "the user prompt must identify the selected research mode");
+
 console.log("ILS_AI_ASSISTANT_MODE_AUTHORIZATION=PASS");
