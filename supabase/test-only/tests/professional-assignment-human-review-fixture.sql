@@ -164,8 +164,18 @@ CREATE TABLE public.ils_professional_assignment_mutation_event_chain (
 );
 
 CREATE OR REPLACE FUNCTION public.ils_professional_assignment_transition_allowed(p_from text,p_to text)
-RETURNS boolean LANGUAGE sql IMMUTABLE AS
-$$ SELECT (p_from,p_to) IN (('PENDING','ACTIVE'),('ACTIVE','PAUSED'),('PAUSED','ACTIVE'),('ACTIVE','REVOKED'),('ACTIVE','COMPLETED')) $$;
+RETURNS boolean LANGUAGE sql IMMUTABLE AS $function$
+  SELECT CASE
+    WHEN p_from IS NULL AND p_to='PENDING' THEN true
+    WHEN p_from='PENDING' AND p_to='APPROVED' THEN true
+    WHEN p_from='APPROVED' AND p_to='ACTIVE' THEN true
+    WHEN p_from='ACTIVE' AND p_to IN ('PAUSED','REVOKED','COMPLETED') THEN true
+    WHEN p_from='PAUSED' AND p_to IN ('ACTIVE','REVOKED') THEN true
+    WHEN p_from='REVOKED' AND p_to='PENDING' THEN false
+    WHEN p_from='COMPLETED' AND p_to='ACTIVE' THEN false
+    ELSE false
+  END;
+$function$;
 CREATE OR REPLACE FUNCTION public.ils_professional_assignment_is_current(p_work_item_id uuid,p_work_stream text,p_professional_user_id uuid)
 RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT true $$;
 
