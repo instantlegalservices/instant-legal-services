@@ -1,0 +1,63 @@
+name: Test Professional Assignment human-review escalation
+
+on:
+  pull_request:
+    paths:
+      - "supabase/test-only/20261123040000_professional_assignment_human_review_escalation.sql"
+      - "supabase/test-only/tests/professional-assignment-human-review-fixture.sql"
+      - "supabase/test-only/tests/professional-assignment-human-review.test.sql"
+      - ".github/workflows/test-professional-assignment-human-review.yml"
+  push:
+    branches:
+      - "feat/assignment-mutation-freeze-guard-20261123"
+    paths:
+      - "supabase/test-only/20261123040000_professional_assignment_human_review_escalation.sql"
+      - "supabase/test-only/tests/professional-assignment-human-review-fixture.sql"
+      - "supabase/test-only/tests/professional-assignment-human-review.test.sql"
+      - ".github/workflows/test-professional-assignment-human-review.yml"
+
+jobs:
+  professional-assignment-human-review:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ils_assignment_freeze
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ils_assignment_freeze"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Wait for PostgreSQL
+        env:
+          PGPASSWORD: postgres
+        run: |
+          for i in $(seq 1 30); do
+            pg_isready -h localhost -U postgres -d ils_assignment_freeze && exit 0
+            sleep 2
+          done
+          exit 1
+      - name: Create disposable TEST-catalog fixture
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_assignment_freeze -v ON_ERROR_STOP=1 -f supabase/test-only/tests/professional-assignment-human-review-fixture.sql
+      - name: Apply TEST-only human-review escalation migration
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_assignment_freeze -v ON_ERROR_STOP=1 -f supabase/test-only/20261123040000_professional_assignment_human_review_escalation.sql
+      - name: Run rollback-only human-review contract tests
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_assignment_freeze -v ON_ERROR_STOP=1 -f supabase/test-only/tests/professional-assignment-human-review.test.sql
