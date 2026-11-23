@@ -21,7 +21,7 @@ assert.match(endpoint,/RAZORPAY_ORDER_ATTACH_RECONCILIATION_REQUIRED/);
 assert.match(endpoint,/async function reconcileRazorpayOrder/);
 assert.match(endpoint,/RAZORPAY_ORDER_RECONCILIATION_REQUIRED/);
 assert.match(endpoint,/ORDER_LOOKUP_WINDOW_INCOMPLETE/);
-assert.match(endpoint,/candidate\?\.receipt===receipt/);
+assert.match(endpoint,/new URLSearchParams\(\{receipt,from:String\(from\)/);\nassert.match(endpoint,/candidate\?\.receipt===receipt/);
 assert.match(endpoint,/candidate\?\.notes\?\.payment_attempt_id/);
 assert.match(endpoint,/candidate\?\.notes\?\.ils_order_id/);
 assert.match(endpoint,/reservation\.created_at/);
