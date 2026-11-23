@@ -147,12 +147,30 @@ BEGIN
     actor,telemetry_assignment_1,'ACTIVATE','ACTIVE','CROSS_USER_ASSIGNMENT');
   PERFORM public.ils_professional_assignment_record_trusted_mutation_failure(
     actor,telemetry_assignment_2,'ACTIVATE','ACTIVE','CROSS_USER_ASSIGNMENT');
+
+  -- A legacy row for another professional must not influence the subject
+  -- attached to a threshold decision; aggregation and subject attribution
+  -- must both use SERVER_VERIFIED_MUTATION events only.
+  INSERT INTO public.ils_professional_assignment_mutation_failure_telemetry
+    (professional_user_id,failure_code,failure_class,safe_message,source_gate,
+     source_type,occurred_at)
+  VALUES(target_professional_id,'CROSS_USER_ASSIGNMENT','LEGACY',
+         'Historical untrusted event.','LEGACY_IMPORT',
+         'LEGACY_UNTRUSTED',clock_timestamp());
+
   v_count:=public.ils_professional_assignment_evaluate_mutation_alerts(15);
   IF v_count<>1 THEN RAISE EXCEPTION 'Expected one REVIEW evaluation, got %',v_count; END IF;
   SELECT count(*) INTO v_queues
   FROM public.ils_professional_assignment_security_review_queue
   WHERE decision='REVIEW' AND source_failure_code='CROSS_USER_ASSIGNMENT' AND review_status='PENDING';
   IF v_queues<>1 THEN RAISE EXCEPTION 'Expected one pending REVIEW queue'; END IF;
+  IF NOT EXISTS(
+    SELECT 1 FROM public.ils_professional_assignment_security_review_queue
+    WHERE decision='REVIEW' AND source_failure_code='CROSS_USER_ASSIGNMENT'
+      AND affected_professional_user_id=actor
+  ) THEN
+    RAISE EXCEPTION 'Legacy untrusted telemetry influenced review subject attribution';
+  END IF;
 
   -- The assignment can still proceed while a REVIEW item is pending.
   PERFORM set_config('request.jwt.claim.sub',actor::text,true);
