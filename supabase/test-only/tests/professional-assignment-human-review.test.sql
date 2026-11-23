@@ -645,12 +645,37 @@ BEGIN
        'public.ils_professional_assignment_mutation_request(uuid,text,text)','EXECUTE') THEN
     RAISE EXCEPTION 'Authenticated role cannot execute the public mutation request';
   END IF;
+  IF has_function_privilege('anon',
+       'public.ils_professional_assignment_mutation_request(uuid,text,text)','EXECUTE')
+     OR has_function_privilege('service_role',
+       'public.ils_professional_assignment_mutation_request(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'Unauthenticated or service role can execute the public mutation request';
+  END IF;
   IF has_function_privilege(current_user,
        'public.ils_professional_assignment_mutation_commit(uuid,text,text)','EXECUTE')
      OR has_function_privilege(current_user,
        'public.ils_professional_assignment_mutation_gate(uuid,text,text)','EXECUTE') THEN
     RAISE EXCEPTION 'Authenticated role can execute an internal mutation RPC';
   END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p
+    WHERE p.oid='public.ils_professional_assignment_mutation_request(uuid,text,text)'::regprocedure
+      AND p.prosecdef=true
+      AND 'search_path=""'=ANY(p.proconfig)
+  ) THEN
+    RAISE EXCEPTION 'Public mutation request must be SECURITY DEFINER with an empty search_path';
+  END IF;
+
+  IF public.ils_professional_assignment_mutation_request(
+       '11111111-1111-4111-8111-111111111111','PAUSE','ACTIVE') IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'Mutation request accepted a mismatched operation and target status';
+  END IF;
+  PERFORM set_config('request.jwt.claim.sub','',true);
+  IF public.ils_professional_assignment_mutation_request(
+       '11111111-1111-4111-8111-111111111111','PAUSE','PAUSED') IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'Mutation request accepted a missing authenticated subject';
+  END IF;
+  PERFORM set_config('request.jwt.claim.sub','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',true);
 
   IF public.ils_professional_assignment_mutation_request(
        '11111111-1111-4111-8111-111111111111','PAUSE','PAUSED') IS DISTINCT FROM true THEN
