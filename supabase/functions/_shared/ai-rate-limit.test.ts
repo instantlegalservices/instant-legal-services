@@ -26,6 +26,9 @@ Deno.test("AI rate limiter fails closed, enforces 429, and hashes client identit
     };
     const limited = await enforceAiRateLimit(new Request("https://test.invalid", { headers: { "cf-connecting-ip": "203.0.113.9" } }));
     if (limited?.status !== 429 || limited.headers.get("Retry-After") !== "17") throw new Error("limit must return 429 and Retry-After");
+    if (!limited.headers.get("Access-Control-Expose-Headers")?.toLowerCase().split(",").map(x => x.trim()).includes("retry-after")) {
+      throw new Error("browser clients must be allowed to read Retry-After");
+    }
     if (bodyText.includes("203.0.113.9")) throw new Error("raw client IP must not be sent to RPC");
     const payload = JSON.parse(bodyText);
     if (!/^[0-9a-f]{64}$/.test(payload.p_key_hash)) throw new Error("expected keyed 64-character digest");
