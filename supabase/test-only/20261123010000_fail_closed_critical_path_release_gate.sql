@@ -312,6 +312,12 @@ BEGIN
              AND r.passed IS TRUE
              AND r.actual_decision=t.expected_decision
              AND r.destructive_attempted IS FALSE
+             AND r.created_at >= greatest(
+               coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e),'-infinity'::timestamptz),
+               coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz),
+               coalesce((SELECT max(c.created_at) FROM public.ils_critical_path_evidence_contracts c),'-infinity'::timestamptz),
+               coalesce((SELECT max(t2.created_at) FROM public.ils_critical_path_release_proof_hostile_tests t2),'-infinity'::timestamptz)
+             )
          )::integer
   INTO v_hostile_total,v_hostile_verified
   FROM public.ils_critical_path_release_proof_hostile_tests t
@@ -372,7 +378,7 @@ BEGIN
      AND v_blocked_paths=0
      AND v_unverified=0
      AND v_dedicated_ok
-     AND v_hostile_total>0
+     AND v_hostile_total=8
      AND v_hostile_verified=v_hostile_total
      AND v_integrity_ok
      AND v_unique_deployments_ok
