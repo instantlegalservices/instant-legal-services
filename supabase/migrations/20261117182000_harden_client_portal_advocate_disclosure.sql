@@ -6,7 +6,7 @@ declare
   v_definition text;
   v_old_primary text := E'where aa.lead_id = c.id\n              and aa.status in (''Assigned'',''Active'')\n\n            order by aa.assigned_at asc';
   v_new_primary text := E'where aa.lead_id = c.id\n              and aa.status in (''Assigned'',''Active'')\n              and coalesce(ar.verification_status, ar.status, ''Pending'') = ''Approved''\n\n            order by aa.assigned_at asc';
-  v_mobile_pattern text := 'case[[:space:]]+when coalesce\\([[:space:]]*c\\.release_advocate_contact,[[:space:]]*false[[:space:]]*\\)[[:space:]]*then ar\\.mobile[[:space:]]*else null[[:space:]]*end';
+  v_mobile_pattern text := 'case[[:space:]]+when coalesce\([[:space:]]*c\.release_advocate_contact,[[:space:]]*false[[:space:]]*\)[[:space:]]*then ar\.mobile[[:space:]]*else null[[:space:]]*end';
   v_mobile_count integer;
 begin
   select pg_get_functiondef('public.get_client_portal(text,text)'::regprocedure)
