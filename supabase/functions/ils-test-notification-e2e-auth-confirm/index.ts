@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sha256Hex } from "../_shared/synthetic-auth-handoff-policy.ts";
 
 const REF = "bgsbuepolooybdqrzmoa";
 const SYN = "82de1b27-5939-4f9e-bdce-313ed59ee7b1";
@@ -26,18 +27,20 @@ Deno.serve(async (req: Request) => {
     return json({ error: "AUTH_OR_CONFIG_REQUIRED" }, 500);
   }
 
+  const tokenDigest = await sha256Hex(tokenHash);
   const admin = createClient(url, service, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
   const { data: handoff, error: handoffError } = await admin
     .from("ils_test_synthetic_auth_handoffs")
-    .select("id,synthetic_user_id,status,correlation_id,expires_at")
+    .select("id,synthetic_user_id,status,correlation_id,expires_at,token_hash_sha256")
     .eq("id", handoffId)
     .single();
 
   if (
     handoffError || !handoff || handoff.synthetic_user_id !== SYN ||
-    handoff.status !== "ISSUED" || new Date(handoff.expires_at) <= new Date()
+    handoff.status !== "ISSUED" || new Date(handoff.expires_at) <= new Date() ||
+    !handoff.token_hash_sha256 || handoff.token_hash_sha256 !== tokenDigest
   ) {
     return json({ error: "HANDOFF_INVALID_OR_EXPIRED" }, 400);
   }
@@ -57,6 +60,24 @@ Deno.serve(async (req: Request) => {
     }, 401);
   }
 
+  // Atomic compare-and-set: exactly one callback can consume this bound handoff.
+  // Consume before invoking downstream work so a concurrent replay cannot race it.
+  const { data: claimed, error: claimError } = await admin
+    .from("ils_test_synthetic_auth_handoffs")
+    .update({ status: "CONSUMED", consumed_at: new Date().toISOString() })
+    .eq("id", handoffId)
+    .eq("synthetic_user_id", SYN)
+    .eq("status", "ISSUED")
+    .eq("token_hash_sha256", tokenDigest)
+    .gt("expires_at", new Date().toISOString())
+    .select("id")
+    .maybeSingle();
+
+  if (claimError || !claimed) {
+    await client.auth.signOut();
+    return json({ error: "HANDOFF_ALREADY_CONSUMED_OR_INVALID" }, 409);
+  }
+
   const response = await fetch(url + "/functions/v1/ils-notification-e2e-real", {
     method: "POST",
     headers: {
@@ -72,16 +93,11 @@ Deno.serve(async (req: Request) => {
   const responseBody = await response.json().catch(() => ({}));
   await client.auth.signOut();
 
+  // A failed downstream attempt remains consumed. A fresh operator-issued
+  // handoff is required; never reopen a single-use OTP handoff for replay.
   if (!response.ok) {
-    await admin.from("ils_test_synthetic_auth_handoffs")
-      .update({ status: "SUPERSEDED" })
-      .eq("id", handoffId);
     return json({ error: "NOTIFICATION_E2E_FAILED", detail: responseBody }, response.status);
   }
-
-  await admin.from("ils_test_synthetic_auth_handoffs")
-    .update({ status: "CONSUMED", consumed_at: new Date().toISOString() })
-    .eq("id", handoffId);
 
   return json(responseBody);
 });
