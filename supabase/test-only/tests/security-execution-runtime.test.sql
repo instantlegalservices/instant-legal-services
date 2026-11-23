@@ -1,5 +1,5 @@
--- Runtime tests call the actual approval-binding/consume function contracts
--- against disposable synthetic rows. The outer ROLLBACK removes every fixture.
+-- Runtime tests execute the exact function definitions copied from the inspected
+-- TEST catalog against disposable synthetic rows. The outer ROLLBACK removes every fixture.
 BEGIN;
 DO $test$
 DECLARE
@@ -14,6 +14,19 @@ DECLARE
   snap text;
   err text;
 BEGIN
+  -- Guard against fixture drift: these hashes are the inspected TEST catalog
+  -- pg_get_functiondef SHA-256 values recorded on 2026-11-23.
+  IF encode(digest(pg_get_functiondef(
+       'public.ils_professional_security_approval_execution_bind(uuid,uuid,text,text,integer)'::regprocedure
+     ),'sha256'),'hex') <> '5cfd7a1b93ce0232b28749fb0d32cd0c25e3e71c7f72f8526cc65baee2f8c04f' THEN
+    RAISE EXCEPTION 'Bind fixture differs from inspected TEST catalog definition';
+  END IF;
+  IF encode(digest(pg_get_functiondef(
+       'public.ils_professional_security_approval_execution_consume(uuid,text,text,text)'::regprocedure
+     ),'sha256'),'hex') <> '1e824f178510db1434e56f13bb5c6811a70f885432c936bb3d9e149be7340cd4' THEN
+    RAISE EXCEPTION 'Consume fixture differs from inspected TEST catalog definition';
+  END IF;
+
   INSERT INTO public.ils_professional_assignment_mutation_alert_escalation_rules
     (decision,action_code,severity,requires_human_approval,destructive_action_allowed,active)
   VALUES('REVIEW','CREATE_SECURITY_REVIEW','MEDIUM',true,false,true);
