@@ -6,6 +6,10 @@ DECLARE
   actor uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
   target_professional_id uuid:='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
   v_reviewer_id uuid:='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  new_reviewer_id uuid:='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+  unverified_reviewer_id uuid:='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+  v_admin_result jsonb;
+  v_admin_audit_count integer;
   assignment_id uuid:=gen_random_uuid();
   telemetry_assignment_1 uuid:=gen_random_uuid();
   telemetry_assignment_2 uuid:=gen_random_uuid();
@@ -61,11 +65,143 @@ BEGIN
     (telemetry_assignment_3,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING'),
     (telemetry_assignment_4,gen_random_uuid(),'PROFESSIONAL',target_professional_id,'PENDING');
 
+  INSERT INTO auth.users(id,email,email_confirmed_at)
+  VALUES
+    (actor,'security-admin-fixture@example.invalid',clock_timestamp()),
+    (v_reviewer_id,'reviewer-fixture@example.invalid',clock_timestamp()),
+    (new_reviewer_id,'new-reviewer-fixture@example.invalid',clock_timestamp()),
+    (unverified_reviewer_id,'unverified-reviewer-fixture@example.invalid',NULL);
+
   INSERT INTO public.ils_professional_security_reviewer_authorizations
     (user_id,reviewer_role,authorization_status,identity_verified,security_training_verified)
   VALUES
     (actor,'SECURITY_ADMIN','ACTIVE',true,true),
     (v_reviewer_id,'SECURITY_REVIEWER','ACTIVE',true,true);
+
+  -- Only a different, active SECURITY_ADMIN may grant SECURITY_REVIEWER.
+  PERFORM set_config('request.jwt.claim.sub',actor::text,true);
+  PERFORM set_config('request.jwt.claim.role','authenticated',true);
+  v_admin_result:=public.ils_professional_security_reviewer_administer(
+    new_reviewer_id,'GRANT',
+    'Identity and security training verified against internal case references.',
+    'ILS-SEC-ID-TEST-0001','ILS-SEC-TRAIN-TEST-0001',
+    clock_timestamp()+interval '90 days');
+  IF v_admin_result->>'authorization_status'<>'ACTIVE'
+     OR v_admin_result->>'reviewer_role'<>'SECURITY_REVIEWER' THEN
+    RAISE EXCEPTION 'Reviewer provisioning did not return an active reviewer';
+  END IF;
+  IF NOT EXISTS(
+    SELECT 1 FROM public.ils_professional_security_reviewer_authorizations
+    WHERE user_id=new_reviewer_id AND reviewer_role='SECURITY_REVIEWER'
+      AND authorization_status='ACTIVE' AND identity_verified=true
+      AND security_training_verified=true AND assigned_by=actor
+      AND valid_until>clock_timestamp()
+  ) THEN RAISE EXCEPTION 'Provisioned reviewer authorization row is incomplete'; END IF;
+
+  BEGIN
+    PERFORM public.ils_professional_security_reviewer_administer(
+      actor,'GRANT','Attempted self-provisioning by the current administrator.',
+      'ILS-SEC-ID-TEST-0002','ILS-SEC-TRAIN-TEST-0002',
+      clock_timestamp()+interval '90 days');
+    RAISE EXCEPTION 'ASSERT_EXPECTED_REVIEWER_SELF_ADMIN_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEWER_SELF_ADMINISTRATION_BLOCKED' THEN RAISE; END IF;
+  END;
+
+  BEGIN
+    PERFORM public.ils_professional_security_reviewer_administer(
+      unverified_reviewer_id,'GRANT',
+      'Attempted grant to an unverified Auth identity.',
+      'ILS-SEC-ID-TEST-0003','ILS-SEC-TRAIN-TEST-0003',
+      clock_timestamp()+interval '90 days');
+    RAISE EXCEPTION 'ASSERT_EXPECTED_REVIEWER_IDENTITY_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEWER_TARGET_IDENTITY_UNVERIFIED' THEN RAISE; END IF;
+  END;
+
+  BEGIN
+    PERFORM public.ils_professional_security_reviewer_administer(
+      new_reviewer_id,'GRANT',
+      'Duplicate grant must not silently refresh an active reviewer.',
+      'ILS-SEC-ID-TEST-0004','ILS-SEC-TRAIN-TEST-0004',
+      clock_timestamp()+interval '90 days');
+    RAISE EXCEPTION 'ASSERT_EXPECTED_DUPLICATE_REVIEWER_GRANT_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEWER_ALREADY_ACTIVE' THEN RAISE; END IF;
+  END;
+
+  -- An ordinary reviewer cannot administer another reviewer.
+  PERFORM set_config('request.jwt.claim.sub',v_reviewer_id::text,true);
+  BEGIN
+    PERFORM public.ils_professional_security_reviewer_administer(
+      new_reviewer_id,'SUSPEND','Unauthorized reviewer attempted to suspend another reviewer.');
+    RAISE EXCEPTION 'ASSERT_EXPECTED_SECURITY_ADMIN_REQUIRED';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_ADMIN_REQUIRED' THEN RAISE; END IF;
+  END;
+
+  -- The Security Admin may suspend and revoke; both transitions are audited.
+  PERFORM set_config('request.jwt.claim.sub',actor::text,true);
+  PERFORM public.ils_professional_security_reviewer_administer(
+    new_reviewer_id,'SUSPEND','Temporary suspension pending a scheduled security review.');
+  IF NOT EXISTS(SELECT 1 FROM public.ils_professional_security_reviewer_authorizations
+                WHERE user_id=new_reviewer_id AND authorization_status='SUSPENDED') THEN
+    RAISE EXCEPTION 'Reviewer suspension did not persist';
+  END IF;
+  PERFORM public.ils_professional_security_reviewer_administer(
+    new_reviewer_id,'REVOKE','Reviewer authorization revoked after independent review.');
+  IF NOT EXISTS(SELECT 1 FROM public.ils_professional_security_reviewer_authorizations
+                WHERE user_id=new_reviewer_id AND authorization_status='REVOKED') THEN
+    RAISE EXCEPTION 'Reviewer revocation did not persist';
+  END IF;
+  SELECT count(*) INTO v_admin_audit_count
+  FROM public.ils_professional_security_reviewer_admin_audit
+  WHERE subject_user_id=new_reviewer_id AND actor_user_id=actor;
+  IF v_admin_audit_count<>3 THEN
+    RAISE EXCEPTION 'Expected grant/suspend/revoke audit entries, got %',v_admin_audit_count;
+  END IF;
+  IF EXISTS(SELECT 1 FROM public.ils_professional_security_reviewer_admin_audit
+            WHERE subject_user_id=new_reviewer_id AND reviewer_role<>'SECURITY_REVIEWER') THEN
+    RAISE EXCEPTION 'Reviewer provisioning audit contains an elevated role';
+  END IF;
+  IF has_table_privilege('service_role',
+       'public.ils_professional_security_reviewer_admin_audit','INSERT')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_security_reviewer_admin_audit','UPDATE')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_security_reviewer_admin_audit','DELETE')
+     OR has_table_privilege('service_role',
+       'public.ils_professional_security_reviewer_admin_audit','TRUNCATE') THEN
+    RAISE EXCEPTION 'service_role can bypass reviewer administration audit';
+  END IF;
+
+  BEGIN
+    UPDATE public.ils_professional_security_reviewer_admin_audit
+    SET reason='tampered' WHERE subject_user_id=new_reviewer_id;
+    RAISE EXCEPTION 'ASSERT_EXPECTED_REVIEWER_AUDIT_UPDATE_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEWER_ADMIN_AUDIT_APPEND_ONLY' THEN RAISE; END IF;
+  END;
+  BEGIN
+    DELETE FROM public.ils_professional_security_reviewer_admin_audit
+    WHERE subject_user_id=new_reviewer_id;
+    RAISE EXCEPTION 'ASSERT_EXPECTED_REVIEWER_AUDIT_DELETE_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEWER_ADMIN_AUDIT_APPEND_ONLY' THEN RAISE; END IF;
+  END;
+  BEGIN
+    TRUNCATE public.ils_professional_security_reviewer_admin_audit;
+    RAISE EXCEPTION 'ASSERT_EXPECTED_REVIEWER_AUDIT_TRUNCATE_BLOCK';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+    IF err<>'SECURITY_REVIEWER_ADMIN_AUDIT_APPEND_ONLY' THEN RAISE; END IF;
+  END;
 
   -- Unauthenticated events are legacy/untrusted and cannot trigger escalation.
   IF EXISTS(SELECT 1 FROM public.ils_professional_assignment_mutation_alert_thresholds
