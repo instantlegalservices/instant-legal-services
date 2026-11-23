@@ -10,6 +10,20 @@ BEGIN
 END;
 $roles$;
 
+CREATE TABLE public.ils_professional_security_reviewer_authorizations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE,
+  reviewer_role text NOT NULL,
+  authorization_status text NOT NULL CHECK (authorization_status IN ('PENDING','ACTIVE','SUSPENDED','REVOKED')),
+  identity_verified boolean NOT NULL DEFAULT false,
+  security_training_verified boolean NOT NULL DEFAULT false,
+  assigned_by uuid,
+  valid_from timestamptz,
+  valid_until timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE TABLE public.ils_professional_assignment_security_review_queue (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   escalation_id uuid UNIQUE,
@@ -73,11 +87,14 @@ ALTER TABLE public.ils_professional_assignment_mutation_alert_escalation_rules E
 ALTER TABLE public.ils_professional_assignment_mutation_alert_escalation_rules FORCE ROW LEVEL SECURITY;
 ALTER TABLE public.ils_professional_security_approval_execution_bindings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ils_professional_security_approval_execution_bindings FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.ils_professional_security_reviewer_authorizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ils_professional_security_reviewer_authorizations FORCE ROW LEVEL SECURITY;
 
 GRANT ALL ON public.ils_professional_assignment_security_review_queue TO service_role;
 GRANT ALL ON public.ils_professional_assignment_security_review_approval_log TO service_role;
 GRANT ALL ON public.ils_professional_assignment_mutation_alert_escalation_rules TO service_role;
 GRANT ALL ON public.ils_professional_security_approval_execution_bindings TO service_role;
+GRANT ALL ON public.ils_professional_security_reviewer_authorizations TO service_role;
 
 CREATE OR REPLACE FUNCTION public.ils_professional_security_approval_execution_bind(p_queue_id uuid, p_approval_log_id uuid, p_approved_action text, p_execution_nonce text, p_ttl_minutes integer DEFAULT 15)
  RETURNS uuid
@@ -114,14 +131,33 @@ BEGIN
   WHERE id = p_approval_log_id AND queue_id = p_queue_id
   FOR UPDATE;
   IF NOT FOUND OR a.approval_decision <> 'APPROVE'
-     OR a.approved_action <> p_approved_action THEN
+     OR a.approved_action <> p_approved_action
+     OR a.reviewer_id IS NULL
+     OR q.assigned_reviewer_id IS DISTINCT FROM a.reviewer_id THEN
     RAISE EXCEPTION 'EXECUTION_BINDING_ACTION_MISMATCH';
   END IF;
 
   SELECT * INTO r
+  FROM public.ils_professional_security_reviewer_authorizations
+  WHERE user_id = a.reviewer_id
+    AND authorization_status = 'ACTIVE'
+    AND reviewer_role IN ('SECURITY_REVIEWER','SECURITY_ADMIN')
+    AND identity_verified = true
+    AND security_training_verified = true
+    AND (valid_from IS NULL OR valid_from <= now())
+    AND (valid_until IS NULL OR valid_until >= now())
+  FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'EXECUTION_BINDING_REVIEWER_NOT_AUTHORIZED';
+  END IF;
+
+  PERFORM 1
   FROM public.ils_professional_assignment_mutation_alert_escalation_rules
-  WHERE decision = q.decision AND action_code = p_approved_action AND active = true;
-  IF NOT FOUND OR r.destructive_action_allowed = true THEN
+  WHERE decision = q.decision
+    AND action_code = p_approved_action
+    AND active = true
+    AND destructive_action_allowed = false;
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'EXECUTION_BINDING_ACTION_NOT_ALLOWED';
   END IF;
 
@@ -140,8 +176,13 @@ BEGIN
 
   snap := encode(digest(concat_ws('|',
     q.id::text, q.review_status, q.decision, q.source_failure_code,
-    a.id::text, a.approval_decision, a.approved_action,
-    coalesce(a.approval_reason,'')), 'sha256'), 'hex');
+    q.assigned_reviewer_id::text,
+    a.id::text, a.reviewer_id::text, a.approval_decision,
+    a.approved_action, coalesce(a.approval_reason,''),
+    r.reviewer_role, r.authorization_status,
+    r.identity_verified::text, r.security_training_verified::text,
+    coalesce(r.valid_from::text,''), coalesce(r.valid_until::text,''),
+    r.updated_at::text), 'sha256'), 'hex');
 
   INSERT INTO public.ils_professional_security_approval_execution_bindings
     (queue_id, approval_log_id, approved_action, execution_status,
@@ -166,6 +207,7 @@ DECLARE
   b record;
   q record;
   a record;
+  r record;
   snap text;
   did_execute boolean := false;
 BEGIN
@@ -195,8 +237,8 @@ BEGIN
   IF b.expires_at IS NULL OR now() > b.expires_at THEN
     UPDATE public.ils_professional_security_approval_execution_bindings
     SET execution_status = 'BLOCKED'
-    WHERE id = b.id;
-    RAISE EXCEPTION 'EXECUTION_CONSUME_EXPIRED';
+    WHERE id = b.id AND execution_status = 'READY';
+    RETURN false;
   END IF;
 
   SELECT * INTO q
@@ -213,14 +255,38 @@ BEGIN
   FOR UPDATE;
   IF NOT FOUND OR q.review_status <> 'APPROVED'
      OR a.approval_decision <> 'APPROVE'
-     OR a.approved_action <> b.approved_action THEN
+     OR a.approved_action <> b.approved_action
+     OR a.reviewer_id IS NULL
+     OR q.assigned_reviewer_id IS DISTINCT FROM a.reviewer_id THEN
     RAISE EXCEPTION 'EXECUTION_CONSUME_APPROVAL_DRIFT';
+  END IF;
+
+  SELECT * INTO r
+  FROM public.ils_professional_security_reviewer_authorizations
+  WHERE user_id = a.reviewer_id
+    AND authorization_status = 'ACTIVE'
+    AND reviewer_role IN ('SECURITY_REVIEWER','SECURITY_ADMIN')
+    AND identity_verified = true
+    AND security_training_verified = true
+    AND (valid_from IS NULL OR valid_from <= now())
+    AND (valid_until IS NULL OR valid_until >= now())
+  FOR SHARE;
+  IF NOT FOUND THEN
+    UPDATE public.ils_professional_security_approval_execution_bindings
+    SET execution_status = 'BLOCKED'
+    WHERE id = b.id AND execution_status = 'READY';
+    RETURN false;
   END IF;
 
   snap := encode(digest(concat_ws('|',
     q.id::text, q.review_status, q.decision, q.source_failure_code,
-    a.id::text, a.approval_decision, a.approved_action,
-    coalesce(a.approval_reason,'')), 'sha256'), 'hex');
+    q.assigned_reviewer_id::text,
+    a.id::text, a.reviewer_id::text, a.approval_decision,
+    a.approved_action, coalesce(a.approval_reason,''),
+    r.reviewer_role, r.authorization_status,
+    r.identity_verified::text, r.security_training_verified::text,
+    coalesce(r.valid_from::text,''), coalesce(r.valid_until::text,''),
+    r.updated_at::text), 'sha256'), 'hex');
 
   IF snap <> b.approval_snapshot_hash OR snap <> p_approval_snapshot_hash THEN
     RAISE EXCEPTION 'EXECUTION_CONSUME_SNAPSHOT_MISMATCH';
