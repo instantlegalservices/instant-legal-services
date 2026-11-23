@@ -1,3 +1,4 @@
+import { enforceAiRateLimit } from "../_shared/ai-rate-limit.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const json=(body:any,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type"}});
@@ -25,6 +26,7 @@ Deno.serve(async(req)=>{
   if(question.length>6000)return json({ok:false,message:"Question is too long."},400);
   const openKey=Deno.env.get("OPENROUTER_API_KEY");
   if(!openKey)return json({ok:false,message:"AI service is not configured. Add OPENROUTER_API_KEY in Supabase secrets."},503);
+  const rateLimitResponse=await enforceAiRateLimit(req);if(rateLimitResponse)return rateLimitResponse;
 
   const supabaseUrl=Deno.env.get("SUPABASE_URL")||"";
   const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||Deno.env.get("SUPABASE_SECRET_KEY")||"";
