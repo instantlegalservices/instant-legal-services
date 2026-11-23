@@ -7,7 +7,13 @@ assert.match(source, /async function isAdmin\(user: any\)[\s\S]*?if \(!user\?\.i
   "admin document access must be bound to an explicitly configured auth user ID");
 assert.doesNotMatch(source, /user\?\.email\s*===\s*["']fahat29@gmail\.com["']/,
   "admin access must not rely on an email-only hardcoded identity");
-assert.match(source, /function escapeLikePattern\(value: string\)[\s\S]*?value\.replace\(\/\[\\\\%_\]\/g, "\\\\\\assert.match(source, /async function getAssignedAdvocate"\)/,
+assert.ok(source.includes("function escapeLikePattern(value: string) {"),
+  "legacy email fallback must use a literal LIKE-pattern escaper");
+assert.ok(source.includes(String.raw\`return value.replace(/[\\\\%_]/g, "\\\\$&");\`),
+  "LIKE metacharacters must be escaped before querying");
+assert.ok(source.includes('.ilike("email", escapeLikePattern(String(user.email).trim()))'),
+  "legacy email lookup must compare the supplied email literally");
+assert.match(source, /async function getAssignedAdvocate"\)/,
   "legacy email fallback must escape SQL LIKE wildcards before case-insensitive matching");
 assert.match(source, /\.ilike\("email", escapeLikePattern\(String\(user\.email\)\.trim\(\)\)\)/,
   "legacy email lookup must compare the supplied email literally");
@@ -15,7 +21,7 @@ assert.match(source, /async function getAssignedAdvocate\(user: any, clientId: n
   "document authorization must resolve the authenticated advocate server-side");
 assert.match(source, /\.eq\("auth_user_id", user\.id\)[\s\S]*?if \(advocate\) \{[\s\S]*?advocate\.status[\s\S]*?advocate\.verification_status[\s\S]*?if \(!approved\) return null/,
   "linked identity must be checked first and an unapproved linked profile must fail closed");
-assert.match(source, /else if \(user\.email\) \{[\s\S]*?\.is\("auth_user_id", null\)[\s\S]*?\.ilike\("email", String\(user\.email\)\.trim\(\)\)[\s\S]*?\.ilike\("status", "Approved"\)[\s\S]*?\.ilike\("verification_status", "Approved"\)/,
+assert.match(source, /else if \(user\.email\) \{[\s\S]*?\.is\("auth_user_id", null\)[\s\S]*?\.ilike\("email", escapeLikePattern\(String\(user\.email\)\.trim\(\)\)\)[\s\S]*?\.ilike\("status", "Approved"\)[\s\S]*?\.ilike\("verification_status", "Approved"\)/,
   "email fallback must be restricted to unlinked legacy registrations and require both approvals");
 assert.match(source, /\.eq\("lead_id", clientId\)[\s\S]*?\.eq\("advocate_id", advocate\.id\)[\s\S]*?\.in\("status", \["Assigned", "Active"\]\)/,
   "document access must require an active assignment for the resolved advocate");
