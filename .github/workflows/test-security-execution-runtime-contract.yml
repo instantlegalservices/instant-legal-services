@@ -8,6 +8,7 @@ on:
       - "supabase/test-only/tests/security-execution-runtime-fixture.sql"
       - "supabase/test-only/tests/security-execution-runtime.test.sql"
       - "supabase/test-only/20261123020000_persist_expired_security_execution_binding_block.sql"
+      - "supabase/test-only/20261123030000_revalidate_security_reviewer_at_bind_and_consume.sql"
       - ".github/workflows/test-security-execution-runtime-contract.yml"
   pull_request:
     paths:
@@ -51,6 +52,11 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -U postgres -d ils_security_runtime -v ON_ERROR_STOP=1 -f supabase/test-only/20261123020000_persist_expired_security_execution_binding_block.sql
+      - name: Apply reviewer revalidation hardening to disposable PostgreSQL
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ils_security_runtime -v ON_ERROR_STOP=1 -f supabase/test-only/20261123030000_revalidate_security_reviewer_at_bind_and_consume.sql
       - name: Execute rollback-only runtime contract tests
         env:
           PGPASSWORD: postgres
