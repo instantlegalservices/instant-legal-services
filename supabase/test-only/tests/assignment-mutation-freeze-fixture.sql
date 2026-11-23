@@ -183,7 +183,3 @@ REVOKE ALL ON FUNCTION public.ils_professional_assignment_mutation_commit(uuid,t
   FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.ils_professional_assignment_mutation_commit(uuid,text,text)
   TO service_role;
-REVOKE ALL ON FUNCTION public.ils_professional_assignment_mutation_gate(uuid,text,text)
-  FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION public.ils_professional_assignment_mutation_gate(uuid,text,text)
-  TO service_role;
