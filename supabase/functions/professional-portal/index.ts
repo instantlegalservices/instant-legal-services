@@ -13,6 +13,42 @@ const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{
 
 const clean=(v:unknown)=>String(v??"").trim();
 
+function escapeLikePattern(value:string){
+  return value.replace(/[\\\\%_]/g,"\\\\async function loadAdvocateAssignments(");
+}
+
+async function resolveIdentityBoundProfile(
+  admin:any,
+  table:"advocate_registrations"|"professional_join_requests",
+  columns:string,
+  userId:string,
+  email:string
+){
+  if(!userId) return null;
+
+  // A profile linked to this auth user always wins. Query errors and duplicate
+  // linked identities fail closed instead of silently falling back to email.
+  const {data:linked,error:linkedError}=await admin
+    .from(table)
+    .select(columns)
+    .eq("auth_user_id",userId)
+    .maybeSingle();
+  if(linkedError) throw linkedError;
+  if(linked) return linked;
+
+  // Transitional compatibility is limited to profiles not linked to ANY auth user.
+  // Escape LIKE metacharacters so the authenticated email is compared literally.
+  if(!email) return null;
+  const {data:legacy,error:legacyError}=await admin
+    .from(table)
+    .select(columns)
+    .is("auth_user_id",null)
+    .ilike("email",escapeLikePattern(email))
+    .maybeSingle();
+  if(legacyError) throw legacyError;
+  return legacy||null;
+}
+
 async function loadAdvocateAssignments(admin:any,advocateId:number,status:unknown,verificationStatus:unknown){
   const approved=String(status||"").trim().toLowerCase()==="approved"
     && String(verificationStatus||"").trim().toLowerCase()==="approved";
@@ -78,12 +114,13 @@ Deno.serve(async(req)=>{
     const uid=user.id;
     const email=clean(user.email).toLowerCase();
 
-    const {data:adv}=await admin
-      .from("advocate_registrations")
-      .select("id,advocate_name,email,mobile,enrollment_number,state_bar_council,practice_state,district_court,primary_practice_area,years_of_practice,status,verification_status,public_profile,approved_at,undertaking_accepted")
-      .or(`auth_user_id.eq.${uid},email.ilike.${email}`)
-      .order("created_at",{ascending:false})
-      .limit(1);
+    const adv=await resolveIdentityBoundProfile(
+      admin,
+      "advocate_registrations",
+      "id,advocate_name,email,mobile,enrollment_number,state_bar_council,practice_state,district_court,primary_practice_area,years_of_practice,status,verification_status,public_profile,approved_at,undertaking_accepted",
+      uid,
+      email
+    );
 
     if(adv?.[0]){
       const a=adv[0];
@@ -118,12 +155,13 @@ Deno.serve(async(req)=>{
       });
     }
 
-    const {data:prof}=await admin
-      .from("professional_join_requests")
-      .select("id,professional_type,full_name,email,mobile,state,city,specialization,years_of_experience,firm_or_organization,status,verification_status,public_profile,created_at,undertaking_accepted")
-      .or(`auth_user_id.eq.${uid},email.ilike.${email}`)
-      .order("created_at",{ascending:false})
-      .limit(1);
+    const prof=await resolveIdentityBoundProfile(
+      admin,
+      "professional_join_requests",
+      "id,professional_type,full_name,email,mobile,state,city,specialization,years_of_experience,firm_or_organization,status,verification_status,public_profile,created_at,undertaking_accepted",
+      uid,
+      email
+    );
 
     if(prof?.[0]){
       const p=prof[0];
