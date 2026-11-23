@@ -6,6 +6,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN CREATE ROLE anon NOLOGIN; END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN CREATE ROLE authenticated NOLOGIN; END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN CREATE ROLE service_role NOLOGIN; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'ils_rpc_owner') THEN CREATE ROLE ils_rpc_owner NOLOGIN; END IF;
 END
 $roles$;
 
@@ -169,6 +170,15 @@ REVOKE ALL ON FUNCTION public.advocate_add_work_progress(bigint,text,text,text,b
 GRANT EXECUTE ON FUNCTION public.get_advocate_client_portal(bigint) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.advocate_send_client_message(bigint,text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.advocate_add_work_progress(bigint,text,text,text,boolean,date,date,date) TO authenticated, service_role;
+
+-- Deliberately make the RPC owner differ from the migration/helper owner. The
+-- migration must grant helper EXECUTE to this trusted SECURITY DEFINER owner.
+GRANT USAGE ON SCHEMA public, auth TO ils_rpc_owner;
+GRANT EXECUTE ON FUNCTION auth.uid(), auth.jwt() TO ils_rpc_owner;
+GRANT SELECT ON public.advocate_registrations, public.advocate_assignments TO ils_rpc_owner;
+ALTER FUNCTION public.get_advocate_client_portal(bigint) OWNER TO ils_rpc_owner;
+ALTER FUNCTION public.advocate_send_client_message(bigint,text) OWNER TO ils_rpc_owner;
+ALTER FUNCTION public.advocate_add_work_progress(bigint,text,text,text,boolean,date,date,date) OWNER TO ils_rpc_owner;
 
 \ir ../supabase/migrations/20261123170000_harden_advocate_matter_rpc_identity.sql
 
