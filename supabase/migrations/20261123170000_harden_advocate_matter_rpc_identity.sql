@@ -123,8 +123,15 @@ BEGIN
       RAISE EXCEPTION 'Reviewed identity block mismatch in %; expected exactly one old block, found %', v_signature, v_old_count;
     END IF;
 
-    IF position(v_old_search_path in v_definition) = 0 THEN
-      RAISE EXCEPTION 'Reviewed search_path clause mismatch in %', v_signature;
+    IF position(v_old_search_path in v_definition) = 0
+       OR position(v_old_email_decl in v_definition) = 0 THEN
+      RAISE EXCEPTION 'Reviewed identity declaration/search_path mismatch in %', v_signature;
+    END IF;
+
+    IF position('public.advocate_assignments' in v_definition) = 0
+       OR position('Assigned' in v_definition) = 0
+       OR position('Active' in v_definition) = 0 THEN
+      RAISE EXCEPTION 'Reviewed active-assignment ownership check missing in %', v_signature;
     END IF;
 
     v_definition := replace(v_definition, v_old_identity, v_new_identity);
@@ -132,7 +139,11 @@ BEGIN
     v_definition := replace(v_definition, v_old_search_path, E'SET search_path TO \'\'');
 
     IF position('ils_current_approved_advocate' in v_definition) = 0
-       OR position(E'SET search_path TO \'\'' in v_definition) = 0 THEN
+       OR position(E'SET search_path TO \'\'' in v_definition) = 0
+       OR position('v_email' in v_definition) > 0
+       OR position('public.advocate_assignments' in v_definition) = 0
+       OR position('Assigned' in v_definition) = 0
+       OR position('Active' in v_definition) = 0 THEN
       RAISE EXCEPTION 'Hardened definition validation failed for %', v_signature;
     END IF;
 
@@ -161,7 +172,9 @@ BEGIN
     END IF;
 
     IF position('ils_current_approved_advocate' in pg_get_functiondef(v_oid)) = 0
-       OR position(E'SET search_path TO \'\'' in pg_get_functiondef(v_oid)) = 0 THEN
+       OR position(E'SET search_path TO \'\'' in pg_get_functiondef(v_oid)) = 0
+       OR position('v_email' in pg_get_functiondef(v_oid)) > 0
+       OR position('public.advocate_assignments' in pg_get_functiondef(v_oid)) = 0 THEN
       RAISE EXCEPTION 'RPC hardening postcondition failed: %', v_signature;
     END IF;
   END LOOP;
