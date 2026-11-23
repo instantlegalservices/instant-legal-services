@@ -274,7 +274,7 @@ $function$;
 
 -- Action 489 requires an immutable approval audit. Protect it at both the
 -- privilege and trigger layers, including against privileged API roles.
-CREATE OR REPLACE FUNCTION public.ils_professional_assignment_security_review_approval_log_reject_mutation()
+CREATE OR REPLACE FUNCTION public.ils_prof_assignment_approval_log_append_only()
 RETURNS trigger
 LANGUAGE plpgsql
 SET search_path TO ''
@@ -289,18 +289,18 @@ DROP TRIGGER IF EXISTS ils_professional_security_review_approval_log_no_row_muta
 CREATE TRIGGER ils_professional_security_review_approval_log_no_row_mutation
   BEFORE UPDATE OR DELETE ON public.ils_professional_assignment_security_review_approval_log
   FOR EACH ROW
-  EXECUTE FUNCTION public.ils_professional_assignment_security_review_approval_log_reject_mutation();
+  EXECUTE FUNCTION public.ils_prof_assignment_approval_log_append_only();
 
 DROP TRIGGER IF EXISTS ils_professional_security_review_approval_log_no_truncate
   ON public.ils_professional_assignment_security_review_approval_log;
 CREATE TRIGGER ils_professional_security_review_approval_log_no_truncate
   BEFORE TRUNCATE ON public.ils_professional_assignment_security_review_approval_log
   FOR EACH STATEMENT
-  EXECUTE FUNCTION public.ils_professional_assignment_security_review_approval_log_reject_mutation();
+  EXECUTE FUNCTION public.ils_prof_assignment_approval_log_append_only();
 
 REVOKE UPDATE,DELETE,TRUNCATE ON public.ils_professional_assignment_security_review_approval_log
   FROM PUBLIC,anon,authenticated,service_role;
-REVOKE ALL ON FUNCTION public.ils_professional_assignment_security_review_approval_log_reject_mutation()
+REVOKE ALL ON FUNCTION public.ils_prof_assignment_approval_log_append_only()
   FROM PUBLIC,anon,authenticated,service_role;
 
 REVOKE ALL ON FUNCTION public.ils_professional_assignment_evaluate_mutation_alerts(integer)
