@@ -61,13 +61,18 @@ BEGIN
    '10000000-0000-0000-0000-000000000003',repeat('c',64)) THEN
    RAISE EXCEPTION 'wrong operator role consumed handoff';
  END IF;
+END
+$negative$;
+RESET ROLE;
+
+DO $assert$
+BEGIN
  IF (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000001') <> 'ISSUED'
     OR (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000002') <> 'ISSUED'
     OR (SELECT status FROM public.ils_test_synthetic_auth_handoffs WHERE id='20000000-0000-0000-0000-000000000003') <> 'ISSUED' THEN
    RAISE EXCEPTION 'Denied handoff attempts must leave the handoff ISSUED';
  END IF;
 END
-$negative$;
-RESET ROLE;
+$assert$;
 
 \echo PASS: operator-active and exact-token checks deny unauthorized handoff consumption; service_role is the only RPC caller.
