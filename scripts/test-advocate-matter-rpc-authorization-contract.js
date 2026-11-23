@@ -21,6 +21,10 @@ assert.match(migration, /v_advocate\.status[\s\S]*?v_advocate\.verification_stat
 assert.match(migration, /lower\(btrim\(coalesce\(v_advocate\.status, ''\)\)\) <> 'approved'[\s\S]*?lower\(btrim\(coalesce\(v_advocate\.verification_status, ''\)\)\) <> 'approved'/);
 assert.match(migration, /REVOKE ALL ON FUNCTION public\.ils_current_approved_advocate\(\)[\s\S]*?FROM PUBLIC, anon, authenticated, service_role/);
 assert.match(migration, /Reviewed identity block mismatch/);
+assert.match(migration, /Reviewed active-assignment ownership check missing/);
+assert.match(migration, /public\\.advocate_assignments/);
+assert.match(migration, /position\('v_email' in v_definition\) > 0/);
+assert.doesNotMatch(migration, /DROP TABLE|TRUNCATE|DELETE FROM|UPDATE public\\./i);
 assert.match(migration, /SET search_path TO/);
 assert.match(migration, /has_function_privilege\('authenticated'/);
 assert.match(migration, /has_function_privilege\('service_role'/);
