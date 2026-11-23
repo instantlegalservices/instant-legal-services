@@ -48,9 +48,6 @@ function escapeLikePattern(value: string) {
   return value.replace(/[\\%_]/g, "\\$&");
 }
 
-async function getAssignedAdvocate(user: any, clientId: number) {");
-}
-
 async function getAssignedAdvocate(user: any, clientId: number) {
   if (!user?.id) return null;
 
