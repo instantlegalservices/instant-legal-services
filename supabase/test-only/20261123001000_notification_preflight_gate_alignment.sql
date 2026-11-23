@@ -75,7 +75,7 @@ AS $function$
     external_provider_invocation_allowed
   FROM public.ils_notification_e2e_preflight
   WHERE path_code='NOTIFICATION_E2E';
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.ils_notification_e2e_release_gate_evaluate()
  RETURNS TABLE(decision text, genuine_verified_evidence_count integer, synthetic_evidence_count integer, hostile_tests_passed integer, hostile_tests_failed integer, destructive_attempts integer, reason text)
@@ -195,7 +195,7 @@ BEGIN
 
   RETURN QUERY SELECT v_decision,v_genuine,v_synth,v_pass,v_fail,v_dest,v_reason;
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.ils_run_critical_path_atomic_release_proof()
  RETURNS TABLE(run_id uuid, decision text, total_paths integer, passed_paths integer, held_paths integer, failed_paths integer, destructive_attempts integer)
@@ -352,4 +352,4 @@ BEGIN
     WHERE id=v_run;
   RETURN QUERY SELECT v_run,v_decision,v_total,v_pass,v_hold,v_fail,0;
 END;
-$function$
+$function$;
