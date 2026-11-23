@@ -17,7 +17,7 @@ CREATE OR REPLACE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$
 $$;
 CREATE OR REPLACE FUNCTION storage.foldername(name text) RETURNS text[]
 LANGUAGE sql IMMUTABLE AS $$
-  SELECT string_to_array(name, '/')[1:array_length(string_to_array(name, '/'),1)-1]
+  SELECT (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'),1)-1]
 $$;
 GRANT USAGE ON SCHEMA auth, storage TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION auth.uid(), auth.jwt(), storage.foldername(text) TO anon, authenticated, service_role;
@@ -78,6 +78,8 @@ CREATE POLICY "ils_public_approved_advocate_photo_read" ON storage.objects FOR S
 USING (bucket_id='advocate-photo' AND name LIKE 'approved/%');
 CREATE POLICY "ils_public_advocate_pending_insert" ON storage.objects FOR INSERT TO anon, authenticated
 WITH CHECK (bucket_id='advocate-photo-pending' AND name LIKE 'pending/%');
+CREATE POLICY "Public can upload advocate photos" ON storage.objects FOR INSERT TO anon, authenticated
+WITH CHECK (bucket_id='advocate-photo' AND (storage.foldername(name))[1]='pending');
 
 INSERT INTO public.ils_admin_users(user_id,email) VALUES
  ('10000000-0000-0000-0000-000000000001','admin-new@example.test');
