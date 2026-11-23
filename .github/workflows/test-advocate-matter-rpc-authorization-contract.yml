@@ -1,0 +1,41 @@
+name: Advocate Matter RPC Authorization Contract
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261123170000_harden_advocate_matter_rpc_identity.sql"
+      - "scripts/test-advocate-matter-rpc-authorization-contract.js"
+      - "scripts/test-advocate-matter-rpc-authorization.sql"
+      - ".github/workflows/test-advocate-matter-rpc-authorization-contract.yml"
+  workflow_dispatch:
+
+jobs:
+  advocate-matter-rpc-authorization-contract:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ils_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ils_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify static advocate matter RPC authorization contract
+        run: node scripts/test-advocate-matter-rpc-authorization-contract.js
+      - name: Apply migration and run PostgreSQL authorization integration tests
+        env:
+          PGPASSWORD: postgres
+        run: psql "postgresql://postgres@localhost:5432/ils_test" -v ON_ERROR_STOP=1 -f scripts/test-advocate-matter-rpc-authorization.sql
