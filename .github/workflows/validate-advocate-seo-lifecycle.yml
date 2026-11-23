@@ -37,6 +37,9 @@ jobs:
           node --check scripts/sync-advocate-sitemap.js
           node --check scripts/sitemap-composer.js
 
+      - name: Validate official labour route registry and SEO pages
+        run: node scripts/test-government-labour-routes.js
+
       - name: Generate advocate profile from isolated fake feed
         shell: bash
         run: |
