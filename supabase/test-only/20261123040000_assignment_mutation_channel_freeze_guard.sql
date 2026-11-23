@@ -42,7 +42,19 @@ ALTER TABLE public.ils_professional_assignment_mutation_channel_audit FORCE ROW 
 REVOKE ALL ON public.ils_professional_assignment_mutation_channel_control FROM PUBLIC,anon,authenticated;
 REVOKE ALL ON public.ils_professional_assignment_mutation_channel_audit FROM PUBLIC,anon,authenticated;
 GRANT SELECT ON public.ils_professional_assignment_mutation_channel_control TO service_role;
+GRANT SELECT ON public.ils_professional_assignment_mutation_channel_control TO authenticated,service_role;
 GRANT SELECT,INSERT ON public.ils_professional_assignment_mutation_channel_audit TO service_role;
+
+CREATE POLICY ils_assignment_channel_state_read
+ON public.ils_professional_assignment_mutation_channel_control
+FOR SELECT TO authenticated USING (true);
+CREATE POLICY ils_assignment_channel_state_service_write
+ON public.ils_professional_assignment_mutation_channel_control
+FOR ALL USING (auth.role()='service_role')
+WITH CHECK (auth.role()='service_role');
+CREATE POLICY ils_assignment_channel_audit_service_write
+ON public.ils_professional_assignment_mutation_channel_audit
+FOR INSERT WITH CHECK (auth.role()='service_role');
 
 CREATE UNIQUE INDEX IF NOT EXISTS ils_professional_assignment_open_escalation_uq
 ON public.ils_professional_assignment_mutation_alert_escalations
