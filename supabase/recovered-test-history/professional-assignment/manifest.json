@@ -500,5 +500,7 @@
       "archive_path": "supabase/recovered-test-history/professional-assignment/20260909092808_action_615_lock_internal_assignment_read_gates.sql",
       "source_sha256": "b47f845bb99be4ac3801a068241d11adcce6bac83f9294103fe6f6ca3e4b9e90"
     }
-  ]
+  ],
+  "source_checksum_algorithm": "SHA-256",
+  "source_checksum_scope": "UTF-8 bytes of the exact TEST ledger statements[1] value"
 }
