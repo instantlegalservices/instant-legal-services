@@ -111,21 +111,45 @@ CREATE TABLE public.ils_notification_e2e_preflight (
 CREATE TABLE public.ils_document_e2e_release_gate_decisions (
   id uuid PRIMARY KEY,
   decision text NOT NULL,
+  genuine_verified_evidence_count integer NOT NULL DEFAULT 0,
+  synthetic_evidence_count integer NOT NULL DEFAULT 0,
+  hostile_tests_passed integer NOT NULL DEFAULT 0,
+  hostile_tests_failed integer NOT NULL DEFAULT 0,
+  destructive_attempts integer NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_notification_e2e_release_gate_decisions (
   id uuid PRIMARY KEY,
   decision text NOT NULL,
+  genuine_verified_evidence_count integer NOT NULL DEFAULT 0,
+  synthetic_evidence_count integer NOT NULL DEFAULT 0,
+  hostile_tests_passed integer NOT NULL DEFAULT 0,
+  hostile_tests_failed integer NOT NULL DEFAULT 0,
+  destructive_attempts integer NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_professional_assignment_e2e_release_gate_decisions (
   id uuid PRIMARY KEY,
   decision text NOT NULL,
+  genuine_verified_evidence_count integer NOT NULL DEFAULT 0,
+  synthetic_evidence_count integer NOT NULL DEFAULT 0,
+  hostile_tests_passed integer NOT NULL DEFAULT 0,
+  hostile_tests_failed integer NOT NULL DEFAULT 0,
+  destructive_attempts integer NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_security_execution_e2e_release_gate_decisions (
   id uuid PRIMARY KEY,
+  evaluated_at timestamptz NOT NULL DEFAULT now(),
+  gate_code text NOT NULL DEFAULT 'SECURITY_EXECUTION_E2E',
   status text NOT NULL,
+  genuine_verified_evidence integer NOT NULL DEFAULT 0,
+  synthetic_evidence integer NOT NULL DEFAULT 0,
+  hostile_tests_passed integer NOT NULL DEFAULT 0,
+  hostile_tests_failed integer NOT NULL DEFAULT 0,
+  destructive_attempts integer NOT NULL DEFAULT 0,
+  production_touch_detected boolean NOT NULL DEFAULT false,
+  reason text NOT NULL DEFAULT '',
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_critical_path_evidence_binding_integrity_audit (
