@@ -2,14 +2,21 @@
 -- Customer writes remain through SECURITY DEFINER RPC; direct table INSERT is closed.
 BEGIN;
 
-REVOKE INSERT ON TABLE public.payment_proofs FROM authenticated, PUBLIC;
+-- Customer proof submission and Admin decisions must use the guarded SECURITY DEFINER RPCs.
+-- Preserve existing SELECT grants and RLS policies, but remove every direct write path.
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  ON TABLE public.payment_proofs FROM anon, authenticated, PUBLIC;
 DO $columns$
-DECLARE c text;
+DECLARE
+  c text;
+  v_privilege text;
 BEGIN
   FOR c IN SELECT column_name FROM information_schema.columns
            WHERE table_schema='public' AND table_name='payment_proofs'
   LOOP
-    EXECUTE format('REVOKE INSERT (%I) ON TABLE public.payment_proofs FROM authenticated, PUBLIC', c);
+    FOREACH v_privilege IN ARRAY ARRAY['INSERT','UPDATE','REFERENCES'] LOOP
+      EXECUTE format('REVOKE %s (%I) ON TABLE public.payment_proofs FROM anon, authenticated, PUBLIC', v_privilege, c);
+    END LOOP;
   END LOOP;
 END
 $columns$;
