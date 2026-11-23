@@ -25,4 +25,12 @@ assert.match(source, /if\(!adv\)return json\([\s\S]*?403\)/,
 assert.doesNotMatch(source, /\.eq\("email",email\)/,
   "advocate access must not rely on email identity matching");
 
+
+assert.match(source, /auth\.toLowerCase\(\)\.startsWith\("bearer "\)/,
+  "advocate mode must require a bearer authorization header");
+assert.match(source, /const token=auth\.slice\(7\)\.trim\(\)/,
+  "the bearer token must be trimmed before validation");
+assert.match(source, /createClient\(supabaseUrl,serviceKey,\{auth:\{persistSession:false,autoRefreshToken:false\}\}\)/,
+  "the service-role client must not persist or refresh a caller session");
+
 console.log("ILS_AI_ASSISTANT_MODE_AUTHORIZATION=PASS");
