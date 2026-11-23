@@ -309,6 +309,7 @@ DECLARE
   v_integrity_ok boolean := false;
   v_atomic_ok boolean := false;
   v_unique_deployments_ok boolean := false;
+  v_security_attacks_ok boolean := false;
   v_decision text := 'HOLD';
   v_reason text;
 BEGIN
@@ -376,6 +377,58 @@ BEGIN
       ORDER BY g.created_at DESC LIMIT 1
     ),false)
   INTO v_dedicated_ok;
+
+  -- Security execution source assertions and preflight booleans are not hostile
+  -- runtime attempts. Require all eight named attacks to be executed and observed.
+  SELECT coalesce((
+    SELECT r.status='PASS'
+       AND r.runtime_checks_failed=0
+       AND r.checks_not_executed=0
+       AND r.destructive_attempts=0
+       AND r.created_at >= greatest(
+         coalesce((SELECT max(e.created_at) FROM public.ils_e2e_evidence e),'-infinity'::timestamptz),
+         coalesce((SELECT max(d.created_at) FROM public.ils_e2e_function_deployment_registry d),'-infinity'::timestamptz),
+         coalesce((SELECT max(c.created_at) FROM public.ils_critical_path_evidence_contracts c),'-infinity'::timestamptz)
+       )
+       AND (
+         SELECT count(*)
+         FROM public.ils_security_execution_e2e_hostile_run_results x
+         WHERE x.run_id=r.id
+           AND x.test_method='RUNTIME_ATTACK'
+           AND x.observed_status='PASS'
+           AND x.passed IS TRUE
+           AND x.destructive_attempted IS FALSE
+           AND x.test_code IN (
+             'PREFLIGHT_BYPASS','UNAUTHORIZED_EXECUTION','REAL_EXECUTION',
+             'REAL_APPROVAL','REPLAY_NONCE','SNAPSHOT_TAMPER',
+             'EXPIRED_BINDING','DESTRUCTIVE_ACTION'
+           )
+       )=8
+       AND (
+         SELECT count(DISTINCT x.test_code)
+         FROM public.ils_security_execution_e2e_hostile_run_results x
+         WHERE x.run_id=r.id
+           AND x.test_method='RUNTIME_ATTACK'
+           AND x.observed_status='PASS'
+           AND x.passed IS TRUE
+           AND x.destructive_attempted IS FALSE
+           AND x.test_code IN (
+             'PREFLIGHT_BYPASS','UNAUTHORIZED_EXECUTION','REAL_EXECUTION',
+             'REAL_APPROVAL','REPLAY_NONCE','SNAPSHOT_TAMPER',
+             'EXPIRED_BINDING','DESTRUCTIVE_ACTION'
+           )
+       )=8
+       AND NOT EXISTS (
+         SELECT 1
+         FROM public.ils_security_execution_e2e_hostile_run_results x
+         WHERE x.run_id=r.id
+           AND (x.passed IS DISTINCT FROM TRUE OR x.destructive_attempted IS TRUE)
+       )
+    FROM public.ils_security_execution_e2e_hostile_runs r
+    ORDER BY r.created_at DESC,r.id DESC
+    LIMIT 1
+  ),false)
+  INTO v_security_attacks_ok;
 
   -- Historical expected-outcome rows are not observed hostile assertions.
   SELECT count(*)::integer,
@@ -454,6 +507,7 @@ BEGIN
      AND v_hostile_verified=v_hostile_total
      AND v_integrity_ok
      AND v_unique_deployments_ok
+     AND v_security_attacks_ok
      AND v_atomic_ok
   THEN
     v_decision:='GO';
@@ -461,10 +515,10 @@ BEGIN
   ELSE
     v_decision:=CASE WHEN v_blocked_paths>0 THEN 'FAIL' ELSE 'HOLD' END;
     v_reason:=format(
-      'Fail-closed release check: paths=%s, verified=%s, unverified_paths=%s, blocked=%s, global_unverified_evidence=%s, dedicated_gates_go=%s, hostile_assertions=%s/%s, binding_integrity_pass=%s, unique_active_deployments=%s, latest_atomic_proof_pass=%s.',
+      'Fail-closed release check: paths=%s, verified=%s, unverified_paths=%s, blocked=%s, global_unverified_evidence=%s, dedicated_gates_go=%s, hostile_assertions=%s/%s, binding_integrity_pass=%s, unique_active_deployments=%s, security_runtime_attacks_pass=%s, latest_atomic_proof_pass=%s.',
       v_total_paths,v_verified_paths,v_unverified_paths,v_blocked_paths,
       v_unverified,v_dedicated_ok,v_hostile_verified,v_hostile_total,
-      v_integrity_ok,v_unique_deployments_ok,v_atomic_ok
+      v_integrity_ok,v_unique_deployments_ok,v_security_attacks_ok,v_atomic_ok
     );
   END IF;
 
