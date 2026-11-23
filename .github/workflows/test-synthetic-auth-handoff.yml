@@ -22,7 +22,20 @@ on:
 
 jobs:
   policy-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: handoff_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d handoff_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
@@ -34,3 +47,13 @@ jobs:
           deno check supabase/functions/ils-test-notification-e2e-auth-confirm/index.ts
       - name: Run policy tests
         run: deno test supabase/functions/_shared/synthetic-auth-handoff-policy.test.ts
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Run isolated atomic handoff consume tests on PostgreSQL 16
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -d handoff_test -v ON_ERROR_STOP=1 -f scripts/test-synthetic-auth-handoff-postgres.sql
+          bash scripts/test-synthetic-auth-handoff-postgres.sh
