@@ -105,8 +105,9 @@ BEGIN
   IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.client_requirements'::regclass) THEN
     RAISE EXCEPTION 'client_requirements RLS is not enabled';
   END IF;
-  IF NOT has_table_privilege('anon', 'public.client_requirements', 'INSERT') THEN
-    RAISE EXCEPTION 'anon lost intended lead INSERT privilege';
+  IF has_table_privilege('anon', 'public.client_requirements', 'INSERT')
+     OR NOT has_any_column_privilege('anon', 'public.client_requirements', 'INSERT') THEN
+    RAISE EXCEPTION 'anon lead INSERT is not restricted to column-level allowlist';
   END IF;
   IF has_table_privilege('anon', 'public.client_requirements', 'SELECT')
      OR has_table_privilege('anon', 'public.client_requirements', 'UPDATE')
