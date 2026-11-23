@@ -57,7 +57,7 @@ AS $function$
       THEN 0
       ELSE
         (CASE WHEN synthetic_only THEN 0 ELSE 1 END
-         + CASE WHEN NOT synthetic_only AND authorization_level <> 'EXPLICIT_OPERATOR_APPROVAL' THEN 1 ELSE 0 END
+         + CASE WHEN NOT synthetic_only AND authorization_level IS DISTINCT FROM 'EXPLICIT_OPERATOR_APPROVAL' THEN 1 ELSE 0 END
          + CASE WHEN synthetic_only AND real_external_delivery_allowed THEN 1 ELSE 0 END
          + CASE WHEN synthetic_only AND real_recipient_data_allowed THEN 1 ELSE 0 END
          + CASE WHEN synthetic_only AND real_message_send_allowed THEN 1 ELSE 0 END
