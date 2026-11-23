@@ -24,6 +24,15 @@ BEGIN
   END IF;
 
   -- The internal gate independently checks ownership and lifecycle state.
+  IF NOT public.ils_professional_assignment_mutation_gate(
+       p_assignment_link_id,p_operation,p_to_status) THEN
+    RAISE EXCEPTION 'MUTATION_GATE_DIAGNOSTIC uid=% role=% assignment_owner=% status=%',
+      auth.uid(),auth.role(),
+      (SELECT l.professional_user_id FROM public.ils_professional_work_assignment_links l
+       WHERE l.id=p_assignment_link_id),
+      (SELECT l.link_status FROM public.ils_professional_work_assignment_links l
+       WHERE l.id=p_assignment_link_id);
+  END IF;
   RETURN public.ils_professional_assignment_mutation_commit(
     p_assignment_link_id,p_operation,p_to_status
   );
