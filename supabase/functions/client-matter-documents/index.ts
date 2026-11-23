@@ -44,8 +44,11 @@ async function isAdmin(user: any) {
 }
 function escapeLikePattern(value: string) {
   // PostgREST forwards this as a SQL LIKE pattern; escape metacharacters so an
-  // email containing %, _ or \\ is compared literally rather than as a wildcard.
-  return value.replace(/[\\%_]/g, "\\\\async function getAssignedAdvocate(user: any, clientId: number) {");
+  // email containing %, _ or \ is compared literally rather than as a wildcard.
+  return value.replace(/[\\%_]/g, "\\$&");
+}
+
+async function getAssignedAdvocate(user: any, clientId: number) {");
 }
 
 async function getAssignedAdvocate(user: any, clientId: number) {
