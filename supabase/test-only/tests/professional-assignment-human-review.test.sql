@@ -33,6 +33,15 @@ DECLARE
   v_escalations integer;
   err text;
 BEGIN
+  IF has_function_privilege('authenticated',
+       'public.ils_professional_assignment_is_current(uuid,text,uuid)','EXECUTE') THEN
+    RAISE EXCEPTION 'Authenticated role unexpectedly has internal current-eligibility EXECUTE';
+  END IF;
+  IF NOT has_function_privilege('service_role',
+       'public.ils_professional_assignment_is_current(uuid,text,uuid)','EXECUTE') THEN
+    RAISE EXCEPTION 'service_role lacks internal current-eligibility EXECUTE';
+  END IF;
+
   -- Preserve Action 613/615 internal RPC lockdown.
   IF has_function_privilege('authenticated',
        'public.ils_professional_assignment_mutation_gate(uuid,text,text)','EXECUTE') THEN
