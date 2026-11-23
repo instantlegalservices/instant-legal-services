@@ -1,6 +1,11 @@
 -- Disposable PostgreSQL fixture for assignment mutation freeze tests.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE SCHEMA IF NOT EXISTS auth;
+CREATE TABLE auth.users (
+  id uuid PRIMARY KEY,
+  email text,
+  email_confirmed_at timestamptz
+);
 DO $roles$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon NOLOGIN; END IF;
@@ -112,8 +117,11 @@ CREATE TABLE public.ils_professional_security_reviewer_authorizations (
   authorization_status text NOT NULL,
   identity_verified boolean NOT NULL,
   security_training_verified boolean NOT NULL,
+  assigned_by uuid,
   valid_from timestamptz,
-  valid_until timestamptz
+  valid_until timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.ils_professional_assignment_security_review_approval_log (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
