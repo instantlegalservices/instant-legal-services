@@ -116,6 +116,15 @@ BEGIN
      OR position('v_preflight.external_provider_invocation_allowed' in v_gate_definition)=0 THEN
     RAISE EXCEPTION 'Dedicated notification release gate is missing the aligned authorization/provider predicates';
   END IF;
+  IF position('ORDER BY started_at DESC' in v_gate_definition)=0
+     OR position('v_run_completed_at IS NOT NULL' in v_gate_definition)=0
+     OR position('WHERE completed_at IS NOT NULL' in v_gate_definition)>0 THEN
+    RAISE EXCEPTION 'Notification gate must hold on the latest incomplete harness run, not fall back to an older completed run';
+  END IF;
+  IF position('ils_e2e_function_deployment_registry' in v_gate_definition)=0
+     OR position('d.active=true' in v_gate_definition)=0 THEN
+    RAISE EXCEPTION 'Notification delivery evidence must match an active deployment';
+  END IF;
 
   SELECT pg_get_functiondef(
     'public.ils_run_critical_path_atomic_release_proof()'::regprocedure
