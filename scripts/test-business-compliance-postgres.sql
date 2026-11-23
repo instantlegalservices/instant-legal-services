@@ -94,6 +94,7 @@ $$;
 \i supabase/migrations/20261117172950_lock_anon_client_requirement_privileges.sql
 \i supabase/migrations/20261117180140_lock_anon_client_requirement_sequence_privileges.sql
 \i supabase/migrations/20261117181527_restrict_anon_client_requirement_insert_columns.sql
+SELECT pg_get_functiondef('public.get_client_portal(text,text)'::regprocedure) AS portal_definition;
 \i supabase/migrations/20261117182000_harden_client_portal_advocate_disclosure.sql
 \i supabase/migrations/20261117182100_align_admin_crm_uuid_authorization.sql
 
