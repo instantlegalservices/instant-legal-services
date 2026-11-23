@@ -1,5 +1,5 @@
--- Runtime tests execute the exact function definitions copied from the inspected
--- TEST catalog against disposable synthetic rows. The outer ROLLBACK removes every fixture.
+-- Runtime tests execute the exact inspected TEST bind definition and the
+-- TEST-only hardened consume definition. The outer ROLLBACK removes every fixture.
 BEGIN;
 DO $test$
 DECLARE
@@ -7,32 +7,42 @@ DECLARE
   q1 uuid:=gen_random_uuid();
   q2 uuid:=gen_random_uuid();
   q3 uuid:=gen_random_uuid();
+  q4 uuid:=gen_random_uuid();
   a1 uuid:=gen_random_uuid();
   a2 uuid:=gen_random_uuid();
   a3 uuid:=gen_random_uuid();
+  a4 uuid:=gen_random_uuid();
   b1 uuid;
-  snap text;
+  b2 uuid;
+  snap1 text;
+  snap2 text;
   err text;
+  consumed boolean;
 BEGIN
-  -- Guard against fixture drift: these hashes are the inspected TEST catalog
-  -- pg_get_functiondef SHA-256 values recorded on 2026-11-23.
+  -- Bind function remains byte-for-byte equivalent to the inspected TEST
+  -- catalog definition. The consume function must expose persisted expiry handling.
   IF encode(digest(pg_get_functiondef(
        'public.ils_professional_security_approval_execution_bind(uuid,uuid,text,text,integer)'::regprocedure
      ),'sha256'),'hex') <> '5cfd7a1b93ce0232b28749fb0d32cd0c25e3e71c7f72f8526cc65baee2f8c04f' THEN
     RAISE EXCEPTION 'Bind fixture differs from inspected TEST catalog definition';
   END IF;
-  IF encode(digest(pg_get_functiondef(
+  IF position('RETURN false' in pg_get_functiondef(
        'public.ils_professional_security_approval_execution_consume(uuid,text,text,text)'::regprocedure
-     ),'sha256'),'hex') <> '1e824f178510db1434e56f13bb5c6811a70f885432c936bb3d9e149be7340cd4' THEN
-    RAISE EXCEPTION 'Consume fixture differs from inspected TEST catalog definition';
+     ))=0
+     OR position('RETURN false' in pg_get_functiondef(
+       'public.ils_professional_security_approval_execution_consume(uuid,text,text,text)'::regprocedure
+     ))>position('EXECUTION_CONSUME_EXPIRED' in pg_get_functiondef(
+       'public.ils_professional_security_approval_execution_consume(uuid,text,text,text)'::regprocedure
+     )) THEN
+    RAISE EXCEPTION 'Consume function does not persist expiry block and return false';
   END IF;
 
   INSERT INTO public.ils_professional_assignment_mutation_alert_escalation_rules
     (decision,action_code,severity,requires_human_approval,destructive_action_allowed,active)
   VALUES('REVIEW','CREATE_SECURITY_REVIEW','MEDIUM',true,false,true);
 
-  -- Approval-not-ready must reject before a binding can be created.
-  INSERT INTO public.ils_professional_assignment_security_review_queue(id,decision,severity,review_status,source_failure_code)
+  INSERT INTO public.ils_professional_assignment_security_review_queue
+    (id,decision,severity,review_status,source_failure_code)
   VALUES(q_pending,'REVIEW','MEDIUM','PENDING','CI_PENDING');
   BEGIN
     PERFORM public.ils_professional_security_approval_execution_bind(
@@ -44,27 +54,27 @@ BEGIN
     IF err<>'EXECUTION_BINDING_APPROVAL_NOT_READY' THEN RAISE; END IF;
   END;
 
-  -- Create two independently approved synthetic records.
   INSERT INTO public.ils_professional_assignment_security_review_queue
     (id,decision,severity,review_status,source_failure_code)
   VALUES
     (q1,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_ONE'),
     (q2,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_TWO'),
-    (q3,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_THREE');
+    (q3,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_THREE'),
+    (q4,'REVIEW','MEDIUM','APPROVED','CI_REVIEW_FOUR');
   INSERT INTO public.ils_professional_assignment_security_review_approval_log
     (id,queue_id,reviewer_id,approval_decision,approved_action,approval_reason)
   VALUES
     (a1,q1,gen_random_uuid(),'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval record one'),
     (a2,q2,gen_random_uuid(),'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval record two'),
-    (a3,q3,gen_random_uuid(),'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval record three');
+    (a3,q3,gen_random_uuid(),'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval record three'),
+    (a4,q4,gen_random_uuid(),'APPROVE','CREATE_SECURITY_REVIEW','Disposable CI approval record four');
 
   b1:=public.ils_professional_security_approval_execution_bind(
     q1,a1,'CREATE_SECURITY_REVIEW','nonce-replay-ci',15
   );
-  SELECT approval_snapshot_hash INTO snap
+  SELECT approval_snapshot_hash INTO snap1
   FROM public.ils_professional_security_approval_execution_bindings WHERE id=b1;
 
-  -- Reusing a nonce on a different queue must be blocked.
   BEGIN
     PERFORM public.ils_professional_security_approval_execution_bind(
       q2,a2,'CREATE_SECURITY_REVIEW','nonce-replay-ci',15
@@ -75,7 +85,6 @@ BEGIN
     IF err<>'EXECUTION_BINDING_NONCE_REPLAY' THEN RAISE; END IF;
   END;
 
-  -- Tampered snapshot must be blocked.
   BEGIN
     PERFORM public.ils_professional_security_approval_execution_consume(
       b1,'nonce-replay-ci','CREATE_SECURITY_REVIEW',repeat('0',64)
@@ -86,36 +95,34 @@ BEGIN
     IF err<>'EXECUTION_CONSUME_SNAPSHOT_MISMATCH' THEN RAISE; END IF;
   END;
 
-  -- Expired binding must be blocked. Nested exception block rolls back the
-  -- consume function's intermediate BLOCKED update, proving no partial write.
+  -- Expired binding returns false and commits BLOCKED instead of raising an
+  -- exception that would roll the status update back.
   UPDATE public.ils_professional_security_approval_execution_bindings
   SET expires_at=now()-interval '1 minute' WHERE id=b1;
-  BEGIN
-    PERFORM public.ils_professional_security_approval_execution_consume(
-      b1,'nonce-replay-ci','CREATE_SECURITY_REVIEW',snap
-    );
-    RAISE EXCEPTION 'ASSERT_EXPECTED_EXPIRED';
-  EXCEPTION WHEN OTHERS THEN
-    GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
-    IF err<>'EXECUTION_CONSUME_EXPIRED' THEN RAISE; END IF;
-  END;
-  IF (SELECT execution_status FROM public.ils_professional_security_approval_execution_bindings WHERE id=b1)<>'READY' THEN
-    RAISE EXCEPTION 'Expired consume left a partial state change';
+  consumed:=public.ils_professional_security_approval_execution_consume(
+    b1,'nonce-replay-ci','CREATE_SECURITY_REVIEW',snap1
+  );
+  IF consumed IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'Expired binding must return false';
+  END IF;
+  IF (SELECT execution_status FROM public.ils_professional_security_approval_execution_bindings WHERE id=b1)<>'BLOCKED' THEN
+    RAISE EXCEPTION 'Expired binding status did not persist as BLOCKED';
   END IF;
 
-  -- Restore only the synthetic fixture to complete a valid one-time consume.
-  UPDATE public.ils_professional_security_approval_execution_bindings
-  SET expires_at=now()+interval '5 minutes' WHERE id=b1;
+  -- A separate valid binding can still be consumed exactly once.
+  b2:=public.ils_professional_security_approval_execution_bind(
+    q4,a4,'CREATE_SECURITY_REVIEW','nonce-valid-ci',15
+  );
+  SELECT approval_snapshot_hash INTO snap2
+  FROM public.ils_professional_security_approval_execution_bindings WHERE id=b2;
   IF public.ils_professional_security_approval_execution_consume(
-    b1,'nonce-replay-ci','CREATE_SECURITY_REVIEW',snap
+    b2,'nonce-valid-ci','CREATE_SECURITY_REVIEW',snap2
   ) IS DISTINCT FROM true THEN
     RAISE EXCEPTION 'Valid one-time consume did not succeed';
   END IF;
-
-  -- A second consume is blocked because the binding is no longer READY.
   BEGIN
     PERFORM public.ils_professional_security_approval_execution_consume(
-      b1,'nonce-replay-ci','CREATE_SECURITY_REVIEW',snap
+      b2,'nonce-valid-ci','CREATE_SECURITY_REVIEW',snap2
     );
     RAISE EXCEPTION 'ASSERT_EXPECTED_CONSUME_REPLAY';
   EXCEPTION WHEN OTHERS THEN
@@ -123,7 +130,6 @@ BEGIN
     IF err<>'EXECUTION_CONSUME_NOT_READY' THEN RAISE; END IF;
   END;
 
-  -- Destructive rules must never produce an execution binding.
   UPDATE public.ils_professional_assignment_mutation_alert_escalation_rules
   SET destructive_action_allowed=true
   WHERE decision='REVIEW' AND action_code='CREATE_SECURITY_REVIEW';
@@ -137,7 +143,6 @@ BEGIN
     IF err<>'EXECUTION_BINDING_ACTION_NOT_ALLOWED' THEN RAISE; END IF;
   END;
 
-  -- Service-only privilege boundary is verified from effective grants.
   IF has_function_privilege('anon',
        'public.ils_professional_security_approval_execution_bind(uuid,uuid,text,text,integer)','EXECUTE')
      OR has_function_privilege('authenticated',
