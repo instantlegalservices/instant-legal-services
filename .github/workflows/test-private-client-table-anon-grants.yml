@@ -1,0 +1,22 @@
+name: Private Client Table Anonymous Grant Hardening
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261117184000_restrict_anon_private_client_table_grants.sql"
+      - "scripts/test-private-client-table-anon-grants.js"
+      - ".github/workflows/test-private-client-table-anon-grants.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify private client table grant hardening
+        run: node scripts/test-private-client-table-anon-grants.js
