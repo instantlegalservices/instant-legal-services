@@ -18,6 +18,7 @@ assert.ok(!shared.includes('headers.get("x-forwarded-for")')&&!shared.includes('
 assert.match(shared,/crypto\.subtle\.sign\("HMAC"/);
 assert.match(shared,/AI_RATE_LIMIT_UNAVAILABLE/);
 assert.match(shared,/Retry-After/);
+assert.match(shared,/Access-Control-Expose-Headers.*Retry-After/);
 for(const file of files){
   const edge=await readFile(file,"utf8");
   assert.match(edge,/\.\.\/_shared\/ai-rate-limit\.ts/);
