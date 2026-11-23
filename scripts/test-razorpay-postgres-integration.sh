@@ -46,54 +46,87 @@ SQL
 if psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$ID_A','gw-payment-conflict',10000,'INR')" >/dev/null 2>&1; then
  echo "FAIL: conflicting payment ID accepted"; exit 1
 fi
-echo "PASS: migration, concurrent reservation, finalization replay, conflicting payment ID, and entitlement idempotency"
 
-
-# Simulate failure/capture webhook ordering through atomic guarded transitions.
-# First failed event may mark an unbound pending attempt failed; capture can still settle it.
-psql -v ON_ERROR_STOP=1 <<SQL
-INSERT INTO service_requests(id,user_id,service_id,status) VALUES ('30000000-0000-0000-0000-000000000002','$USER_ID','$SERVICE_ID','pending');
-INSERT INTO orders(id,order_number,user_id,service_request_id,total,currency,status) VALUES ('40000000-0000-0000-0000-000000000002','CI-ORDER-002','$USER_ID','30000000-0000-0000-0000-000000000002',100,'INR','pending');
-INSERT INTO order_items(order_id,service_id,quantity,unit_price,line_total) VALUES ('40000000-0000-0000-0000-000000000002','$SERVICE_ID',1,100,100);
-SQL
-ID_B=$(psql -v ON_ERROR_STOP=1 -Atc "select ils_reserve_razorpay_attempt('40000000-0000-0000-0000-000000000002')->>'payment_id'")
-psql -v ON_ERROR_STOP=1 -c "select ils_attach_razorpay_order('$ID_B','gw-order-ci-002')"
-# failed before capture: safe status transition is allowed
-psql -v ON_ERROR_STOP=1 -c "update payments set status='failed' where id='$ID_B' and status in ('created','pending') and gateway_payment_id is null"
-psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$ID_B','gw-payment-ci-002',10000,'INR')"
-# delayed failed event after capture must not downgrade paid state
-psql -v ON_ERROR_STOP=1 -c "update payments set status='failed' where id='$ID_B' and status in ('created','pending') and gateway_payment_id is null"
+# Verify out-of-order failure webhook transition cannot downgrade paid state.
+psql -v ON_ERROR_STOP=1 -c "update payments set status='failed' where id='$ID_A' and status in ('created','pending') and gateway_payment_id is null" >/dev/null
 psql -v ON_ERROR_STOP=1 <<SQL
 DO \$\$
 BEGIN
- IF (SELECT status FROM payments WHERE id='$ID_B') <> 'paid' THEN RAISE EXCEPTION 'delayed failure downgraded payment'; END IF;
- IF (SELECT status FROM orders WHERE id='40000000-0000-0000-0000-000000000002') <> 'paid' THEN RAISE EXCEPTION 'delayed failure downgraded order'; END IF;
+ IF (SELECT status FROM payments WHERE id='$ID_A') <> 'paid' THEN RAISE EXCEPTION 'late failure downgraded payment'; END IF;
+ IF (SELECT status FROM orders WHERE id='$ORDER_ID') <> 'paid' THEN RAISE EXCEPTION 'late failure downgraded order'; END IF;
 END
 \$\$;
 SQL
 
-# Reservation racing with settlement: both contend on the order row lock.
-# A reservation may return the existing attempt or fail because the order is already paid.
-INSERT_RACE_FIXTURE='40000000-0000-0000-0000-000000000003'
+# Race reservation and settlement on another order: both must serialize on order lock.
+RACE_ORDER='40000000-0000-0000-0000-000000000003'
+RACE_REQUEST='30000000-0000-0000-0000-000000000003'
 psql -v ON_ERROR_STOP=1 <<SQL
-INSERT INTO service_requests(id,user_id,service_id,status) VALUES ('30000000-0000-0000-0000-000000000003','$USER_ID','$SERVICE_ID','pending');
-INSERT INTO orders(id,order_number,user_id,service_request_id,total,currency,status) VALUES ('40000000-0000-0000-0000-000000000003','CI-ORDER-003','$USER_ID','30000000-0000-0000-0000-000000000003',100,'INR','pending');
-INSERT INTO order_items(order_id,service_id,quantity,unit_price,line_total) VALUES ('40000000-0000-0000-0000-000000000003','$SERVICE_ID',1,100,100);
+INSERT INTO service_requests(id,user_id,service_id,status) VALUES ('$RACE_REQUEST','$USER_ID','$SERVICE_ID','pending');
+INSERT INTO orders(id,order_number,user_id,service_request_id,total,currency,status) VALUES ('$RACE_ORDER','CI-ORDER-RACE','$USER_ID','$RACE_REQUEST',100,'INR','pending');
+INSERT INTO order_items(order_id,service_id,quantity,unit_price,line_total) VALUES ('$RACE_ORDER','$SERVICE_ID',1,100,100);
 SQL
-ID_C=$(psql -v ON_ERROR_STOP=1 -Atc "select ils_reserve_razorpay_attempt('$INSERT_RACE_FIXTURE')->>'payment_id'")
-psql -v ON_ERROR_STOP=1 -c "select ils_attach_razorpay_order('$ID_C','gw-order-ci-003')"
-psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$ID_C','gw-payment-ci-003',10000,'INR')" >/tmp/finalize-race.log &
+RACE_PAYMENT=$(psql -v ON_ERROR_STOP=1 -Atc "select ils_reserve_razorpay_attempt('$RACE_ORDER')->>'payment_id'")
+psql -v ON_ERROR_STOP=1 -c "select ils_attach_razorpay_order('$RACE_PAYMENT','gw-order-race')" >/dev/null
+psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$RACE_PAYMENT','gw-payment-race',10000,'INR')" >/tmp/race-finalize.log &
 FINALIZE_PID=$!
-psql -v ON_ERROR_STOP=1 -c "select ils_reserve_razorpay_attempt('$INSERT_RACE_FIXTURE')" >/tmp/reserve-race.log 2>&1 &
+# This call can either return the existing attempt or fail if settlement wins first.
+psql -v ON_ERROR_STOP=1 -c "select ils_reserve_razorpay_attempt('$RACE_ORDER')" >/tmp/race-reserve.log 2>&1 &
 RESERVE_PID=$!
+
 wait "$FINALIZE_PID"
-wait "$RESERVE_PID" || true
+if wait "$RESERVE_PID"; then
+  : # Reservation completed before/after settlement and returned successfully.
+else
+  if ! grep -q "ORDER_NOT_PAYABLE" /tmp/race-reserve.log; then
+    echo "FAIL: reservation race returned an unexpected error"
+    cat /tmp/race-reserve.log
+    exit 1
+  fi
+fi
 psql -v ON_ERROR_STOP=1 <<SQL
 DO \$\$
 BEGIN
- IF (SELECT status FROM orders WHERE id='$INSERT_RACE_FIXTURE') <> 'paid' THEN RAISE EXCEPTION 'race left order unpaid'; END IF;
- IF (SELECT count(*) FROM payments WHERE order_id='$INSERT_RACE_FIXTURE' AND status='paid') <> 1 THEN RAISE EXCEPTION 'race has multiple or missing paid payments'; END IF;
- IF (SELECT count(*) FROM entitlements WHERE order_id='$INSERT_RACE_FIXTURE') <> 1 THEN RAISE EXCEPTION 'race duplicated/missing entitlement'; END IF;
+ IF (SELECT status FROM orders WHERE id='$RACE_ORDER') <> 'paid' THEN RAISE EXCEPTION 'race order not paid'; END IF;
+ IF (SELECT count(*) FROM payments WHERE order_id='$RACE_ORDER' AND status='paid') <> 1 THEN RAISE EXCEPTION 'race payment count not exactly one'; END IF;
+ IF (SELECT count(*) FROM entitlements WHERE order_id='$RACE_ORDER') <> 1 THEN RAISE EXCEPTION 'race entitlement count not exactly one'; END IF;
 END
 \$\$;
 SQL
+
+# Report success only after every regression test above and below has completed.
+
+# Late capture from an older failed gateway attempt must settle at most once.
+LATE_ORDER='40000000-0000-0000-0000-000000000004'
+LATE_REQUEST='30000000-0000-0000-0000-000000000004'
+LATE_PAYMENT_A='50000000-0000-0000-0000-000000000004'
+psql -v ON_ERROR_STOP=1 <<SQL
+INSERT INTO service_requests(id,user_id,service_id,status) VALUES ('$LATE_REQUEST','$USER_ID','$SERVICE_ID','pending');
+INSERT INTO orders(id,order_number,user_id,service_request_id,total,currency,status) VALUES ('$LATE_ORDER','CI-ORDER-LATE-CAPTURE','$USER_ID','$LATE_REQUEST',100,'INR','pending');
+INSERT INTO order_items(order_id,service_id,quantity,unit_price,line_total) VALUES ('$LATE_ORDER','$SERVICE_ID',1,100,100);
+INSERT INTO payments(id,order_id,gateway,gateway_payment_id,gateway_order_id,amount,currency,status)
+VALUES ('$LATE_PAYMENT_A','$LATE_ORDER','razorpay',NULL,'gw-order-old',100,'INR','failed');
+SQL
+# A failed webhook with an attached gateway order must be reused for retry,
+# not replaced with a second externally chargeable order.
+REUSED=$(psql -v ON_ERROR_STOP=1 -Atc "SELECT (r->>'payment_id') || '|' || coalesce(r->>'gateway_order_id','') FROM (SELECT ils_reserve_razorpay_attempt('$LATE_ORDER') AS r) q")
+if [[ "$REUSED" != "$LATE_PAYMENT_A|gw-order-old" ]]; then
+ echo "FAIL: failed-but-attached Razorpay order was not reused: $REUSED"; exit 1
+fi
+if psql -v ON_ERROR_STOP=1 -c "INSERT INTO payments(order_id,gateway,gateway_order_id,amount,currency,status) VALUES ('$LATE_ORDER','razorpay','gw-order-retry',100,'INR','created')" >/dev/null 2>&1; then
+ echo "FAIL: a second unresolved Razorpay gateway order was allowed"; exit 1
+fi
+psql -v ON_ERROR_STOP=1 -c "select ils_finalize_razorpay_payment('$LATE_PAYMENT_A','gw-payment-old-captured',10000,'INR')" >/dev/null
+psql -v ON_ERROR_STOP=1 <<SQL
+DO \$\$
+BEGIN
+ IF (SELECT status FROM orders WHERE id='$LATE_ORDER') <> 'paid' THEN RAISE EXCEPTION 'late capture did not settle order'; END IF;
+ IF (SELECT count(*) FROM payments WHERE order_id='$LATE_ORDER' AND status='paid') <> 1 THEN RAISE EXCEPTION 'late capture settled more than one payment'; END IF;
+ IF (SELECT status FROM payments WHERE id='$LATE_PAYMENT_A') <> 'paid' THEN RAISE EXCEPTION 'old attempt was not settled'; END IF;
+ IF (SELECT count(*) FROM payments WHERE order_id='$LATE_ORDER') <> 1 THEN RAISE EXCEPTION 'retry created a second internal payment attempt'; END IF;
+ IF (SELECT count(*) FROM entitlements WHERE order_id='$LATE_ORDER') <> 1 THEN RAISE EXCEPTION 'late capture duplicate/missing entitlement'; END IF;
+END
+\$\$;
+SQL
+
+echo "PASS: migration, reservation concurrency, replay/conflict checks, delayed-failure protection, reservation/settlement race, and failed-attached-order retry reuse regression"
