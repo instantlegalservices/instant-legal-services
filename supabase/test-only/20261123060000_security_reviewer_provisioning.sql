@@ -7,6 +7,9 @@ ALTER TABLE public.ils_professional_security_reviewer_authorizations
   ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(),
   ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 
+REVOKE ALL ON public.ils_professional_security_reviewer_authorizations
+  FROM PUBLIC,anon,authenticated,service_role;
+
 CREATE TABLE IF NOT EXISTS public.ils_professional_security_reviewer_admin_audit (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   authorization_id uuid,
@@ -170,7 +173,6 @@ BEGIN
     v_new_status:=CASE WHEN p_operation='SUSPEND' THEN 'SUSPENDED' ELSE 'REVOKED' END;
     UPDATE public.ils_professional_security_reviewer_authorizations
     SET authorization_status=v_new_status,
-        assigned_by=v_actor,
         updated_at=v_now
     WHERE user_id=p_subject_user_id
     RETURNING id INTO v_authorization_id;
