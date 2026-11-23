@@ -64,6 +64,8 @@ BEGIN
      OR position('q.assigned_reviewer_id IS DISTINCT FROM a.reviewer_id' in bind_definition)=0
      OR position('r.valid_until < clock_timestamp()' in bind_definition)=0
      OR position('r.valid_until < clock_timestamp()' in bind_definition) < position('FOR SHARE' in bind_definition)
+     OR position('r.valid_until < clock_timestamp()' in bind_definition) < position('FROM public.ils_professional_assignment_mutation_alert_escalation_rules' in bind_definition)
+     OR position('FOR SHARE' in substring(bind_definition from position('FROM public.ils_professional_assignment_mutation_alert_escalation_rules' in bind_definition)))=0
      OR position('v_authorized_at' in bind_definition)>0 THEN
     RAISE EXCEPTION 'Bind function does not lock and validate reviewer authorization';
   END IF;
@@ -74,6 +76,8 @@ BEGIN
      OR position('rule_rec.id::text' in consume_definition)=0
      OR position('r.valid_until < clock_timestamp()' in consume_definition)=0
      OR position('r.valid_until < clock_timestamp()' in consume_definition) < position('FOR SHARE' in consume_definition)
+     OR position('r.valid_until < clock_timestamp()' in consume_definition) < position('FROM public.ils_professional_assignment_mutation_alert_escalation_rules' in consume_definition)
+     OR position('FOR SHARE' in substring(consume_definition from position('FROM public.ils_professional_assignment_mutation_alert_escalation_rules' in consume_definition)))=0
      OR position('v_authorized_at' in consume_definition)>0 THEN
     RAISE EXCEPTION 'Consume function does not revalidate reviewer and persist blocked state';
   END IF;
