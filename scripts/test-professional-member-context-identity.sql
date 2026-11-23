@@ -35,7 +35,7 @@ INSERT INTO public.professional_join_requests(auth_user_id,email,professional_ty
 ('00000000-0000-4000-8000-000000000001','shared@example.test','ca','Pending','2026-01-01T00:00:00Z'),
 ('00000000-0000-4000-8000-000000000002','shared@example.test','cs','Approved','2026-02-01T00:00:00Z'),
 (NULL,'shared@example.test','hr','Pending','2026-03-01T00:00:00Z'),
-('00000000-0000-4000-8000-000000000003','legacy@example.test','hr','Pending','2026-01-03T00:00:00Z'),
+(NULL,'legacy@example.test','hr','Pending','2026-01-03T00:00:00Z'),
 ('00000000-0000-4000-8000-000000000002','protected@example.test','gst_practitioner','Pending','2026-01-04T00:00:00Z'),
 ('00000000-0000-4000-8000-000000000008','rejected@example.test','ca','Rejected','2026-01-05T00:00:00Z');
 
