@@ -34,7 +34,16 @@ SELECT pg_sleep(1);
 COMMIT;
 SQL
 revoke_pid=$!
-sleep 0.5
+locked=false
+for attempt in $(seq 1 40); do
+  active_sleep=$(psql -Atq -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ILIKE '%pg_sleep(1)%';")
+  if [[ "$active_sleep" -ge 1 ]]; then locked=true; break; fi
+  sleep 0.05
+done
+if [[ "$locked" != "true" ]]; then
+  echo "FAIL: operator revocation transaction did not acquire its lock in time" >&2
+  exit 1
+fi
 revoked=$(psql -Atq -v ON_ERROR_STOP=1 -c "SET ROLE service_role; SELECT public.ils_test_consume_synthetic_auth_handoff('20000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001',repeat('d',64));" 2>/dev/null || true)
 wait "$revoke_pid"
 if [[ "$revoked" != "f" ]]; then
