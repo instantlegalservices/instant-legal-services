@@ -122,6 +122,16 @@ BEGIN
   IF v_event_id IS NULL OR v_event_id_retry IS DISTINCT FROM v_event_id THEN
     RAISE EXCEPTION 'Telemetry retry did not return the existing idempotent event';
   END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.ils_professional_assignment_mutation_failure_telemetry
+    WHERE id=v_event_id
+      AND professional_user_id=target_professional_id
+      AND actor_user_id=actor
+      AND professional_user_id IS DISTINCT FROM actor
+  ) THEN
+    RAISE EXCEPTION 'Telemetry did not preserve assignment owner and actor as distinct identities';
+  END IF;
   SELECT count(*) INTO v_telemetry_count
   FROM public.ils_professional_assignment_mutation_failure_telemetry
   WHERE failure_code='INVALID_OPERATION' AND source_type='SERVER_VERIFIED_MUTATION';
