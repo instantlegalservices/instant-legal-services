@@ -94,6 +94,11 @@ const params=new URLSearchParams(location.search);
 const mode=params.get("mode");
 const problem=params.get("problem")||"";
 const route=params.get("route")||"";
+const service=params.get("service")||"";
+const serviceIntake={
+ "legal-drafting":{title:"Legal Drafting Assistance",matter:"Other",brief:"I need legal drafting assistance (for example, a notice, agreement, affidavit or application). Please contact me to understand the document, facts and applicable scope."},
+ "money-recovery":{title:"Money Recovery Assistance",matter:"Other",brief:"I need assistance regarding recovery of an outstanding amount. Please contact me to understand the transaction, amount, supporting documents and appropriate next steps."}
+};
 const routeData={
  cyber:{url:"https://cybercrime.gov.in/",title:"National Cyber Crime Reporting Portal",items:["Transaction/reference ID, date and amount","Bank/UPI/payment screenshots and statements","Chronology of what happened","Any complaint/reference already received","Never share OTP, password, PIN or payment credentials"]},
  consumer:{url:"https://consumerhelpline.gov.in/",title:"National Consumer Helpline",items:["Invoice/order ID and purchase date","Product/service details","Warranty/terms where relevant","Communication with seller/service provider","Specific remedy requested"]},
@@ -295,6 +300,13 @@ async function resumePendingCheckout(){
  }
 }
 document.addEventListener("DOMContentLoaded",()=>{
+ if(!mode&&serviceIntake[service]){
+  const intake=serviceIntake[service];
+  document.querySelector("#standardHelp h1").textContent=intake.title;
+  document.querySelector("#standardHelp p").textContent="Share the basic details below. ILS will review your request and clarify the scope and applicable fee before any work begins.";
+  document.getElementById("matter").value=intake.matter;
+  document.getElementById("brief").value=intake.brief;
+ }
  showMode();
  resumePendingCheckout();
  const form=document.getElementById("assistForm");
