@@ -88,6 +88,8 @@ function paymentLabel(orderStatus,proofStatus){
 }
 async function loadPaymentHistory(){
  const panel=$("clientDashboard"),target=$("paymentHistory");
+ $("loginPanel").classList.add("hidden");$("signupPanel").classList.add("hidden");
+ $("tabLogin").classList.add("hidden");$("tabSignup").classList.add("hidden");
  panel.classList.remove("hidden");target.textContent="Loading your orders and payment status…";
  try{
   const {data:{user},error:authError}=await sb.auth.getUser();
@@ -122,7 +124,8 @@ async function loadPaymentHistory(){
  }catch(e){target.textContent=e.message||"Unable to load payment history. Please refresh or sign in again.";}
 }
 $("refreshPayments").onclick=loadPaymentHistory;
-$("logoutBtn").onclick=async()=>{await sb.auth.signOut();$("clientDashboard").classList.add("hidden");show("login");status("Signed out successfully.",true);};
+$("logoutBtn").onclick=async()=>{await sb.auth.signOut();$("clientDashboard").classList.add("hidden");$("tabLogin").classList.remove("hidden");$("tabSignup").classList.remove("hidden");show("login");status("Signed out successfully.",true);};
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){await loadPaymentHistory();}})();
 $("tabLogin").onclick=()=>show("login");$("tabSignup").onclick=()=>show("signup");
 
 async function provision(user){
