@@ -111,6 +111,17 @@ document.addEventListener("DOMContentLoaded",()=>{
   }catch(error){status.textContent=error?.message||"We could not submit your enquiry. Your details remain on this form; please try again later or contact ILS.";}
   finally{button.disabled=false;}
  });
+ // Resume the GST marketplace checkout after the customer signs in.
+ try{
+  const raw=sessionStorage.getItem("ils_pending_checkout");
+  if(raw){
+   const pending=JSON.parse(raw),current=location.pathname+location.search+location.hash;
+   if(pending?.slug==="ils-enquiry-fee-199"&&pending?.details?.intake_service==="gst-returns"&&pending?.returnTo===current&&pending?.createdAt&&Date.now()-pending.createdAt<=30*60*1000){
+    status.textContent="Welcome back. Restoring your GST enquiry and opening the existing UPI payment screen…";
+    window.ILS_TOOLS?.createOrder("ils-enquiry-fee-199",pending.details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true});
+   }
+  }
+ }catch(error){console.warn("GST checkout resume could not be restored.",error);}
 });
 </script>
 </body></html>
