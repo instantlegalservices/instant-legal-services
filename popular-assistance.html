@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Service Details | Instant Legal Services</title>
+<meta name="description" content="Explore service-specific assistance, understand the next steps and send an enquiry to Instant Legal Services.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://instantlegalservices.in/popular-assistance.html">
+<link rel="stylesheet" href="assets/ils.css">
+<meta name="theme-color" content="#07111f">
+<style>
+body{margin:0;background:#07111f;color:#f8fafc;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{width:min(980px,calc(100% - 28px));margin:auto}
+header{position:sticky;top:0;z-index:10;background:rgba(7,17,31,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.1)}
+.nav{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;color:#f8fafc;text-decoration:none;font-weight:900;letter-spacing:.04em}
+.brand img{width:44px;height:44px;border-radius:12px;object-fit:cover}
+.lang{background:#102337;border:1px solid rgba(242,189,85,.35);color:#fff;border-radius:10px;padding:10px;font-weight:800}
+main{padding:34px 0 54px}
+.eyebrow{color:#f2bd55;font-size:11px;font-weight:900;letter-spacing:.12em}
+h1{font-size:clamp(30px,6vw,48px);line-height:1.12;margin:12px 0}
+.lead{color:#b9c7d4;line-height:1.7;max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:26px 0}
+.service{padding:20px;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:linear-gradient(145deg,rgba(92,197,255,.08),rgba(16,35,55,.96));min-width:0}
+.service h2{font-size:18px;margin:0 0 12px}
+.service p,.service li{color:#b9c7d4;font-size:14px;line-height:1.65}
+.service ul{padding-left:20px;margin:0}
+.panel{padding:20px;border:1px solid rgba(242,189,85,.24);border-radius:18px;background:rgba(242,189,85,.055);line-height:1.65;color:#dce5ec}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.actions a{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:11px 16px;border-radius:12px;text-decoration:none;font-weight:850}
+.primary{background:linear-gradient(135deg,#ffd56e,#df9d30);color:#171006}
+.secondary{border:1px solid rgba(255,255,255,.2);color:#f8fafc;background:rgba(255,255,255,.04)}
+.back{display:inline-block;margin-bottom:22px;color:#9edfff;text-decoration:none;font-weight:800}
+footer{border-top:1px solid rgba(255,255,255,.1);padding:22px 0;color:#8295a8;font-size:12px}
+@media(max-width:620px){.grid{grid-template-columns:1fr}.service{padding:17px}.actions a{width:100%}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav"><a class="brand" href="/"><img src="assets/ils-logo.jpg" alt="ILS">INSTANT LEGAL SERVICES</a><select id="language" class="lang" aria-label="Language"><option value="hi-IN">हिन्दी</option><option value="en-IN">English</option><option value="hinglish">Hinglish</option><option value="ur-IN">اردو</option><option value="bn-IN">বাংলা</option></select></div></header>
+<main class="wrap">
+<a class="back" href="/" id="back">← Back to homepage</a>
+<div class="eyebrow" id="kicker">ILS SERVICE GUIDE</div>
+<h1 id="title">Service details</h1>
+<p class="lead" id="intro"></p>
+<div class="grid" id="services" aria-live="polite"></div>
+<div class="panel" id="disclosure"></div>
+<div class="actions" id="actions"></div>
+</main>
+<footer><div class="wrap" id="footer">Instant Legal Services · Service scope and applicable charges are confirmed before work begins.</div></footer>
+<script>
+(function(){
+const content={
+"en-IN":{
+ back:"← Back to homepage",kicker:"INSTANT LEGAL SERVICES · SERVICE GUIDE",disclosure:"ILS is an independent assistance platform, not a government department. Sending an enquiry does not create a paid order or guarantee acceptance, recovery, filing or an outcome. We confirm availability, scope, documents and applicable ILS charges before you decide. Government fees, if any, are separate. Never share OTPs, passwords, PINs or payment credentials.",footer:"Instant Legal Services · Service scope and applicable charges are confirmed before work begins.",explore:"Request assistance",official:"Open official eChallan portal",more:"View all services",
+"legal-drafting":{title:"Legal Drafting Services",intro:"Choose the document or drafting support you need. The final scope, facts, applicable law and professional involvement are reviewed before work begins.",cards:[["Legal notices","Demand, reply, legal and statutory notices based on the facts and documents supplied."],["Agreements and contracts","Business, service, rent, loan and other agreement-drafting enquiries."],["Applications and affidavits","Court-related applications, affidavits, undertakings and supporting drafts."],["Replies and representations","Replies to notices, written representations and structured responses."]],cta:"assistance.html?service=legal-drafting",ctaText:"Describe your drafting requirement",secondary:"assistance.html?service=legal-drafting"},
+"money-recovery":{title:"Money Recovery Assistance",intro:"Select the kind of outstanding payment issue you are facing. ILS can review the available documents and route the enquiry for suitable non-legal or independent professional assistance.",cards:[["Business invoice dues","Unpaid invoices, supply bills and outstanding trade payments."],["Loan or personal dues","Documented personal loans, advances and repayment defaults."],["Cheque-bounce matters","Section 138 NI Act-related enquiry and document coordination with an independent advocate."],["Demand and follow-up","Demand notice drafting enquiries, payment reminders and recovery communication support."]],cta:"assistance.html?service=money-recovery",ctaText:"Submit a money recovery enquiry",secondary:"assistance.html?service=money-recovery"},
+"gst-assistance":{title:"GST Assistance Services",intro:"Choose the GST task you need help with. ILS will clarify the required records, scope and applicable service charges before any work begins.",cards:[["GST registration and amendment","New registration, amendment and profile-update assistance."],["GST return preparation","Return data organisation, preparation and filing coordination."],["GST notices and replies","Notice understanding, document checklist and reply-coordination enquiries."],["GST portal and compliance","Portal issue coordination, due-date planning and basic compliance calendars."]],cta:"business-compliance.html?service=gst-returns#business-enquiry",ctaText:"Start a GST enquiry",secondary:"business-compliance.html#business-enquiry"},
+"traffic-challan":{title:"Traffic Challan Assistance",intro:"Understand your eChallan status and the available next steps. Official challan details, payments, disputes and final decisions remain on the government portal or with the competent authority.",cards:[["Check challan status","Find the official eChallan route and understand the information you may need."],["Understand a challan","Get help understanding the displayed violation, amount, date and next-step information."],["Payment and receipt guidance","Navigate to the official portal for payment and receipt-related steps. ILS does not collect government challan payments."],["Dispute or court-related query","Enquiry routing for contesting a challan or seeking independent legal advice where appropriate."]],cta:"assistance.html?mode=guided&problem=I%20need%20guidance%20about%20my%20traffic%20challan&route=Traffic%20eChallan",ctaText:"Request guided assistance",secondary:"government/echallan/"}
+},
+"hi-IN":{
+back:"← मुखपृष्ठ पर लौटें",kicker:"इंस्टेंट लीगल सर्विसेज · सेवा मार्गदर्शिका",disclosure:"ILS एक स्वतंत्र सहायता मंच है, सरकारी विभाग नहीं। पूछताछ भेजने से सशुल्क ऑर्डर नहीं बनता और किसी परिणाम, वसूली, दाखिले या स्वीकृति की गारंटी नहीं होती। निर्णय से पहले उपलब्धता, कार्य-क्षेत्र, दस्तावेज़ और लागू ILS शुल्क स्पष्ट किए जाएँगे। सरकारी शुल्क अलग होंगे। OTP, पासवर्ड, PIN या भुगतान संबंधी गोपनीय जानकारी साझा न करें।",footer:"इंस्टेंट लीगल सर्विसेज · काम शुरू होने से पहले सेवा का दायरा और लागू शुल्क स्पष्ट किए जाएँगे।",
+"legal-drafting":{title:"कानूनी ड्राफ्टिंग सेवाएँ",intro:"अपनी आवश्यकता के अनुसार दस्तावेज़ या ड्राफ्टिंग सेवा चुनें। काम शुरू होने से पहले तथ्य, दस्तावेज़, लागू कानून और आवश्यक पेशेवर भूमिका की समीक्षा की जाएगी।",cards:[["कानूनी नोटिस","दिए गए तथ्यों और दस्तावेज़ों के आधार पर मांग, जवाब और अन्य कानूनी नोटिस।"],["समझौते और अनुबंध","व्यापार, सेवा, किराया, ऋण और अन्य अनुबंधों के ड्राफ्टिंग संबंधी अनुरोध।"],["आवेदन और शपथपत्र","न्यायालयीन आवेदन, शपथपत्र, वचनपत्र और सहायक प्रारूप।"],["जवाब और अभ्यावेदन","नोटिस के जवाब, लिखित अभ्यावेदन और व्यवस्थित प्रत्युत्तर।"]],cta:"assistance.html?service=legal-drafting",ctaText:"ड्राफ्टिंग की आवश्यकता बताएँ"},
+"money-recovery":{title:"बकाया रकम की वसूली में सहायता",intro:"बताएँ कि किस प्रकार का भुगतान बकाया है। ILS उपलब्ध दस्तावेज़ों की प्रारंभिक जानकारी लेकर उपयुक्त सहायता या स्वतंत्र पेशेवर तक अनुरोध पहुँचा सकता है।",cards:[["व्यापारिक बिल का बकाया","अवैतनिक बिल, माल की सप्लाई और व्यापारिक भुगतान की बकाया रकम।"],["ऋण या व्यक्तिगत बकाया","दस्तावेज़ों से समर्थित निजी ऋण, अग्रिम और भुगतान में चूक।"],["चेक बाउंस संबंधी मामला","धारा 138 NI Act से संबंधित पूछताछ और स्वतंत्र अधिवक्ता के साथ दस्तावेज़ समन्वय।"],["मांग और भुगतान अनुस्मारक","मांग नोटिस, भुगतान अनुस्मारक और वसूली संबंधी संचार सहायता।"]],cta:"assistance.html?service=money-recovery",ctaText:"वसूली संबंधी पूछताछ भेजें"},
+"gst-assistance":{title:"जीएसटी सहायता सेवाएँ",intro:"अपनी आवश्यकता के अनुसार जीएसटी सेवा चुनें। काम शुरू होने से पहले आवश्यक रिकॉर्ड, कार्य-क्षेत्र और लागू सेवा शुल्क स्पष्ट किए जाएँगे।",cards:[["जीएसटी पंजीकरण और संशोधन","नया पंजीकरण, संशोधन और प्रोफ़ाइल अपडेट संबंधी सहायता।"],["जीएसटी रिटर्न तैयारी","रिटर्न के लिए डेटा व्यवस्थित करना, तैयारी और दाखिले का समन्वय।"],["जीएसटी नोटिस और जवाब","नोटिस समझने, दस्तावेज़ सूची और जवाब के समन्वय संबंधी पूछताछ।"],["जीएसटी पोर्टल और अनुपालन","पोर्टल समस्या समन्वय, देय तिथि योजना और मूल अनुपालन कैलेंडर।"]],cta:"business-compliance.html?service=gst-returns#business-enquiry",ctaText:"जीएसटी पूछताछ शुरू करें"},
+"traffic-challan":{title:"यातायात चालान सहायता",intro:"ई-चालान की स्थिति और उपलब्ध अगले कदम समझें। चालान का आधिकारिक विवरण, भुगतान, विवाद और अंतिम निर्णय सरकारी पोर्टल या सक्षम प्राधिकरण के अधीन हैं।",cards:[["चालान की स्थिति देखें","आधिकारिक ई-चालान मार्ग और आवश्यक जानकारी समझें।"],["चालान का विवरण समझें","दिखाए गए उल्लंघन, राशि, तारीख और अगले कदम की जानकारी समझने में सहायता।"],["भुगतान और रसीद मार्गदर्शन","भुगतान और रसीद के लिए आधिकारिक पोर्टल का उपयोग करें। ILS सरकारी चालान राशि नहीं लेता।"],["विवाद या न्यायालय संबंधी प्रश्न","चालान चुनौती देने या स्वतंत्र कानूनी सलाह के लिए उपयुक्त पूछताछ मार्ग।"]],cta:"assistance.html?mode=guided&problem=मुझे%20यातायात%20चालान%20के%20बारे%20में%20मार्गदर्शन%20चाहिए&route=Traffic%20eChallan",ctaText:"मार्गदर्शित सहायता माँगें"}
+},
+"hinglish":{
+back:"← Homepage par wapas",kicker:"INSTANT LEGAL SERVICES · SERVICE GUIDE",disclosure:"ILS ek independent assistance platform hai, government department nahi. Enquiry bhejne se paid order create nahi hota aur kisi result, recovery ya filing ki guarantee nahi hai. Aage badhne se pehle availability, scope, documents aur applicable ILS charges clear kiye jayenge. Government fees alag hongi. OTP, password, PIN ya payment credentials share na karein.",footer:"Instant Legal Services · Work start hone se pehle scope aur applicable charges clear honge.",
+"legal-drafting":{title:"Legal Drafting Services",intro:"Apni requirement ke hisaab se document ya drafting support choose karein. Work se pehle facts, documents, applicable law aur professional involvement review hoga.",cards:[["Legal notices","Demand, reply aur legal/statutory notices."],["Agreements and contracts","Business, service, rent, loan aur other agreements."],["Applications and affidavits","Court applications, affidavits aur supporting drafts."],["Replies and representations","Notice replies aur written representations."]],cta:"assistance.html?service=legal-drafting",ctaText:"Drafting requirement batayein"},
+"money-recovery":{title:"Money Recovery Assistance",intro:"Batayein kis type ka payment pending hai. ILS documents ki basic details review karke suitable assistance ya independent professional tak enquiry route karega.",cards:[["Business invoice dues","Unpaid invoices, supply bills aur trade payments."],["Loan or personal dues","Documented personal loans, advances aur defaults."],["Cheque-bounce matters","Section 138 NI Act enquiry aur independent advocate coordination."],["Demand and follow-up","Demand notice aur payment reminder support."]],cta:"assistance.html?service=money-recovery",ctaText:"Recovery enquiry bhejein"},
+"gst-assistance":{title:"GST Assistance Services",intro:"Apne GST task ko choose karein. Work start hone se pehle records, scope aur applicable service charges clear honge.",cards:[["GST registration and amendment","New registration, amendment aur profile updates."],["GST return preparation","Return data organisation aur filing coordination."],["GST notices and replies","Notice understanding, document checklist aur reply coordination."],["GST portal and compliance","Portal issue, due-date planning aur compliance calendar."]],cta:"business-compliance.html?service=gst-returns#business-enquiry",ctaText:"GST enquiry start karein"},
+"traffic-challan":{title:"Traffic Challan Assistance",intro:"eChallan status aur next steps samjhein. Official details, payment, dispute aur final decision government portal ya competent authority ke paas rahenge.",cards:[["Check challan status","Official eChallan route aur required information."],["Understand a challan","Violation, amount, date aur next step samjhein."],["Payment and receipt guidance","Official portal se payment/receipt. ILS government challan payment collect nahi karta."],["Dispute or court query","Challan contest karne ya independent legal advice ki enquiry."]],cta:"assistance.html?mode=guided&problem=Traffic%20challan%20ke%20baare%20mein%20guidance%20chahiye&route=Traffic%20eChallan",ctaText:"Guided assistance maangein"}
+},
+"ur-IN":{
+back:"← مرکزی صفحے پر واپس",kicker:"انسٹنٹ لیگل سروسز · خدمات کی رہنمائی",disclosure:"ILS ایک آزاد معاونتی پلیٹ فارم ہے، سرکاری محکمہ نہیں۔ انکوائری بھیجنے سے بامعاوضہ آرڈر نہیں بنتا اور کسی نتیجے، وصولی یا فائلنگ کی ضمانت نہیں ہوتی۔ آگے بڑھنے سے پہلے دستیابی، دائرۂ کار، دستاویزات اور قابل اطلاق ILS فیس واضح کی جائے گی۔ سرکاری فیس الگ ہوگی۔ OTP، پاس ورڈ، PIN یا ادائیگی کی خفیہ معلومات شیئر نہ کریں۔",footer:"انسٹنٹ لیگل سروسز · کام شروع ہونے سے پہلے دائرۂ کار اور فیس واضح کی جائے گی۔",
+"legal-drafting":{title:"قانونی مسودہ نویسی کی خدمات",intro:"اپنی ضرورت کے مطابق دستاویز یا مسودہ نویسی کی خدمت منتخب کریں۔ کام سے پہلے حقائق، دستاویزات، متعلقہ قانون اور پیشہ ورانہ شمولیت کا جائزہ لیا جائے گا۔",cards:[["قانونی نوٹس","فراہم کردہ حقائق اور دستاویزات کی بنیاد پر مطالبہ اور جواب کے نوٹس۔"],["معاہدے","کاروبار، خدمات، کرایہ، قرض اور دیگر معاہدوں کے مسودے۔"],["درخواستیں اور حلف نامے","عدالتی درخواستیں، حلف نامے اور معاون مسودے۔"],["جوابات اور نمائندگی","نوٹس کے جوابات اور تحریری نمائندگی۔"]],cta:"assistance.html?service=legal-drafting",ctaText:"مسودہ نویسی کی ضرورت بتائیں"},
+"money-recovery":{title:"بقایا رقم کی وصولی میں معاونت",intro:"بتائیں کس قسم کی ادائیگی باقی ہے۔ ILS دستاویزات کی ابتدائی معلومات لے کر مناسب معاونت یا آزاد پیشہ ور تک انکوائری پہنچا سکتا ہے۔",cards:[["کاروباری بل","غیر ادا شدہ انوائس، سپلائی بل اور تجارتی واجبات۔"],["قرض یا ذاتی واجبات","دستاویزی ذاتی قرض، ایڈوانس اور عدم ادائیگی۔"],["چیک باؤنس","دفعہ 138 NI Act سے متعلق انکوائری اور آزاد وکیل کے ساتھ دستاویزات کا رابطہ۔"],["مطالبہ اور یاددہانی","مطالبہ نوٹس، ادائیگی کی یاددہانی اور رابطے میں معاونت۔"]],cta:"assistance.html?service=money-recovery",ctaText:"وصولی کی انکوائری بھیجیں"},
+"gst-assistance":{title:"جی ایس ٹی معاونتی خدمات",intro:"اپنی ضرورت کے مطابق جی ایس ٹی خدمت منتخب کریں۔ کام سے پہلے ضروری ریکارڈ، دائرۂ کار اور فیس واضح کی جائے گی۔",cards:[["رجسٹریشن اور ترمیم","نئی رجسٹریشن، ترمیم اور پروفائل اپ ڈیٹ۔"],["جی ایس ٹی ریٹرن","ریٹرن ڈیٹا کی ترتیب اور فائلنگ کا رابطہ۔"],["نوٹس اور جوابات","نوٹس سمجھنے، دستاویزات کی فہرست اور جواب کی معاونت۔"],["پورٹل اور تعمیل","پورٹل مسائل، آخری تاریخوں کی منصوبہ بندی اور تعمیل کیلنڈر۔"]],cta:"business-compliance.html?service=gst-returns#business-enquiry",ctaText:"جی ایس ٹی انکوائری شروع کریں"},
+"traffic-challan":{title:"ٹریفک چالان معاونت",intro:"ای چالان کی صورتحال اور اگلے اقدامات سمجھیں۔ سرکاری تفصیلات، ادائیگی، تنازع اور حتمی فیصلہ سرکاری پورٹل یا مجاز اتھارٹی کے پاس رہتا ہے۔",cards:[["چالان کی صورتحال","سرکاری ای چالان راستہ اور مطلوبہ معلومات۔"],["چالان کی تفصیل","خلاف ورزی، رقم، تاریخ اور اگلے اقدام کو سمجھیں۔"],["ادائیگی اور رسید","ادائیگی کے لیے سرکاری پورٹل استعمال کریں۔ ILS سرکاری چالان رقم وصول نہیں کرتا۔"],["تنازع یا عدالتی سوال","چالان کو چیلنج کرنے یا آزاد قانونی مشورے کی انکوائری۔"]],cta:"assistance.html?mode=guided&problem=مجھے%20ٹریفک%20چالان%20کے%20بارے%20میں%20رہنمائی%20چاہیے&route=Traffic%20eChallan",ctaText:"رہنمائی کی درخواست کریں"}
+},
+"bn-IN":{
+back:"← হোমপেজে ফিরে যান",kicker:"ইনস্ট্যান্ট লিগ্যাল সার্ভিসেস · পরিষেবা নির্দেশিকা",disclosure:"ILS একটি স্বাধীন সহায়তা প্ল্যাটফর্ম, সরকারি দপ্তর নয়। অনুসন্ধান পাঠালে পেইড অর্ডার তৈরি হয় না এবং ফলাফল, টাকা আদায় বা ফাইলিংয়ের নিশ্চয়তা দেওয়া হয় না। এগোনোর আগে পরিষেবার উপলব্ধতা, কাজের পরিধি, নথি ও প্রযোজ্য ILS ফি জানানো হবে। সরকারি ফি আলাদা। OTP, পাসওয়ার্ড, PIN বা পেমেন্টের গোপন তথ্য শেয়ার করবেন না।",footer:"ইনস্ট্যান্ট লিগ্যাল সার্ভিসেস · কাজ শুরুর আগে পরিষেবার পরিধি ও প্রযোজ্য ফি জানানো হবে।",
+"legal-drafting":{title:"আইনি খসড়া পরিষেবা",intro:"আপনার প্রয়োজন অনুযায়ী নথি বা খসড়া পরিষেবা বেছে নিন। কাজ শুরুর আগে তথ্য, নথি, প্রযোজ্য আইন এবং পেশাদার সহায়তার প্রয়োজন পর্যালোচনা করা হবে।",cards:[["আইনি নোটিশ","প্রদত্ত তথ্য ও নথির ভিত্তিতে দাবি এবং জবাবের নোটিশ।"],["চুক্তি ও এগ্রিমেন্ট","ব্যবসা, পরিষেবা, ভাড়া, ঋণ ও অন্যান্য চুক্তির খসড়া।"],["আবেদন ও হলফনামা","আদালতের আবেদন, হলফনামা ও সহায়ক খসড়া।"],["জবাব ও প্রতিনিধিত্ব","নোটিশের জবাব এবং লিখিত প্রতিনিধিত্ব।"]],cta:"assistance.html?service=legal-drafting",ctaText:"খসড়ার প্রয়োজন জানান"},
+"money-recovery":{title:"বকেয়া টাকা আদায়ে সহায়তা",intro:"কী ধরনের টাকা বকেয়া রয়েছে তা বেছে নিন। ILS নথির প্রাথমিক তথ্য দেখে উপযুক্ত সহায়তা বা স্বাধীন পেশাদারের কাছে অনুসন্ধান পাঠাতে পারে।",cards:[["ব্যবসায়িক বিল","অপরিশোধিত ইনভয়েস, সরবরাহ বিল ও ব্যবসায়িক পাওনা।"],["ঋণ বা ব্যক্তিগত পাওনা","নথিভুক্ত ব্যক্তিগত ঋণ, অগ্রিম ও পরিশোধে ব্যর্থতা।"],["চেক বাউন্স","ধারা 138 NI Act সংক্রান্ত অনুসন্ধান এবং স্বাধীন আইনজীবীর সঙ্গে নথি সমন্বয়।"],["দাবি ও অনুস্মারক","দাবি নোটিশ, পেমেন্ট রিমাইন্ডার ও যোগাযোগে সহায়তা।"]],cta:"assistance.html?service=money-recovery",ctaText:"আদায় সংক্রান্ত অনুসন্ধান পাঠান"},
+"gst-assistance":{title:"জিএসটি সহায়তা পরিষেবা",intro:"আপনার প্রয়োজন অনুযায়ী জিএসটি পরিষেবা বেছে নিন। কাজ শুরুর আগে প্রয়োজনীয় রেকর্ড, কাজের পরিধি ও প্রযোজ্য ফি জানানো হবে।",cards:[["জিএসটি নিবন্ধন ও সংশোধন","নতুন নিবন্ধন, সংশোধন ও প্রোফাইল আপডেট।"],["জিএসটি রিটার্ন প্রস্তুতি","রিটার্নের তথ্য সাজানো, প্রস্তুতি ও ফাইলিং সমন্বয়।"],["জিএসটি নোটিশ ও জবাব","নোটিশ বোঝা, নথির তালিকা ও জবাব সমন্বয়।"],["জিএসটি পোর্টাল ও কমপ্লায়েন্স","পোর্টাল সমস্যা, নির্ধারিত তারিখ পরিকল্পনা ও কমপ্লায়েন্স ক্যালেন্ডার।"]],cta:"business-compliance.html?service=gst-returns#business-enquiry",ctaText:"জিএসটি অনুসন্ধান শুরু করুন"},
+"traffic-challan":{title:"ট্রাফিক চালান সহায়তা",intro:"ই-চালানের অবস্থা ও পরবর্তী পদক্ষেপ বুঝুন। সরকারি বিবরণ, পেমেন্ট, বিরোধ ও চূড়ান্ত সিদ্ধান্ত সরকারি পোর্টাল বা উপযুক্ত কর্তৃপক্ষের অধীনে থাকে।",cards:[["চালানের অবস্থা দেখুন","সরকারি ই-চালান পথ ও প্রয়োজনীয় তথ্য জানুন।"],["চালানের বিবরণ বুঝুন","উল্লঙ্ঘন, অর্থের পরিমাণ, তারিখ ও পরবর্তী পদক্ষেপ বুঝতে সহায়তা।"],["পেমেন্ট ও রসিদ","পেমেন্টের জন্য সরকারি পোর্টাল ব্যবহার করুন। ILS সরকারি চালানের টাকা নেয় না।"],["বিরোধ বা আদালত সংক্রান্ত প্রশ্ন","চালান চ্যালেঞ্জ বা স্বাধীন আইনি পরামর্শের জন্য অনুসন্ধান।"]],cta:"assistance.html?mode=guided&problem=ট্রাফিক%20চালান%20সম্পর্কে%20আমার%20নির্দেশনা%20প্রয়োজন&route=Traffic%20eChallan",ctaText:"নির্দেশিত সহায়তা চান"}
+}
+};
+const params=new URLSearchParams(location.search),slug=params.get("service")||"";
+const langSelect=document.getElementById("language");
+function render(lang){
+ const d=content[lang]||content["en-IN"],item=d[slug]||d["legal-drafting"];
+ document.documentElement.lang=lang==="hinglish"?"en-IN":lang;document.documentElement.dir=lang==="ur-IN"?"rtl":"ltr";
+ document.getElementById("language").value=lang;
+ document.getElementById("back").textContent=d.back;
+ document.getElementById("kicker").textContent=d.kicker;
+ document.getElementById("title").textContent=item.title;
+ document.getElementById("intro").textContent=item.intro;
+ document.getElementById("disclosure").textContent=d.disclosure;
+ document.getElementById("footer").textContent=d.footer;
+ document.getElementById("services").innerHTML=item.cards.map((c,i)=>'<article class="service"><h2>'+String(i+1).padStart(2,"0")+'. '+c[0]+'</h2><p>'+c[1]+'</p></article>').join("");
+ const actions=document.getElementById("actions");
+ actions.innerHTML='<a class="primary" href="'+item.cta+'">'+item.ctaText+'</a>'+(slug==="traffic-challan"?'<a class="secondary" href="https://echallan.parivahan.nic.in/login" target="_blank" rel="noopener">Open official eChallan portal ↗</a>':"")+'<a class="secondary" href="/">Home</a>';
+ try{localStorage.setItem("ils-home-lang",lang)}catch(e){}
+}
+const saved=localStorage.getItem("ils-home-lang")||"en-IN";
+langSelect.value=saved;render(saved);
+langSelect.addEventListener("change",e=>render(e.target.value));
+})();
+</script>
+</body>
+</html>
