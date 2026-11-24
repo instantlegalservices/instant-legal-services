@@ -31,8 +31,8 @@ await page.route("**/assets/ils-tools.js*", route =>
 try {
   // Both the multilingual service router and the dedicated GST page must
   // point straight to the single universal form with the GST option preselected.
-  const routerSource = await (await page.request.get(base + "/popular-assistance.html")).text();
-  const gstLandingSource = await (await page.request.get(base + "/services/gst-assistance/")).text();
+  const routerSource = await (await page.request.get(baseUrl + "/popular-assistance.html")).text();
+  const gstLandingSource = await (await page.request.get(baseUrl + "/services/gst-assistance/")).text();
   if ((routerSource.match(/assistance\.html\?service=business-compliance&option=GST%20return%20%2F%20notice%20%2F%20portal%20issue/g) || []).length !== 5) throw new Error("All multilingual GST router CTAs must open the universal form directly.");
   if (!gstLandingSource.includes("/assistance.html?service=business-compliance&amp;option=GST%20return%20%2F%20notice%20%2F%20portal%20issue")) throw new Error("Dedicated GST landing page must open the universal form directly.");
 
