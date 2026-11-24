@@ -23,20 +23,30 @@ const { chromium } = require("playwright");
     await page.selectOption("#language","hi-IN");
     if(await page.locator("#popular-assistance-title").innerText()!=="लोकप्रिय सहायता")throw new Error("Hindi language did not localize Popular Assistance title.");
     const routes={
-      legal:"popular-assistance.html?service=legal-drafting",
-      recovery:"popular-assistance.html?service=money-recovery",
-      gst:"popular-assistance.html?service=gst-assistance",
-      traffic:"popular-assistance.html?service=traffic-challan"
+      legal:"services/legal-drafting/",
+      recovery:"services/money-recovery/",
+      gst:"services/gst-assistance/",
+      traffic:"services/traffic-challan/"
     };
     for(const [key,href] of Object.entries(routes)){
       await page.goto(base+"/");
       const actual=await page.locator("#popular-assistance .popular-card."+key).getAttribute("href");
       if(actual!==href)throw new Error(key+" card route mismatch: "+actual);
       await page.goto(base+"/"+href);
-      if(await page.locator("#services .service").count()!==4)throw new Error(key+" service detail page must show four service options.");
-      if(!(await page.locator("#title").innerText()).trim())throw new Error(key+" service detail heading missing.");
-      if(!(await page.locator("#actions a").count()))throw new Error(key+" service detail enquiry/action route missing.");
+      if(await page.locator("main .service").count()!==4)throw new Error(key+" SEO service page must show four service options.");
+      if(!(await page.locator("main h1").innerText()).trim())throw new Error(key+" SEO page heading missing.");
+      if(!(await page.locator('meta[name="description"]').getAttribute("content")))throw new Error(key+" SEO meta description missing.");
+      if((await page.locator('link[rel="canonical"]').getAttribute("href"))!=="https://instantlegalservices.in/"+href)throw new Error(key+" canonical URL mismatch.");
+      const schema=await page.locator('script[type="application/ld+json"]').innerText();
+      if(!schema.includes('"Service"')||!schema.includes('"FAQPage"'))throw new Error(key+" structured data missing.");
+      if(!(await page.locator("main a.cta").count()))throw new Error(key+" service enquiry action missing.");
     }
+    const sitemap=await (await page.request.get(base+"/sitemap.xml")).text();
+    for(const href of Object.values(routes))if(!sitemap.includes("https://instantlegalservices.in/"+href))throw new Error("Sitemap missing new service URL: "+href);
+    const robots=await (await page.request.get(base+"/robots.txt")).text();
+    if(!robots.includes("Sitemap: https://instantlegalservices.in/sitemap.xml"))throw new Error("Existing robots sitemap directive missing.");
+    await page.goto(base+"/popular-assistance.html?service=legal-drafting");
+    if((await page.locator('meta[name="robots"]').getAttribute("content"))!=="noindex,follow")throw new Error("Query-driven duplicate service router must remain noindex.");
     await page.goto(base+"/business-compliance.html?service=gst-returns#business-enquiry");
     if(await page.locator("#bcService").inputValue()!=="GST return / notice / portal issue")throw new Error("GST enquiry did not preselect the relevant existing service.");
     if(!(await page.locator("#bcBrief").inputValue()).includes("GST services"))throw new Error("GST enquiry did not prefill a useful service-specific brief.");
@@ -52,7 +62,7 @@ const { chromium } = require("playwright");
     if(pageErrors.length)throw new Error("Browser page errors: "+pageErrors.join(" | "));
     console.log("POPULAR_ASSISTANCE_POSITION=PASS");
     console.log("POPULAR_ASSISTANCE_MULTILINGUAL=PASS (English/Hindi)");
-    console.log("ALL_FOUR_SERVICE_DETAIL_ROUTES=PASS");
+    console.log("ALL_FOUR_SERVICE_DETAIL_ROUTES=PASS");\n    console.log("FOUR_SERVICE_SEO_CANONICALS_SCHEMA_SITEMAP=PASS");\n    console.log("EXISTING_ROBOTS_SITEMAP_DIRECTIVE=PASS");
     console.log("GST_EXISTING_ENQUIRY_PREFILL=PASS");
     console.log("LEGAL_DRAFTING_AND_MONEY_RECOVERY_INTAKE=PASS");
     console.log("GUIDED_MODE_COMPATIBILITY=PASS");
