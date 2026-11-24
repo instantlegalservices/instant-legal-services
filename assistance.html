@@ -72,6 +72,7 @@ if(window.supabase && !window.supabaseClient){window.supabaseClient=window.supab
 <div class="form-row"><div><label>Name</label><input id="name" required maxlength="100"></div><div><label>10-digit mobile</label><input id="mobile" inputmode="numeric" maxlength="10" required></div></div>
 <div class="form-row"><div><label>State</label><input id="state" required maxlength="80"></div><div><label>District / City</label><input id="city" required maxlength="100"></div></div>
 <label>Legal matter</label><select id="matter" required><option value="">Select</option><option>Criminal</option><option>Bail / Anticipatory Bail</option><option>NDPS</option><option>Cyber Crime</option><option>Family / Matrimonial</option><option>Civil / Property</option><option>Cheque Bounce / NI Act</option><option>Consumer</option><option>Commercial / Corporate</option><option>Labour / Service</option><option>Tax / GST</option><option>Writ / Constitutional</option><option>Arbitration / ADR</option><option>Other</option></select>
+<div id="serviceOptionWrap" class="hide"><label for="serviceOption">Specific service required</label><select id="serviceOption"><option value="">Choose the closest option</option></select><small id="serviceOptionHelp" style="display:block;color:#8fa2b4;margin:5px 0 12px">Choose the closest match. You can explain further below.</small></div>
 <label>Brief requirement</label><textarea id="brief" maxlength="3000" required placeholder="Briefly describe the matter and what assistance you need."></textarea>
 <label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input id="consent" type="checkbox" style="width:18px;margin-top:2px" required><span>I understand this submission is a request for coordination and does not itself create an advocate-client relationship.</span></label>
 <button class="btn btn-primary" type="submit">Submit Requirement</button><div id="assistStatus" class="status"></div></form>
@@ -95,9 +96,15 @@ const mode=params.get("mode");
 const problem=params.get("problem")||"";
 const route=params.get("route")||"";
 const service=params.get("service")||"";
+const serviceOption=params.get("option")||"";
 const serviceIntake={
  "legal-drafting":{title:"Legal Drafting Assistance",matter:"Other",brief:"I need legal drafting assistance (for example, a notice, agreement, affidavit or application). Please contact me to understand the document, facts and applicable scope."},
- "money-recovery":{title:"Money Recovery Assistance",matter:"Other",brief:"I need assistance regarding recovery of an outstanding amount. Please contact me to understand the transaction, amount, supporting documents and appropriate next steps."}
+ "money-recovery":{title:"Money Recovery Assistance",matter:"Other",brief:"I need assistance regarding recovery of an outstanding amount. Please contact me to understand the transaction, amount, supporting documents and appropriate next steps."},
+ "consumer-banking-disputes":{title:"Consumer & Banking Dispute Assistance",matter:"Consumer",brief:"I need assistance with a consumer or banking dispute. Please contact me to understand the transaction or purchase, complaint history, supporting documents and appropriate next steps."},
+ "cyber-fraud-assistance":{title:"Cyber Fraud Assistance",matter:"Cyber Crime",brief:"I need assistance organising information and next steps after a cyber or online financial fraud. I understand urgent reporting through 1930 and the official cybercrime portal should be done promptly. Please contact me to review the available records."},
+ "matrimonial-family":{title:"Matrimonial & Family Assistance",matter:"Family / Matrimonial",brief:"I need assistance regarding a matrimonial or family matter. Please contact me to understand the issue, relevant dates, documents and appropriate next steps."},
+ "property-documentation":{title:"Property & Documentation Assistance",matter:"Civil / Property",brief:"I need assistance regarding a property or documentation matter. Please contact me to understand the property details, documents, transaction history and appropriate next steps."},
+ "income-tax-itr":{title:"Income Tax & ITR Assistance",matter:"Tax / GST",brief:"I need assistance with an income-tax or ITR matter. Please contact me to understand the relevant assessment/financial year, notice or filing issue and documents. I will not share passwords or OTPs."}
 };
 const routeData={
  cyber:{url:"https://cybercrime.gov.in/",title:"National Cyber Crime Reporting Portal",items:["Transaction/reference ID, date and amount","Bank/UPI/payment screenshots and statements","Chronology of what happened","Any complaint/reference already received","Never share OTP, password, PIN or payment credentials"]},
@@ -170,15 +177,16 @@ function showMode(){
  document.getElementById("routeName").textContent=rd?.title||route||"Official route";
  document.getElementById("problemText").textContent=problem||"Problem details were not carried forward. You can return to the problem search.";
  const guided=mode==="guided";
- const configuredServiceSlug=guided?"official-route-guidance":"digital-form-assistance";
- const configuredFallback=guided?19:160;
+ const paidMarketplaceTraffic=guided&&/traffic.*echallan|echallan.*traffic/i.test([problem,route,rd?.title||""].join(" "));
+ const configuredServiceSlug=paidMarketplaceTraffic?"ils-enquiry-fee-199":(guided?"official-route-guidance":"digital-form-assistance");
+ const configuredFallback=paidMarketplaceTraffic?199:(guided?19:160);
  document.getElementById("modePill").textContent=guided?"PAID GUIDED SELF-SERVICE":"PAID ASSOCIATE ASSISTANCE";
  document.getElementById("modeTitle").textContent=guided?"Fill the official form yourself — with a concise guidance pack.":"Have an ILS associate assist with the digital/form-filling task.";
  document.getElementById("modeLead").textContent=guided?"You remain in control of the official filing. ILS provides a summarized, non-legal checklist and field guidance.":"This is non-legal digital/administrative assistance. The associate does not provide legal advice or replace an independent professional.";
- document.getElementById("payTitle").textContent=guided?"Guided self-service":"Associate assistance — basic";
- document.getElementById("payPrice").textContent=guided?"₹19":"₹160";
- document.getElementById("payDesc").textContent=guided?"One-time guidance pack. Government fee, if any, is separate and paid to the official authority.":"Basic digital/form-filling assistance. Scope is confirmed before work; professional legal fees, if needed, are separate.";
- document.getElementById("payBtn").textContent=guided?"Pay ₹19 & unlock guidance":"Pay ₹160 & request assistance";
+ document.getElementById("payTitle").textContent=paidMarketplaceTraffic?"Traffic Challan Assistance — initial enquiry":(guided?"Guided self-service":"Associate assistance — basic");
+ document.getElementById("payPrice").textContent=paidMarketplaceTraffic?"₹199":(guided?"₹19":"₹160");
+ document.getElementById("payDesc").textContent=paidMarketplaceTraffic?"One-time ILS initial enquiry and coordination fee. Any government challan amount is separate and must be paid only through the official portal.":(guided?"One-time guidance pack. Government fee, if any, is separate and paid to the official authority.":"Basic digital/form-filling assistance. Scope is confirmed before work; professional legal fees, if needed, are separate.");
+ document.getElementById("payBtn").textContent=paidMarketplaceTraffic?"Pay ₹199 & continue":(guided?"Pay ₹19 & unlock guidance":"Pay ₹160 & request assistance");
  if(guided)document.getElementById("associateFields").classList.add("hide");
  else {document.getElementById("associateFields").classList.remove("hide");document.getElementById("consentWrap").classList.remove("hide");}
  const btn=document.getElementById("officialBtn");
@@ -214,7 +222,8 @@ async function pay(guided,rd,resumeIntent=null){
    city:guided?"":document.getElementById("assistCity").value.trim(),
    ...(resumeIntent?.checkoutIntentId?{checkout_intent_id:resumeIntent.checkoutIntentId}: {})
   };
-  const serviceSlug=guided?"official-route-guidance":"digital-form-assistance";
+  const isPaidMarketplaceTraffic=guided&&/traffic.*echallan|echallan.*traffic/i.test([problem,route,rd?.title||""].join(" "));
+  const serviceSlug=isPaidMarketplaceTraffic?"ils-enquiry-fee-199":(guided?"official-route-guidance":"digital-form-assistance");
   status("Creating your secure service order…");
 
   document.getElementById("paymentStatus").className="status";
@@ -276,29 +285,39 @@ async function resumePendingCheckout(){
   const raw=sessionStorage.getItem("ils_pending_checkout");
   if(!raw)return;
   const pending=JSON.parse(raw);
-  if(!pending||!pending.createdAt||Date.now()-pending.createdAt>30*60*1000){
+  if(!pending)return;
+  // Clear any legacy record that contains intake details before checking age or URL.
+  if(pending.details){
+   sessionStorage.removeItem("ils_pending_checkout");
+   const current=location.pathname+location.search+location.hash;
+   if(pending.returnTo===current){
+    status("Welcome back. Saved enquiry details were cleared from this browser for your privacy. Please re-enter the required details and submit again to create your order.","ok");
+   }
+   return;
+  }
+  if(!pending.createdAt||Date.now()-pending.createdAt>30*60*1000){
    sessionStorage.removeItem("ils_pending_checkout");
    return;
   }
   const current=location.pathname+location.search+location.hash;
-  if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance"].includes(pending.slug))return;
-  const expected=mode==="guided"?"official-route-guidance":mode==="associate"?"digital-form-assistance":null;
-  if(expected!==pending.slug||!pending.details)return;
-  const d=pending.details;
-  if(mode==="associate"){
-   document.getElementById("assistName").value=d.name||"";
-   document.getElementById("assistMobile").value=d.mobile||"";
-   document.getElementById("assistState").value=d.state||"";
-   document.getElementById("assistCity").value=d.city||"";
-   document.getElementById("assistConsent").checked=true;
+  if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance","ils-enquiry-fee-199"].includes(pending.slug))return;
+  if(pending.requiresReentry){
+   sessionStorage.removeItem("ils_pending_checkout");
+   status("Welcome back. For your privacy, your enquiry details were not saved in the browser. Please re-enter the required details and submit again to create your order.","ok");
   }
-  status("Welcome back. Your saved request is being restored. Please review the order and complete payment.");
-  await pay(mode==="guided",detectRoute(),pending);
  }catch(err){
+  try{sessionStorage.removeItem("ils_pending_checkout");}catch(_){}
   console.warn("Could not resume saved ILS checkout.",err);
-  status("Your saved request could not be restored. Please review your details and try again.","err");
+  status("Your saved checkout marker could not be read. Please review your details and try again.","err");
  }
 }
+const serviceOptionChoices={
+ "consumer-banking-disputes":["Refund / replacement","Defective product / service deficiency","Unauthorised bank / UPI transaction","Consumer complaint preparation"],
+ "cyber-fraud-assistance":["Urgent reporting and next-step checklist","Evidence organisation","Bank complaint support","Legal review enquiry"],
+ "matrimonial-family":["Mutual consent divorce","Maintenance / financial support","Family settlement / mediation","Other matrimonial / family dispute"],
+ "property-documentation":["Sale / purchase / agreement drafting","Rent / lease documentation","Title / record review enquiry","Possession / property dispute"],
+ "income-tax-itr":["ITR preparation assistance","Tax notice / demand response","Business / professional income","Correction / compliance support"]
+};
 document.addEventListener("DOMContentLoaded",()=>{
  if(!mode&&serviceIntake[service]){
   const intake=serviceIntake[service];
@@ -306,6 +325,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.querySelector("#standardHelp p").textContent="Share the basic details below. ILS will review your request and clarify the scope and applicable fee before any work begins.";
   document.getElementById("matter").value=intake.matter;
   document.getElementById("brief").value=intake.brief;
+  const choices=serviceOptionChoices[service]||[];
+  if(choices.length){
+   const wrap=document.getElementById("serviceOptionWrap");
+   const select=document.getElementById("serviceOption");
+   wrap.classList.remove("hide");
+   choices.forEach(label=>{const option=document.createElement("option");option.value=label;option.textContent=label;select.appendChild(option);});
+   if(serviceOption&&choices.includes(serviceOption))select.value=serviceOption;
+  }
  }
  showMode();
  resumePendingCheckout();
@@ -314,7 +341,21 @@ document.addEventListener("DOMContentLoaded",()=>{
   e.preventDefault();const s=document.getElementById("assistStatus");s.className="status";s.textContent="Submitting…";s.style.display="block";
   const mobile=document.getElementById("mobile").value.trim();
   if(!/^[0-9]{10}$/.test(mobile)){s.className="status err";s.textContent="Please enter a valid 10-digit mobile number.";return}
-  try{await ILS.submitRequirement({name:document.getElementById("name").value,mobile,state:document.getElementById("state").value,city:document.getElementById("city").value,matter:document.getElementById("matter").value,brief:document.getElementById("brief").value});s.className="status ok";s.textContent="Requirement submitted successfully. Please retain your details for follow-up.";form.reset()}catch(err){s.className="status err";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}
+  try{
+   const selectedOption=document.getElementById("serviceOption")?.value||"";
+   const baseBrief=document.getElementById("brief").value.trim();
+   const finalBrief=(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
+   const intakeService=new URLSearchParams(location.search).get("service")||"";
+   const paidIntakeServices=new Set(["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr"]);
+   if(paidIntakeServices.has(intakeService)){
+    if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
+    const details={mode:"popular-assistance",intake_service:intakeService,service_option:selectedOption,name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief.slice(0,3000)};
+    s.className="status";s.textContent="Enquiry received. Preparing your ₹199 UPI payment…";
+    await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
+    return;
+   }
+   await ILS.submitRequirement({name:document.getElementById("name").value,mobile,state,city,matter:document.getElementById("matter").value,brief:finalBrief});
+   s.className="status ok";s.textContent="Requirement submitted successfully. Please retain your details for follow-up.";form.reset()}catch(err){s.className="status err";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}
  );
 });
 })();

@@ -9,6 +9,7 @@ on:
       - "admin.html"
       - "assets/ils-tools.js"
       - "assets/ils-core.js"
+      - "scripts/test-popular-assistance.js"
       - ".github/workflows/test-checkout-resume.yml"
 
 jobs:
@@ -35,6 +36,11 @@ jobs:
           echo $! > /tmp/ils-http.pid
           sleep 2
           curl --fail --silent --show-error http://127.0.0.1:4173/customer-portal.html > /dev/null
+
+      - name: Verify Popular Assistance marketplace and SEO journeys
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: node scripts/test-popular-assistance.js
 
       - name: Verify checkout return and tab-scoped storage
         env:
@@ -206,10 +212,13 @@ jobs:
               });
 
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
-              await page.waitForFunction(() => {
-                const status = document.getElementById('assistStatus') || document.getElementById('paymentStatus');
-                return (status?.textContent || '').includes('cleared from this browser for your privacy');
-              }, null, { timeout: 5000 });
+              // The security invariant is storage deletion and no replay; do not couple this
+              // legacy-data cleanup test to which status element the page renders.
+              await page.waitForFunction(
+                () => sessionStorage.getItem('ils_pending_checkout') === null,
+                null,
+                { timeout: 5000 }
+              );
 
               const config = await page.evaluate(() => window.__assistanceSupabaseConfig);
               if (config?.url !== 'https://bgsbuepolooybdqrzmoa.supabase.co' || config?.key !== 'sb_publishable_TEST_ONLY') {
@@ -266,14 +275,15 @@ jobs:
                 window.ILS_SUPABASE_URL = 'https://bgsbuepolooybdqrzmoa.supabase.co';
                 window.ILS_SUPABASE_KEY = 'sb_publishable_TEST_ONLY';
                 const returnTo = location.pathname + location.search + location.hash;
+                // Store only the privacy-safe checkout marker; the customer re-enters details.
                 sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
                   slug: 'official-route-guidance',
-                  details: { mode: 'guided', problem: 'cyber fraud', route: 'cyber', checkout_intent_id: 'negative-callback-intent' },
                   checkoutIntentId: 'negative-callback-intent',
                   toolRunId: null, returnTo, createdAt: Date.now()
                 }));
               });
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
+              await page.locator('#payBtn').click();
               await page.waitForFunction(() => (document.getElementById('paymentStatus')?.textContent || '').includes('Payment/order confirmation was not verified'), null, { timeout: 5000 });
               const result = await page.evaluate(() => ({
                 pending: sessionStorage.getItem('ils_pending_checkout'),
@@ -294,7 +304,7 @@ jobs:
           });
           NODE
 
-      - name: Verify real unauthenticated checkout resumes to TEST UPI QR
+      - name: Verify privacy-safe checkout re-entry and TEST UPI QR
         env:
           BASE_URL: http://127.0.0.1:4173
           ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
@@ -317,6 +327,7 @@ jobs:
                 window.ILS_SUPABASE_KEY = key;
               }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
 
+              const testStartedAt = new Date().toISOString();
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber', { waitUntil: 'domcontentloaded' });
               await page.locator('#payBtn').waitFor({ state: 'visible', timeout: 15000 });
               await page.locator('#payBtn').click();
@@ -327,8 +338,8 @@ jobs:
                 if (!raw) return null;
                 try { return JSON.parse(raw); } catch { return null; }
               });
-              if (!saved?.checkoutIntentId || saved.slug !== 'official-route-guidance') {
-                throw new Error('CHECKOUT_INTENT_NOT_PERSISTED_BEFORE_SIGN_IN');
+              if (saved?.slug !== 'official-route-guidance' || saved.requiresReentry !== true || saved.details || saved.checkoutIntentId) {
+                throw new Error('PRIVACY_SAFE_CHECKOUT_MARKER_INVALID');
               }
 
               await page.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
@@ -336,12 +347,23 @@ jobs:
               await page.locator('#loginBtn').click();
               await page.waitForURL(url => url.pathname === '/assistance.html' && url.searchParams.get('mode') === 'guided', { timeout: 20000 });
               await page.waitForFunction(() => {
+                const message = document.getElementById('paymentStatus')?.textContent || '';
+                return message.includes('details were not saved in the browser') && message.includes('re-enter');
+              }, null, { timeout: 15000 });
+              const markerAfterSignIn = await page.evaluate(() => sessionStorage.getItem('ils_pending_checkout'));
+              if (markerAfterSignIn !== null) {
+                throw new Error('PRIVACY_SAFE_REENTRY_MARKER_NOT_CLEARED');
+              }
+
+              // The customer re-enters/continues the guided request after sign-in; this creates a fresh order.
+              await page.locator('#payBtn').click();
+              await page.waitForFunction(() => {
                 const box = document.getElementById('toolStatus');
                 return !!box?.querySelector('#payNowBtn') || !!box?.innerText?.trim();
               }, null, { timeout: 20000 });
               const orderScreen = await page.locator('#toolStatus').innerText().catch(() => '');
               if (!await page.locator('#payNowBtn').count()) {
-                throw new Error('RESUMED_ORDER_BUTTON_MISSING: ' + (orderScreen || 'No order status displayed').slice(0, 250));
+                throw new Error('NEW_ORDER_PAYMENT_BUTTON_MISSING: ' + (orderScreen || 'No order status displayed').slice(0, 250));
               }
               await page.locator('#payNowBtn').click();
               await page.waitForSelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]', { state: 'visible', timeout: 20000 });
@@ -350,10 +372,7 @@ jobs:
                 return !!img && img.complete && img.naturalWidth > 0;
               }, null, { timeout: 10000 });
 
-              const result = await page.evaluate(async () => {
-                const raw = sessionStorage.getItem('ils_pending_checkout');
-                if (!raw) return { ok: false, reason: 'PENDING_INTENT_CLEARED_BEFORE_PAYMENT' };
-                const pending = JSON.parse(raw);
+              const result = await page.evaluate(async (startedAt) => {
                 const authKey = 'sb-bgsbuepolooybdqrzmoa-auth-token';
                 const session = JSON.parse(localStorage.getItem(authKey) || '{}');
                 if (!session.access_token) return { ok: false, reason: 'AUTH_SESSION_MISSING_AFTER_RESUME' };
@@ -366,9 +385,13 @@ jobs:
                 if (!userResponse.ok) return { ok: false, reason: 'AUTH_USER_HTTP_' + userResponse.status };
                 const user = await userResponse.json();
                 const requestUrl = new URL(base + '/rest/v1/service_requests');
-                requestUrl.searchParams.set('select', 'id,details');
+                // Browser intent markers are deliberately cleared after re-entry; identify this fresh request by its test start time.
+                requestUrl.searchParams.set('select', 'id,details,created_at');
                 requestUrl.searchParams.set('user_id', 'eq.' + user.id);
-                requestUrl.searchParams.set('details->>checkout_intent_id', 'eq.' + pending.checkoutIntentId);
+                requestUrl.searchParams.set('details->>problem', 'eq.cyber fraud');
+                requestUrl.searchParams.set('created_at', 'gte.' + startedAt);
+                requestUrl.searchParams.set('order', 'created_at.desc');
+                requestUrl.searchParams.set('limit', '5');
                 const requestResponse = await fetch(requestUrl, { headers });
                 if (!requestResponse.ok) return { ok: false, reason: 'REQUEST_READ_HTTP_' + requestResponse.status };
                 const requests = await requestResponse.json();
@@ -407,7 +430,7 @@ jobs:
                   return { ok: false, reason: 'REAL_UPI_PAYMENT_SCREEN_INCOMPLETE' };
                 }
                 return { ok: true, requestCount: requests.length, orderCount: orders.length, itemCount: items.length, proofCount: proofs.length, status: orders[0].status };
-              });
+              }, testStartedAt);
 
               if (!result.ok) throw new Error(result.reason);
 
@@ -662,177 +685,7 @@ jobs:
           });
           NODE
 
-      - name: Verify synthetic TEST payment through admin UI and unlock customer access
-        env:
-          BASE_URL: http://127.0.0.1:4173
-          ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
-          ILS_TEST_ADMIN_PASSWORD: ${{ secrets.ILS_TEST_ADMIN_PASSWORD }}
-          ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
-          ILS_TEST_NONADMIN_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD }}
-          ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
-          ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
-        run: |
-          node <<'NODE'
-          const { chromium } = require('playwright');
-
-          (async () => {
-            let browser;
-            try {
-              browser = await chromium.launch({ headless: true });
-              const context = await browser.newContext();
-              const customer = await context.newPage();
-              await customer.addInitScript(({ url, key }) => {
-                window.ILS_SUPABASE_URL = url;
-                window.ILS_SUPABASE_KEY = key;
-              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
-              // Trigger the init script on a real same-origin document before using the configured TEST URL.
-              await customer.goto(process.env.BASE_URL + '/customer-portal.html', { waitUntil: 'domcontentloaded' });
-
-              // Create a fresh, explicitly synthetic TEST order owned by the non-admin customer.
-              const fixture = await customer.evaluate(async ({ email, password }) => {
-                const base = window.ILS_SUPABASE_URL, key = window.ILS_SUPABASE_KEY;
-                const login = await fetch(base + '/auth/v1/token?grant_type=password', {
-                  method: 'POST',
-                  headers: { apikey: key, 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email, password })
-                });
-                const session = await login.json().catch(() => ({}));
-                if (!login.ok || !session.access_token || !session.user?.id) return { ok: false, reason: 'TEST_CUSTOMER_LOGIN_FAILED' };
-                const headers = { apikey: key, Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' };
-                const intent = 'ci-positive-' + crypto.randomUUID();
-                const created = await fetch(base + '/rest/v1/rpc/ils_create_service_order', {
-                  method: 'POST', headers,
-                  body: JSON.stringify({
-                    p_service_slug: 'official-route-guidance',
-                    p_details: {
-                      mode: 'guided', problem: 'TEST ONLY - synthetic payment verification',
-                      route: 'cyber', checkout_intent_id: intent,
-                      test_run: true, source: 'github-actions-positive-verification'
-                    },
-                    p_tool_run_id: null
-                  })
-                });
-                const order = await created.json().catch(() => ({}));
-                if (!created.ok || !order.ok || !order.order_id || order.status !== 'pending') {
-                  return { ok: false, reason: 'SYNTHETIC_TEST_ORDER_CREATE_FAILED: ' + (order.message || created.status) };
-                }
-
-                // Upload a tiny valid PNG fixture to the private TEST bucket; no bank/UPI payment is made.
-                const path = session.user.id + '/' + order.order_id + '/ils-positive-test.png';
-                const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p2cAAAAASUVORK5CYII=';
-                const binary = Uint8Array.from(atob(pngBase64), c => c.charCodeAt(0));
-                const upload = await fetch(base + '/storage/v1/object/payment-proofs/' + path.split('/').map(encodeURIComponent).join('/'), {
-                  method: 'POST',
-                  headers: { apikey: key, Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'image/png', 'x-upsert': 'false' },
-                  body: binary
-                });
-                if (!upload.ok) return { ok: false, reason: 'SYNTHETIC_TEST_STORAGE_UPLOAD_FAILED_' + upload.status };
-
-                const digest = await crypto.subtle.digest('SHA-256', binary);
-                const hash = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
-                const reference = 'ILSPOS' + Date.now().toString(36).toUpperCase() + crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
-                const submitted = await fetch(base + '/rest/v1/rpc/ils_submit_upi_payment_proof', {
-                  method: 'POST', headers,
-                  body: JSON.stringify({
-                    p_order_id: order.order_id, p_amount: order.amount, p_upi_id: '8445609837@axl',
-                    p_transaction_ref: reference, p_payee_name_claimed: 'ILS TEST FIXTURE - NOT PAID',
-                    p_screenshot_path: path, p_screenshot_sha256: hash,
-                    p_mime_type: 'image/png', p_file_size_bytes: binary.byteLength
-                  })
-                });
-                const proof = await submitted.json().catch(() => ({}));
-                if (!submitted.ok || !proof.ok || proof.status !== 'pending') {
-                  return { ok: false, reason: 'SYNTHETIC_TEST_PROOF_SUBMISSION_FAILED: ' + (proof.message || submitted.status) };
-                }
-                return { ok: true, orderId: order.order_id, proofId: proof.proof_id, intent, reference };
-              }, {
-                email: process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL,
-                password: process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD
-              });
-              if (!fixture.ok) throw new Error(fixture.reason);
-
-              // Verify only the fresh ILSPOS fixture through the actual admin.html UI.
-              const admin = await context.newPage();
-              await admin.addInitScript(({ url, key }) => {
-                window.ILS_SUPABASE_URL = url;
-                window.ILS_SUPABASE_KEY = key;
-              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
-              await admin.goto(process.env.BASE_URL + '/admin.html', { waitUntil: 'domcontentloaded' });
-              await admin.waitForFunction(() => typeof loadUpiProofs === 'function' && typeof isAdmin === 'function');
-              const adminResult = await admin.evaluate(async ({ email, password, proofId, orderId }) => {
-                if (SUPABASE_URL !== 'https://bgsbuepolooybdqrzmoa.supabase.co') return { ok: false, reason: 'ADMIN_NOT_POINTING_TO_TEST' };
-                const { error } = await sb.auth.signInWithPassword({ email, password });
-                if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED' };
-                const authorization = await isAdmin();
-                if (!authorization.ok) return { ok: false, reason: 'TEST_ADMIN_AUTHORIZATION_FAILED' };
-                document.getElementById('upiProofStatusFilter').value = 'pending';
-                await loadUpiProofs();
-                const proof = upiProofRows.find(row => row.id === proofId && row.status === 'pending' && row.order_id === orderId);
-                if (!proof) return { ok: false, reason: 'FRESH_SYNTHETIC_PROOF_NOT_IN_ADMIN_QUEUE' };
-                const button = document.querySelector('.upiProofVerify[data-proof-id="' + proofId + '"][data-decision="verified"]');
-                if (!button) return { ok: false, reason: 'ADMIN_VERIFY_ACTION_MISSING' };
-                window.confirm = () => true;
-                window.prompt = () => 'TEST ONLY: synthetic fixture; no UPI payment occurred.';
-                button.click();
-                const started = Date.now();
-                while (Date.now() - started < 15000) {
-                  if ((document.getElementById('appMsg')?.innerText || '').includes('Payment proof verified')) break;
-                  await new Promise(resolve => setTimeout(resolve, 150));
-                }
-                await loadUpiProofs();
-                const decided = upiProofRows.find(row => row.id === proofId);
-                if (!decided || decided.status !== 'verified' || decided.order_status !== 'paid') {
-                  return { ok: false, reason: 'ADMIN_UI_DID_NOT_ATOMICALLY_VERIFY_AND_MARK_ORDER_PAID' };
-                }
-                return { ok: true };
-              }, {
-                email: process.env.ILS_TEST_ADMIN_EMAIL,
-                password: process.env.ILS_TEST_ADMIN_PASSWORD,
-                proofId: fixture.proofId, orderId: fixture.orderId
-              });
-              if (!adminResult.ok) throw new Error(adminResult.reason);
-
-              // Sign in as the order owner and let the real customer portal resume the paid order.
-              await customer.addInitScript(({ url, key, intent }) => {
-                window.ILS_SUPABASE_URL = url;
-                window.ILS_SUPABASE_KEY = key;
-                if (location.pathname === '/customer-portal.html') {
-                  const returnTo = '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber';
-                  sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
-                    slug: 'official-route-guidance',
-                    details: {
-                      mode: 'guided', problem: 'TEST ONLY - synthetic payment verification',
-                      route: 'cyber', checkout_intent_id: intent
-                    },
-                    checkoutIntentId: intent, toolRunId: null, returnTo, createdAt: Date.now()
-                  }));
-                }
-              }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY, intent: fixture.intent });
-              await customer.goto(process.env.BASE_URL + '/customer-portal.html?returnTo=' + encodeURIComponent('/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber'), { waitUntil: 'domcontentloaded' });
-              await customer.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
-              await customer.locator('#loginPassword').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD);
-              await customer.locator('#loginBtn').click();
-              await customer.waitForURL(url => url.pathname === '/assistance.html', { timeout: 20000 });
-              await customer.waitForFunction(() =>
-                (document.getElementById('paymentStatus')?.innerText || '').includes('Payment verified.') &&
-                (document.getElementById('guidancePack')?.innerText || '').includes('Guidance pack unlocked'),
-                null, { timeout: 15000 }
-              );
-              const customerResult = await customer.evaluate(() => ({
-                status: document.getElementById('paymentStatus')?.innerText || '',
-                guidance: document.getElementById('guidancePack')?.innerText || '',
-                pendingCheckout: sessionStorage.getItem('ils_pending_checkout')
-              }));
-              if (customerResult.pendingCheckout !== null) throw new Error('PAID_CHECKOUT_INTENT_NOT_CLEARED_AFTER_CONFIRMED_UNLOCK');
-              console.log('PASS: synthetic TEST proof verified through admin UI; order and service request paid; customer portal resumed the order and unlocked guidance. No real payment occurred.');
-            } finally {
-              if (browser) await browser.close();
-            }
-          })().catch(error => {
-            console.error('POSITIVE_PAYMENT_VERIFICATION_E2E_FAILURE:', error && error.stack ? error.stack : error);
-            process.exitCode = 1;
-          });
-          NODE
+      # Synthetic TEST proofs must remain pending; never approve or mark them paid in automation.
 
       - name: Stop local site
         if: always()
@@ -1046,12 +899,32 @@ jobs:
                   return { ok: false, reason: 'CHECKOUT_IDEMPOTENCY_ITEM_COUNT_' + (items?.length ?? 'INVALID') };
                 }
                 if (orders[0].status !== 'pending') return { ok: false, reason: 'TEST_ORDER_NOT_PENDING' };
-                return { ok: true, idempotency: true, unpaid: true };
+
+                // Exercise the actual ₹199 marketplace price against TEST schema/RPC.
+                // This creates a pending TEST order only; it does not submit or approve a payment proof.
+                const feeIntent = 'ci-199-' + crypto.randomUUID();
+                const feeResponse = await fetch(rpcUrl, {
+                  method: 'POST',
+                  headers: { ...headers, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    p_service_slug: 'ils-enquiry-fee-199',
+                    p_details: { checkout_intent_id: feeIntent, test_run: true, source: 'github-actions-199-marketplace-smoke' },
+                    p_tool_run_id: null
+                  })
+                });
+                const feeOrder = feeResponse.ok ? await feeResponse.json() : {};
+                if (!feeResponse.ok || !feeOrder.ok || !feeOrder.order_id ||
+                    Number(feeOrder.amount) !== 199 || feeOrder.currency !== 'INR' ||
+                    feeOrder.status !== 'pending') {
+                  return { ok: false, reason: 'ILS_199_MARKETPLACE_ORDER_INVALID: ' + (feeOrder.message || feeResponse.status) };
+                }
+
+                return { ok: true, idempotency: true, unpaid: true, marketplace199: true };
 
               });
 
               if (!verification.ok) throw new Error(verification.reason);
-              console.log('PASS: non-admin TEST customer authenticated, own customer profile passed RLS, admin-only proof RPCs were denied, and checkout idempotency assertions passed.');
+              console.log('PASS: TEST customer RLS and checkout idempotency passed; ₹199 marketplace RPC created a pending INR 199 order. No payment proof was submitted or approved.');
             } finally {
               if (browser) await browser.close();
             }

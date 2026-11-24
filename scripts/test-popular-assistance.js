@@ -13,7 +13,7 @@ const { chromium } = require("playwright");
     const base=(process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"");
     await page.goto(base+"/");
     const cards=page.locator("#popular-assistance .popular-card");
-    if(await cards.count()!==4)throw new Error("Expected four Popular Assistance cards.");
+    if(await cards.count()!==9)throw new Error("Expected nine Popular Assistance cards.");
     const heroEnd=await page.locator("#start").evaluate(el=>el.compareDocumentPosition(document.querySelector("#popular-assistance")) & Node.DOCUMENT_POSITION_FOLLOWING);
     const businessAfter=await page.locator("#popular-assistance").evaluate(el=>el.compareDocumentPosition(document.querySelector("#business-lines")) & Node.DOCUMENT_POSITION_FOLLOWING);
     if(!heroEnd||!businessAfter)throw new Error("Popular Assistance must sit immediately after the search/intake hero and before the following homepage sections.");
@@ -38,9 +38,73 @@ const { chromium } = require("playwright");
       if(!(await page.locator('meta[name="description"]').getAttribute("content")))throw new Error(key+" SEO meta description missing.");
       if((await page.locator('link[rel="canonical"]').getAttribute("href"))!=="https://instantlegalservices.in/"+href)throw new Error(key+" canonical URL mismatch.");
       const schema=await page.locator('script[type="application/ld+json"]').innerText();
-      if(!schema.includes('"Service"')||!schema.includes('"FAQPage"'))throw new Error(key+" structured data missing.");
+      if(!schema.includes('"Service"')||!schema.includes('"BreadcrumbList"'))throw new Error(key+" Service/Breadcrumb structured data missing.");
       if(!(await page.locator("main a.cta").count()))throw new Error(key+" service enquiry action missing.");
     }
+    const newRoutes={
+      consumer:["consumer","services/consumer-banking-disputes/","consumer-banking-disputes","Consumer & Banking Dispute Assistance"],
+      cyber:["cyber","services/cyber-fraud-assistance/","cyber-fraud-assistance","Cyber Fraud Assistance"],
+      family:["family","services/matrimonial-family/","matrimonial-family","Matrimonial & Family Assistance"],
+      property:["property","services/property-documentation/","property-documentation","Property & Documentation Assistance"],
+      tax:["tax","services/income-tax-itr/","income-tax-itr","Income Tax & ITR Assistance"]
+    };
+    for(const [key,[cardClass,href,serviceKey,expectedTitle]] of Object.entries(newRoutes)){
+      await page.goto(base+"/");
+      const card=page.locator("#popular-assistance .popular-card."+cardClass);
+      if(await card.count()!==1)throw new Error(key+" homepage card missing.");
+      if(await card.getAttribute("href")!==href)throw new Error(key+" card route mismatch.");
+      await page.goto(base+"/"+href);
+      if(await page.locator("main .item").count()!==4)throw new Error(key+" SEO page must show four assistance options.");
+      if((await page.locator("main h1").innerText()).trim().length===0)throw new Error(key+" SEO page heading missing.");
+      if(!(await page.locator('meta[name="description"]').getAttribute("content")))throw new Error(key+" SEO description missing.");
+      if((await page.locator('link[rel="canonical"]').getAttribute("href"))!=="https://instantlegalservices.in/"+href)throw new Error(key+" canonical mismatch.");
+      const schema=await page.locator('script[type="application/ld+json"]').innerText();
+      if(!schema.includes('"Service"')||!schema.includes('"BreadcrumbList"'))throw new Error(key+" Service/Breadcrumb structured data missing.");
+      if(await page.locator("main .choice").count()!==4)throw new Error(key+" must show four clear service choices.");
+      if(await page.locator("main .docs-panel li").count()<4)throw new Error(key+" required-document checklist missing.");
+      if(await page.locator("main .fee-panel .fee-list>div").count()!==4)throw new Error(key+" fee structure must disclose four cost components.");
+      const cta=page.locator("main a.cta");
+      if(await cta.count()!==1||!(await cta.getAttribute("href")).includes("service="+serviceKey))throw new Error(key+" CTA does not route to its intake category.");
+      const selectedHref=await page.locator("main .choice a").first().getAttribute("href");
+      const selectedUrl=new URL(selectedHref,"https://instantlegalservices.in");
+      if(selectedUrl.searchParams.get("service")!==serviceKey||!selectedUrl.searchParams.get("option"))throw new Error(key+" service choice does not carry the selected option.");
+      await page.goto(base+selectedUrl.pathname+selectedUrl.search);
+      if((await page.locator("#standardHelp h1").innerText()).trim()!==expectedTitle)throw new Error(key+" enquiry heading did not prefill.");
+      if(!(await page.locator("#brief").inputValue()).trim())throw new Error(key+" enquiry brief did not prefill.");
+      if(!(await page.locator("#matter").inputValue()))throw new Error(key+" legal matter category did not prefill.");
+      if(await page.locator("#serviceOption").inputValue()!==selectedUrl.searchParams.get("option"))throw new Error(key+" selected service option did not prefill in enquiry form.");
+    }
+    console.log("FIVE_NEW_SERVICE_PAGES_AND_INTAKE_PREFILLS=PASS");
+    const customerPortal=await (await page.request.get(base+"/customer-portal.html")).text();
+    for(const marker of ['id="clientDashboard"','id="paymentHistory"','from("orders")','eq("user_id",user.id)','from("payment_proofs")','from("payments")','id="refreshPayments"','id="logoutBtn"']){
+      if(!customerPortal.includes(marker))throw new Error("Customer portal payment history is missing secure feature: "+marker);
+    }
+    if(!customerPortal.includes("UPI proof submitted · Pending verification")||!customerPortal.includes("Paid · Verified")||!customerPortal.includes("UPI proof rejected"))throw new Error("Customer portal payment status labels are incomplete.");
+    console.log("CUSTOMER_PORTAL_OWN_ORDERS_UPI_PAYMENT_STATUS=PASS");
+    const toolsModule=await (await page.request.get(base+"/assets/ils-tools.js")).text();
+    if(!toolsModule.includes("'ils-enquiry-fee-199':'ils-enquiry-fee-199'")||!toolsModule.includes("if(options.autoPay===true)"))throw new Error("Dedicated fixed-price UPI checkout is not registered for immediate form checkout.");
+    const assistanceSource=await (await page.request.get(base+"/assistance.html")).text();
+    for(const key of ["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr"]){
+      if(!assistanceSource.includes('"'+key+'"'))throw new Error("Marketplace enquiry checkout mapping missing: "+key);
+    }
+    if(!assistanceSource.includes('paidMarketplaceTraffic')||!assistanceSource.includes('isPaidMarketplaceTraffic'))throw new Error("Traffic Challan marketplace checkout mapping missing.");
+    const businessSource=await (await page.request.get(base+"/business-compliance.html?service=gst-returns")).text();
+    if(!businessSource.includes('createOrder("ils-enquiry-fee-199"'))throw new Error("GST marketplace enquiry is not connected to ₹199 checkout.");
+    if(!businessSource.includes('pending?.requiresReentry')||!businessSource.includes('Saved GST enquiry details were cleared from this browser'))throw new Error("GST privacy-safe post-login re-entry notice is missing.");
+    if(businessSource.includes('createOrder("ils-enquiry-fee-199",pending.details'))throw new Error("GST resume must not create an order from browser-stored intake details.");
+    if(!toolsModule.includes('requiresReentry:true')||toolsModule.includes('details:savedDetails'))throw new Error("Unauthenticated checkout must not persist customer intake details in browser storage.");
+    if(!assistanceSource.includes('pending.requiresReentry')||!assistanceSource.includes('your enquiry details were not saved in the browser'))throw new Error("Assistance privacy-safe post-login re-entry notice is missing.");
+    if(assistanceSource.includes('const d=pending.details')||businessSource.includes('pending?.details?.intake_service==="gst-returns"'))throw new Error("Legacy browser-stored intake details must be cleared, never resumed.");
+    if(!businessSource.includes('Submit your GST assistance request')||!businessSource.includes('one-time ₹199 initial enquiry'))throw new Error("GST form does not disclose the ₹199 charge before submission.");
+    const portalSource=await (await page.request.get(base+"/customer-portal.html")).text();
+    if(!portalSource.includes('"/business-compliance.html"'))throw new Error("Customer portal does not allow the safe GST enquiry return path.");
+    if(!portalSource.includes('const intakeLabels=')||!portalSource.includes('"gst-returns":"GST Assistance"'))throw new Error("Client portal does not show marketplace-specific service names.");
+    if(!toolsModule.includes("containerId='toolStatus'")||!toolsModule.includes("getElementById(containerId)"))throw new Error("UPI payment screen is not rendered in the visible marketplace form container.");
+    if(!assistanceSource.includes('const mode=params.get("mode")')||!assistanceSource.includes('mode==="guided"')||!assistanceSource.includes('mode:"popular-assistance"'))throw new Error("Assistance marketplace/Traffic checkout mode handling is incomplete.");
+    const migration=await (await page.request.get(base+"/supabase/migrations/20261124175000_add_ils_enquiry_fee_199.sql")).text().catch(()=> "");
+    if(migration&&!migration.includes("'ils-enquiry-fee-199'"))throw new Error("₹199 service migration does not contain its dedicated service slug.");
+    console.log("NINE_MARKETPLACE_JOURNEYS_FIXED_199_UPI_WIRING=PASS");
+
     const sitemap=await (await page.request.get(base+"/sitemap.xml")).text();
     for(const href of Object.values(routes))if(!sitemap.includes("https://instantlegalservices.in/"+href))throw new Error("Sitemap missing new service URL: "+href);
     const robots=await (await page.request.get(base+"/robots.txt")).text();
@@ -62,8 +126,8 @@ const { chromium } = require("playwright");
     if(pageErrors.length)throw new Error("Browser page errors: "+pageErrors.join(" | "));
     console.log("POPULAR_ASSISTANCE_POSITION=PASS");
     console.log("POPULAR_ASSISTANCE_MULTILINGUAL=PASS (English/Hindi)");
-    console.log("ALL_FOUR_SERVICE_DETAIL_ROUTES=PASS");
-    console.log("FOUR_SERVICE_SEO_CANONICALS_SCHEMA_SITEMAP=PASS");
+    console.log("ALL_FOUR_LEGACY_SERVICE_DETAIL_ROUTES=PASS");
+    console.log("FOUR_LEGACY_SERVICE_SEO_CANONICALS_SCHEMA_SITEMAP=PASS");
     console.log("EXISTING_ROBOTS_SITEMAP_DIRECTIVE=PASS");
     console.log("GST_EXISTING_ENQUIRY_PREFILL=PASS");
     console.log("LEGAL_DRAFTING_AND_MONEY_RECOVERY_INTAKE=PASS");

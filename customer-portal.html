@@ -13,7 +13,7 @@ main{width:min(620px,100%);margin:30px auto}.brand{font-weight:800;letter-spacin
 .card{background:rgba(13,24,39,.94);border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 25px 70px rgba(0,0,0,.25)}
 h1{margin:0 0 8px;font-size:30px}h2{font-size:19px;margin:0 0 12px}.sub{color:var(--muted);line-height:1.6;margin-bottom:22px}
 .tabs{display:flex;gap:8px;margin-bottom:18px}.tab{flex:1;padding:11px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04);color:#fff;cursor:pointer}.tab.active{border-color:rgba(215,168,79,.6);color:#f1c56a}
-label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width:100%;padding:13px;border-radius:9px;border:1px solid #39485e;background:#08111e;color:#fff;font-size:15px}button.primary{width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;background:linear-gradient(135deg,#f1c56a,#d7a84f);color:#08111e;font-weight:800;cursor:pointer}.note{margin-top:12px;font-size:12px;color:#8796a8}.status{margin-top:16px;padding:12px;border-radius:10px;background:#111f31;border:1px solid var(--line);white-space:pre-wrap}.status.ok{border-color:#2e7d5b}.status.err{border-color:#934550}.hidden{display:none}.back{display:inline-block;margin-top:18px;color:#f1c56a;text-decoration:none;font-size:13px}
+label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width:100%;padding:13px;border-radius:9px;border:1px solid #39485e;background:#08111e;color:#fff;font-size:15px}button.primary{width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;background:linear-gradient(135deg,#f1c56a,#d7a84f);color:#08111e;font-weight:800;cursor:pointer}.note{margin-top:12px;font-size:12px;color:#8796a8}.status{margin-top:16px;padding:12px;border-radius:10px;background:#111f31;border:1px solid var(--line);white-space:pre-wrap}.status.ok{border-color:#2e7d5b}.status.err{border-color:#934550}.hidden{display:none}.order-row{padding:13px 0;border-bottom:1px solid var(--line)}.order-row:last-child{border-bottom:0}.order-meta{color:var(--muted);font-size:12px;line-height:1.6}.payment-pill{display:inline-block;padding:4px 8px;border:1px solid var(--line);border-radius:99px;font-size:12px;margin-top:6px}.back{display:inline-block;margin-top:18px;color:#f1c56a;text-decoration:none;font-size:13px}
 </style>
 </head>
 <body>
@@ -42,6 +42,11 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 <p class="note">Only enter a client requirement ID that ILS has already provided to you. Do not use someone else’s ID.</p>
 </section>
 
+<section id="clientDashboard" class="hidden" style="margin-top:20px;border-top:1px solid var(--line);padding-top:20px">
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2 style="margin:0">My Orders &amp; Payments</h2><p class="note">Your service orders and UPI payment verification status are visible only to your signed-in account.</p></div><button id="refreshPayments" type="button" class="tab" style="flex:0 0 auto">Refresh</button></div>
+<div id="paymentHistory" class="note" style="margin-top:12px">Loading your orders…</div>
+<button id="logoutBtn" type="button" class="tab" style="margin-top:14px">Sign out</button>
+</section>
 <div id="status" class="status">Ready.</div>
 <a class="back" href="index.html">← Back to ILS</a>
 </div>
@@ -59,7 +64,7 @@ function safeReturnTo(value){
  if(!value)return "";
  try{
   const u=new URL(value,location.origin);
-  const allowedPaths=new Set(["/assistance.html","/tools.html"]);
+  const allowedPaths=new Set(["/assistance.html","/business-compliance.html","/tools.html"]);
   if(u.origin!==location.origin||!allowedPaths.has(u.pathname))return "";
   return u.pathname+u.search+u.hash;
  }catch(_){return ""}
@@ -72,6 +77,59 @@ function show(mode){
  const login=mode==="login"; $("loginPanel").classList.toggle("hidden",!login);$("signupPanel").classList.toggle("hidden",login);
  $("tabLogin").classList.toggle("active",login);$("tabSignup").classList.toggle("active",!login);
 }
+function paymentLabel(orderStatus,proofStatus){
+ const o=String(orderStatus||"").toLowerCase(),p=String(proofStatus||"").toLowerCase();
+ if(o==="paid")return "Paid · Verified";
+ if(p==="pending")return "UPI proof submitted · Pending verification";
+ if(p==="rejected")return "UPI proof rejected · Please contact ILS support";
+ if(p==="verified"||p==="approved")return "Proof verified · Order status updating";
+ if(o==="pending")return "Payment pending";
+ return orderStatus||"Status unavailable";
+}
+async function loadPaymentHistory(){
+ const panel=$("clientDashboard"),target=$("paymentHistory");
+ $("loginPanel").classList.add("hidden");$("signupPanel").classList.add("hidden");
+ $("tabLogin").classList.add("hidden");$("tabSignup").classList.add("hidden");
+ panel.classList.remove("hidden");target.textContent="Loading your orders and payment status…";
+ try{
+  const {data:{user},error:authError}=await sb.auth.getUser();
+  if(authError||!user)throw new Error("Please sign in to view your payment history.");
+  const {data:orders,error}=await sb.from("orders").select("id,order_number,total,currency,status,created_at,service_request_id").eq("user_id",user.id).order("created_at",{ascending:false}).limit(100);
+  if(error)throw error;
+  if(!orders?.length){target.textContent="No service orders found for this account yet. Orders created after a service enquiry will appear here.";return;}
+  const requestIds=[...new Set(orders.map(x=>x.service_request_id).filter(Boolean))];
+  let requests=[];
+  if(requestIds.length){const r=await sb.from("service_requests").select("id,service_id,details").in("id",requestIds);if(r.error)throw r.error;requests=r.data||[];}
+  const serviceIds=[...new Set(requests.map(x=>x.service_id).filter(Boolean))];
+  let services=[];
+  if(serviceIds.length){const r=await sb.from("services").select("id,name,slug").in("id",serviceIds);if(r.error)throw r.error;services=r.data||[];}
+  const orderIds=orders.map(x=>x.id);
+  const [proofResult,paymentResult]=await Promise.all([
+   sb.from("payment_proofs").select("order_id,status,amount,currency,transaction_ref,submitted_at,verified_at,verification_notes").in("order_id",orderIds).order("submitted_at",{ascending:false}),
+   sb.from("payments").select("order_id,status,amount,currency,paid_at,created_at").in("order_id",orderIds).order("created_at",{ascending:false})
+  ]);
+  if(proofResult.error)throw proofResult.error;
+  if(paymentResult.error)throw paymentResult.error;
+  const requestById=new Map(requests.map(x=>[x.id,x])),serviceById=new Map(services.map(x=>[x.id,x]));
+  const intakeLabels={"legal-drafting":"Legal Drafting","money-recovery":"Money Recovery","gst-returns":"GST Assistance","consumer-banking-disputes":"Consumer & Banking Disputes","cyber-fraud-assistance":"Cyber Fraud Assistance","matrimonial-family":"Matrimonial & Family","property-documentation":"Property & Documentation","income-tax-itr":"Income Tax & ITR"};
+  const proofByOrder=new Map(),gatewayByOrder=new Map();
+  for(const p of proofResult.data||[])if(!proofByOrder.has(p.order_id))proofByOrder.set(p.order_id,p);
+  for(const p of paymentResult.data||[])if(!gatewayByOrder.has(p.order_id))gatewayByOrder.set(p.order_id,p);
+  target.innerHTML=orders.map(o=>{
+   const req=requestById.get(o.service_request_id),svc=serviceById.get(req?.service_id),proof=proofByOrder.get(o.id),gateway=gatewayByOrder.get(o.id);
+   const intakeKey=req?.details?.intake_service;
+   const trafficRoute=[req?.details?.route,req?.details?.problem,req?.details?.official_route].filter(Boolean).join(" ");
+   const serviceLabel=intakeLabels[intakeKey]||(req?.details?.mode==="guided"&&/traffic.*echallan|echallan.*traffic/i.test(trafficRoute)?"Traffic Challan Assistance":(svc?.name||svc?.slug||"ILS Service"));
+   const state=paymentLabel(o.status,proof?.status||gateway?.status);
+   const ref=proof?.transaction_ref?String(proof.transaction_ref).replace(/^(.{4}).*(.{4})$/,"$1••••$2"):"";
+   const date=o.created_at?new Date(o.created_at).toLocaleString("en-IN"):"—";
+   return '<article class="order-row"><strong>'+esc(serviceLabel)+'</strong><div class="order-meta">Order: '+esc(o.order_number||o.id)+' · '+esc(date)+'</div><div style="font-weight:800;margin-top:5px">'+esc(o.currency||"INR")+' '+esc(Number(o.total||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}))+'</div><span class="payment-pill">'+esc(state)+'</span>'+(ref?'<div class="order-meta">UPI reference: '+esc(ref)+'</div>':"")+(proof?.submitted_at?'<div class="order-meta">Proof submitted: '+esc(new Date(proof.submitted_at).toLocaleString("en-IN"))+'</div>':"")+(proof?.verified_at?'<div class="order-meta">Verified: '+esc(new Date(proof.verified_at).toLocaleString("en-IN"))+'</div>':"")+(proof?.status==="rejected"&&proof?.verification_notes?'<div class="order-meta">Review note: '+esc(proof.verification_notes)+'</div>':"")+'</article>';
+  }).join("");
+ }catch(e){target.textContent=e.message||"Unable to load payment history. Please refresh or sign in again.";}
+}
+$("refreshPayments").onclick=loadPaymentHistory;
+$("logoutBtn").onclick=async()=>{await sb.auth.signOut();$("clientDashboard").classList.add("hidden");$("tabLogin").classList.remove("hidden");$("tabSignup").classList.remove("hidden");show("login");status("Signed out successfully.",true);};
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){await loadPaymentHistory();}})();
 $("tabLogin").onclick=()=>show("login");$("tabSignup").onclick=()=>show("signup");
 
 async function provision(user){
@@ -94,6 +152,7 @@ $("signupBtn").onclick=async()=>{
      status("Customer account and profile provisioned successfully.\nProfile: "+p.customer_profile_id,true);
      continueAfterAuth();
      show("login");
+     if(!returnTo)await loadPaymentHistory();
    }else{
      status("Account created. If email confirmation is required, confirm it, return to the original checkout tab, and sign in there. Your saved request is stored in that tab.",true);
    }
@@ -114,10 +173,12 @@ $("loginBtn").onclick=async()=>{
      if(e||!p?.ok) throw new Error(e?.message||"CUSTOMER_PROFILE_PROVISION_FAILED");
      status("Signed in. Missing customer profile was safely provisioned.\nProfile: "+p.customer_profile_id,true);
      continueAfterAuth();
+     if(!returnTo)await loadPaymentHistory();
    }else{
      if(profile.status!=="active") throw new Error("CUSTOMER_ACCOUNT_SUSPENDED");
      status("Signed in successfully.\nWelcome, "+profile.full_name+".",true);
      continueAfterAuth();
+     if(!returnTo)await loadPaymentHistory();
    }
  }catch(e){status(e.message||"Unable to sign in.");}
  finally{$("loginBtn").disabled=false;}

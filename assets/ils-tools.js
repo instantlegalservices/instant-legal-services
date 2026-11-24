@@ -121,6 +121,7 @@ window.ILS_TOOLS = (() => {
     'tool-output-micro-9':'tool-output-micro-9','tool-output-micro-19':'tool-output-micro-19','tool-output-micro-29':'tool-output-micro-29','tool-output-micro-39':'tool-output-micro-39',
     'official-route-guidance':'official-route-guidance',
     'digital-form-assistance':'digital-form-assistance',
+    'ils-enquiry-fee-199':'ils-enquiry-fee-199',
   };
 
   async function createOrder(slug, details, toolRunId=null, onPaid=null, options={}){
@@ -133,11 +134,10 @@ window.ILS_TOOLS = (() => {
       status('Please sign in or create your ILS customer account to continue this order.');
       if(options.resumeCheckout){
         try{
-          const checkoutIntentId=details?.checkout_intent_id||
-            (window.crypto?.randomUUID?.()||('ils-'+Date.now()+'-'+Math.random().toString(36).slice(2)));
-          const savedDetails={...(details||{}),checkout_intent_id:checkoutIntentId};
+          // Never persist legal, financial, identity, or other intake details in browser storage.
+          // Keep only a short-lived navigation marker; the customer re-enters details after sign-in.
           sessionStorage.setItem('ils_pending_checkout',JSON.stringify({
-            slug,details:savedDetails,checkoutIntentId,toolRunId:toolRunId||null,
+            slug,requiresReentry:true,
             returnTo:window.location.pathname+window.location.search+window.location.hash,
             createdAt:Date.now()
           }));
@@ -235,12 +235,17 @@ window.ILS_TOOLS = (() => {
       data=createdOrder;
     }
 
+    if(options.autoPay===true){
+      await startRazorpay(data,onPaid,true,options.paymentContainerId||"toolStatus");
+      return;
+    }
+
     const box=document.getElementById('toolStatus');
 
     if(box){
       box.className='status ok';
       box.innerHTML=`Order <strong>${esc(data.order_number)}</strong> created for <strong>₹${Number(data.amount).toLocaleString('en-IN')}</strong>. <button type="button" class="btn btn-primary btn-small" id="payNowBtn" style="margin-left:8px">Pay Securely</button>`;
-      document.getElementById('payNowBtn').onclick=()=>startRazorpay(data,onPaid,options.forceQr===true);
+      document.getElementById('payNowBtn').onclick=()=>startRazorpay(data,onPaid,options.forceQr===true,options.paymentContainerId||'toolStatus');
     }
   }
 
@@ -248,7 +253,7 @@ window.ILS_TOOLS = (() => {
 // Keep the Razorpay implementation intact so it can be re-enabled later by changing this flag.
 const QR_ONLY_PAYMENT_MODE = true;
 
-async function startRazorpay(data,onPaid=null,forceQr=false){
+async function startRazorpay(data,onPaid=null,forceQr=false,containerId='toolStatus'){
   try {
     const sb = window.ILS?.ready?.();
 
@@ -287,7 +292,7 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
     paymentError || paymentData
   );
 
-  const box = document.getElementById('toolStatus');
+  const box = document.getElementById(containerId) || document.getElementById('toolStatus');
   const amount = Number(data.amount || 0);
   const upiId = '8445609837@axl';
 
