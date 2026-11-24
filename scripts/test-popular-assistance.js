@@ -90,7 +90,7 @@ const { chromium } = require("playwright");
     if(!assistanceSource.includes('paidMarketplaceTraffic')||!assistanceSource.includes('isPaidMarketplaceTraffic'))throw new Error("Traffic Challan marketplace checkout mapping missing.");
     const businessSource=await (await page.request.get(base+"/business-compliance.html?service=gst-returns")).text();
     if(!businessSource.includes('createOrder("ils-enquiry-fee-199"'))throw new Error("GST marketplace enquiry is not connected to ₹199 checkout.");
-    if(!businessSource.includes('pending?.requiresReentry')||!businessSource.includes('saved GST enquiry details were cleared from this browser'))throw new Error("GST privacy-safe post-login re-entry notice is missing.");
+    if(!businessSource.includes('pending?.requiresReentry')||!businessSource.includes('Saved GST enquiry details were cleared from this browser'))throw new Error("GST privacy-safe post-login re-entry notice is missing.");
     if(businessSource.includes('createOrder("ils-enquiry-fee-199",pending.details'))throw new Error("GST resume must not create an order from browser-stored intake details.");
     if(!toolsModule.includes('requiresReentry:true')||toolsModule.includes('details:savedDetails'))throw new Error("Unauthenticated checkout must not persist customer intake details in browser storage.");
     if(!assistanceSource.includes('pending.requiresReentry')||!assistanceSource.includes('your enquiry details were not saved in the browser'))throw new Error("Assistance privacy-safe post-login re-entry notice is missing.");
