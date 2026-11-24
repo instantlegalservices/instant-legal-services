@@ -181,14 +181,14 @@ function showMode(){
  const guided=mode==="guided";
  const paidMarketplaceTraffic=guided&&/traffic.*echallan|echallan.*traffic/i.test([problem,route,rd?.title||""].join(" "));
  const configuredServiceSlug=paidMarketplaceTraffic?"ils-enquiry-fee-199":(guided?"official-route-guidance":"digital-form-assistance");
- const configuredFallback=paidMarketplaceTraffic?199:(guided?19:160);
+ const configuredFallback=paidMarketplaceTraffic?299:(guided?19:160);
  document.getElementById("modePill").textContent=guided?"PAID GUIDED SELF-SERVICE":"PAID ASSOCIATE ASSISTANCE";
  document.getElementById("modeTitle").textContent=guided?"Fill the official form yourself — with a concise guidance pack.":"Have an ILS associate assist with the digital/form-filling task.";
  document.getElementById("modeLead").textContent=guided?"You remain in control of the official filing. ILS provides a summarized, non-legal checklist and field guidance.":"This is non-legal digital/administrative assistance. The associate does not provide legal advice or replace an independent professional.";
  document.getElementById("payTitle").textContent=paidMarketplaceTraffic?"Traffic Challan Assistance — initial enquiry":(guided?"Guided self-service":"Associate assistance — basic");
- document.getElementById("payPrice").textContent=paidMarketplaceTraffic?"₹199":(guided?"₹19":"₹160");
+ document.getElementById("payPrice").textContent=paidMarketplaceTraffic?"₹299":(guided?"₹19":"₹160");
  document.getElementById("payDesc").textContent=paidMarketplaceTraffic?"One-time ILS initial enquiry and coordination fee. Any government challan amount is separate and must be paid only through the official portal.":(guided?"One-time guidance pack. Government fee, if any, is separate and paid to the official authority.":"Basic digital/form-filling assistance. Scope is confirmed before work; professional legal fees, if needed, are separate.");
- document.getElementById("payBtn").textContent=paidMarketplaceTraffic?"Pay ₹199 & continue":(guided?"Pay ₹19 & unlock guidance":"Pay ₹160 & request assistance");
+ document.getElementById("payBtn").textContent=paidMarketplaceTraffic?"Pay ₹299 & continue":(guided?"Pay ₹19 & unlock guidance":"Pay ₹160 & request assistance");
  if(guided)document.getElementById("associateFields").classList.add("hide");
  else {document.getElementById("associateFields").classList.remove("hide");document.getElementById("consentWrap").classList.remove("hide");}
  const btn=document.getElementById("officialBtn");
@@ -364,7 +364,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    if(requiresPaidCheckout){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
     const details={mode:"popular-assistance",intake_source:"ils-universal-service-form",intake_service:intakeService,service_option:selectedOption,business_type:businessType,name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value,matter:document.getElementById("matter").value,brief:finalBrief.slice(0,3000)};
-    s.className="status";s.textContent="Enquiry received. Preparing your ₹199 UPI payment…";
+    s.className="status";s.textContent="Enquiry received. Preparing your ₹299 UPI payment…";
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
    }
