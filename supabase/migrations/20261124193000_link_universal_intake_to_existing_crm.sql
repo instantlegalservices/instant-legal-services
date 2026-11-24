@@ -74,5 +74,8 @@ before insert on public.service_requests
 for each row
 execute function public.ils_link_universal_intake_to_crm();
 
+-- This helper is trigger-only; do not expose it as a callable PostgREST RPC.
+revoke all on function public.ils_link_universal_intake_to_crm() from public, anon, authenticated;
+
 comment on function public.ils_link_universal_intake_to_crm()
 is 'Creates one Admin CRM client_requirements record for each paid universal service form request and links it to the existing service_request.';
