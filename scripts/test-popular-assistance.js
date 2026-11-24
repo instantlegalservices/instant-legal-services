@@ -91,6 +91,7 @@ const { chromium } = require("playwright");
     const businessSource=await (await page.request.get(base+"/business-compliance.html?service=gst-returns")).text();
     if(!businessSource.includes('createOrder("ils-enquiry-fee-199"'))throw new Error("GST marketplace enquiry is not connected to ₹199 checkout.");
     if(!businessSource.includes('pending?.details?.intake_service==="gst-returns"'))throw new Error("GST checkout is not restored after authentication.");
+    if(!businessSource.includes('Submit your GST assistance request')||!businessSource.includes('one-time ₹199 initial enquiry'))throw new Error("GST form does not disclose the ₹199 charge before submission.");
     const portalSource=await (await page.request.get(base+"/customer-portal.html")).text();
     if(!portalSource.includes('"/business-compliance.html"'))throw new Error("Customer portal does not allow the safe GST enquiry return path.");
     if(!portalSource.includes('const intakeLabels=')||!portalSource.includes('"gst-returns":"GST Assistance"'))throw new Error("Client portal does not show marketplace-specific service names.");
