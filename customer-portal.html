@@ -64,7 +64,7 @@ function safeReturnTo(value){
  if(!value)return "";
  try{
   const u=new URL(value,location.origin);
-  const allowedPaths=new Set(["/assistance.html","/tools.html"]);
+  const allowedPaths=new Set(["/assistance.html","/business-compliance.html","/tools.html"]);
   if(u.origin!==location.origin||!allowedPaths.has(u.pathname))return "";
   return u.pathname+u.search+u.hash;
  }catch(_){return ""}
