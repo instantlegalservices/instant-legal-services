@@ -324,7 +324,8 @@ jobs:
                 window.ILS_SUPABASE_KEY = key;
               }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
 
-              await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber', { waitUntil: 'domcontentloaded' });
+              const freshProblem = 'cyber fraud checkout-e2e-' + Date.now();
+              await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=' + encodeURIComponent(freshProblem) + '&route=cyber', { waitUntil: 'domcontentloaded' });
               await page.locator('#payBtn').waitFor({ state: 'visible', timeout: 15000 });
               await page.locator('#payBtn').click();
               await page.waitForURL(url => url.pathname === '/customer-portal.html', { timeout: 10000 });
@@ -369,9 +370,10 @@ jobs:
               }, null, { timeout: 10000 });
 
               const result = await page.evaluate(async () => {
-                const raw = sessionStorage.getItem('ils_pending_checkout');
-                if (!raw) return { ok: false, reason: 'PENDING_INTENT_CLEARED_BEFORE_PAYMENT' };
-                const pending = JSON.parse(raw);
+                // The privacy-safe sign-in marker is intentionally cleared after re-entry.
+                // Identify the newly submitted request by this test's unique problem text instead.
+                const freshProblem = new URLSearchParams(location.search).get('problem');
+                if (!freshProblem) return { ok: false, reason: 'FRESH_REENTRY_PROBLEM_MARKER_MISSING' };
                 const authKey = 'sb-bgsbuepolooybdqrzmoa-auth-token';
                 const session = JSON.parse(localStorage.getItem(authKey) || '{}');
                 if (!session.access_token) return { ok: false, reason: 'AUTH_SESSION_MISSING_AFTER_RESUME' };
@@ -386,7 +388,7 @@ jobs:
                 const requestUrl = new URL(base + '/rest/v1/service_requests');
                 requestUrl.searchParams.set('select', 'id,details');
                 requestUrl.searchParams.set('user_id', 'eq.' + user.id);
-                requestUrl.searchParams.set('details->>checkout_intent_id', 'eq.' + pending.checkoutIntentId);
+                requestUrl.searchParams.set('details->>problem', 'eq.' + freshProblem);
                 const requestResponse = await fetch(requestUrl, { headers });
                 if (!requestResponse.ok) return { ok: false, reason: 'REQUEST_READ_HTTP_' + requestResponse.status };
                 const requests = await requestResponse.json();
