@@ -295,7 +295,7 @@ async function resumePendingCheckout(){
   const d=pending.details;
   if(pending.slug==="ils-enquiry-fee-199"&&d.mode==="popular-assistance"){
    status("Welcome back. Restoring your saved enquiry and opening the existing UPI payment screen.");
-   await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",d,null,null,{resumeCheckout:true,forceQr:true,autoPay:true});
+   await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",d,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
    return;
   }
   const expected=mode==="guided"?"official-route-guidance":mode==="associate"?"digital-form-assistance":null;
