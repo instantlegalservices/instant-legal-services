@@ -75,6 +75,12 @@ const { chromium } = require("playwright");
       if(await page.locator("#serviceOption").inputValue()!==selectedUrl.searchParams.get("option"))throw new Error(key+" selected service option did not prefill in enquiry form.");
     }
     console.log("FIVE_NEW_SERVICE_PAGES_AND_INTAKE_PREFILLS=PASS");
+    const customerPortal=await (await page.request.get(base+"/customer-portal.html")).text();
+    for(const marker of ['id="clientDashboard"','id="paymentHistory"','from("orders")','eq("user_id",user.id)','from("payment_proofs")','from("payments")','id="refreshPayments"','id="logoutBtn"']){
+      if(!customerPortal.includes(marker))throw new Error("Customer portal payment history is missing secure feature: "+marker);
+    }
+    if(!customerPortal.includes("UPI proof submitted · Pending verification")||!customerPortal.includes("Paid · Verified")||!customerPortal.includes("UPI proof rejected"))throw new Error("Customer portal payment status labels are incomplete.");
+    console.log("CUSTOMER_PORTAL_OWN_ORDERS_UPI_PAYMENT_STATUS=PASS");
     const sitemap=await (await page.request.get(base+"/sitemap.xml")).text();
     for(const href of Object.values(routes))if(!sitemap.includes("https://instantlegalservices.in/"+href))throw new Error("Sitemap missing new service URL: "+href);
     const robots=await (await page.request.get(base+"/robots.txt")).text();
