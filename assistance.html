@@ -291,6 +291,11 @@ async function resumePendingCheckout(){
   }
   const current=location.pathname+location.search+location.hash;
   if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance","ils-enquiry-fee-199"].includes(pending.slug))return;
+  if(pending.requiresReentry){
+   sessionStorage.removeItem("ils_pending_checkout");
+   status("Welcome back. For your privacy, your enquiry details were not saved in the browser. Please re-enter the required details and submit again to create your ₹199 UPI order.","ok");
+   return;
+  }
   if(!pending.details)return;
   const d=pending.details;
   if(pending.slug==="ils-enquiry-fee-199"&&d.mode==="popular-assistance"){
