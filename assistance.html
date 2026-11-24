@@ -285,43 +285,30 @@ async function resumePendingCheckout(){
   const raw=sessionStorage.getItem("ils_pending_checkout");
   if(!raw)return;
   const pending=JSON.parse(raw);
-  if(!pending||!pending.createdAt||Date.now()-pending.createdAt>30*60*1000){
+  if(!pending)return;
+  // Clear any legacy record that contains intake details before checking age or URL.
+  if(pending.details){
+   sessionStorage.removeItem("ils_pending_checkout");
+   const current=location.pathname+location.search+location.hash;
+   if(pending.returnTo===current){
+    status("Welcome back. Saved enquiry details were cleared from this browser for your privacy. Please re-enter the required details and submit again to create your order.","ok");
+   }
+   return;
+  }
+  if(!pending.createdAt||Date.now()-pending.createdAt>30*60*1000){
    sessionStorage.removeItem("ils_pending_checkout");
    return;
   }
   const current=location.pathname+location.search+location.hash;
   if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance","ils-enquiry-fee-199"].includes(pending.slug))return;
-  if(pending.requiresReentry||pending.details){
-   // Also clear legacy pending records written by older versions of the checkout helper.
+  if(pending.requiresReentry){
    sessionStorage.removeItem("ils_pending_checkout");
-   status("Welcome back. For your privacy, saved enquiry details were cleared from this browser. Please re-enter the required details and submit again to create your order.","ok");
-   return;
+   status("Welcome back. For your privacy, enquiry details were not saved in the browser. Please re-enter the required details and submit again to create your order.","ok");
   }
-  return;
-  if(pending.slug==="ils-enquiry-fee-199"&&d.mode==="popular-assistance"){
-   status("Welcome back. Restoring your saved enquiry and opening the existing UPI payment screen.");
-   await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",d,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
-   return;
-  }
-  const expected=mode==="guided"?"official-route-guidance":mode==="associate"?"digital-form-assistance":null;
-  if(pending.slug==="ils-enquiry-fee-199"&&mode==="guided"&&d.mode==="guided"){
-   status("Welcome back. Restoring your Traffic Challan request and payment.");
-   await pay(true,detectRoute(),pending);
-   return;
-  }
-  if(expected!==pending.slug||!d)return;
-  if(mode==="associate"){
-   document.getElementById("assistName").value=d.name||"";
-   document.getElementById("assistMobile").value=d.mobile||"";
-   document.getElementById("assistState").value=d.state||"";
-   document.getElementById("assistCity").value=d.city||"";
-   document.getElementById("assistConsent").checked=true;
-  }
-  status("Welcome back. Your saved request is being restored. Please review the order and complete payment.");
-  await pay(mode==="guided",detectRoute(),pending);
  }catch(err){
+  try{sessionStorage.removeItem("ils_pending_checkout");}catch(_){}
   console.warn("Could not resume saved ILS checkout.",err);
-  status("Your saved request could not be restored. Please review your details and try again.","err");
+  status("Your saved checkout marker could not be read. Please review your details and try again.","err");
  }
 }
 const serviceOptionChoices={
