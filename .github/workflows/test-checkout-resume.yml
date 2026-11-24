@@ -812,8 +812,12 @@ jobs:
               });
               if (!adminResult.ok) throw new Error(adminResult.reason);
 
+              // Use an isolated, unauthenticated browser context for the post-payment customer sign-in.
+              // The original checkout context may retain the customer's earlier authenticated session.
+              const resumedContext = await browser.newContext();
+              const resumedCustomer = await resumedContext.newPage();
               // Sign in as the order owner and let the real customer portal resume the paid order.
-              await customer.addInitScript(({ url, key, intent }) => {
+              await resumedCustomer.addInitScript(({ url, key, intent }) => {
                 window.ILS_SUPABASE_URL = url;
                 window.ILS_SUPABASE_KEY = key;
                 if (location.pathname === '/customer-portal.html') {
@@ -828,17 +832,17 @@ jobs:
                   }));
                 }
               }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY, intent: fixture.intent });
-              await customer.goto(process.env.BASE_URL + '/customer-portal.html?returnTo=' + encodeURIComponent('/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber'), { waitUntil: 'domcontentloaded' });
-              await customer.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
-              await customer.locator('#loginPassword').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD);
-              await customer.locator('#loginBtn').click();
-              await customer.waitForURL(url => url.pathname === '/assistance.html', { timeout: 20000 });
-              await customer.waitForFunction(() =>
+              await resumedCustomer.goto(process.env.BASE_URL + '/customer-portal.html?returnTo=' + encodeURIComponent('/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber'), { waitUntil: 'domcontentloaded' });
+              await resumedCustomer.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
+              await resumedCustomer.locator('#loginPassword').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD);
+              await resumedCustomer.locator('#loginBtn').click();
+              await resumedCustomer.waitForURL(url => url.pathname === '/assistance.html', { timeout: 20000 });
+              await resumedCustomer.waitForFunction(() =>
                 (document.getElementById('paymentStatus')?.innerText || '').includes('Payment verified.') &&
                 (document.getElementById('guidancePack')?.innerText || '').includes('Guidance pack unlocked'),
                 null, { timeout: 15000 }
               );
-              const customerResult = await customer.evaluate(() => ({
+              const customerResult = await resumedCustomer.evaluate(() => ({
                 status: document.getElementById('paymentStatus')?.innerText || '',
                 guidance: document.getElementById('guidancePack')?.innerText || '',
                 pendingCheckout: sessionStorage.getItem('ils_pending_checkout')
