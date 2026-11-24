@@ -93,6 +93,7 @@ const { chromium } = require("playwright");
     if(!businessSource.includes('pending?.requiresReentry')||!businessSource.includes('your GST enquiry details were not saved in the browser'))throw new Error("GST privacy-safe post-login re-entry notice is missing.");
     if(!toolsModule.includes('requiresReentry:true')||toolsModule.includes('details:savedDetails'))throw new Error("Unauthenticated checkout must not persist customer intake details in browser storage.");
     if(!assistanceSource.includes('pending.requiresReentry')||!assistanceSource.includes('your enquiry details were not saved in the browser'))throw new Error("Assistance privacy-safe post-login re-entry notice is missing.");
+    if(assistanceSource.includes('const d=pending.details')||businessSource.includes('pending?.details?.intake_service==="gst-returns"'))throw new Error("Legacy browser-stored intake details must be cleared, never resumed.");
     if(!businessSource.includes('Submit your GST assistance request')||!businessSource.includes('one-time ₹199 initial enquiry'))throw new Error("GST form does not disclose the ₹199 charge before submission.");
     const portalSource=await (await page.request.get(base+"/customer-portal.html")).text();
     if(!portalSource.includes('"/business-compliance.html"'))throw new Error("Customer portal does not allow the safe GST enquiry return path.");
