@@ -199,6 +199,28 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
 @media(max-width:480px){.popular-assistance{padding-top:27px;padding-bottom:31px}.popular-head{align-items:start}.popular-trust{display:none}.popular-grid{gap:9px}.popular-card{min-height:158px;padding:14px;border-radius:16px}.popular-card-copy strong{font-size:15px}.popular-card-copy small{font-size:9px}.popular-card-copy b{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.popular-card{transition:none}}
 
+
+/* Homepage account entry — compact, animated and mobile-first */
+.account-entry{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;max-width:850px;margin:0 0 22px;position:relative;z-index:2}
+.account-entry-card{min-width:0;padding:12px 13px;border:1px solid rgba(255,255,255,.13);border-radius:17px;background:linear-gradient(135deg,rgba(18,42,63,.96),rgba(8,22,36,.94));box-shadow:0 12px 28px rgba(0,0,0,.18);position:relative;overflow:hidden;animation:accountFloat 5s ease-in-out infinite}
+.account-entry-card:before{content:"";position:absolute;inset:-1px;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.09) 48%,transparent 70%);transform:translateX(-120%);animation:accountShine 6s ease-in-out infinite;pointer-events:none}
+.client-entry{animation-delay:.6s;border-color:rgba(92,197,255,.24)}
+.professional-entry{border-color:rgba(242,189,85,.28)}
+.account-entry-heading{display:flex;align-items:center;gap:9px;margin-bottom:10px;position:relative}
+.account-entry-icon{width:35px;height:35px;flex:0 0 35px;display:grid;place-items:center;border-radius:11px;background:rgba(242,189,85,.12);font-size:18px}
+.client-entry .account-entry-icon{background:rgba(92,197,255,.12)}
+.account-entry-heading b{display:block;font-size:13px;line-height:1.2;color:#fff}
+.account-entry-heading small{display:block;margin-top:3px;color:#91a5b8;font-size:9px;line-height:1.3}
+.account-entry-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;position:relative}
+.account-entry-btn{display:flex;align-items:center;justify-content:center;min-height:36px;padding:7px 8px;border-radius:10px;text-decoration:none;font-size:10px;font-weight:900;white-space:nowrap;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.account-entry-btn:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(0,0,0,.22)}
+.account-login{color:#dff5ff;background:rgba(92,197,255,.10);border:1px solid rgba(92,197,255,.3)}
+.account-join{color:#ffe39a;background:rgba(242,189,85,.13);border:1px solid rgba(242,189,85,.36)}
+@keyframes accountFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes accountShine{0%,72%,100%{transform:translateX(-120%)}86%{transform:translateX(120%)}}
+@media(max-width:520px){.account-entry{gap:7px;margin-bottom:19px}.account-entry-card{padding:10px 9px;border-radius:14px}.account-entry-heading{gap:7px;margin-bottom:8px}.account-entry-icon{width:30px;height:30px;flex-basis:30px;font-size:16px}.account-entry-heading b{font-size:12px}.account-entry-heading small{font-size:8px}.account-entry-actions{gap:5px}.account-entry-btn{min-height:34px;padding:6px 5px;font-size:9px;white-space:normal;text-align:center}}
+@media(prefers-reduced-motion:reduce){.account-entry-card,.account-entry-card:before{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -220,7 +242,22 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
 <section class="hero" id="start">
 <div class="wrap hero-grid">
 <div>
-<span class="eyebrow"><span class="dot"></span><span data-t="eyebrow">सरल भाषा में कानूनी जानकारी और सही मार्गदर्शन</span></span>
+<div class="account-entry" aria-label="Account access">
+  <section class="account-entry-card professional-entry" aria-labelledby="professional-entry-title">
+    <div class="account-entry-heading"><span class="account-entry-icon" aria-hidden="true">⚖️</span><div><b id="professional-entry-title">Professional</b><small>Advocates &amp; registered professionals</small></div></div>
+    <div class="account-entry-actions">
+      <a class="account-entry-btn account-login" href="portal.html#login">Login</a>
+      <a class="account-entry-btn account-join" href="advocate-register.html?v=20260928">Join / Register</a>
+    </div>
+  </section>
+  <section class="account-entry-card client-entry" aria-labelledby="client-entry-title">
+    <div class="account-entry-heading"><span class="account-entry-icon" aria-hidden="true">👤</span><div><b id="client-entry-title">Client</b><small>Access your matters &amp; services</small></div></div>
+    <div class="account-entry-actions">
+      <a class="account-entry-btn account-login" href="customer-portal.html?mode=login">Login</a>
+      <a class="account-entry-btn account-join" href="customer-portal.html">Create Account</a>
+    </div>
+  </section>
+</div>
 <h1 data-t="heroTitle">कानून समझिए। <span>सही रास्ता चुनिए।</span><br>आगे बढ़िए।</h1>
 <p class="lead" data-t="heroLead"><strong>कानून की धारा याद होना आवश्यक नहीं है।</strong> सरल भाषा में अपनी आवश्यकता बताइए। ILS आपको उपलब्ध जानकारी, संबंधित आधिकारिक मार्ग और आगे बढ़ने के विकल्प एक व्यवस्थित तरीके से समझने में सहायता करेगा।</p>
 <div class="flowbar"><span class="active" data-t="flow1">① आवश्यकता बताइए</span><span data-t="flow2">② मार्ग समझिए</span><span data-t="flow3">③ आधिकारिक सेवा तक जाएँ</span><span data-t="flow4">④ सहायता चुनिए</span></div>
