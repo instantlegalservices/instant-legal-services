@@ -272,14 +272,15 @@ jobs:
                 window.ILS_SUPABASE_URL = 'https://bgsbuepolooybdqrzmoa.supabase.co';
                 window.ILS_SUPABASE_KEY = 'sb_publishable_TEST_ONLY';
                 const returnTo = location.pathname + location.search + location.hash;
+                // Store only the privacy-safe checkout marker; the customer re-enters details.
                 sessionStorage.setItem('ils_pending_checkout', JSON.stringify({
                   slug: 'official-route-guidance',
-                  details: { mode: 'guided', problem: 'cyber fraud', route: 'cyber', checkout_intent_id: 'negative-callback-intent' },
                   checkoutIntentId: 'negative-callback-intent',
                   toolRunId: null, returnTo, createdAt: Date.now()
                 }));
               });
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
+              await page.locator('#payBtn').click();
               await page.waitForFunction(() => (document.getElementById('paymentStatus')?.textContent || '').includes('Payment/order confirmation was not verified'), null, { timeout: 5000 });
               const result = await page.evaluate(() => ({
                 pending: sessionStorage.getItem('ils_pending_checkout'),
