@@ -37,6 +37,11 @@ jobs:
           sleep 2
           curl --fail --silent --show-error http://127.0.0.1:4173/customer-portal.html > /dev/null
 
+      - name: Verify Popular Assistance marketplace and SEO journeys
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: node scripts/test-popular-assistance.js
+
       - name: Verify checkout return and tab-scoped storage
         env:
           BASE_URL: http://127.0.0.1:4173
