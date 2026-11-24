@@ -7,6 +7,7 @@ on:
       - "index.html"
       - "scripts/test-home-search-routing.js"
       - "scripts/test-home-judgment-cards.js"
+      - "scripts/test-popular-assistance.js"
       - ".github/workflows/test-home-search-routing.yml"
   push:
     branches:
@@ -15,6 +16,7 @@ on:
       - "index.html"
       - "scripts/test-home-search-routing.js"
       - "scripts/test-home-judgment-cards.js"
+      - "scripts/test-popular-assistance.js"
       - ".github/workflows/test-home-search-routing.yml"
 
 jobs:
@@ -50,3 +52,8 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:4173/
         run: node scripts/test-home-judgment-cards.js
+
+      - name: Run Popular Assistance conversion regression
+        env:
+          BASE_URL: http://127.0.0.1:4173/
+        run: node scripts/test-popular-assistance.js
