@@ -38,7 +38,7 @@ const { chromium } = require("playwright");
       if(!(await page.locator('meta[name="description"]').getAttribute("content")))throw new Error(key+" SEO meta description missing.");
       if((await page.locator('link[rel="canonical"]').getAttribute("href"))!=="https://instantlegalservices.in/"+href)throw new Error(key+" canonical URL mismatch.");
       const schema=await page.locator('script[type="application/ld+json"]').innerText();
-      if(!schema.includes('"Service"')||!schema.includes('"FAQPage"'))throw new Error(key+" structured data missing.");
+      if(!schema.includes('"Service"')||!schema.includes('"BreadcrumbList"'))throw new Error(key+" Service/Breadcrumb structured data missing.");
       if(!(await page.locator("main a.cta").count()))throw new Error(key+" service enquiry action missing.");
     }
     const newRoutes={
