@@ -22,6 +22,11 @@ begin
       true
     )
     returning id into v_service_id;
+  else
+    -- This migration explicitly enables the dedicated marketplace checkout service.
+    update public.services
+    set is_active = true
+    where id = v_service_id;
   end if;
 
   if not exists (
