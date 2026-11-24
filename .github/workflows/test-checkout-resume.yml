@@ -1,3 +1,4 @@
+# CI trigger refresh: run the checkout regression suite on this branch head.
 name: Checkout Resume UI E2E
 
 on:
