@@ -150,7 +150,8 @@ async function ensureCustomerProfile(user){
   try{
    const profile=await ensureCustomerProfile(session.user);
    status(profile.provisioned?"Your customer profile was securely completed.":"Signed in successfully. Welcome, "+profile.full_name+".",true);
-   await loadPaymentHistory();
+   continueAfterAuth();
+   if(!returnTo) await loadPaymentHistory();
   }catch(e){
    $("clientDashboard").classList.add("hidden");
    $("tabLogin").classList.remove("hidden");$("tabSignup").classList.remove("hidden");
