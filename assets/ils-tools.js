@@ -134,11 +134,10 @@ window.ILS_TOOLS = (() => {
       status('Please sign in or create your ILS customer account to continue this order.');
       if(options.resumeCheckout){
         try{
-          const checkoutIntentId=details?.checkout_intent_id||
-            (window.crypto?.randomUUID?.()||('ils-'+Date.now()+'-'+Math.random().toString(36).slice(2)));
-          const savedDetails={...(details||{}),checkout_intent_id:checkoutIntentId};
+          // Never persist legal, financial, identity, or other intake details in browser storage.
+          // Keep only a short-lived navigation marker; the customer re-enters details after sign-in.
           sessionStorage.setItem('ils_pending_checkout',JSON.stringify({
-            slug,details:savedDetails,checkoutIntentId,toolRunId:toolRunId||null,
+            slug,requiresReentry:true,
             returnTo:window.location.pathname+window.location.search+window.location.hash,
             createdAt:Date.now()
           }));
