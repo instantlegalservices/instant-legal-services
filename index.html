@@ -344,6 +344,18 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
   .intake-actions .btn{font-size:9px!important}
 }
 
+
+/* Homepage desktop/tablet flow repair: remove viewport-height centering */
+body.ils-enhanced-ui .hero{
+  min-height:auto!important;
+  display:block!important;
+  align-items:initial!important;
+  padding:42px 0 28px!important;
+}
+@media(max-width:620px){
+  body.ils-enhanced-ui .hero{padding:30px 0 24px!important}
+}
+
 </style>
 </head>
 <body>
