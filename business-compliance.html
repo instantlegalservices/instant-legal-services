@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    const pending=JSON.parse(raw),current=location.pathname+location.search+location.hash;
    if(pending?.slug==="ils-enquiry-fee-199"&&pending?.details?.intake_service==="gst-returns"&&pending?.returnTo===current&&pending?.createdAt&&Date.now()-pending.createdAt<=30*60*1000){
     status.textContent="Welcome back. Restoring your GST enquiry and opening the existing UPI payment screen…";
-    window.ILS_TOOLS?.createOrder("ils-enquiry-fee-199",pending.details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true});
+    window.ILS_TOOLS?.createOrder("ils-enquiry-fee-199",pending.details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"bcStatus"});
    }
   }
  }catch(error){console.warn("GST checkout resume could not be restored.",error);}
