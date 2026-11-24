@@ -99,9 +99,16 @@ document.addEventListener("DOMContentLoaded",()=>{
   const service=document.getElementById("bcService").value;
   const details=["Business type: "+businessType,"Requested service: "+service,"Requirement: "+document.getElementById("bcBrief").value.trim()].join("\n");
   try{
+   if(params.get("service")==="gst-returns"){
+    if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
+    status.textContent="Enquiry received. Preparing your ₹199 UPI payment…";
+    const checkoutDetails={mode:"popular-assistance",intake_service:"gst-returns",business_type:businessType,requested_service:service,name:document.getElementById("bcName").value.trim(),mobile,state:document.getElementById("bcState").value.trim(),city:document.getElementById("bcCity").value.trim(),matter:"Business Compliance — "+service,brief:details.slice(0,3000)};
+    await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",checkoutDetails,null,null,{resumeCheckout:true,forceQr:true,autoPay:true});
+    return;
+   }
    await window.ILS.submitRequirement({name:document.getElementById("bcName").value.trim(),mobile,state:document.getElementById("bcState").value.trim(),city:document.getElementById("bcCity").value.trim(),matter:"Business Compliance — "+service,brief:details});
    status.textContent="Your enquiry has been submitted. The ILS team will contact you to discuss scope, availability and applicable fees. No payment has been taken."; form.reset();
-  }catch{status.textContent="We could not submit your enquiry. Your details remain on this form; please try again later or contact ILS.";}
+  }catch(error){status.textContent=error?.message||"We could not submit your enquiry. Your details remain on this form; please try again later or contact ILS.";}
   finally{button.disabled=false;}
  });
 });
