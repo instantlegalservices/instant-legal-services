@@ -20,8 +20,10 @@ const { chromium } = require("playwright");
     await page.selectOption("#language","en-IN");
     if(await page.locator("#popular-assistance-title").innerText()!=="Popular Assistance")throw new Error("English language did not localize Popular Assistance title.");
     if(!(await page.locator("#popular-assistance .legal small").innerText()).includes("Notices"))throw new Error("English card description remained untranslated.");
+     if(await page.locator("#popular-assistance .popular-fee-note").count()!==1||!(await page.locator("#popular-assistance .popular-fee-note").innerText()).includes("credited in full"))throw new Error("Homepage service cards must disclose the enquiry fee adjustment.");
     await page.selectOption("#language","hi-IN");
     if(await page.locator("#popular-assistance-title").innerText()!=="लोकप्रिय सहायता")throw new Error("Hindi language did not localize Popular Assistance title.");
+     if(!(await page.locator("#popular-assistance .popular-fee-note").innerText()).includes("पूरी राशि"))throw new Error("Homepage fee adjustment note did not localize to Hindi.");
     const routes={
       legal:"services/legal-drafting/",
       recovery:"services/money-recovery/",
@@ -99,7 +101,7 @@ const { chromium } = require("playwright");
     const businessSource=await (await page.request.get(base+"/business-compliance.html")).text();
     if(businessSource.includes('id="businessEnquiryForm"'))throw new Error("Business page must not create a second service enquiry form.");
     if(!businessSource.includes('href="assistance.html?service=business-compliance"'))throw new Error("Business enquiry must route to the universal existing form.");
-    if(await page.locator("#fee-adjustment-note").count()){}
+
     if(!assistanceSource.includes('"business-compliance"')||!assistanceSource.includes('intake_source:"ils-universal-service-form"'))throw new Error("Universal form business intake mapping/CRM marker missing.");
     if(!assistanceSource.includes('intakeService!=="business-compliance"||selectedOption==="GST return / notice / portal issue"'))throw new Error("Only the previously paid GST business route may open the ₹199 checkout; other business enquiries must remain free.");
     if(!toolsModule.includes('requiresReentry:true')||toolsModule.includes('details:savedDetails'))throw new Error("Unauthenticated checkout must not persist customer intake details in browser storage.");
