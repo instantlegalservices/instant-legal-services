@@ -9,6 +9,7 @@ on:
       - "admin.html"
       - "assets/ils-tools.js"
       - "assets/ils-core.js"
+      - "scripts/test-popular-assistance.js"
       - ".github/workflows/test-checkout-resume.yml"
 
 jobs:
