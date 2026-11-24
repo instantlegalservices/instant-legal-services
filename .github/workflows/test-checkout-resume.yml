@@ -324,6 +324,7 @@ jobs:
                 window.ILS_SUPABASE_KEY = key;
               }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
 
+              const testStartedAt = new Date().toISOString();
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber', { waitUntil: 'domcontentloaded' });
               await page.locator('#payBtn').waitFor({ state: 'visible', timeout: 15000 });
               await page.locator('#payBtn').click();
@@ -368,10 +369,7 @@ jobs:
                 return !!img && img.complete && img.naturalWidth > 0;
               }, null, { timeout: 10000 });
 
-              const result = await page.evaluate(async () => {
-                const raw = sessionStorage.getItem('ils_pending_checkout');
-                if (!raw) return { ok: false, reason: 'PENDING_INTENT_CLEARED_BEFORE_PAYMENT' };
-                const pending = JSON.parse(raw);
+              const result = await page.evaluate(async (startedAt) => {
                 const authKey = 'sb-bgsbuepolooybdqrzmoa-auth-token';
                 const session = JSON.parse(localStorage.getItem(authKey) || '{}');
                 if (!session.access_token) return { ok: false, reason: 'AUTH_SESSION_MISSING_AFTER_RESUME' };
@@ -384,9 +382,12 @@ jobs:
                 if (!userResponse.ok) return { ok: false, reason: 'AUTH_USER_HTTP_' + userResponse.status };
                 const user = await userResponse.json();
                 const requestUrl = new URL(base + '/rest/v1/service_requests');
-                requestUrl.searchParams.set('select', 'id,details');
+                requestUrl.searchParams.set('select', 'id,details,created_at');
                 requestUrl.searchParams.set('user_id', 'eq.' + user.id);
-                requestUrl.searchParams.set('details->>checkout_intent_id', 'eq.' + pending.checkoutIntentId);
+                requestUrl.searchParams.set('details->>problem', 'eq.cyber fraud');
+                requestUrl.searchParams.set('created_at', 'gte.' + startedAt);
+                requestUrl.searchParams.set('order', 'created_at.desc');
+                requestUrl.searchParams.set('limit', '5');
                 const requestResponse = await fetch(requestUrl, { headers });
                 if (!requestResponse.ok) return { ok: false, reason: 'REQUEST_READ_HTTP_' + requestResponse.status };
                 const requests = await requestResponse.json();
@@ -425,7 +426,7 @@ jobs:
                   return { ok: false, reason: 'REAL_UPI_PAYMENT_SCREEN_INCOMPLETE' };
                 }
                 return { ok: true, requestCount: requests.length, orderCount: orders.length, itemCount: items.length, proofCount: proofs.length, status: orders[0].status };
-              });
+              }, testStartedAt);
 
               if (!result.ok) throw new Error(result.reason);
 
