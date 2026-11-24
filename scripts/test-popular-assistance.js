@@ -81,6 +81,19 @@ const { chromium } = require("playwright");
     }
     if(!customerPortal.includes("UPI proof submitted · Pending verification")||!customerPortal.includes("Paid · Verified")||!customerPortal.includes("UPI proof rejected"))throw new Error("Customer portal payment status labels are incomplete.");
     console.log("CUSTOMER_PORTAL_OWN_ORDERS_UPI_PAYMENT_STATUS=PASS");
+    const toolsModule=await (await page.request.get(base+"/assets/ils-tools.js")).text();
+    if(!toolsModule.includes("'ils-enquiry-fee-199':'ils-enquiry-fee-199'")||!toolsModule.includes("if(options.autoPay===true)"))throw new Error("Dedicated fixed-price UPI checkout is not registered for immediate form checkout.");
+    const assistanceSource=await (await page.request.get(base+"/assistance.html")).text();
+    for(const key of ["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr"]){
+      if(!assistanceSource.includes('"'+key+'"'))throw new Error("Marketplace enquiry checkout mapping missing: "+key);
+    }
+    if(!assistanceSource.includes('paidMarketplaceTraffic')||!assistanceSource.includes('isPaidMarketplaceTraffic'))throw new Error("Traffic Challan marketplace checkout mapping missing.");
+    const businessSource=await (await page.request.get(base+"/business-compliance.html?service=gst-returns")).text();
+    if(!businessSource.includes('createOrder("ils-enquiry-fee-199"'))throw new Error("GST marketplace enquiry is not connected to ₹199 checkout.");
+    const migration=await (await page.request.get(base+"/supabase/migrations/20261124175000_add_ils_enquiry_fee_199.sql")).text().catch(()=> "");
+    if(migration&&!migration.includes("'ils-enquiry-fee-199'"))throw new Error("₹199 service migration does not contain its dedicated service slug.");
+    console.log("NINE_MARKETPLACE_JOURNEYS_FIXED_199_UPI_WIRING=PASS");
+
     const sitemap=await (await page.request.get(base+"/sitemap.xml")).text();
     for(const href of Object.values(routes))if(!sitemap.includes("https://instantlegalservices.in/"+href))throw new Error("Sitemap missing new service URL: "+href);
     const robots=await (await page.request.get(base+"/robots.txt")).text();
