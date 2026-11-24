@@ -29,6 +29,7 @@ const { chromium } = require("playwright");
       traffic:"popular-assistance.html?service=traffic-challan"
     };
     for(const [key,href] of Object.entries(routes)){
+      await page.goto(base+"/");
       const actual=await page.locator("#popular-assistance .popular-card."+key).getAttribute("href");
       if(actual!==href)throw new Error(key+" card route mismatch: "+actual);
       await page.goto(base+"/"+href);
