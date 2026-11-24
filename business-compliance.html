@@ -81,6 +81,13 @@
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
  const form=document.getElementById("businessEnquiryForm"); if(!form)return;
+ const params=new URLSearchParams(window.location.search);
+ if(params.get("service")==="gst-returns"){
+  const service=document.getElementById("bcService");
+  if(service)service.value="GST return / notice / portal issue";
+  const brief=document.getElementById("bcBrief");
+  if(brief&&!brief.value)brief.value="I need assistance with GST services. Please contact me to confirm the required documents, scope and applicable charges.";
+ }
  const status=document.getElementById("bcStatus"); const button=document.getElementById("bcSubmit");
  form.addEventListener("submit",async event=>{
   event.preventDefault();
