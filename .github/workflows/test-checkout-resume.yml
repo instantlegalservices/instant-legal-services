@@ -212,10 +212,13 @@ jobs:
               });
 
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
-              await page.waitForFunction(() => {
-                const status = document.getElementById('assistStatus') || document.getElementById('paymentStatus');
-                return (status?.textContent || '').includes('cleared from this browser for your privacy');
-              }, null, { timeout: 5000 });
+              // The security invariant is storage deletion and no replay; do not couple this
+              // legacy-data cleanup test to which status element the page renders.
+              await page.waitForFunction(
+                () => sessionStorage.getItem('ils_pending_checkout') === null,
+                null,
+                { timeout: 5000 }
+              );
 
               const config = await page.evaluate(() => window.__assistanceSupabaseConfig);
               if (config?.url !== 'https://bgsbuepolooybdqrzmoa.supabase.co' || config?.key !== 'sb_publishable_TEST_ONLY') {
