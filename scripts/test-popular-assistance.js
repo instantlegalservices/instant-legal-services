@@ -71,6 +71,7 @@ const { chromium } = require("playwright");
       await page.goto(base+selectedUrl.pathname+selectedUrl.search);
       if((await page.locator("#standardHelp h1").innerText()).trim()!==expectedTitle)throw new Error(key+" enquiry heading did not prefill.");
       if(!(await page.locator("#brief").inputValue()).trim())throw new Error(key+" enquiry brief did not prefill.");
+      if(!(await page.locator("#matter").inputValue()))throw new Error(key+" legal matter category did not prefill.");
       if(await page.locator("#serviceOption").inputValue()!==selectedUrl.searchParams.get("option"))throw new Error(key+" selected service option did not prefill in enquiry form.");
     }
     console.log("FIVE_NEW_SERVICE_PAGES_AND_INTAKE_PREFILLS=PASS");
