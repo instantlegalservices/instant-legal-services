@@ -131,7 +131,34 @@ async function loadPaymentHistory(){
 }
 $("refreshPayments").onclick=loadPaymentHistory;
 $("logoutBtn").onclick=async()=>{await sb.auth.signOut();$("clientDashboard").classList.add("hidden");$("tabLogin").classList.remove("hidden");$("tabSignup").classList.remove("hidden");show("login");status("Signed out successfully.",true);};
-(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){await loadPaymentHistory();}})();
+async function ensureCustomerProfile(user){
+ const {data:profile,error}=await sb.from("customer_profiles").select("id,full_name,status").eq("user_id",user.id).maybeSingle();
+ if(error) throw error;
+ if(profile){
+  if(profile.status!=="active") throw new Error("CUSTOMER_ACCOUNT_SUSPENDED");
+  return {...profile,provisioned:false};
+ }
+ const name=user.user_metadata?.full_name||user.email?.split("@")[0]||"ILS Customer";
+ const {data,error:provisionError}=await sb.rpc("provision_customer_profile",{p_full_name:name,p_mobile:null,p_client_requirement_id:null});
+ if(provisionError||!data?.ok) throw new Error(provisionError?.message||"CUSTOMER_PROFILE_PROVISION_FAILED");
+ return {id:data.customer_profile_id,full_name:name,status:"active",provisioned:true};
+}
+(async()=>{
+ const {data:{session},error}=await sb.auth.getSession();
+ if(error){status(error.message||"Unable to restore your session.");return;}
+ if(session){
+  try{
+   const profile=await ensureCustomerProfile(session.user);
+   status(profile.provisioned?"Your customer profile was securely completed.":"Signed in successfully. Welcome, "+profile.full_name+".",true);
+   await loadPaymentHistory();
+  }catch(e){
+   $("clientDashboard").classList.add("hidden");
+   $("tabLogin").classList.remove("hidden");$("tabSignup").classList.remove("hidden");
+   show("login");
+   status(e.message||"Unable to verify your customer account.");
+  }
+ }
+})();
 $("tabLogin").onclick=()=>show("login");$("tabSignup").onclick=()=>show("signup");
 
 async function provision(user){
@@ -167,21 +194,10 @@ $("loginBtn").onclick=async()=>{
    const email=$("loginEmail").value.trim(),password=$("loginPassword").value;
    const {data,error}=await sb.auth.signInWithPassword({email,password});
    if(error) throw error;
-   const {data:profile,error:pe}=await sb.from("customer_profiles").select("id,full_name,status").eq("user_id",data.user.id).maybeSingle();
-   if(pe) throw pe;
-   if(!profile){
-     const name=data.user.user_metadata?.full_name||data.user.email?.split("@")[0]||"ILS Customer";
-     const {data:p,error:e}=await sb.rpc("provision_customer_profile",{p_full_name:name,p_mobile:null,p_client_requirement_id:null});
-     if(e||!p?.ok) throw new Error(e?.message||"CUSTOMER_PROFILE_PROVISION_FAILED");
-     status("Signed in. Missing customer profile was safely provisioned.\nProfile: "+p.customer_profile_id,true);
-     continueAfterAuth();
-     if(!returnTo)await loadPaymentHistory();
-   }else{
-     if(profile.status!=="active") throw new Error("CUSTOMER_ACCOUNT_SUSPENDED");
-     status("Signed in successfully.\nWelcome, "+profile.full_name+".",true);
-     continueAfterAuth();
-     if(!returnTo)await loadPaymentHistory();
-   }
+   const profile=await ensureCustomerProfile(data.user);
+   status(profile.provisioned?"Signed in. Missing customer profile was safely provisioned.\nProfile: "+profile.id:"Signed in successfully.\nWelcome, "+profile.full_name+".",true);
+   continueAfterAuth();
+   if(!returnTo)await loadPaymentHistory();
  }catch(e){status(e.message||"Unable to sign in.");}
  finally{$("loginBtn").disabled=false;}
 };
