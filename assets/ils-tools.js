@@ -126,12 +126,12 @@ window.ILS_TOOLS = (() => {
 
   async function createOrder(slug, details, toolRunId=null, onPaid=null, options={}){
     const sb=window.ILS?.ready?.();
-    if(!sb){ status('Service connection unavailable.'); return; }
+    if(!sb){ status('Service connection unavailable.',false,options.paymentContainerId); return; }
 
     const {data:{user}}=await sb.auth.getUser();
 
     if(!user){
-      status('Please sign in or create your ILS customer account to continue this order.');
+      status('Please sign in or create your ILS customer account to continue this order.',false,options.paymentContainerId);
       if(options.resumeCheckout){
         try{
           // Never persist legal, financial, identity, or other intake details in browser storage.
@@ -153,7 +153,7 @@ window.ILS_TOOLS = (() => {
 
     const service=serviceMap[slug];
     if(!service){
-      status('Paid service is not configured yet.');
+      status('Paid service is not configured yet.',false,options.paymentContainerId);
       return;
     }
 
@@ -170,14 +170,14 @@ window.ILS_TOOLS = (() => {
         .limit(2);
 
       if(requestError){
-        status('Unable to safely resume your saved request. Please try again shortly.');
+        status('Unable to safely resume your saved request. Please try again shortly.',false,options.paymentContainerId);
         console.error('Checkout request lookup failed.',requestError);
         return;
       }
 
       const matches=(requests||[]).filter(row=>row.service?.slug===service);
       if(matches.length>1){
-        status('More than one saved order matches this checkout. Please contact ILS support before paying.');
+        status('More than one saved order matches this checkout. Please contact ILS support before paying.',false,options.paymentContainerId);
         return;
       }
 
@@ -190,7 +190,7 @@ window.ILS_TOOLS = (() => {
           .maybeSingle();
 
         if(orderError || !existingOrder){
-          status('Your saved request was found, but its order could not be safely loaded. Please contact ILS support.');
+          status('Your saved request was found, but its order could not be safely loaded. Please contact ILS support.',false,options.paymentContainerId);
           console.error('Resumed checkout order lookup failed.',orderError);
           return;
         }
@@ -200,7 +200,7 @@ window.ILS_TOOLS = (() => {
             'ils_get_upi_proof_status',{p_order_id:existingOrder.id}
           );
           if(paymentStateError || paymentState?.order_status!=='paid'){
-            status('The saved order status could not be verified. Access remains locked.');
+            status('The saved order status could not be verified. Access remains locked.',false,options.paymentContainerId);
             return;
           }
           if(typeof onPaid==='function'){
@@ -210,7 +210,7 @@ window.ILS_TOOLS = (() => {
         }
 
         if(existingOrder.status!=='pending'){
-          status('Your saved order is no longer payable. Please contact ILS support before creating another order.');
+          status('Your saved order is no longer payable. Please contact ILS support before creating another order.',false,options.paymentContainerId);
           return;
         }
 
@@ -229,7 +229,7 @@ window.ILS_TOOLS = (() => {
         p_tool_run_id:toolRunId
       });
       if(error||!createdOrder?.ok){
-        status(error?.message||'Unable to create the service order.');
+        status(error?.message||createdOrder?.message||'Unable to create the service order.',false,options.paymentContainerId);
         return;
       }
       data=createdOrder;
@@ -258,17 +258,17 @@ async function startRazorpay(data,onPaid=null,forceQr=false,containerId='toolSta
     const sb = window.ILS?.ready?.();
 
     if (!sb) {
-      status('Service connection unavailable.');
+      status('Service connection unavailable.',false,options.paymentContainerId);
       return;
     }
 
     if (!data?.order_id) {
-      status('Internal order ID missing. Please try again.');
+      status('Internal order ID missing. Please try again.',false,containerId);
       return;
     }
 
     // Create Razorpay gateway order from our internal order
-    status('Preparing secure payment…');
+    status('Preparing secure payment…',false,containerId);
 
     let paymentData = null;
     let paymentError = null;
@@ -817,8 +817,8 @@ async function startRazorpay(data,onPaid=null,forceQr=false,containerId='toolSta
     };
   }
 
-  function status(message, ok=false){
-    const el=document.getElementById('toolStatus');
+  function status(message, ok=false, containerId='toolStatus'){
+    const el=document.getElementById(containerId)||document.getElementById('toolStatus');
     if(!el)return;
     el.textContent=message;
     el.className='status '+(ok?'ok':'err');
