@@ -22,6 +22,10 @@ CREATE TABLE public.advocate_registrations (
   verification_status text,
   status text
 );
+CREATE TABLE public.service_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  details jsonb NOT NULL DEFAULT '{}'::jsonb
+);
 
 CREATE OR REPLACE FUNCTION public.ils_is_admin()
 RETURNS boolean
@@ -96,6 +100,7 @@ $$;
 \i supabase/migrations/20261117181527_restrict_anon_client_requirement_insert_columns.sql
 \i supabase/migrations/20261117182000_harden_client_portal_advocate_disclosure.sql
 \i supabase/migrations/20261117182100_align_admin_crm_uuid_authorization.sql
+\i supabase/migrations/20261124193000_link_universal_intake_to_existing_crm.sql
 
 DO $assert$
 DECLARE
@@ -164,6 +169,47 @@ BEGIN
 END;
 $assert$;
 
+-- Exercise the universal paid-intake trigger: it must create one CRM lead
+-- and link the service request without granting public direct CRM write access.
+DO $universal_intake$
+DECLARE
+  v_request_id uuid;
+  v_lead_id bigint;
+  v_lead_count integer;
+BEGIN
+  INSERT INTO public.service_requests(details)
+  VALUES (jsonb_build_object(
+    'intake_source', 'ils-universal-service-form',
+    'intake_service', 'business-compliance',
+    'service_option', 'GST return / notice / portal issue',
+    'business_type', 'Wholesale / Trading',
+    'name', 'Universal Intake Fixture',
+    'mobile', '9876543210',
+    'state', 'Uttar Pradesh',
+    'city', 'Bareilly',
+    'matter', 'Commercial / Corporate',
+    'brief', 'Need monthly GST return assistance.'
+  ))
+  RETURNING id, client_requirement_id INTO v_request_id, v_lead_id;
+
+  IF v_lead_id IS NULL THEN
+    RAISE EXCEPTION 'universal service request did not link a CRM lead';
+  END IF;
+  SELECT count(*) INTO v_lead_count
+  FROM public.client_requirements
+  WHERE id = v_lead_id
+    AND client_name = 'Universal Intake Fixture'
+    AND mobile = '9876543210'
+    AND status = 'New'
+    AND payment_status = 'Pending'
+    AND brief_requirement LIKE '%Wholesale / Trading%'
+    AND brief_requirement LIKE '%GST return / notice / portal issue%';
+  IF v_lead_count <> 1 THEN
+    RAISE EXCEPTION 'universal intake did not create exactly one correctly populated CRM lead';
+  END IF;
+END;
+$universal_intake$;
+
 -- Exercise the rewritten portal function: contact is hidden unless both the
 -- lead release switch and assignment-specific visibility flag are true.
 INSERT INTO public.client_requirements(client_name, mobile, brief_requirement, release_advocate_contact)
@@ -207,4 +253,4 @@ BEGIN
 END;
 $admin$;
 
-\echo PASS: PR117 CRM/portal migrations execute on PostgreSQL 16; anon grants are column-scoped; authenticated CRM access preserved; portal disclosure and both Admin RPC authorization guards verified.
+\echo PASS: CRM/portal migrations and universal intake CRM trigger execute on PostgreSQL 16; anon grants remain column-scoped; authenticated CRM access, portal disclosure and Admin RPC guards verified.
