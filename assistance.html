@@ -303,7 +303,7 @@ async function resumePendingCheckout(){
   if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance","ils-enquiry-fee-199"].includes(pending.slug))return;
   if(pending.requiresReentry){
    sessionStorage.removeItem("ils_pending_checkout");
-   status("Welcome back. For your privacy, enquiry details were not saved in the browser. Please re-enter the required details and submit again to create your order.","ok");
+   status("Welcome back. For your privacy, your enquiry details were not saved in the browser. Please re-enter the required details and submit again to create your order.","ok");
   }
  }catch(err){
   try{sessionStorage.removeItem("ils_pending_checkout");}catch(_){}
