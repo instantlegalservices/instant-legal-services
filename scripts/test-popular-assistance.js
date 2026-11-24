@@ -93,6 +93,8 @@ const { chromium } = require("playwright");
     if(!businessSource.includes('pending.details.intake_service==="gst-returns"'))throw new Error("GST checkout is not restored after authentication.");
     const portalSource=await (await page.request.get(base+"/customer-portal.html")).text();
     if(!portalSource.includes('"/business-compliance.html"'))throw new Error("Customer portal does not allow the safe GST enquiry return path.");
+    if(!portalSource.includes('const intakeLabels=')||!portalSource.includes('"gst-returns":"GST Assistance"'))throw new Error("Client portal does not show marketplace-specific service names.");
+    if(!toolsModule.includes("containerId='toolStatus'")||!toolsModule.includes("getElementById(containerId)"))throw new Error("UPI payment screen is not rendered in the visible marketplace form container.");
     if(!assistanceSource.includes('d.mode==="popular-assistance"')||!assistanceSource.includes('d.mode==="guided"'))throw new Error("Assistance marketplace/Traffic checkout resume handling is incomplete.");
     const migration=await (await page.request.get(base+"/supabase/migrations/20261124175000_add_ils_enquiry_fee_199.sql")).text().catch(()=> "");
     if(migration&&!migration.includes("'ils-enquiry-fee-199'"))throw new Error("₹199 service migration does not contain its dedicated service slug.");
