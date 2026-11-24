@@ -290,10 +290,21 @@ async function resumePendingCheckout(){
    return;
   }
   const current=location.pathname+location.search+location.hash;
-  if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance"].includes(pending.slug))return;
-  const expected=mode==="guided"?"official-route-guidance":mode==="associate"?"digital-form-assistance":null;
-  if(expected!==pending.slug||!pending.details)return;
+  if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance","ils-enquiry-fee-199"].includes(pending.slug))return;
+  if(!pending.details)return;
   const d=pending.details;
+  if(pending.slug==="ils-enquiry-fee-199"&&d.mode==="popular-assistance"){
+   status("Welcome back. Restoring your saved enquiry and opening the existing UPI payment screen.");
+   await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",d,null,null,{resumeCheckout:true,forceQr:true,autoPay:true});
+   return;
+  }
+  const expected=mode==="guided"?"official-route-guidance":mode==="associate"?"digital-form-assistance":null;
+  if(pending.slug==="ils-enquiry-fee-199"&&mode==="guided"&&d.mode==="guided"){
+   status("Welcome back. Restoring your Traffic Challan request and payment.");
+   await pay(true,detectRoute(),pending);
+   return;
+  }
+  if(expected!==pending.slug||!d)return;
   if(mode==="associate"){
    document.getElementById("assistName").value=d.name||"";
    document.getElementById("assistMobile").value=d.mobile||"";
