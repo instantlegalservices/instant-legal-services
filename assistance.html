@@ -71,6 +71,7 @@ if(window.supabase && !window.supabaseClient){window.supabaseClient=window.supab
 <section id="standardFormSection" class="section alt"><div class="wrap"><form id="assistForm" class="card form-card">
 <div class="form-row"><div><label>Name</label><input id="name" required maxlength="100"></div><div><label>10-digit mobile</label><input id="mobile" inputmode="numeric" maxlength="10" required></div></div>
 <div class="form-row"><div><label>State</label><input id="state" required maxlength="80"></div><div><label>District / City</label><input id="city" required maxlength="100"></div></div>
+<div id="businessFields" class="hide"><label for="businessType">Business type</label><select id="businessType"><option value="">Select business type</option><option>Retail shop</option><option>Wholesale / Trading</option><option>Manufacturer</option><option>Factory / Workshop</option><option>Service business</option><option>Other</option></select></div>
 <label>Legal matter</label><select id="matter" required><option value="">Select</option><option>Criminal</option><option>Bail / Anticipatory Bail</option><option>NDPS</option><option>Cyber Crime</option><option>Family / Matrimonial</option><option>Civil / Property</option><option>Cheque Bounce / NI Act</option><option>Consumer</option><option>Commercial / Corporate</option><option>Labour / Service</option><option>Tax / GST</option><option>Writ / Constitutional</option><option>Arbitration / ADR</option><option>Other</option></select>
 <div id="serviceOptionWrap" class="hide"><label for="serviceOption">Specific service required</label><select id="serviceOption"><option value="">Choose the closest option</option></select><small id="serviceOptionHelp" style="display:block;color:#8fa2b4;margin:5px 0 12px">Choose the closest match. You can explain further below.</small></div>
 <label>Brief requirement</label><textarea id="brief" maxlength="3000" required placeholder="Briefly describe the matter and what assistance you need."></textarea>
@@ -104,7 +105,8 @@ const serviceIntake={
  "cyber-fraud-assistance":{title:"Cyber Fraud Assistance",matter:"Cyber Crime",brief:"I need assistance organising information and next steps after a cyber or online financial fraud. I understand urgent reporting through 1930 and the official cybercrime portal should be done promptly. Please contact me to review the available records."},
  "matrimonial-family":{title:"Matrimonial & Family Assistance",matter:"Family / Matrimonial",brief:"I need assistance regarding a matrimonial or family matter. Please contact me to understand the issue, relevant dates, documents and appropriate next steps."},
  "property-documentation":{title:"Property & Documentation Assistance",matter:"Civil / Property",brief:"I need assistance regarding a property or documentation matter. Please contact me to understand the property details, documents, transaction history and appropriate next steps."},
- "income-tax-itr":{title:"Income Tax & ITR Assistance",matter:"Tax / GST",brief:"I need assistance with an income-tax or ITR matter. Please contact me to understand the relevant assessment/financial year, notice or filing issue and documents. I will not share passwords or OTPs."}
+ "income-tax-itr":{title:"Income Tax & ITR Assistance",matter:"Tax / GST",brief:"I need assistance with an income-tax or ITR matter. Please contact me to understand the relevant assessment/financial year, notice or filing issue and documents. I will not share passwords or OTPs."},
+ "business-compliance":{title:"Business Compliance Assistance",matter:"Commercial / Corporate",brief:"I need business compliance assistance. Please review my business type and selected service, then confirm the required documents, scope and applicable ILS fee."}
 };
 const routeData={
  cyber:{url:"https://cybercrime.gov.in/",title:"National Cyber Crime Reporting Portal",items:["Transaction/reference ID, date and amount","Bank/UPI/payment screenshots and statements","Chronology of what happened","Any complaint/reference already received","Never share OTP, password, PIN or payment credentials"]},
@@ -312,11 +314,14 @@ async function resumePendingCheckout(){
  }
 }
 const serviceOptionChoices={
+ "legal-drafting":["Legal notice","Agreement / contract","Affidavit","Application / petition","Reply / legal response","Other legal document"],
+ "money-recovery":["Unpaid invoice / business dues","Personal loan / friendly loan recovery","Cheque bounce / NI Act 138","Security deposit / rent recovery","Salary / service dues","Other money recovery"],
  "consumer-banking-disputes":["Refund / replacement","Defective product / service deficiency","Unauthorised bank / UPI transaction","Consumer complaint preparation"],
  "cyber-fraud-assistance":["Urgent reporting and next-step checklist","Evidence organisation","Bank complaint support","Legal review enquiry"],
  "matrimonial-family":["Mutual consent divorce","Maintenance / financial support","Family settlement / mediation","Other matrimonial / family dispute"],
  "property-documentation":["Sale / purchase / agreement drafting","Rent / lease documentation","Title / record review enquiry","Possession / property dispute"],
- "income-tax-itr":["ITR preparation assistance","Tax notice / demand response","Business / professional income","Correction / compliance support"]
+ "income-tax-itr":["ITR preparation assistance","Tax notice / demand response","Business / professional income","Correction / compliance support"],
+ "business-compliance":["GST registration / amendment","GST return / notice / portal issue","Income tax / ITR assistance","Business registration","Business documents / drafting","Outstanding payment / recovery","Monthly / recurring compliance","Other business requirement"]
 };
 document.addEventListener("DOMContentLoaded",()=>{
  if(!mode&&serviceIntake[service]){
@@ -325,11 +330,17 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.querySelector("#standardHelp p").textContent="Share the basic details below. ILS will review your request and clarify the scope and applicable fee before any work begins.";
   document.getElementById("matter").value=intake.matter;
   document.getElementById("brief").value=intake.brief;
+  const businessFields=document.getElementById("businessFields");
+  if(service==="business-compliance"){
+   businessFields.classList.remove("hide");
+   document.getElementById("businessType").required=true;
+  }
   const choices=serviceOptionChoices[service]||[];
   if(choices.length){
    const wrap=document.getElementById("serviceOptionWrap");
    const select=document.getElementById("serviceOption");
    wrap.classList.remove("hide");
+   select.required=true;
    choices.forEach(label=>{const option=document.createElement("option");option.value=label;option.textContent=label;select.appendChild(option);});
    if(serviceOption&&choices.includes(serviceOption))select.value=serviceOption;
   }
@@ -344,17 +355,20 @@ document.addEventListener("DOMContentLoaded",()=>{
   try{
    const selectedOption=document.getElementById("serviceOption")?.value||"";
    const baseBrief=document.getElementById("brief").value.trim();
-   const finalBrief=(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
    const intakeService=new URLSearchParams(location.search).get("service")||"";
-   const paidIntakeServices=new Set(["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr"]);
-   if(paidIntakeServices.has(intakeService)){
+   const businessType=intakeService==="business-compliance"?(document.getElementById("businessType").value||""):"";
+   const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
+   const paidIntakeServices=new Set(["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr","business-compliance"]);
+   const requiresPaidCheckout=paidIntakeServices.has(intakeService)&&
+    (intakeService!=="business-compliance"||selectedOption==="GST return / notice / portal issue");
+   if(requiresPaidCheckout){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
-    const details={mode:"popular-assistance",intake_service:intakeService,service_option:selectedOption,name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief.slice(0,3000)};
+    const details={mode:"popular-assistance",intake_source:"ils-universal-service-form",intake_service:intakeService,service_option:selectedOption,business_type:businessType,name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value,matter:document.getElementById("matter").value,brief:finalBrief.slice(0,3000)};
     s.className="status";s.textContent="Enquiry received. Preparing your ₹199 UPI payment…";
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
    }
-   await ILS.submitRequirement({name:document.getElementById("name").value,mobile,state,city,matter:document.getElementById("matter").value,brief:finalBrief});
+   await ILS.submitRequirement({name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief});
    s.className="status ok";s.textContent="Requirement submitted successfully. Please retain your details for follow-up.";form.reset()}catch(err){s.className="status err";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}
  );
 });
