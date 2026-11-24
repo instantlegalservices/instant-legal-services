@@ -8,6 +8,8 @@ on:
       - "scripts/test-home-search-routing.js"
       - "scripts/test-home-judgment-cards.js"
       - "scripts/test-popular-assistance.js"
+      - "popular-assistance.html"
+      - "business-compliance.html"
       - ".github/workflows/test-home-search-routing.yml"
   push:
     branches:
