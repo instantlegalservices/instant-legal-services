@@ -14,7 +14,7 @@ await page.route("**/assets/ils-core.js*", route =>
   route.fulfill({
     status: 200,
     contentType: "application/javascript",
-    body: "window.__submittedLead=null;window.ILS={submitRequirement:async payload=>{window.__submittedLead=payload;}};"
+    body: "window.__submittedLead=null;window.ILS={};"
   })
 );
 await page.route("**/assets/ils-payments.js*", route =>
@@ -24,7 +24,7 @@ await page.route("**/assets/ils-tools.js*", route =>
   route.fulfill({
     status: 200,
     contentType: "application/javascript",
-    body: "window.__orderCall=null;window.ILS_TOOLS={createOrder:async(...args)=>{window.__orderCall=args;}};"
+    body: "window.__orderCall=null;window.ILS_TOOLS={};"
   })
 );
 
@@ -52,6 +52,10 @@ try {
   await page.locator("#serviceOption").selectOption({ label: "Business registration" });
   await page.locator("#brief").fill("Need Udyam and shop registration guidance.");
   await page.locator("#consent").check();
+  await page.evaluate(() => {
+    window.__submittedLead = null;
+    window.ILS.submitRequirement = async payload => { window.__submittedLead = payload; };
+  });
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Requirement submitted successfully" }).waitFor();
   const lead = await page.evaluate(() => window.__submittedLead);
@@ -75,6 +79,10 @@ try {
   await page.locator("#businessType").selectOption({ label: "Wholesale / Trading" });
   await page.locator("#brief").fill("Need monthly GST return assistance.");
   await page.locator("#consent").check();
+  await page.evaluate(() => {
+    window.__orderCall = null;
+    window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
+  });
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹199 UPI payment" }).waitFor();
   const order = await page.evaluate(() => window.__orderCall);
