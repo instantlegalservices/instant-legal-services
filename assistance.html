@@ -177,15 +177,16 @@ function showMode(){
  document.getElementById("routeName").textContent=rd?.title||route||"Official route";
  document.getElementById("problemText").textContent=problem||"Problem details were not carried forward. You can return to the problem search.";
  const guided=mode==="guided";
- const configuredServiceSlug=guided?"official-route-guidance":"digital-form-assistance";
- const configuredFallback=guided?19:160;
+ const paidMarketplaceTraffic=guided&&/traffic.*echallan|echallan.*traffic/i.test([problem,route,rd?.title||""].join(" "));
+ const configuredServiceSlug=paidMarketplaceTraffic?"ils-enquiry-fee-199":(guided?"official-route-guidance":"digital-form-assistance");
+ const configuredFallback=paidMarketplaceTraffic?199:(guided?19:160);
  document.getElementById("modePill").textContent=guided?"PAID GUIDED SELF-SERVICE":"PAID ASSOCIATE ASSISTANCE";
  document.getElementById("modeTitle").textContent=guided?"Fill the official form yourself — with a concise guidance pack.":"Have an ILS associate assist with the digital/form-filling task.";
  document.getElementById("modeLead").textContent=guided?"You remain in control of the official filing. ILS provides a summarized, non-legal checklist and field guidance.":"This is non-legal digital/administrative assistance. The associate does not provide legal advice or replace an independent professional.";
- document.getElementById("payTitle").textContent=guided?"Guided self-service":"Associate assistance — basic";
- document.getElementById("payPrice").textContent=guided?"₹19":"₹160";
- document.getElementById("payDesc").textContent=guided?"One-time guidance pack. Government fee, if any, is separate and paid to the official authority.":"Basic digital/form-filling assistance. Scope is confirmed before work; professional legal fees, if needed, are separate.";
- document.getElementById("payBtn").textContent=guided?"Pay ₹19 & unlock guidance":"Pay ₹160 & request assistance";
+ document.getElementById("payTitle").textContent=paidMarketplaceTraffic?"Traffic Challan Assistance — initial enquiry":(guided?"Guided self-service":"Associate assistance — basic");
+ document.getElementById("payPrice").textContent=paidMarketplaceTraffic?"₹199":(guided?"₹19":"₹160");
+ document.getElementById("payDesc").textContent=paidMarketplaceTraffic?"One-time ILS initial enquiry and coordination fee. Any government challan amount is separate and must be paid only through the official portal.":(guided?"One-time guidance pack. Government fee, if any, is separate and paid to the official authority.":"Basic digital/form-filling assistance. Scope is confirmed before work; professional legal fees, if needed, are separate.");
+ document.getElementById("payBtn").textContent=paidMarketplaceTraffic?"Pay ₹199 & continue":(guided?"Pay ₹19 & unlock guidance":"Pay ₹160 & request assistance");
  if(guided)document.getElementById("associateFields").classList.add("hide");
  else {document.getElementById("associateFields").classList.remove("hide");document.getElementById("consentWrap").classList.remove("hide");}
  const btn=document.getElementById("officialBtn");
@@ -221,7 +222,8 @@ async function pay(guided,rd,resumeIntent=null){
    city:guided?"":document.getElementById("assistCity").value.trim(),
    ...(resumeIntent?.checkoutIntentId?{checkout_intent_id:resumeIntent.checkoutIntentId}: {})
   };
-  const serviceSlug=guided?"official-route-guidance":"digital-form-assistance";
+  const isPaidMarketplaceTraffic=guided&&/traffic.*echallan|echallan.*traffic/i.test([problem,route,rd?.title||""].join(" "));
+  const serviceSlug=isPaidMarketplaceTraffic?"ils-enquiry-fee-199":(guided?"official-route-guidance":"digital-form-assistance");
   status("Creating your secure service order…");
 
   document.getElementById("paymentStatus").className="status";
