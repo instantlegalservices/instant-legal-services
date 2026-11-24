@@ -97,7 +97,12 @@ const route=params.get("route")||"";
 const service=params.get("service")||"";
 const serviceIntake={
  "legal-drafting":{title:"Legal Drafting Assistance",matter:"Other",brief:"I need legal drafting assistance (for example, a notice, agreement, affidavit or application). Please contact me to understand the document, facts and applicable scope."},
- "money-recovery":{title:"Money Recovery Assistance",matter:"Other",brief:"I need assistance regarding recovery of an outstanding amount. Please contact me to understand the transaction, amount, supporting documents and appropriate next steps."}
+ "money-recovery":{title:"Money Recovery Assistance",matter:"Other",brief:"I need assistance regarding recovery of an outstanding amount. Please contact me to understand the transaction, amount, supporting documents and appropriate next steps."},
+ "consumer-banking-disputes":{title:"Consumer & Banking Dispute Assistance",matter:"Consumer / Banking Dispute",brief:"I need assistance with a consumer or banking dispute. Please contact me to understand the transaction or purchase, complaint history, supporting documents and appropriate next steps."},
+ "cyber-fraud-assistance":{title:"Cyber Fraud Assistance",matter:"Cyber Fraud",brief:"I need assistance organising information and next steps after a cyber or online financial fraud. I understand urgent reporting through 1930 and the official cybercrime portal should be done promptly. Please contact me to review the available records."},
+ "matrimonial-family":{title:"Matrimonial & Family Assistance",matter:"Matrimonial / Family Matter",brief:"I need assistance regarding a matrimonial or family matter. Please contact me to understand the issue, relevant dates, documents and appropriate next steps."},
+ "property-documentation":{title:"Property & Documentation Assistance",matter:"Property / Documentation",brief:"I need assistance regarding a property or documentation matter. Please contact me to understand the property details, documents, transaction history and appropriate next steps."},
+ "income-tax-itr":{title:"Income Tax & ITR Assistance",matter:"Income Tax / ITR",brief:"I need assistance with an income-tax or ITR matter. Please contact me to understand the relevant assessment/financial year, notice or filing issue and documents. I will not share passwords or OTPs."}
 };
 const routeData={
  cyber:{url:"https://cybercrime.gov.in/",title:"National Cyber Crime Reporting Portal",items:["Transaction/reference ID, date and amount","Bank/UPI/payment screenshots and statements","Chronology of what happened","Any complaint/reference already received","Never share OTP, password, PIN or payment credentials"]},
