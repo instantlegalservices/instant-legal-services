@@ -146,7 +146,7 @@ window.ILS_TOOLS = (() => {
         }
       }
       const returnTo=window.location.pathname+window.location.search+window.location.hash;
-      const target='customer-portal.html?returnTo='+encodeURIComponent(returnTo);
+      const target='customer-portal.html?returnTo='+encodeURIComponent(returnTo)+'&mode=signup';
       setTimeout(()=>{ window.location.href=target; },350);
       return;
     }
