@@ -301,23 +301,9 @@ h1{font-size:clamp(42px,6.3vw,76px);line-height:.98;letter-spacing:-.055em;margi
 
 
 
-<section class="section" id="choices">
-<div class="wrap"><div class="head"><div><h2 data-t="choiceTitle">आधिकारिक रास्ता मिलने के बाद आगे कैसे बढ़ें</h2><p data-t="choiceSub">ILS सरकारी पोर्टल नहीं है। सरकारी सेवाएँ, आवेदन, शुल्क और निर्णय संबंधित प्राधिकरण के अधीन रहते हैं।</p></div></div>
-<div class="choices">
-<div class="choice"><span class="num" data-t="option1">विकल्प 01</span><div class="icon">🆓</div><h3 data-t="c1">स्वयं सेवा — निःशुल्क</h3><p data-t="choice1Desc">आधिकारिक पोर्टल खुलेगा। ILS सीमित और सरल मार्गदर्शन देता है ताकि आप फ़ॉर्म स्वयं पूरा कर सकें।</p><ul><li data-t="choice1Li1">आधिकारिक वेबसाइट पर सीधे आवेदन करें</li><li data-t="choice1Li2">फ़ॉर्म के प्रत्येक फ़ील्ड के लिए मूल मार्गदर्शन</li><li data-t="choice1Li3">लागू सरकारी शुल्क अलग हो सकता है</li></ul><button class="btn ghost go" id="freeChoice" type="button" data-t="choice1Btn">निःशुल्क स्वयं सेवा →</button><span class="tag free" data-t="tagFree">कोई ILS सहायता शुल्क नहीं</span></div>
-<div class="choice"><span class="num" data-t="option2">विकल्प 02</span><div class="icon">📝</div><h3 data-t="c2">मार्गदर्शित स्वयं सेवा</h3><p data-t="choice2Desc">आप आधिकारिक फ़ॉर्म स्वयं पूरा करते हैं; ILS सशुल्क सारांश, दस्तावेज़ सूची और प्रत्येक फ़ील्ड के लिए मार्गदर्शन देता है।</p><ul><li data-t="choice2Li1">समस्या का सारांश</li><li data-t="choice2Li2">आवश्यक जानकारी की सूची</li><li data-t="choice2Li3">चरण-दर-चरण मार्गदर्शन</li></ul><button class="btn primary go" id="guidedChoice" type="button" data-t="choice2Btn">मार्गदर्शित सहायता देखें →</button><span class="tag paid" data-t="tagGuided">सशुल्क मार्गदर्शन</span></div>
-<div class="choice"><span class="num" data-t="option3">विकल्प 03</span><div class="icon">🧑‍💼</div><h3 data-t="c3">पेशेवर सहायता का अनुरोध करें</h3><p data-t="choice3Desc">यदि आप फ़ॉर्म स्वयं पूरा नहीं करना चाहते, तो सशुल्क सहयोगी सहायता का अनुरोध कर सकते हैं। काम शुरू होने से पहले कार्य-क्षेत्र और शुल्क स्पष्ट किए जाएंगे।</p><ul><li data-t="choice3Li1">जानकारी एकत्र करने में सहायता</li><li data-t="choice3Li2">फ़ॉर्म भरने में सहायता</li><li data-t="choice3Li3">काम से पहले कार्य-क्षेत्र और शुल्क की पुष्टि</li></ul><button class="btn blue go" id="associateChoice" type="button" data-t="choice3Btn">सहायता का अनुरोध करें →</button><span class="tag paid" data-t="tagPaid">सशुल्क सहायता</span></div>
-</div></div>
-</section>
 
-<section class="section alt" id="how">
-<div class="wrap"><div class="head"><div><h2 data-t="howTitle">ILS कैसे काम करता है</h2><p data-t="howSub">समस्या बताने से संबंधित आधिकारिक रास्ता खोजने तक की सरल प्रक्रिया।</p></div></div>
-<div class="route route-compact">
-<div class="step"><div class="n">1</div><b data-t="step1">अपनी समस्या बताइए</b><p data-t="step1Sub">हिंदी, अंग्रेज़ी, हिंग्लिश, उर्दू या आवाज़ में बताएं।</p></div>
-<div class="step"><div class="n">2</div><b data-t="step2">संबंधित रास्ता पहचानिए</b><p data-t="step2Sub">समस्या को सही श्रेणी और आधिकारिक रास्ते में व्यवस्थित करें।</p></div>
-<div class="step"><div class="n">3</div><b data-t="step6">अगले कदम</b><p data-t="step6Sub">जहाँ उपलब्ध हो, ILS टूल्स, पेशेवर सहायता या ट्रैकिंग का उपयोग करें।</p></div>
-</div></div>
-</section>
+
+
 
 <section class="section alt" id="official">
 <div class="wrap"><div class="head"><div><h2 data-t="officialTitle">Official routes • source checked</h2><p data-t="officialSub">These are external government portals. ILS does not replace them.</p></div></div>
@@ -823,7 +809,6 @@ document.addEventListener("DOMContentLoaded",()=>{
  });
  $("close").onclick=()=>{$("modal").classList.remove("open");$("modal").setAttribute("aria-hidden","true")};
  $("modal").addEventListener("click",e=>{if(e.target===$("modal"))$("close").click()});
- $("freeChoice").onclick=()=>routeChoice("free");$("guidedChoice").onclick=()=>routeChoice("guided");$("associateChoice").onclick=()=>routeChoice("associate");
  $("problem").addEventListener("input",()=>{
   if(selectedChipRoute && $("problem").value!==selectedChipValue){selectedChipRoute=null;selectedChipValue="";}
   if(governmentContextActive && $("problem").value.trim()!==governmentContextActive.seed) governmentContextActive=null;
