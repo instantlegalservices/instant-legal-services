@@ -236,6 +236,11 @@ window.ILS_TOOLS = (() => {
       data=createdOrder;
     }
 
+    if(options.autoPay===true){
+      await startRazorpay(data,onPaid,true);
+      return;
+    }
+
     const box=document.getElementById('toolStatus');
 
     if(box){
