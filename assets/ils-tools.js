@@ -237,7 +237,7 @@ window.ILS_TOOLS = (() => {
     }
 
     if(options.autoPay===true){
-      await startRazorpay(data,onPaid,true);
+      await startRazorpay(data,onPaid,true,options.paymentContainerId||"toolStatus");
       return;
     }
 
@@ -246,7 +246,7 @@ window.ILS_TOOLS = (() => {
     if(box){
       box.className='status ok';
       box.innerHTML=`Order <strong>${esc(data.order_number)}</strong> created for <strong>₹${Number(data.amount).toLocaleString('en-IN')}</strong>. <button type="button" class="btn btn-primary btn-small" id="payNowBtn" style="margin-left:8px">Pay Securely</button>`;
-      document.getElementById('payNowBtn').onclick=()=>startRazorpay(data,onPaid,options.forceQr===true);
+      document.getElementById('payNowBtn').onclick=()=>startRazorpay(data,onPaid,options.forceQr===true,options.paymentContainerId||'toolStatus');
     }
   }
 
@@ -254,7 +254,7 @@ window.ILS_TOOLS = (() => {
 // Keep the Razorpay implementation intact so it can be re-enabled later by changing this flag.
 const QR_ONLY_PAYMENT_MODE = true;
 
-async function startRazorpay(data,onPaid=null,forceQr=false){
+async function startRazorpay(data,onPaid=null,forceQr=false,containerId='toolStatus'){
   try {
     const sb = window.ILS?.ready?.();
 
@@ -293,7 +293,7 @@ async function startRazorpay(data,onPaid=null,forceQr=false){
     paymentError || paymentData
   );
 
-  const box = document.getElementById('toolStatus');
+  const box = document.getElementById(containerId) || document.getElementById('toolStatus');
   const amount = Number(data.amount || 0);
   const upiId = '8445609837@axl';
 
