@@ -357,7 +357,9 @@ document.addEventListener("DOMContentLoaded",()=>{
    const businessType=intakeService==="business-compliance"?(document.getElementById("businessType").value||""):"";
    const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
    const paidIntakeServices=new Set(["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr","business-compliance"]);
-   if(paidIntakeServices.has(intakeService)){
+   const requiresPaidCheckout=paidIntakeServices.has(intakeService)&&
+    (intakeService!=="business-compliance"||selectedOption==="GST return / notice / portal issue");
+   if(requiresPaidCheckout){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
     const details={mode:"popular-assistance",intake_source:"ils-universal-service-form",intake_service:intakeService,service_option:selectedOption,business_type:businessType,name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value,matter:document.getElementById("matter").value,brief:finalBrief.slice(0,3000)};
     s.className="status";s.textContent="Enquiry received. Preparing your ₹199 UPI payment…";
