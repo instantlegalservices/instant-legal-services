@@ -90,7 +90,7 @@ const { chromium } = require("playwright");
     const toolsModule=await (await page.request.get(base+"/assets/ils-tools.js")).text();
     if(!toolsModule.includes("'ils-enquiry-fee-199':'ils-enquiry-fee-199'")||!toolsModule.includes("if(options.autoPay===true)"))throw new Error("Dedicated fixed-price UPI checkout is not registered for immediate form checkout.");
     const assistanceSource=await (await page.request.get(base+"/assistance.html")).text();
-    for(const key of ["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr"]){
+    for(const key of ["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr","business-compliance"]){
       if(!assistanceSource.includes('"'+key+'"'))throw new Error("Marketplace enquiry checkout mapping missing: "+key);
     }
     if(!assistanceSource.includes('paidMarketplaceTraffic')||!assistanceSource.includes('isPaidMarketplaceTraffic'))throw new Error("Traffic Challan marketplace checkout mapping missing.");
