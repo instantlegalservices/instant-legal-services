@@ -98,6 +98,7 @@ const { chromium } = require("playwright");
     if(businessSource.includes('id="businessEnquiryForm"'))throw new Error("Business page must not create a second service enquiry form.");
     if(!businessSource.includes('href="assistance.html?service=business-compliance"'))throw new Error("Business enquiry must route to the universal existing form.");
     if(!assistanceSource.includes('"business-compliance"')||!assistanceSource.includes('intake_source:"ils-universal-service-form"'))throw new Error("Universal form business intake mapping/CRM marker missing.");
+    if(!assistanceSource.includes('intakeService!=="business-compliance"||selectedOption==="GST return / notice / portal issue"'))throw new Error("Only the previously paid GST business route may open the ₹199 checkout; other business enquiries must remain free.");
     if(!toolsModule.includes('requiresReentry:true')||toolsModule.includes('details:savedDetails'))throw new Error("Unauthenticated checkout must not persist customer intake details in browser storage.");
     if(!assistanceSource.includes('pending.requiresReentry')||!assistanceSource.includes('your enquiry details were not saved in the browser'))throw new Error("Assistance privacy-safe post-login re-entry notice is missing.");
     if(assistanceSource.includes('const d=pending.details'))throw new Error("Legacy browser-stored intake details must be cleared, never resumed.");
