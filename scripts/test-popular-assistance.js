@@ -12,6 +12,12 @@ const { chromium } = require("playwright");
     await page.route(/https:\/\/(cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|unpkg\.com\/@supabase\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:stub}));
     const base=(process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"");
     await page.goto(base+"/");
+    for (const selector of ["#choices", "#how", "#freeChoice", "#guidedChoice", "#associateChoice"]) {
+      if (await page.locator(selector).count() !== 0) throw new Error("Removed homepage section/control unexpectedly reappeared: " + selector);
+    }
+    for (const selector of ["#start", "#popular-assistance", "#business-lines", "#problems", "#official", "#judgments", "#advocates"]) {
+      if (await page.locator(selector).count() !== 1) throw new Error("Required homepage section missing or duplicated: " + selector);
+    }
     const cards=page.locator("#popular-assistance .popular-card");
     if(await cards.count()!==9)throw new Error("Expected nine Popular Assistance cards.");
     const heroEnd=await page.locator("#start").evaluate(el=>el.compareDocumentPosition(document.querySelector("#popular-assistance")) & Node.DOCUMENT_POSITION_FOLLOWING);
