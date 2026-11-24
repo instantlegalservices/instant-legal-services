@@ -192,7 +192,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 
 <section class="panel admin-workspace-panel" id="pricingControlPanel" data-admin-workspace="pricing">
 <h2>💰 Pricing & Professional Fee Control</h2>
-<p style="color:#9ca7b6;margin-top:-6px">Admin-only control. Service/tool prices are used by the existing order RPC at checkout. Professional/associate fees are configuration only until a service explicitly uses them. Every pricing change is recorded in the admin pricing audit.</p>
+<p style="color:#9ca7b6;margin-top:-6px">Admin-only control. Service/tool prices are used by the existing order RPC at checkout. Professional/associate fees are configuration only until a service explicitly uses them. Every pricing change is recorded in the admin pricing audit. The fee-credit setting is the amount Admin may deduct from ILS professional/service charges for the same matter after verifying the enquiry payment; government, court and third-party charges are excluded.</p>
 <div id="pricingMsg" class="msg"></div>
 <div class="toolbar" style="margin-top:14px"><input id="pricingSearch" placeholder="Search service, tool or category…"><button class="btnx secondary" id="refreshPricingBtn" type="button">↻ Refresh Pricing</button></div>
 <div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Service / Tool</th><th>Slug</th><th>Category</th><th>Current Price</th><th>New Price (₹)</th><th>Fee credit enabled</th><th>Credit (₹)</th><th>Action</th></tr></thead><tbody id="pricingBody"><tr><td colspan="8" style="text-align:center">Loading pricing…</td></tr></tbody></table></div>
