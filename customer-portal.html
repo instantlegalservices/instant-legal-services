@@ -111,15 +111,19 @@ async function loadPaymentHistory(){
   if(proofResult.error)throw proofResult.error;
   if(paymentResult.error)throw paymentResult.error;
   const requestById=new Map(requests.map(x=>[x.id,x])),serviceById=new Map(services.map(x=>[x.id,x]));
+  const intakeLabels={"legal-drafting":"Legal Drafting","money-recovery":"Money Recovery","gst-returns":"GST Assistance","consumer-banking-disputes":"Consumer & Banking Disputes","cyber-fraud-assistance":"Cyber Fraud Assistance","matrimonial-family":"Matrimonial & Family","property-documentation":"Property & Documentation","income-tax-itr":"Income Tax & ITR"};
   const proofByOrder=new Map(),gatewayByOrder=new Map();
   for(const p of proofResult.data||[])if(!proofByOrder.has(p.order_id))proofByOrder.set(p.order_id,p);
   for(const p of paymentResult.data||[])if(!gatewayByOrder.has(p.order_id))gatewayByOrder.set(p.order_id,p);
   target.innerHTML=orders.map(o=>{
    const req=requestById.get(o.service_request_id),svc=serviceById.get(req?.service_id),proof=proofByOrder.get(o.id),gateway=gatewayByOrder.get(o.id);
+   const intakeKey=req?.details?.intake_service;
+   const trafficRoute=[req?.details?.route,req?.details?.problem,req?.details?.official_route].filter(Boolean).join(" ");
+   const serviceLabel=intakeLabels[intakeKey]||(req?.details?.mode==="guided"&&/traffic.*echallan|echallan.*traffic/i.test(trafficRoute)?"Traffic Challan Assistance":(svc?.name||svc?.slug||"ILS Service"));
    const state=paymentLabel(o.status,proof?.status||gateway?.status);
    const ref=proof?.transaction_ref?String(proof.transaction_ref).replace(/^(.{4}).*(.{4})$/,"$1••••$2"):"";
    const date=o.created_at?new Date(o.created_at).toLocaleString("en-IN"):"—";
-   return '<article class="order-row"><strong>'+esc(svc?.name||svc?.slug||"ILS Service")+'</strong><div class="order-meta">Order: '+esc(o.order_number||o.id)+' · '+esc(date)+'</div><div style="font-weight:800;margin-top:5px">'+esc(o.currency||"INR")+' '+esc(Number(o.total||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}))+'</div><span class="payment-pill">'+esc(state)+'</span>'+(ref?'<div class="order-meta">UPI reference: '+esc(ref)+'</div>':"")+(proof?.submitted_at?'<div class="order-meta">Proof submitted: '+esc(new Date(proof.submitted_at).toLocaleString("en-IN"))+'</div>':"")+(proof?.verified_at?'<div class="order-meta">Verified: '+esc(new Date(proof.verified_at).toLocaleString("en-IN"))+'</div>':"")+(proof?.status==="rejected"&&proof?.verification_notes?'<div class="order-meta">Review note: '+esc(proof.verification_notes)+'</div>':"")+'</article>';
+   return '<article class="order-row"><strong>'+esc(serviceLabel)+'</strong><div class="order-meta">Order: '+esc(o.order_number||o.id)+' · '+esc(date)+'</div><div style="font-weight:800;margin-top:5px">'+esc(o.currency||"INR")+' '+esc(Number(o.total||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}))+'</div><span class="payment-pill">'+esc(state)+'</span>'+(ref?'<div class="order-meta">UPI reference: '+esc(ref)+'</div>':"")+(proof?.submitted_at?'<div class="order-meta">Proof submitted: '+esc(new Date(proof.submitted_at).toLocaleString("en-IN"))+'</div>':"")+(proof?.verified_at?'<div class="order-meta">Verified: '+esc(new Date(proof.verified_at).toLocaleString("en-IN"))+'</div>':"")+(proof?.status==="rejected"&&proof?.verification_notes?'<div class="order-meta">Review note: '+esc(proof.verification_notes)+'</div>':"")+'</article>';
   }).join("");
  }catch(e){target.textContent=e.message||"Unable to load payment history. Please refresh or sign in again.";}
 }
