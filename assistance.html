@@ -291,13 +291,13 @@ async function resumePendingCheckout(){
   }
   const current=location.pathname+location.search+location.hash;
   if(pending.returnTo!==current||!["official-route-guidance","digital-form-assistance","ils-enquiry-fee-199"].includes(pending.slug))return;
-  if(pending.requiresReentry){
+  if(pending.requiresReentry||pending.details){
+   // Also clear legacy pending records written by older versions of the checkout helper.
    sessionStorage.removeItem("ils_pending_checkout");
-   status("Welcome back. For your privacy, your enquiry details were not saved in the browser. Please re-enter the required details and submit again to create your ₹199 UPI order.","ok");
+   status("Welcome back. For your privacy, saved enquiry details were cleared from this browser. Please re-enter the required details and submit again to create your order.","ok");
    return;
   }
-  if(!pending.details)return;
-  const d=pending.details;
+  return;
   if(pending.slug==="ils-enquiry-fee-199"&&d.mode==="popular-assistance"){
    status("Welcome back. Restoring your saved enquiry and opening the existing UPI payment screen.");
    await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",d,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
