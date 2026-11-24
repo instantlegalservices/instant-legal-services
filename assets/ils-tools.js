@@ -121,6 +121,7 @@ window.ILS_TOOLS = (() => {
     'tool-output-micro-9':'tool-output-micro-9','tool-output-micro-19':'tool-output-micro-19','tool-output-micro-29':'tool-output-micro-29','tool-output-micro-39':'tool-output-micro-39',
     'official-route-guidance':'official-route-guidance',
     'digital-form-assistance':'digital-form-assistance',
+    'ils-enquiry-fee-199':'ils-enquiry-fee-199',
   };
 
   async function createOrder(slug, details, toolRunId=null, onPaid=null, options={}){
