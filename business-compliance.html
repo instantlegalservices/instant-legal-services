@@ -68,5 +68,13 @@
 </div></section>
 </main>
 <footer class="footer"><div class="wrap footer-grid"><div><strong>Instant Legal Services</strong><p>Business compliance and legal assistance pathways.</p><p>Independent assistance only; official filings and decisions remain with the relevant authority.</p></div><div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="government/">Government Services</a><a href="business-compliance.html">Business Compliance</a></div><div><strong>Resources</strong><a href="law-guide.html">Law Guide</a><a href="judgments.html">Judgments</a><a href="faq.html">FAQ</a></div><div><strong>Portals</strong><a href="customer-portal.html">Client Login</a><a href="advocate-register.html">Professional Network</a></div></div></footer>
-<script>/* Business service intake is handled by the single existing assistance.html form. */</script>
+<script>
+/* Business service intake is handled by the single existing assistance.html form. */
+(function(){
+ const params=new URLSearchParams(location.search);
+ if(params.get("service")!=="gst-returns")return;
+ const target="assistance.html?service=business-compliance&option="+encodeURIComponent("GST return / notice / portal issue");
+ document.querySelectorAll('a[href="assistance.html?service=business-compliance"]').forEach(link=>{link.href=target;});
+})();
+</script>
 </body></html>
