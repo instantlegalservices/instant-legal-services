@@ -83,6 +83,14 @@ document.addEventListener("DOMContentLoaded",()=>{
  const form=document.getElementById("businessEnquiryForm"); if(!form)return;
  const params=new URLSearchParams(window.location.search);
  if(params.get("service")==="gst-returns"){
+  const heading=document.querySelector("#business-enquiry .section-head h2");
+  const intro=document.querySelector("#business-enquiry .section-head p");
+  const submit=document.getElementById("bcSubmit");
+  const disclosure=document.querySelector("#bcSubmit + p + p");
+  if(heading)heading.textContent="Submit your GST assistance request";
+  if(intro)intro.textContent="Complete the GST enquiry form. After successful submission, the existing ILS UPI payment screen will show the one-time ₹199 initial enquiry and coordination fee. Any further professional fee and government charges, if applicable, are separate and will be disclosed before work begins.";
+  if(submit)submit.textContent="Submit GST request & continue to ₹199 payment";
+  if(disclosure)disclosure.textContent="The ₹199 payment is an initial ILS enquiry and coordination fee, not a government fee or a guarantee of filing, refund, notice resolution or other outcome. Further scope and charges are disclosed separately.";
   const service=document.getElementById("bcService");
   if(service)service.value="GST return / notice / portal issue";
   const brief=document.getElementById("bcBrief");
