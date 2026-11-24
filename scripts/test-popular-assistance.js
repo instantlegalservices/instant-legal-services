@@ -108,6 +108,8 @@ const { chromium } = require("playwright");
     if(!assistanceSource.includes('const mode=params.get("mode")')||!assistanceSource.includes('mode==="guided"')||!assistanceSource.includes('mode:"popular-assistance"'))throw new Error("Assistance marketplace/Traffic checkout mode handling is incomplete.");
     const migration=await (await page.request.get(base+"/supabase/migrations/20261124175000_add_ils_enquiry_fee_199.sql")).text().catch(()=> "");
     if(migration&&!migration.includes("'ils-enquiry-fee-199'"))throw new Error("₹199 service migration does not contain its dedicated service slug.");
+    const crmMigration=await (await page.request.get(base+"/supabase/migrations/20261124193000_link_universal_intake_to_existing_crm.sql")).text().catch(()=> "");
+    if(crmMigration&&(!crmMigration.includes("trg_ils_link_universal_intake_to_crm")||!crmMigration.includes("client_requirement_id")||!crmMigration.includes("ils-universal-service-form")))throw new Error("Universal service requests are not linked to the existing Admin CRM.");
     console.log("NINE_MARKETPLACE_JOURNEYS_FIXED_199_UPI_WIRING=PASS");
 
     const sitemap=await (await page.request.get(base+"/sitemap.xml")).text();
