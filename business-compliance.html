@@ -53,21 +53,11 @@
 </div></div></section>
 <section class="section alt" id="business-enquiry"><div class="wrap">
 <div class="section-head"><div><h2>Start with a free business enquiry</h2><p>No account or upfront payment is required to send an enquiry. We will review the requirement, confirm availability, scope and ILS service charges before you decide whether to proceed.</p></div></div>
-<form id="businessEnquiryForm" class="bc-card" style="max-width:820px;margin:0 auto">
-<div class="bc-form-grid">
-<div><label for="bcName">Your name</label><input id="bcName" name="name" autocomplete="name" maxlength="100" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
-<div><label for="bcMobile">10-digit mobile number</label><input id="bcMobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
-<div><label for="bcBusinessType">Business type</label><select id="bcBusinessType" name="business_type" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"><option value="">Select business type</option><option>Retail shop</option><option>Wholesale / Trading</option><option>Manufacturer</option><option>Factory / Workshop</option><option>Service business</option><option>Other</option></select></div>
-<div><label for="bcService">What help do you need?</label><select id="bcService" name="service" required style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"><option value="">Select a service</option><option>GST registration / amendment</option><option>GST return / notice / portal issue</option><option>Income tax / ITR assistance</option><option>Business registration</option><option>Business documents / drafting</option><option>Outstanding payment / recovery</option><option>Monthly / recurring compliance</option><option>Other business requirement</option></select></div>
-<div><label for="bcState">State</label><input id="bcState" name="state" maxlength="80" autocomplete="address-level1" style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
-<div><label for="bcCity">District / City</label><input id="bcCity" name="city" maxlength="100" autocomplete="address-level2" style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px"></div>
-</div><label for="bcBrief" style="display:block;margin-top:14px">Briefly describe your requirement</label>
-<textarea id="bcBrief" name="brief" maxlength="2500" required rows="4" style="width:100%;padding:12px;border:1px solid #cbd5df;border-radius:9px" placeholder="Example: I run a wholesale business and need monthly GST return assistance."></textarea>
-<label style="display:flex;gap:9px;align-items:flex-start;margin-top:14px;font-size:13px;font-weight:500"><input id="bcConsent" type="checkbox" required style="margin-top:3px"><span>I agree that ILS may contact me about this enquiry. I will not share passwords, OTPs, PINs or payment credentials.</span></label>
-<button id="bcSubmit" class="btn btn-primary" type="submit" style="margin-top:16px">Submit free enquiry</button>
-<p id="bcStatus" role="status" aria-live="polite" style="margin:12px 0 0;line-height:1.6"></p>
-<p style="font-size:12px;color:#536273;margin-top:10px">Submitting this form creates an enquiry only, not a paid order, professional engagement or government filing. Any ILS fee and official government charges will be disclosed separately before you commit.</p>
-</form></div></section>
+<div class="bc-card" style="max-width:820px;margin:0 auto">
+<p style="margin-top:0">All business service requests now use the same existing ILS service form. Select your business type, choose the required service and submit the details there.</p>
+<a id="universalBusinessEnquiry" class="btn btn-primary" href="assistance.html?service=business-compliance">Open the ILS service form</a>
+<p style="font-size:12px;color:#536273;margin-top:12px">The applicable ILS fee will be displayed before payment. Government charges, if any, are separate.</p>
+</div></div></section>
 <section class="section alt"><div class="wrap">
 <div class="section-head"><div><h2>How the service works</h2><p>A clear process, with scope and charges explained before you commit.</p></div></div>
 <div class="workflow"><div class="step"><b>1. Tell us what you need</b><p>Share your business type, service and relevant deadline. Do not send passwords or OTPs.</p></div><div class="step"><b>2. Confirm the scope</b><p>We identify the documents, work involved and whether specialist professional input is needed.</p></div><div class="step"><b>3. Review the fee</b><p>ILS service charges are shown separately from government fees, taxes or statutory payments.</p></div><div class="step"><b>4. Start the service</b><p>Work begins after your confirmation and any required payment or documents.</p></div></div>
@@ -78,69 +68,5 @@
 </div></section>
 </main>
 <footer class="footer"><div class="wrap footer-grid"><div><strong>Instant Legal Services</strong><p>Business compliance and legal assistance pathways.</p><p>Independent assistance only; official filings and decisions remain with the relevant authority.</p></div><div><strong>Services</strong><a href="assistance.html">Legal Assistance</a><a href="government/">Government Services</a><a href="business-compliance.html">Business Compliance</a></div><div><strong>Resources</strong><a href="law-guide.html">Law Guide</a><a href="judgments.html">Judgments</a><a href="faq.html">FAQ</a></div><div><strong>Portals</strong><a href="customer-portal.html">Client Login</a><a href="advocate-register.html">Professional Network</a></div></div></footer>
-<script>
-document.addEventListener("DOMContentLoaded",()=>{
- const form=document.getElementById("businessEnquiryForm"); if(!form)return;
- const params=new URLSearchParams(window.location.search);
- if(params.get("service")==="gst-returns"){
-  const heading=document.querySelector("#business-enquiry .section-head h2");
-  const intro=document.querySelector("#business-enquiry .section-head p");
-  const submit=document.getElementById("bcSubmit");
-  const disclosure=document.querySelector("#bcSubmit + p + p");
-  if(heading)heading.textContent="Submit your GST assistance request";
-  if(intro)intro.textContent="Complete the GST enquiry form. After successful submission, the existing ILS UPI payment screen will show the one-time ₹199 initial enquiry and coordination fee. Any further professional fee and government charges, if applicable, are separate and will be disclosed before work begins.";
-  if(submit)submit.textContent="Submit GST request & continue to ₹199 payment";
-  if(disclosure)disclosure.textContent="The ₹199 payment is an initial ILS enquiry and coordination fee, not a government fee or a guarantee of filing, refund, notice resolution or other outcome. Further scope and charges are disclosed separately.";
-  const service=document.getElementById("bcService");
-  if(service)service.value="GST return / notice / portal issue";
-  const brief=document.getElementById("bcBrief");
-  if(brief&&!brief.value)brief.value="I need assistance with GST services. Please contact me to confirm the required documents, scope and applicable charges.";
- }
- const status=document.getElementById("bcStatus"); const button=document.getElementById("bcSubmit");
- form.addEventListener("submit",async event=>{
-  event.preventDefault();
-  const mobile=document.getElementById("bcMobile").value.trim();
-  if(!/^[0-9]{10}$/.test(mobile)){status.textContent="Please enter a valid 10-digit mobile number.";return;}
-  if(!window.ILS?.submitRequirement){status.textContent="Enquiry service is loading. Please try again in a moment.";return;}
-  button.disabled=true;status.textContent="Submitting your enquiry…";
-  const businessType=document.getElementById("bcBusinessType").value;
-  const service=document.getElementById("bcService").value;
-  const details=["Business type: "+businessType,"Requested service: "+service,"Requirement: "+document.getElementById("bcBrief").value.trim()].join("\n");
-  try{
-   if(params.get("service")==="gst-returns"){
-    if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
-    status.textContent="Enquiry received. Preparing your ₹199 UPI payment…";
-    const checkoutDetails={mode:"popular-assistance",intake_service:"gst-returns",business_type:businessType,requested_service:service,name:document.getElementById("bcName").value.trim(),mobile,state:document.getElementById("bcState").value.trim(),city:document.getElementById("bcCity").value.trim(),matter:"Business Compliance — "+service,brief:details.slice(0,3000)};
-    await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",checkoutDetails,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"bcStatus"});
-    return;
-   }
-   await window.ILS.submitRequirement({name:document.getElementById("bcName").value.trim(),mobile,state:document.getElementById("bcState").value.trim(),city:document.getElementById("bcCity").value.trim(),matter:"Business Compliance — "+service,brief:details});
-   status.textContent="Your enquiry has been submitted. The ILS team will contact you to discuss scope, availability and applicable fees. No payment has been taken."; form.reset();
-  }catch(error){console.warn("Business enquiry submission failed.",error);status.textContent="We could not submit your enquiry. Your details remain on this form; please try again later or contact ILS.";}
-  finally{button.disabled=false;}
- });
- // Resume the GST marketplace checkout after the customer signs in.
- try{
-  const raw=sessionStorage.getItem("ils_pending_checkout");
-  if(raw){
-   const pending=JSON.parse(raw);
-   const current=location.pathname+location.search+location.hash;
-   if(pending?.details){
-    // Clear legacy sensitive intake records regardless of age or return URL.
-    sessionStorage.removeItem("ils_pending_checkout");
-    if(pending?.slug==="ils-enquiry-fee-199"&&pending?.returnTo===current){
-     status.textContent="Welcome back. Saved GST enquiry details were cleared from this browser for your privacy. Please re-enter the details and submit again to create your ₹199 UPI order.";
-     status.className="status ok";
-    }
-   }else if(pending?.requiresReentry&&pending?.slug==="ils-enquiry-fee-199"&&pending?.returnTo===current){
-    sessionStorage.removeItem("ils_pending_checkout");
-    status.textContent="Welcome back. For your privacy, enquiry details were not saved in the browser. Please re-enter the details and submit again to create your ₹199 UPI order.";
-    status.className="status ok";
-   }else if(!pending?.createdAt||Date.now()-pending.createdAt>30*60*1000){
-    sessionStorage.removeItem("ils_pending_checkout");
-   }
-  }
- }catch(error){console.warn("GST checkout resume could not be restored.",error);}
-});
-</script>
+<script>/* Business service intake is handled by the single existing assistance.html form. */</script>
 </body></html>
