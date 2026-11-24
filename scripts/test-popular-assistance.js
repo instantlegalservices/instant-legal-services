@@ -8,7 +8,7 @@ const { chromium } = require("playwright");
   const pageErrors=[];
   page.on("pageerror",error=>pageErrors.push(error.message));
   try {
-    const stub="window.supabase={createClient:function(){return {};}};";
+    const stub="window.supabase={createClient:function(){return {auth:{getSession:async()=>({data:{session:null}})}};}};";
     await page.route(/https:\/\/(cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|unpkg\.com\/@supabase\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:stub}));
     const base=(process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"");
     await page.goto(base+"/");
@@ -81,6 +81,12 @@ const { chromium } = require("playwright");
     }
     if(!customerPortal.includes("UPI proof submitted · Pending verification")||!customerPortal.includes("Paid · Verified")||!customerPortal.includes("UPI proof rejected"))throw new Error("Customer portal payment status labels are incomplete.");
     console.log("CUSTOMER_PORTAL_OWN_ORDERS_UPI_PAYMENT_STATUS=PASS");
+    await page.goto(base+"/customer-portal.html?returnTo="+encodeURIComponent("/assistance.html?service=consumer-banking-disputes")+"&mode=signup");
+    if(!(await page.locator("#signupPanel").isVisible()))throw new Error("Unauthenticated marketplace checkout must open the Create account panel first.");
+    if(!(await page.locator("#signupEmail").isVisible())||!(await page.locator("#signupPassword").isVisible()))throw new Error("Marketplace checkout signup must visibly request email and password.");
+    await page.locator("#tabLogin").click();
+    if(!(await page.locator("#loginPanel").isVisible()))throw new Error("Existing customers must be able to switch from signup to Sign in.");
+    console.log("MARKETPLACE_CHECKOUT_SIGNUP_FIRST_AND_EXISTING_LOGIN=PASS");
     const toolsModule=await (await page.request.get(base+"/assets/ils-tools.js")).text();
     if(!toolsModule.includes("'ils-enquiry-fee-199':'ils-enquiry-fee-199'")||!toolsModule.includes("if(options.autoPay===true)"))throw new Error("Dedicated fixed-price UPI checkout is not registered for immediate form checkout.");
     const assistanceSource=await (await page.request.get(base+"/assistance.html")).text();
