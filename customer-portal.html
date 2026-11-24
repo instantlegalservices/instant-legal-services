@@ -77,6 +77,8 @@ function show(mode){
  const login=mode==="login"; $("loginPanel").classList.toggle("hidden",!login);$("signupPanel").classList.toggle("hidden",login);
  $("tabLogin").classList.toggle("active",login);$("tabSignup").classList.toggle("active",!login);
 }
+// First-time checkout visitors should see account creation immediately; existing customers can switch to Sign in.
+show(returnTo && new URLSearchParams(location.search).get("mode")==="signup" ? "signup" : "login");
 function paymentLabel(orderStatus,proofStatus){
  const o=String(orderStatus||"").toLowerCase(),p=String(proofStatus||"").toLowerCase();
  if(o==="paid")return "Paid · Verified";
@@ -183,10 +185,6 @@ $("loginBtn").onclick=async()=>{
  }catch(e){status(e.message||"Unable to sign in.");}
  finally{$("loginBtn").disabled=false;}
 };
-</script>
-
-<script>
-(()=>{const activateRequestedClientTab=()=>{if(new URLSearchParams(window.location.search).get("mode")==="signup"){document.getElementById("tabSignup")?.click();}};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",activateRequestedClientTab,{once:true});else activateRequestedClientTab();})();
 </script>
 </body>
 </html>
