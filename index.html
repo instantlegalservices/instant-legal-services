@@ -809,7 +809,6 @@ document.addEventListener("DOMContentLoaded",()=>{
  });
  $("close").onclick=()=>{$("modal").classList.remove("open");$("modal").setAttribute("aria-hidden","true")};
  $("modal").addEventListener("click",e=>{if(e.target===$("modal"))$("close").click()});
- $("freeChoice").onclick=()=>routeChoice("free");$("guidedChoice").onclick=()=>routeChoice("guided");$("associateChoice").onclick=()=>routeChoice("associate");
  $("problem").addEventListener("input",()=>{
   if(selectedChipRoute && $("problem").value!==selectedChipValue){selectedChipRoute=null;selectedChipValue="";}
   if(governmentContextActive && $("problem").value.trim()!==governmentContextActive.seed) governmentContextActive=null;
