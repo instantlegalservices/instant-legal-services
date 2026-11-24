@@ -184,5 +184,9 @@ $("loginBtn").onclick=async()=>{
  finally{$("loginBtn").disabled=false;}
 };
 </script>
+
+<script>
+(()=>{const activateRequestedClientTab=()=>{if(new URLSearchParams(window.location.search).get("mode")==="signup"){document.getElementById("tabSignup")?.click();}};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",activateRequestedClientTab,{once:true});else activateRequestedClientTab();})();
+</script>
 </body>
 </html>
