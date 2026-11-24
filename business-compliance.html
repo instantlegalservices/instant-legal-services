@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    }
    await window.ILS.submitRequirement({name:document.getElementById("bcName").value.trim(),mobile,state:document.getElementById("bcState").value.trim(),city:document.getElementById("bcCity").value.trim(),matter:"Business Compliance — "+service,brief:details});
    status.textContent="Your enquiry has been submitted. The ILS team will contact you to discuss scope, availability and applicable fees. No payment has been taken."; form.reset();
-  }catch(error){status.textContent=error?.message||"We could not submit your enquiry. Your details remain on this form; please try again later or contact ILS.";}
+  }catch(error){console.warn("Business enquiry submission failed.",error);status.textContent="We could not submit your enquiry. Your details remain on this form; please try again later or contact ILS.";}
   finally{button.disabled=false;}
  });
  // Resume the GST marketplace checkout after the customer signs in.
