@@ -338,6 +338,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    const wrap=document.getElementById("serviceOptionWrap");
    const select=document.getElementById("serviceOption");
    wrap.classList.remove("hide");
+   select.required=true;
    choices.forEach(label=>{const option=document.createElement("option");option.value=label;option.textContent=label;select.appendChild(option);});
    if(serviceOption&&choices.includes(serviceOption))select.value=serviceOption;
   }
