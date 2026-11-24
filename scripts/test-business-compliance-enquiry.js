@@ -21,9 +21,14 @@ try {
   assert.equal(await page.locator("#businessType option").count(), 7, "existing business-type choices must be available");
   assert.equal(await page.locator("#serviceOption option").count(), 9, "business service choices must be available");
   assert.equal(await page.locator("#matter").inputValue(), "Commercial / Corporate");
+  await page.goto(new URL("business-compliance.html?service=gst-returns", baseUrl).toString(), { waitUntil: "domcontentloaded" });
+  await page.locator("#universalBusinessEnquiry").click();
+  await page.waitForURL(/assistance\.html\?service=business-compliance/);
+  assert.equal(await page.locator("#serviceOption").inputValue(), "GST return / notice / portal issue", "legacy GST entry route must preselect the GST option in the universal form.");
+
   assert.deepEqual(pageErrors, [], "page should not produce JavaScript errors");
 
-  console.log("PASS: business compliance uses the single existing universal service form with dynamic business/service choices.");
+  console.log("PASS: business compliance uses the single existing universal service form with dynamic business/service choices and preserves the legacy GST route.");
 } finally {
   await browser.close();
 }
