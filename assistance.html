@@ -368,7 +368,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
    }
-   await ILS.submitRequirement({name:document.getElementById("name").value,mobile,state,city,matter:document.getElementById("matter").value,brief:finalBrief});
+   await ILS.submitRequirement({name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief});
    s.className="status ok";s.textContent="Requirement submitted successfully. Please retain your details for follow-up.";form.reset()}catch(err){s.className="status err";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}
  );
 });
