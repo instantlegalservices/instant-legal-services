@@ -195,7 +195,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
 <p style="color:#9ca7b6;margin-top:-6px">Admin-only control. Service/tool prices are used by the existing order RPC at checkout. Professional/associate fees are configuration only until a service explicitly uses them. Every pricing change is recorded in the admin pricing audit.</p>
 <div id="pricingMsg" class="msg"></div>
 <div class="toolbar" style="margin-top:14px"><input id="pricingSearch" placeholder="Search service, tool or category…"><button class="btnx secondary" id="refreshPricingBtn" type="button">↻ Refresh Pricing</button></div>
-<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Service / Tool</th><th>Slug</th><th>Category</th><th>Current Price</th><th>New Price (₹)</th><th>Action</th></tr></thead><tbody id="pricingBody"><tr><td colspan="6" style="text-align:center">Loading pricing…</td></tr></tbody></table></div>
+<div class="table-wrap"><table class="action-queue-table"><thead><tr><th>Service / Tool</th><th>Slug</th><th>Category</th><th>Current Price</th><th>New Price (₹)</th><th>Fee credit enabled</th><th>Credit (₹)</th><th>Action</th></tr></thead><tbody id="pricingBody"><tr><td colspan="8" style="text-align:center">Loading pricing…</td></tr></tbody></table></div>
 <h3 style="margin-top:24px">Associate & Professional Fee Matrix</h3>
 <p style="color:#9ca7b6">Admin decides the configured fee for each professional type. No public user can create, edit or publish these rows.</p>
 <form id="professionalFeeForm" class="toolbar" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;align-items:end">
@@ -1476,17 +1476,68 @@ async function handleActionQueueAction(id,action){
  else return;
  try{const {error}=await sb.from("ils_action_assistance_queue").update(patch).eq("id",id);if(error)throw error;msg("actionQueueMsg",action==="complete"?"Associate request completed.":"Associate queue updated.","ok");await loadActionAssistanceQueue();}
  catch(e){console.error("Action queue update:",e);msg("actionQueueMsg","Queue update failed: "+(e?.message||"Unknown error"),"err");}}
-let pricingServiceRows=[], professionalFeeRows=[];
+let pricingServiceRows=[], professionalFeeRows=[], pricingPriceColumn="price";
 function clearProfessionalFeeForm(){["feeCode","feeName","feeAmount","feeNotes"].forEach(id=>$(id).value="");$("feeProfessionalType").value="advocate";$("feeBillingType").value="one_time";$("professionalFeeForm").dataset.editId="";$("saveProfessionalFeeBtn").textContent="Save Fee";}
 function renderPricingRows(){
  const body=$("pricingBody");if(!body)return;const q=($("pricingSearch")?.value||"").toLowerCase().trim();
  const rows=pricingServiceRows.filter(r=>!q||[r.name,r.slug,r.category].filter(Boolean).join(" ").toLowerCase().includes(q));
- body.innerHTML=rows.length?rows.map(r=>{const p=Number(r.price?.price||0);return '<tr><td><strong>'+esc(r.name||"—")+'</strong></td><td>'+esc(r.slug||"—")+'</td><td>'+esc(r.category||"—")+'</td><td>₹'+p.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td><input class="pricingNewValue" data-service-id="'+esc(r.id)+'" type="number" min="0" step="0.01" value="'+esc(p)+'"></td><td><button class="btnx primary pricingSaveBtn" type="button" data-service-id="'+esc(r.id)+'">Save</button></td></tr>';}).join(""):'<tr><td colspan="6" style="text-align:center">No services/tools found.</td></tr>';
- body.querySelectorAll(".pricingSaveBtn").forEach(btn=>btn.addEventListener("click",async()=>{const id=btn.dataset.serviceId,row=pricingServiceRows.find(x=>String(x.id)===String(id)),input=body.querySelector('.pricingNewValue[data-service-id="'+CSS.escape(id)+'"]'),amount=Number(input?.value),old=Number(row?.price?.price||0);if(!row||!Number.isFinite(amount)||amount<0){msg("pricingMsg","Enter a valid non-negative price.","err");return;}if(amount===old){msg("pricingMsg","No price change detected.","err");return;}if(!confirm("Change "+(row.name||row.slug)+" from ₹"+old.toLocaleString("en-IN")+" to ₹"+amount.toLocaleString("en-IN")+"?\n\nExisting paid orders will not be repriced."))return;btn.disabled=true;btn.textContent="Saving…";try{const result=row.price?.id?await sb.from("service_prices").update({price:amount,currency:"INR",is_active:true}).eq("id",row.price.id):await sb.from("service_prices").insert({service_id:row.id,price:amount,currency:"INR",billing_type:"one_time",is_active:true});if(result.error)throw result.error;msg("pricingMsg","Service/tool price updated. New orders will use the new price.","ok");await loadPricingControls();}catch(e){console.error(e);msg("pricingMsg","Price update failed: "+(e?.message||"Administrator access required."),"err");}finally{btn.disabled=false;btn.textContent="Save";}}));
+ body.innerHTML=rows.length?rows.map(r=>{
+  const p=Number(r.price?.price??r.price?.amount??0),enabled=Boolean(r.price?.fee_adjustment_enabled),credit=Number(r.price?.fee_adjustment_amount??0);
+  return '<tr><td><strong>'+esc(r.name||"—")+'</strong></td><td>'+esc(r.slug||"—")+'</td><td>'+esc(r.category||"—")+'</td><td>₹'+p.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td><input class="pricingNewValue" data-service-id="'+esc(r.id)+'" type="number" min="0" step="0.01" value="'+esc(p)+'"></td><td><label style="display:flex;align-items:center;gap:6px"><input class="pricingAdjustmentEnabled" data-service-id="'+esc(r.id)+'" type="checkbox" '+(enabled?'checked':'')+'> Enabled</label></td><td><input class="pricingAdjustmentAmount" data-service-id="'+esc(r.id)+'" type="number" min="0" step="0.01" value="'+esc(credit)+'" aria-label="Fee credit amount"></td><td><button class="btnx primary pricingSaveBtn" type="button" data-service-id="'+esc(r.id)+'">Save</button></td></tr>';
+ }).join(""):'<tr><td colspan="8" style="text-align:center">No services/tools found.</td></tr>';
+ body.querySelectorAll(".pricingSaveBtn").forEach(btn=>btn.addEventListener("click",async()=>{
+  const id=btn.dataset.serviceId,row=pricingServiceRows.find(x=>String(x.id)===String(id));
+  const input=body.querySelector('.pricingNewValue[data-service-id="'+CSS.escape(id)+'"]');
+  const toggle=body.querySelector('.pricingAdjustmentEnabled[data-service-id="'+CSS.escape(id)+'"]');
+  const creditInput=body.querySelector('.pricingAdjustmentAmount[data-service-id="'+CSS.escape(id)+'"]');
+  const amount=Number(input?.value),credit=Number(creditInput?.value),enabled=Boolean(toggle?.checked);
+  const old=Number(row?.price?.price??row?.price?.amount??0);
+  if(!row||!Number.isFinite(amount)||amount<0||!Number.isFinite(credit)||credit<0){msg("pricingMsg","Enter valid non-negative price and credit amounts.","err");return;}
+  if(enabled&&credit<=0){msg("pricingMsg","Enter a positive credit amount or disable fee adjustment.","err");return;}
+  if(enabled&&credit>amount){msg("pricingMsg","Fee credit cannot exceed the enquiry fee price.","err");return;}
+  const oldEnabled=Boolean(row.price?.fee_adjustment_enabled),oldCredit=Number(row.price?.fee_adjustment_amount??0);
+  if(amount===old&&enabled===oldEnabled&&credit===oldCredit){msg("pricingMsg","No pricing or adjustment change detected.","err");return;}
+  if(!confirm("Save "+(row.name||row.slug)+"?\nEnquiry price: ₹"+old.toLocaleString("en-IN")+" → ₹"+amount.toLocaleString("en-IN")+"\nFee credit: "+(oldEnabled?"Enabled ₹"+oldCredit:"Disabled")+" → "+(enabled?"Enabled ₹"+credit:"Disabled")+"\n\nExisting paid orders will not be repriced."))return;
+  btn.disabled=true;btn.textContent="Saving…";
+  try{
+   const payload={[pricingPriceColumn]:amount,currency:"INR",is_active:true,fee_adjustment_enabled:enabled,fee_adjustment_amount:enabled?credit:0};
+   if(row.price?.id){
+    const result=await sb.from("service_prices").update(payload).eq("id",row.price.id);
+    if(result.error)throw result.error;
+   }else{
+    payload.service_id=row.id;
+    if(pricingPriceColumn==="price")payload.billing_type="one_time";
+    const result=await sb.from("service_prices").insert(payload);
+    if(result.error)throw result.error;
+   }
+   msg("pricingMsg","Service price and fee-credit settings updated. New orders use the saved price; existing paid orders remain unchanged.","ok");
+   await loadPricingControls();
+  }catch(e){console.error(e);msg("pricingMsg","Price/fee-credit update failed: "+(e?.message||"Administrator access required."),"err");}
+  finally{btn.disabled=false;btn.textContent="Save";}
+ }));
 }
 async function loadPricingControls(){
- const pb=$("pricingBody"),fb=$("professionalFeeBody"),ab=$("pricingAuditBody");if(pb)pb.innerHTML='<tr><td colspan="6" style="text-align:center">Loading pricing…</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading fees…</td></tr>';
- try{const [a,b,d,e]=await Promise.all([sb.from("services").select("id,slug,name,category,is_active").order("name"),sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false}),sb.from("professional_fee_catalog").select("id,professional_type,fee_code,fee_name,amount,currency,billing_type,is_active,notes,updated_at").order("professional_type").order("fee_name"),sb.from("ils_admin_pricing_audit").select("entity_type,entity_id,old_value,new_value,changed_at").order("changed_at",{ascending:false}).limit(20)]);for(const x of [a,b,d,e])if(x.error)throw x.error;const latest={};(b.data||[]).forEach(p=>{if(!latest[p.service_id])latest[p.service_id]=p;});pricingServiceRows=(a.data||[]).map(s=>({...s,price:latest[s.id]||null}));professionalFeeRows=d.data||[];renderPricingRows();renderProfessionalFees();ab.innerHTML=(e.data||[]).length?(e.data||[]).map(r=>'<tr><td>'+esc(r.entity_type)+'</td><td>'+esc(r.entity_id)+'</td><td>'+esc(String(r.old_value?.price??r.old_value?.amount??"—"))+'</td><td>'+esc(String(r.new_value?.price??r.new_value?.amount??"—"))+'</td><td>'+esc(r.changed_at?new Date(r.changed_at).toLocaleString("en-IN"):"—")+'</td></tr>').join(""):'<tr><td colspan="5" style="text-align:center">No pricing changes recorded yet.</td></tr>';}catch(e){console.error("Pricing controls:",e);if(pb)pb.innerHTML='<tr><td colspan="6" style="text-align:center">Pricing unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Fees unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';}}
+ const pb=$("pricingBody"),fb=$("professionalFeeBody"),ab=$("pricingAuditBody");if(pb)pb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading pricing…</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading fees…</td></tr>';
+ try{
+  const [a,d,e]=await Promise.all([
+   sb.from("services").select("id,slug,name,category,is_active").order("name"),
+   sb.from("professional_fee_catalog").select("id,professional_type,fee_code,fee_name,amount,currency,billing_type,is_active,notes,updated_at").order("professional_type").order("fee_name"),
+   sb.from("ils_admin_pricing_audit").select("entity_type,entity_id,old_value,new_value,changed_at").order("changed_at",{ascending:false}).limit(20)
+  ]);
+  for(const x of [a,d,e])if(x.error)throw x.error;
+  let b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,fee_adjustment_enabled,fee_adjustment_amount,created_at").eq("is_active",true).order("created_at",{ascending:false});
+  pricingPriceColumn="price";
+  if(b.error&&["42703","PGRST204"].includes(b.error.code)){
+   b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,fee_adjustment_enabled,fee_adjustment_amount,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   pricingPriceColumn="amount";
+  }
+  if(b.error)throw b.error;
+  const latest={};(b.data||[]).forEach(p=>{if(!latest[p.service_id])latest[p.service_id]=p;});
+  pricingServiceRows=(a.data||[]).map(s=>({...s,price:latest[s.id]||null}));
+  professionalFeeRows=d.data||[];renderPricingRows();renderProfessionalFees();
+  ab.innerHTML=(e.data||[]).length?(e.data||[]).map(r=>'<tr><td>'+esc(r.entity_type)+'</td><td>'+esc(r.entity_id)+'</td><td>'+esc(String(r.old_value?.price??r.old_value?.amount??"—"))+'</td><td>'+esc(String(r.new_value?.price??r.new_value?.amount??"—"))+'</td><td>'+esc(r.changed_at?new Date(r.changed_at).toLocaleString("en-IN"):"—")+'</td></tr>').join(""):'<tr><td colspan="5" style="text-align:center">No pricing changes recorded yet.</td></tr>';
+ }catch(e){console.error("Pricing controls:",e);if(pb)pb.innerHTML='<tr><td colspan="8" style="text-align:center">Pricing unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Fees unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';}
+}
 function renderProfessionalFees(){
  const body=$("professionalFeeBody");if(!body)return;body.innerHTML=professionalFeeRows.length?professionalFeeRows.map(r=>'<tr><td>'+esc(r.professional_type)+'</td><td><strong>'+esc(r.fee_name)+'</strong><div class="queue-note">'+esc(r.fee_code)+'</div></td><td>₹'+Number(r.amount||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>'+esc(r.billing_type)+'</td><td>'+esc(r.is_active?"Active":"Inactive")+'</td><td>'+esc(r.notes||"")+'</td><td>'+esc(r.updated_at?new Date(r.updated_at).toLocaleString("en-IN"):"—")+'</td><td><button class="btnx secondary feeEditBtn" type="button" data-id="'+esc(r.id)+'">Edit</button> <button class="btnx secondary feeToggleBtn" type="button" data-id="'+esc(r.id)+'">'+(r.is_active?"Deactivate":"Activate")+'</button></td></tr>').join(""):'<tr><td colspan="8" style="text-align:center">No professional/associate fees configured. Admin can add them above.</td></tr>';
  body.querySelectorAll(".feeEditBtn").forEach(btn=>btn.addEventListener("click",()=>{const r=professionalFeeRows.find(x=>String(x.id)===String(btn.dataset.id));if(!r)return;$("feeProfessionalType").value=r.professional_type;$("feeCode").value=r.fee_code;$("feeName").value=r.fee_name;$("feeAmount").value=r.amount;$("feeBillingType").value=r.billing_type;$("feeNotes").value=r.notes||"";$("professionalFeeForm").dataset.editId=r.id;$("saveProfessionalFeeBtn").textContent="Update Fee";window.scrollTo({top:$("professionalFeeForm").getBoundingClientRect().top+window.scrollY-80,behavior:"smooth"});}));
