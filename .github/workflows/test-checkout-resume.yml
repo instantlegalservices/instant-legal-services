@@ -301,7 +301,7 @@ jobs:
           });
           NODE
 
-      - name: Verify real unauthenticated checkout resumes to TEST UPI QR
+      - name: Verify privacy-safe checkout re-entry and TEST UPI QR
         env:
           BASE_URL: http://127.0.0.1:4173
           ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
@@ -334,8 +334,8 @@ jobs:
                 if (!raw) return null;
                 try { return JSON.parse(raw); } catch { return null; }
               });
-              if (!saved?.checkoutIntentId || saved.slug !== 'official-route-guidance') {
-                throw new Error('CHECKOUT_INTENT_NOT_PERSISTED_BEFORE_SIGN_IN');
+              if (saved?.slug !== 'official-route-guidance' || saved.requiresReentry !== true || saved.details || saved.checkoutIntentId) {
+                throw new Error('PRIVACY_SAFE_CHECKOUT_MARKER_INVALID');
               }
 
               await page.locator('#loginEmail').fill(process.env.ILS_TEST_NONADMIN_CUSTOMER_EMAIL);
@@ -343,12 +343,23 @@ jobs:
               await page.locator('#loginBtn').click();
               await page.waitForURL(url => url.pathname === '/assistance.html' && url.searchParams.get('mode') === 'guided', { timeout: 20000 });
               await page.waitForFunction(() => {
+                const message = document.getElementById('paymentStatus')?.textContent || '';
+                return message.includes('details were not saved in the browser') && message.includes('re-enter');
+              }, null, { timeout: 15000 });
+              const markerAfterSignIn = await page.evaluate(() => sessionStorage.getItem('ils_pending_checkout'));
+              if (markerAfterSignIn !== null) {
+                throw new Error('PRIVACY_SAFE_REENTRY_MARKER_NOT_CLEARED');
+              }
+
+              // The customer re-enters/continues the guided request after sign-in; this creates a fresh order.
+              await page.locator('#payBtn').click();
+              await page.waitForFunction(() => {
                 const box = document.getElementById('toolStatus');
                 return !!box?.querySelector('#payNowBtn') || !!box?.innerText?.trim();
               }, null, { timeout: 20000 });
               const orderScreen = await page.locator('#toolStatus').innerText().catch(() => '');
               if (!await page.locator('#payNowBtn').count()) {
-                throw new Error('RESUMED_ORDER_BUTTON_MISSING: ' + (orderScreen || 'No order status displayed').slice(0, 250));
+                throw new Error('NEW_ORDER_PAYMENT_BUTTON_MISSING: ' + (orderScreen || 'No order status displayed').slice(0, 250));
               }
               await page.locator('#payNowBtn').click();
               await page.waitForSelector('#toolStatus img[src="assets/ils-upi-qr.jpg"]', { state: 'visible', timeout: 20000 });
