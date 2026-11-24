@@ -359,7 +359,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
     const details={mode:"popular-assistance",intake_service:intakeService,service_option:selectedOption,name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief.slice(0,3000)};
     s.className="status";s.textContent="Enquiry received. Preparing your ₹199 UPI payment…";
-    await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true});
+    await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
    }
    await ILS.submitRequirement({name:document.getElementById("name").value,mobile,state,city,matter:document.getElementById("matter").value,brief:finalBrief});
