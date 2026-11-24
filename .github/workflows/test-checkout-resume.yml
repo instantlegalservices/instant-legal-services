@@ -196,9 +196,9 @@ jobs:
                     mode: 'guided',
                     problem: 'cyber fraud',
                     route: 'cyber',
-                    checkout_intent_id: 'resume-e2e-intent'
+                    checkout_intent_id: 'legacy-sensitive-intent'
                   },
-                  checkoutIntentId: 'resume-e2e-intent',
+                  checkoutIntentId: 'legacy-sensitive-intent',
                   toolRunId: null,
                   returnTo,
                   createdAt: Date.now()
@@ -206,7 +206,10 @@ jobs:
               });
 
               await page.goto(process.env.BASE_URL + '/assistance.html?mode=guided&problem=cyber%20fraud&route=cyber');
-              await page.waitForFunction(() => document.getElementById('paymentStatus')?.textContent.includes('Payment verified. Order: ILS-MOCK-1'), null, { timeout: 5000 });
+              await page.waitForFunction(() => {
+                const status = document.getElementById('assistStatus') || document.getElementById('paymentStatus');
+                return (status?.textContent || '').includes('cleared from this browser for your privacy');
+              }, null, { timeout: 5000 });
 
               const config = await page.evaluate(() => window.__assistanceSupabaseConfig);
               if (config?.url !== 'https://bgsbuepolooybdqrzmoa.supabase.co' || config?.key !== 'sb_publishable_TEST_ONLY') {
@@ -214,16 +217,11 @@ jobs:
               }
 
               const call = await page.evaluate(() => window.__resumeCheckoutCall);
-              if (!call) throw new Error('Assistance page did not invoke the checkout module.');
-              if (call.slug !== 'official-route-guidance') throw new Error('Wrong service slug restored.');
-              if (call.details?.checkout_intent_id !== 'resume-e2e-intent') throw new Error('Checkout intent was not forwarded.');
-              if (call.options?.resumeCheckout !== true || call.options?.forceQr !== true) {
-                throw new Error('Resume checkout options were not preserved.');
-              }
+              if (call) throw new Error('Legacy browser-stored intake details were replayed into a new order.');
               const pending = await page.evaluate(() => sessionStorage.getItem('ils_pending_checkout'));
-              if (pending !== null) throw new Error('Saved checkout was not cleared after the simulated paid callback.');
+              if (pending !== null) throw new Error('Legacy sensitive checkout data was not cleared from session storage.');
 
-              console.log('PASS: assistance page restored the matching checkout, forwarded its intent and options, and cleared storage only after the simulated paid callback.');
+              console.log('PASS: legacy sensitive assistance checkout data is cleared and never replayed into a new order.');
             } finally {
               if (browser) await browser.close();
             }
