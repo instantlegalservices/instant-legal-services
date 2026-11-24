@@ -40,6 +40,7 @@ const { chromium } = require("playwright");
       const schema=await page.locator('script[type="application/ld+json"]').innerText();
       if(!schema.includes('"Service"')||!schema.includes('"BreadcrumbList"'))throw new Error(key+" Service/Breadcrumb structured data missing.");
       if(!(await page.locator("main a.cta").count()))throw new Error(key+" service enquiry action missing.");
+       if(await page.locator("main .fee-adjustment-note").count()!==1||!(await page.locator("main .fee-adjustment-note").innerText()).includes("credited towards"))throw new Error(key+" service page must disclose same-matter enquiry fee adjustment.");
     }
     const newRoutes={
       consumer:["consumer","services/consumer-banking-disputes/","consumer-banking-disputes","Consumer & Banking Dispute Assistance"],
@@ -63,6 +64,7 @@ const { chromium } = require("playwright");
       if(await page.locator("main .choice").count()!==4)throw new Error(key+" must show four clear service choices.");
       if(await page.locator("main .docs-panel li").count()<4)throw new Error(key+" required-document checklist missing.");
       if(await page.locator("main .fee-panel .fee-list>div").count()!==4)throw new Error(key+" fee structure must disclose four cost components.");
+       if(!(await page.locator("main .fee-panel").innerText()).includes("credited towards ILS professional"))throw new Error(key+" fee breakdown must explain enquiry fee credit.");
       const cta=page.locator("main a.cta");
       if(await cta.count()!==1||!(await cta.getAttribute("href")).includes("service="+serviceKey))throw new Error(key+" CTA does not route to its intake category.");
       const selectedHref=await page.locator("main .choice a").first().getAttribute("href");
@@ -97,6 +99,7 @@ const { chromium } = require("playwright");
     const businessSource=await (await page.request.get(base+"/business-compliance.html")).text();
     if(businessSource.includes('id="businessEnquiryForm"'))throw new Error("Business page must not create a second service enquiry form.");
     if(!businessSource.includes('href="assistance.html?service=business-compliance"'))throw new Error("Business enquiry must route to the universal existing form.");
+    if(await page.locator("#fee-adjustment-note").count()){}
     if(!assistanceSource.includes('"business-compliance"')||!assistanceSource.includes('intake_source:"ils-universal-service-form"'))throw new Error("Universal form business intake mapping/CRM marker missing.");
     if(!assistanceSource.includes('intakeService!=="business-compliance"||selectedOption==="GST return / notice / portal issue"'))throw new Error("Only the previously paid GST business route may open the ₹199 checkout; other business enquiries must remain free.");
     if(!toolsModule.includes('requiresReentry:true')||toolsModule.includes('details:savedDetails'))throw new Error("Unauthenticated checkout must not persist customer intake details in browser storage.");
@@ -118,6 +121,11 @@ const { chromium } = require("playwright");
     const robots=await (await page.request.get(base+"/robots.txt")).text();
     if(!robots.includes("Sitemap: https://instantlegalservices.in/sitemap.xml"))throw new Error("Existing robots sitemap directive missing.");
     await page.goto(base+"/popular-assistance.html?service=legal-drafting");
+    for(const [lang,phrase] of [["en-IN","credited towards ILS professional"],["hi-IN","पूरी राशि उसी मामले"],["hinglish","poori amount usi matter"],["ur-IN","پوری رقم اسی معاملے"],["bn-IN","পুরো অর্থ একই বিষয়"]]){
+      await page.selectOption("#language",lang);
+      const adjustment=await page.locator("#feeAdjustment").innerText();
+      if(!adjustment.includes(phrase))throw new Error("Fee adjustment disclosure missing for "+lang);
+    }
     if((await page.locator('meta[name="robots"]').getAttribute("content"))!=="noindex,follow")throw new Error("Query-driven duplicate service router must remain noindex.");
     await page.goto(base+"/business-compliance.html#business-enquiry");
     if(await page.locator("#businessEnquiryForm").count()!==0)throw new Error("Business page still contains a duplicate enquiry form.");
