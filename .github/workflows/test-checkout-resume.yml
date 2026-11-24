@@ -382,6 +382,7 @@ jobs:
                 if (!userResponse.ok) return { ok: false, reason: 'AUTH_USER_HTTP_' + userResponse.status };
                 const user = await userResponse.json();
                 const requestUrl = new URL(base + '/rest/v1/service_requests');
+                // Browser intent markers are deliberately cleared after re-entry; identify this fresh request by its test start time.
                 requestUrl.searchParams.set('select', 'id,details,created_at');
                 requestUrl.searchParams.set('user_id', 'eq.' + user.id);
                 requestUrl.searchParams.set('details->>problem', 'eq.cyber fraud');
