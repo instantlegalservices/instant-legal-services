@@ -332,6 +332,8 @@ jobs:
               await page.locator('#payBtn').waitFor({ state: 'visible', timeout: 15000 });
               await page.locator('#payBtn').click();
               await page.waitForURL(url => url.pathname === '/customer-portal.html', { timeout: 10000 });
+              // This E2E uses an existing customer; first-time visitors now see signup by default.
+              await page.locator('#tabLogin').click();
 
               const saved = await page.evaluate(() => {
                 const raw = sessionStorage.getItem('ils_pending_checkout');
