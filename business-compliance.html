@@ -124,7 +124,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   const raw=sessionStorage.getItem("ils_pending_checkout");
   if(raw){
    const pending=JSON.parse(raw),current=location.pathname+location.search+location.hash;
-   if(pending?.slug==="ils-enquiry-fee-199"&&pending?.details?.intake_service==="gst-returns"&&pending?.returnTo===current&&pending?.createdAt&&Date.now()-pending.createdAt<=30*60*1000){
+   if(pending?.requiresReentry&&pending?.slug==="ils-enquiry-fee-199"&&pending?.returnTo===current&&pending?.createdAt&&Date.now()-pending.createdAt<=30*60*1000){
+    sessionStorage.removeItem("ils_pending_checkout");
+    status.textContent="Welcome back. For your privacy, your GST enquiry details were not saved in the browser. Please re-enter the details and submit again to create your ₹199 UPI order.";
+    status.className="status ok";
+   }else if(pending?.slug==="ils-enquiry-fee-199"&&pending?.details?.intake_service==="gst-returns"&&pending?.returnTo===current&&pending?.createdAt&&Date.now()-pending.createdAt<=30*60*1000){
     status.textContent="Welcome back. Restoring your GST enquiry and opening the existing UPI payment screen…";
     window.ILS_TOOLS?.createOrder("ils-enquiry-fee-199",pending.details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"bcStatus"});
    }
