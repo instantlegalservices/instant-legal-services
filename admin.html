@@ -1525,22 +1525,31 @@ function renderPricingRows(){
 async function loadPricingControls(){
  const pb=$("pricingBody"),fb=$("professionalFeeBody"),ab=$("pricingAuditBody");if(pb)pb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading pricing…</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading fees…</td></tr>';
  try{
-  const [a,d,e]=await Promise.all([
+  let [a,d,e]=await Promise.all([
    sb.from("services").select("id,slug,name,category,is_active").order("name"),
    sb.from("professional_fee_catalog").select("id,professional_type,fee_code,fee_name,amount,currency,billing_type,is_active,notes,updated_at").order("professional_type").order("fee_name"),
    sb.from("ils_admin_pricing_audit").select("entity_type,entity_id,old_value,new_value,changed_at").order("changed_at",{ascending:false}).limit(20)
   ]);
-  for(const x of [a,d,e])if(x.error)throw x.error;
   const missingColumnError=err=>Boolean(err&&["42703","PGRST204"].includes(err.code));
+  if(missingColumnError(a.error)){
+   a=await sb.from("services").select("id,slug,name,category,status").order("name");
+   if(!a.error)a.data=(a.data||[]).map(s=>({...s,is_active:s.status==="active"}));
+  }
+  for(const x of [a,d,e])if(x.error)throw x.error;
   pricingPriceColumn="price";pricingAdjustmentColumnsAvailable=true;
   let b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,fee_adjustment_enabled,fee_adjustment_amount,created_at").eq("is_active",true).order("created_at",{ascending:false});
   if(missingColumnError(b.error)){
-   pricingAdjustmentColumnsAvailable=false;
-   b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   b=await sb.from("service_prices").select("id,service_id,amount,currency,fee_adjustment_enabled,fee_adjustment_amount,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   if(!b.error)pricingPriceColumn="amount";
   }
   if(missingColumnError(b.error)){
-   pricingPriceColumn="amount";
-   b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   pricingAdjustmentColumnsAvailable=false;
+   pricingPriceColumn="price";
+   b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   if(missingColumnError(b.error)){
+    pricingPriceColumn="amount";
+    b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   }
   }
   if(b.error)throw b.error;
   if(!pricingAdjustmentColumnsAvailable)msg("pricingMsg","Service pricing remains available. Fee-credit controls will activate after the approved database migration is applied.","");
