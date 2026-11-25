@@ -38,10 +38,17 @@ begin
         updated_at = v_now
   returning window_started_at, request_count into v_started, v_count;
 
-  if v_count % 256 = 0 then
-    delete from public.ils_ai_rate_limits
-     where updated_at < v_now - interval '2 hours';
-  end if;
+  -- Bounded stale-row cleanup on every call. The updated_at index keeps
+  -- selection bounded; SKIP LOCKED avoids waiting on concurrent limiter calls.
+  delete from public.ils_ai_rate_limits as stale
+   where (stale.key_hash, stale.window_seconds) in (
+     select candidate.key_hash, candidate.window_seconds
+       from public.ils_ai_rate_limits as candidate
+      where candidate.updated_at < v_now - interval '2 hours'
+      order by candidate.updated_at
+      limit 100
+      for update skip locked
+   );
 
   return pg_catalog.jsonb_build_object(
     'allowed', v_count <= p_limit,
