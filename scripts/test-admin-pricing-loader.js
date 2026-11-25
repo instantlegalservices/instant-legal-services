@@ -11,7 +11,7 @@ const { chromium } = require("playwright");
     const mock = String.raw`window.__pricingMockCalls = [];
 window.supabase = {
   createClient: () => ({
-    auth: { getSession: async () => ({ data: { session: null }, error: null }) },
+    auth: { getSession: async () => ({ data: { session: null }, error: null }), onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }) },
     rpc: async () => ({ data: false, error: null }),
     from(table) {
       const query = {
