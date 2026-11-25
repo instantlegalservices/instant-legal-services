@@ -549,12 +549,18 @@ async function loadLeads(){
       <td><select data-status="${esc(r.id)}">${statusOptions(r.status||"New")}</select></td>
       <td><select data-priority="${esc(r.id)}">${priorityOptions(r.priority||"Normal")}</select></td>
       <td>${esc(r.payment_status||"Pending")}</td>
-      <td class="actions-cell"><button class="btnx primary manageLead" data-id="${esc(r.id)}">Manage</button></td>
+      <td class="actions-cell"><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btnx primary manageLead" type="button" data-id="${esc(r.id)}">Manage</button><button class="btnx danger deleteLead" type="button" data-id="${esc(r.id)}" aria-label="Permanently delete lead ${esc(r.id)}">Delete</button></div></td>
     </tr>`;
   }).join("");
 
   document.querySelectorAll(".manageLead").forEach(btn=>{
     btn.addEventListener("click",()=>openLeadManager(btn.dataset.id));
+  });
+  document.querySelectorAll(".deleteLead").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      if(btn.disabled)return;
+      adminPermanentDelete("client",btn.dataset.id);
+    });
   });
 }
 
