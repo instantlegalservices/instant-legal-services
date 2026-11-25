@@ -1532,7 +1532,7 @@ async function loadPricingControls(){
   ]);
   const missingColumnError=err=>Boolean(err&&["42703","PGRST204"].includes(err.code));
   if(missingColumnError(a.error)){
-   a=await sb.from("services").select("id,slug,name,category,status").order("name");
+   a=await sb.from("services").select("id,slug,name,status").order("name");
    if(!a.error)a.data=(a.data||[]).map(s=>({...s,is_active:s.status==="active"}));
   }
   for(const x of [a,d,e])if(x.error)throw x.error;
