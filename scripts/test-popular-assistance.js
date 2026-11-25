@@ -119,7 +119,7 @@ const { chromium } = require("playwright");
     const feeMigration=await (await page.request.get(base+"/supabase/migrations/20261125000100_configure_ils_enquiry_fee_299_and_adjustment.sql")).text().catch(()=> "");
     if(feeMigration&&(!feeMigration.includes("299.00")||!feeMigration.includes("fee_adjustment_enabled = true")||!feeMigration.includes("fee_adjustment_amount = 299.00")))throw new Error("₹299 price and fee-adjustment migration is incomplete.");
     const adminSource=await (await page.request.get(base+"/admin.html")).text();
-    for(const marker of ["Fee credit enabled","pricingAdjustmentEnabled","fee_adjustment_enabled","fee_adjustment_amount","category,status","s.status===","service_id,amount,currency,fee_adjustment_enabled,fee_adjustment_amount","pricingPriceColumn="])if(!adminSource.includes(marker))throw new Error("Admin pricing schema compatibility/control missing: "+marker);
+    for(const marker of ["Fee credit enabled","pricingAdjustmentEnabled","fee_adjustment_enabled","fee_adjustment_amount","id,slug,name,status","s.status===","service_id,amount,currency,fee_adjustment_enabled,fee_adjustment_amount","pricingPriceColumn="])if(!adminSource.includes(marker))throw new Error("Admin pricing schema compatibility/control missing: "+marker);
     if(crmMigration&&(!crmMigration.includes("trg_ils_link_universal_intake_to_crm")||!crmMigration.includes("client_requirement_id")||!crmMigration.includes("ils-universal-service-form")))throw new Error("Universal service requests are not linked to the existing Admin CRM.");
     console.log("NINE_MARKETPLACE_JOURNEYS_FIXED_299_UPI_WIRING=PASS");
 
