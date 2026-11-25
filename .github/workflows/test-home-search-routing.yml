@@ -8,6 +8,7 @@ on:
       - "scripts/test-home-search-routing.js"
       - "scripts/test-home-judgment-cards.js"
       - "scripts/test-popular-assistance.js"
+      - "scripts/test-admin-pricing-loader.js"
       - "popular-assistance.html"
       - "business-compliance.html"
       - ".github/workflows/test-home-search-routing.yml"
@@ -59,3 +60,8 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:4173/
         run: node scripts/test-popular-assistance.js
+
+      - name: Run mocked Admin pricing loader regression
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: node scripts/test-admin-pricing-loader.js
