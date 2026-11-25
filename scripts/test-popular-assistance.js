@@ -20,8 +20,10 @@ const { chromium } = require("playwright");
     await page.selectOption("#language","en-IN");
     if(await page.locator("#popular-assistance-title").innerText()!=="Popular Assistance")throw new Error("English language did not localize Popular Assistance title.");
     if(!(await page.locator("#popular-assistance .legal small").innerText()).includes("Notices"))throw new Error("English card description remained untranslated.");
+     if(await page.locator("#popular-assistance .popular-fee-note").count()!==1||!(await page.locator("#popular-assistance .popular-fee-note").innerText()).includes("₹299 initial enquiry fee"))throw new Error("Homepage service cards must disclose the enquiry fee adjustment.");
     await page.selectOption("#language","hi-IN");
     if(await page.locator("#popular-assistance-title").innerText()!=="लोकप्रिय सहायता")throw new Error("Hindi language did not localize Popular Assistance title.");
+     if(!(await page.locator("#popular-assistance .popular-fee-note").innerText()).includes("पूरी राशि"))throw new Error("Homepage fee adjustment note did not localize to Hindi.");
     const routes={
       legal:"services/legal-drafting/",
       recovery:"services/money-recovery/",
@@ -40,6 +42,7 @@ const { chromium } = require("playwright");
       const schema=await page.locator('script[type="application/ld+json"]').innerText();
       if(!schema.includes('"Service"')||!schema.includes('"BreadcrumbList"'))throw new Error(key+" Service/Breadcrumb structured data missing.");
       if(!(await page.locator("main a.cta").count()))throw new Error(key+" service enquiry action missing.");
+       if(await page.locator("main .fee-adjustment-note").count()!==1||!(await page.locator("main .fee-adjustment-note").innerText()).includes("₹299 initial enquiry fee"))throw new Error(key+" service page must disclose same-matter enquiry fee adjustment.");
     }
     const newRoutes={
       consumer:["consumer","services/consumer-banking-disputes/","consumer-banking-disputes","Consumer & Banking Dispute Assistance"],
@@ -63,6 +66,7 @@ const { chromium } = require("playwright");
       if(await page.locator("main .choice").count()!==4)throw new Error(key+" must show four clear service choices.");
       if(await page.locator("main .docs-panel li").count()<4)throw new Error(key+" required-document checklist missing.");
       if(await page.locator("main .fee-panel .fee-list>div").count()!==4)throw new Error(key+" fee structure must disclose four cost components.");
+       if(!(await page.locator("main .fee-panel").innerText()).includes("₹299 initial enquiry fee"))throw new Error(key+" fee breakdown must explain enquiry fee credit.");
       const cta=page.locator("main a.cta");
       if(await cta.count()!==1||!(await cta.getAttribute("href")).includes("service="+serviceKey))throw new Error(key+" CTA does not route to its intake category.");
       const selectedHref=await page.locator("main .choice a").first().getAttribute("href");
@@ -97,8 +101,10 @@ const { chromium } = require("playwright");
     const businessSource=await (await page.request.get(base+"/business-compliance.html")).text();
     if(businessSource.includes('id="businessEnquiryForm"'))throw new Error("Business page must not create a second service enquiry form.");
     if(!businessSource.includes('href="assistance.html?service=business-compliance"'))throw new Error("Business enquiry must route to the universal existing form.");
+
     if(!assistanceSource.includes('"business-compliance"')||!assistanceSource.includes('intake_source:"ils-universal-service-form"'))throw new Error("Universal form business intake mapping/CRM marker missing.");
-    if(!assistanceSource.includes('intakeService!=="business-compliance"||selectedOption==="GST return / notice / portal issue"'))throw new Error("Only the previously paid GST business route may open the ₹199 checkout; other business enquiries must remain free.");
+    if(!assistanceSource.includes('intakeService!=="business-compliance"||selectedOption==="GST return / notice / portal issue"'))throw new Error("Only the previously paid GST business route may open the ₹299 checkout; other business enquiries must remain free.");
+    if(!assistanceSource.includes("₹299")||assistanceSource.includes("₹199"))throw new Error("Customer checkout must display ₹299 and must not retain ₹199 pricing copy.");
     if(!toolsModule.includes('requiresReentry:true')||toolsModule.includes('details:savedDetails'))throw new Error("Unauthenticated checkout must not persist customer intake details in browser storage.");
     if(!assistanceSource.includes('pending.requiresReentry')||!assistanceSource.includes('your enquiry details were not saved in the browser'))throw new Error("Assistance privacy-safe post-login re-entry notice is missing.");
     if(assistanceSource.includes('const d=pending.details'))throw new Error("Legacy browser-stored intake details must be cleared, never resumed.");
@@ -110,14 +116,23 @@ const { chromium } = require("playwright");
     const migration=await (await page.request.get(base+"/supabase/migrations/20261124175000_add_ils_enquiry_fee_199.sql")).text().catch(()=> "");
     if(migration&&!migration.includes("'ils-enquiry-fee-199'"))throw new Error("₹199 service migration does not contain its dedicated service slug.");
     const crmMigration=await (await page.request.get(base+"/supabase/migrations/20261124193000_link_universal_intake_to_existing_crm.sql")).text().catch(()=> "");
+    const feeMigration=await (await page.request.get(base+"/supabase/migrations/20261125000100_configure_ils_enquiry_fee_299_and_adjustment.sql")).text().catch(()=> "");
+    if(feeMigration&&(!feeMigration.includes("299.00")||!feeMigration.includes("fee_adjustment_enabled = true")||!feeMigration.includes("fee_adjustment_amount = 299.00")))throw new Error("₹299 price and fee-adjustment migration is incomplete.");
+    const adminSource=await (await page.request.get(base+"/admin.html")).text();
+    for(const marker of ["Fee credit enabled","pricingAdjustmentEnabled","fee_adjustment_enabled","fee_adjustment_amount"])if(!adminSource.includes(marker))throw new Error("Admin pricing fee-adjustment control missing: "+marker);
     if(crmMigration&&(!crmMigration.includes("trg_ils_link_universal_intake_to_crm")||!crmMigration.includes("client_requirement_id")||!crmMigration.includes("ils-universal-service-form")))throw new Error("Universal service requests are not linked to the existing Admin CRM.");
-    console.log("NINE_MARKETPLACE_JOURNEYS_FIXED_199_UPI_WIRING=PASS");
+    console.log("NINE_MARKETPLACE_JOURNEYS_FIXED_299_UPI_WIRING=PASS");
 
     const sitemap=await (await page.request.get(base+"/sitemap.xml")).text();
     for(const href of Object.values(routes))if(!sitemap.includes("https://instantlegalservices.in/"+href))throw new Error("Sitemap missing new service URL: "+href);
     const robots=await (await page.request.get(base+"/robots.txt")).text();
     if(!robots.includes("Sitemap: https://instantlegalservices.in/sitemap.xml"))throw new Error("Existing robots sitemap directive missing.");
     await page.goto(base+"/popular-assistance.html?service=legal-drafting");
+    for(const [lang,phrase] of [["en-IN","₹299"],["hi-IN","₹299"],["hinglish","₹299"],["ur-IN","₹299"],["bn-IN","₹299"]]){
+      await page.selectOption("#language",lang);
+      const adjustment=await page.locator("#feeAdjustment").innerText();
+      if(!adjustment.includes(phrase))throw new Error("Fee adjustment disclosure missing for "+lang);
+    }
     if((await page.locator('meta[name="robots"]').getAttribute("content"))!=="noindex,follow")throw new Error("Query-driven duplicate service router must remain noindex.");
     await page.goto(base+"/business-compliance.html#business-enquiry");
     if(await page.locator("#businessEnquiryForm").count()!==0)throw new Error("Business page still contains a duplicate enquiry form.");
