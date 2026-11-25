@@ -129,7 +129,30 @@ WITH CHECK (
   AND public.ils_is_admin()
 );
 
--- Preserve the intended public surface: pending-only uploads and approved-only reads.
+-- Recreate the narrowly scoped public surface explicitly. TEST may not yet have
+-- these policies even though Production does; bucket absence is not a reason to
+-- leave policy definitions missing from the restored TEST baseline.
+DROP POLICY IF EXISTS "ils_public_approved_advocate_photo_read" ON storage.objects;
+CREATE POLICY "ils_public_approved_advocate_photo_read"
+ON storage.objects
+FOR SELECT
+TO anon, authenticated
+USING (
+  bucket_id = 'advocate-photo'
+  AND name LIKE 'approved/%'
+);
+
+DROP POLICY IF EXISTS "ils_public_advocate_pending_insert" ON storage.objects;
+CREATE POLICY "ils_public_advocate_pending_insert"
+ON storage.objects
+FOR INSERT
+TO anon, authenticated
+WITH CHECK (
+  bucket_id = 'advocate-photo-pending'
+  AND name LIKE 'pending/%'
+);
+
+-- Verify the intended public surface: pending-only uploads and approved-only reads.
 DO $verify$
 DECLARE
   v_signature text;
