@@ -8,7 +8,7 @@ const { chromium } = require("playwright");
     const pageErrors = [];
     page.on("pageerror", error => pageErrors.push(error.message));
 
-    const mock = String.raw\`window.__pricingMockCalls = [];
+    const mock = String.raw`window.__pricingMockCalls = [];
 window.supabase = {
   createClient: () => ({
     auth: { getSession: async () => ({ data: { session: null }, error: null }) },
@@ -46,7 +46,7 @@ window.supabase = {
       return query;
     }
   })
-};\`;
+};`;
 
     await page.route("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2", route =>
       route.fulfill({ status: 200, contentType: "application/javascript", body: mock })
