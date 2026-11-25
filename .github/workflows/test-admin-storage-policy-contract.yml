@@ -1,0 +1,42 @@
+name: Admin Storage Identity Contract
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261123180000_harden_admin_storage_identity.sql"
+      - "supabase/functions/create-advocate-user/index.ts"
+      - "scripts/test-admin-storage-policy-contract.js"
+      - "scripts/test-admin-storage-policy-contract.sql"
+      - ".github/workflows/test-admin-storage-policy-contract.yml"
+  workflow_dispatch:
+
+jobs:
+  admin-storage-identity-contract:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ils_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ils_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify static admin storage contract
+        run: node scripts/test-admin-storage-policy-contract.js
+      - name: Apply migration and test admin/storage RLS in PostgreSQL
+        env:
+          PGPASSWORD: postgres
+        run: psql "postgresql://postgres@localhost:5432/ils_test" -v ON_ERROR_STOP=1 -f scripts/test-admin-storage-policy-contract.sql
