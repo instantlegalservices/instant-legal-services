@@ -138,6 +138,7 @@ const { chromium } = require("playwright");
     if(await page.locator("#businessEnquiryForm").count()!==0)throw new Error("Business page still contains a duplicate enquiry form.");
     await page.locator("#universalBusinessEnquiry").click();
     if(await page.locator("#assistForm").count()!==1)throw new Error("Business enquiry did not open the single universal form.");
+    await page.locator("#businessFields").waitFor({state:"visible",timeout:10000});
     if(!(await page.locator("#businessFields").isVisible()))throw new Error("Universal business-type field did not appear.");
     if((await page.locator("#serviceOption option").count())<8)throw new Error("Business service choices are missing from the universal form.");
     await page.goto(base+"/assistance.html?service=legal-drafting");

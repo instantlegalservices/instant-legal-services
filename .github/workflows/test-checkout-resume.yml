@@ -902,31 +902,31 @@ jobs:
                 }
                 if (orders[0].status !== 'pending') return { ok: false, reason: 'TEST_ORDER_NOT_PENDING' };
 
-                // Exercise the actual ₹199 marketplace price against TEST schema/RPC.
+                // Exercise the actual ₹299 marketplace price against TEST schema/RPC.
                 // This creates a pending TEST order only; it does not submit or approve a payment proof.
-                const feeIntent = 'ci-199-' + crypto.randomUUID();
+                const feeIntent = 'ci-299-' + crypto.randomUUID();
                 const feeResponse = await fetch(rpcUrl, {
                   method: 'POST',
                   headers: { ...headers, 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     p_service_slug: 'ils-enquiry-fee-199',
-                    p_details: { checkout_intent_id: feeIntent, test_run: true, source: 'github-actions-199-marketplace-smoke' },
+                    p_details: { checkout_intent_id: feeIntent, test_run: true, source: 'github-actions-299-marketplace-smoke' },
                     p_tool_run_id: null
                   })
                 });
                 const feeOrder = feeResponse.ok ? await feeResponse.json() : {};
                 if (!feeResponse.ok || !feeOrder.ok || !feeOrder.order_id ||
-                    Number(feeOrder.amount) !== 199 || feeOrder.currency !== 'INR' ||
+                    Number(feeOrder.amount) !== 299 || feeOrder.currency !== 'INR' ||
                     feeOrder.status !== 'pending') {
-                  return { ok: false, reason: 'ILS_199_MARKETPLACE_ORDER_INVALID: ' + (feeOrder.message || feeResponse.status) };
+                  return { ok: false, reason: 'ILS_299_MARKETPLACE_ORDER_INVALID: ' + (feeOrder.message || feeResponse.status) };
                 }
 
-                return { ok: true, idempotency: true, unpaid: true, marketplace199: true };
+                return { ok: true, idempotency: true, unpaid: true, marketplace299: true };
 
               });
 
               if (!verification.ok) throw new Error(verification.reason);
-              console.log('PASS: TEST customer RLS and checkout idempotency passed; ₹199 marketplace RPC created a pending INR 199 order. No payment proof was submitted or approved.');
+              console.log('PASS: TEST customer RLS and checkout idempotency passed; ₹299 marketplace RPC created a pending INR 299 order. No payment proof was submitted or approved.');
             } finally {
               if (browser) await browser.close();
             }

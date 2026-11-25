@@ -1476,14 +1476,14 @@ async function handleActionQueueAction(id,action){
  else return;
  try{const {error}=await sb.from("ils_action_assistance_queue").update(patch).eq("id",id);if(error)throw error;msg("actionQueueMsg",action==="complete"?"Associate request completed.":"Associate queue updated.","ok");await loadActionAssistanceQueue();}
  catch(e){console.error("Action queue update:",e);msg("actionQueueMsg","Queue update failed: "+(e?.message||"Unknown error"),"err");}}
-let pricingServiceRows=[], professionalFeeRows=[], pricingPriceColumn="price";
+let pricingServiceRows=[], professionalFeeRows=[], pricingPriceColumn="price", pricingAdjustmentColumnsAvailable=true;
 function clearProfessionalFeeForm(){["feeCode","feeName","feeAmount","feeNotes"].forEach(id=>$(id).value="");$("feeProfessionalType").value="advocate";$("feeBillingType").value="one_time";$("professionalFeeForm").dataset.editId="";$("saveProfessionalFeeBtn").textContent="Save Fee";}
 function renderPricingRows(){
  const body=$("pricingBody");if(!body)return;const q=($("pricingSearch")?.value||"").toLowerCase().trim();
  const rows=pricingServiceRows.filter(r=>!q||[r.name,r.slug,r.category].filter(Boolean).join(" ").toLowerCase().includes(q));
  body.innerHTML=rows.length?rows.map(r=>{
-  const p=Number(r.price?.price??r.price?.amount??0),enabled=Boolean(r.price?.fee_adjustment_enabled),credit=Number(r.price?.fee_adjustment_amount??0);
-  return '<tr><td><strong>'+esc(r.name||"—")+'</strong></td><td>'+esc(r.slug||"—")+'</td><td>'+esc(r.category||"—")+'</td><td>₹'+p.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td><input class="pricingNewValue" data-service-id="'+esc(r.id)+'" type="number" min="0" step="0.01" value="'+esc(p)+'"></td><td><label style="display:flex;align-items:center;gap:6px"><input class="pricingAdjustmentEnabled" data-service-id="'+esc(r.id)+'" type="checkbox" '+(enabled?'checked':'')+'> Enabled</label></td><td><input class="pricingAdjustmentAmount" data-service-id="'+esc(r.id)+'" type="number" min="0" step="0.01" value="'+esc(credit)+'" aria-label="Fee credit amount"></td><td><button class="btnx primary pricingSaveBtn" type="button" data-service-id="'+esc(r.id)+'">Save</button></td></tr>';
+  const p=Number(r.price?.price??r.price?.amount??0),enabled=pricingAdjustmentColumnsAvailable&&Boolean(r.price?.fee_adjustment_enabled),credit=Number(r.price?.fee_adjustment_amount??0);
+  return '<tr><td><strong>'+esc(r.name||"—")+'</strong></td><td>'+esc(r.slug||"—")+'</td><td>'+esc(r.category||"—")+'</td><td>₹'+p.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td><input class="pricingNewValue" data-service-id="'+esc(r.id)+'" type="number" min="0" step="0.01" value="'+esc(p)+'"></td><td><label style="display:flex;align-items:center;gap:6px"><input class="pricingAdjustmentEnabled" data-service-id="'+esc(r.id)+'" type="checkbox" '+(enabled?'checked':'')+(!pricingAdjustmentColumnsAvailable?' disabled':'')+'> Enabled</label></td><td><input class="pricingAdjustmentAmount" data-service-id="'+esc(r.id)+'" type="number" min="0" step="0.01" value="'+esc(credit)+'" aria-label="Fee credit amount" '+(!pricingAdjustmentColumnsAvailable?'disabled title="Apply the approved database migration to enable fee credit controls."':'')+'></td><td><button class="btnx primary pricingSaveBtn" type="button" data-service-id="'+esc(r.id)+'">Save</button></td></tr>';
  }).join(""):'<tr><td colspan="8" style="text-align:center">No services/tools found.</td></tr>';
  body.querySelectorAll(".pricingSaveBtn").forEach(btn=>btn.addEventListener("click",async()=>{
   const id=btn.dataset.serviceId,row=pricingServiceRows.find(x=>String(x.id)===String(id));
@@ -1500,7 +1500,7 @@ function renderPricingRows(){
   if(!confirm("Save "+(row.name||row.slug)+"?\nEnquiry price: ₹"+old.toLocaleString("en-IN")+" → ₹"+amount.toLocaleString("en-IN")+"\nFee credit: "+(oldEnabled?"Enabled ₹"+oldCredit:"Disabled")+" → "+(enabled?"Enabled ₹"+credit:"Disabled")+"\n\nExisting paid orders will not be repriced."))return;
   btn.disabled=true;btn.textContent="Saving…";
   try{
-   const payload={[pricingPriceColumn]:amount,currency:"INR",is_active:true,fee_adjustment_enabled:enabled,fee_adjustment_amount:enabled?credit:0};
+   const payload={[pricingPriceColumn]:amount,currency:"INR",is_active:true};if(pricingAdjustmentColumnsAvailable){payload.fee_adjustment_enabled=enabled;payload.fee_adjustment_amount=enabled?credit:0;}
    if(row.price?.id){
     const result=await sb.from("service_prices").update(payload).eq("id",row.price.id);
     if(result.error)throw result.error;
@@ -1525,13 +1525,19 @@ async function loadPricingControls(){
    sb.from("ils_admin_pricing_audit").select("entity_type,entity_id,old_value,new_value,changed_at").order("changed_at",{ascending:false}).limit(20)
   ]);
   for(const x of [a,d,e])if(x.error)throw x.error;
+  const missingColumnError=err=>Boolean(err&&["42703","PGRST204"].includes(err.code));
+  pricingPriceColumn="price";pricingAdjustmentColumnsAvailable=true;
   let b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,fee_adjustment_enabled,fee_adjustment_amount,created_at").eq("is_active",true).order("created_at",{ascending:false});
-  pricingPriceColumn="price";
-  if(b.error&&["42703","PGRST204"].includes(b.error.code)){
-   b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,fee_adjustment_enabled,fee_adjustment_amount,created_at").eq("is_active",true).order("created_at",{ascending:false});
+  if(missingColumnError(b.error)){
+   pricingAdjustmentColumnsAvailable=false;
+   b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+  }
+  if(missingColumnError(b.error)){
    pricingPriceColumn="amount";
+   b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
   }
   if(b.error)throw b.error;
+  if(!pricingAdjustmentColumnsAvailable)msg("pricingMsg","Service pricing remains available. Fee-credit controls will activate after the approved database migration is applied.","");
   const latest={};(b.data||[]).forEach(p=>{if(!latest[p.service_id])latest[p.service_id]=p;});
   pricingServiceRows=(a.data||[]).map(s=>({...s,price:latest[s.id]||null}));
   professionalFeeRows=d.data||[];renderPricingRows();renderProfessionalFees();
