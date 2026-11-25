@@ -16,6 +16,7 @@ on:
       - "assets/ils-tools.js"
       - "assets/ils-core.js"
       - "scripts/test-popular-assistance.js"
+      - "scripts/test-admin-pricing-loader.js"
       - ".github/workflows/test-checkout-resume.yml"
 
 jobs:
@@ -47,6 +48,11 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:4173
         run: node scripts/test-popular-assistance.js
+
+      - name: Verify Admin pricing loader against mocked TEST schema
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: node scripts/test-admin-pricing-loader.js
 
       - name: Verify checkout return and tab-scoped storage
         env:
