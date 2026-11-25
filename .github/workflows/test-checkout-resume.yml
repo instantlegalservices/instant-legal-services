@@ -17,6 +17,7 @@ on:
       - "assets/ils-core.js"
       - "scripts/test-popular-assistance.js"
       - "scripts/test-admin-pricing-loader.js"
+      - "scripts/test-admin-pricing-live-readonly.js"
       - ".github/workflows/test-checkout-resume.yml"
 
 jobs:
@@ -53,6 +54,15 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:4173
         run: node scripts/test-admin-pricing-loader.js
+      
+      - name: Verify live TEST Admin pricing read-only
+        if: ${{ github.event_name == 'push' && secrets.ILS_TEST_ADMIN_EMAIL != '' && secrets.ILS_TEST_ADMIN_PASSWORD != '' }}
+        env:
+          BASE_URL: http://127.0.0.1:4173
+          ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
+          ILS_TEST_ADMIN_PASSWORD: ${{ secrets.ILS_TEST_ADMIN_PASSWORD }}
+          ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
+        run: node scripts/test-admin-pricing-live-readonly.js
 
       - name: Verify checkout return and tab-scoped storage
         env:
