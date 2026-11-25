@@ -2,6 +2,12 @@ name: Checkout Resume UI E2E
 
 on:
   workflow_dispatch:
+    inputs:
+      run_test_database_e2e:
+        description: "Run authenticated TEST Supabase E2E (creates synthetic TEST orders/proofs)"
+        required: false
+        type: boolean
+        default: false
   push:
     paths:
       - "customer-portal.html"
@@ -10,6 +16,8 @@ on:
       - "assets/ils-tools.js"
       - "assets/ils-core.js"
       - "scripts/test-popular-assistance.js"
+      - "scripts/test-admin-pricing-loader.js"
+      - "scripts/test-admin-pricing-live-readonly.js"
       - ".github/workflows/test-checkout-resume.yml"
 
 jobs:
@@ -41,6 +49,19 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:4173
         run: node scripts/test-popular-assistance.js
+
+      - name: Verify Admin pricing loader against mocked TEST schema
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: node scripts/test-admin-pricing-loader.js
+      
+      - name: Verify live TEST Admin pricing read-only
+        env:
+          BASE_URL: http://127.0.0.1:4173
+          ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
+          ILS_TEST_ADMIN_PASSWORD: ${{ secrets.ILS_TEST_ADMIN_PASSWORD }}
+          ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
+        run: node scripts/test-admin-pricing-live-readonly.js
 
       - name: Verify checkout return and tab-scoped storage
         env:
@@ -305,6 +326,7 @@ jobs:
           NODE
 
       - name: Verify privacy-safe checkout re-entry and TEST UPI QR
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_test_database_e2e }}
         env:
           BASE_URL: http://127.0.0.1:4173
           ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
@@ -510,6 +532,7 @@ jobs:
           NODE
 
       - name: Reject synthetic TEST proof through admin.html
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_test_database_e2e }}
         env:
           BASE_URL: http://127.0.0.1:4173
           ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
@@ -706,6 +729,7 @@ jobs:
       ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
     steps:
       - name: Require protected TEST customer credentials
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_test_database_e2e }}
         shell: bash
         run: |
           if [[ -z "$ILS_TEST_NONADMIN_CUSTOMER_EMAIL" || -z "$ILS_TEST_NONADMIN_CUSTOMER_PASSWORD" ]]; then
@@ -734,6 +758,7 @@ jobs:
           curl --fail --silent --show-error "$BASE_URL/customer-portal.html" > /dev/null
 
       - name: Sign in against real TEST Supabase and verify customer profile
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_test_database_e2e }}
         run: |
           node <<'NODE'
           const { chromium } = require('playwright');
@@ -937,6 +962,7 @@ jobs:
           NODE
 
       - name: Verify admin payment-proof UI against TEST only
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_test_database_e2e }}
         env:
           BASE_URL: http://127.0.0.1:4173
           ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
