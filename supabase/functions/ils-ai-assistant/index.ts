@@ -1,3 +1,4 @@
+import { enforceAiRateLimit } from "../_shared/ai-rate-limit.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const json=(body:any,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type"}});
@@ -30,6 +31,7 @@ Deno.serve(async(req)=>{
 
   const supabaseUrl=Deno.env.get("SUPABASE_URL")||"";
   const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||Deno.env.get("SUPABASE_SECRET_KEY")||"";
+  let advocateUserId="";
   if(advocateMode){
     const auth=req.headers.get("Authorization")||"";
     if(!auth.toLowerCase().startsWith("bearer "))return json({ok:false,message:"Advocate Research AI requires login."},401);
@@ -39,6 +41,7 @@ Deno.serve(async(req)=>{
     if(!token)return json({ok:false,message:"Advocate Research AI requires login."},401);
     const {data:userData,error:userError}=await userClient.auth.getUser(token);
     if(userError||!userData.user)return json({ok:false,message:"Your login session is invalid or expired."},401);
+    advocateUserId=String(userData.user.id);
     const {data:adv,error:advError}=await userClient
       .from("advocate_registrations")
       .select("id,advocate_name,status,verification_status")
@@ -49,6 +52,9 @@ Deno.serve(async(req)=>{
     if(advError)return json({ok:false,message:"Advocate verification could not be completed."},503);
     if(!adv)return json({ok:false,message:"Advocate Research AI is available only to approved and verified ILS advocates."},403);
   }
+
+  const rateLimitResponse=await enforceAiRateLimit(req,advocateMode?advocateUserId:undefined);
+  if(rateLimitResponse)return rateLimitResponse;
 
   const baseSystem=`You are Instant Legal Services (ILS) Public Legal AI for Indian law. Produce professional, natural, precise work product, but never claim to be a human, lawyer, advocate, or eyewitness. The objective is human-quality usefulness, not imitation or concealment of AI authorship.\n\nEVIDENCE-FIRST RULES:\n1. Treat user-supplied facts, documents and evidence as the factual record; never add facts that are not supplied or verified.\n2. For current or legally material propositions, use authoritative-source search before stating them as fact.\n3. Prefer Indian primary/official sources: Supreme Court, relevant High Courts, India Code, Legislative Department/Gazette, Department of Justice, official eCourts and official tax/GST/MCA authorities where applicable.\n4. Never invent or guess a section, case name, citation, date, quotation, ratio, limitation period, procedural rule, evidence or factual circumstance.\n5. Separate FACTS, EVIDENCE, LAW, INFERENCE and UNCERTAINTY. Never present an inference as an established fact.\n6. Cross-check material legal propositions against the retrieved source before including them. If sources conflict, explicitly identify the conflict instead of choosing silently.\n7. If a material proposition cannot be verified, state: 'No verified answer is available from the authoritative sources searched.' Do not fill the gap from model memory.\n8. For drafting, preserve supplied facts exactly; do not fabricate names, dates, amounts, events, admissions, exhibits or citations. Use [VERIFY] markers where a required fact is missing.\n9. For evidence analysis, explain what the supplied evidence supports, what it does not establish, and what additional evidence would be needed.\n10. Do not guarantee a legal outcome or create an advocate-client relationship.\n11. Cite authoritative sources using the exact URLs returned by search.\n12. If authoritative verification is unavailable for a material legal conclusion, abstain from that conclusion.\n\nWrite naturally and professionally, with clear Indian legal drafting style. Do not use generic AI filler, exaggerated certainty, invented confidence, or unnecessary disclaimers. Answer structure: Issue; Facts/Evidence; Applicable law; Verified analysis; Draft/Action; Gaps to verify; Sources.`;
   const system=advocateMode
