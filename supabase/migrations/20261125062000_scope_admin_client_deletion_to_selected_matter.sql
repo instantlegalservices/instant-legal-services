@@ -2,8 +2,6 @@
 -- Preserve other matters and orders belonging to the same authenticated user.
 -- Harden admin deletion RPC for Edge Function service-role execution.
 -- The Edge Function authenticates the administrator and passes the actor UUID explicitly.
-drop function if exists public.ils_admin_delete_data(text,text);
-
 create or replace function public.ils_admin_delete_data(
   p_entity_type text,
   p_entity_id text,
@@ -78,7 +76,6 @@ begin
   v_id:=p_entity_id::bigint;
   select id into v_id from public.client_requirements where id=v_id for update;
   if not found then raise exception 'Client matter not found'; end if;
-  select user_id into v_user from public.customer_profiles where client_requirement_id=v_id limit 1;
   select coalesce(array_agg(sr.id),'{}'::uuid[]) into v_req_ids from public.service_requests sr where sr.client_requirement_id=v_id;
   select coalesce(array_agg(o.id),'{}'::uuid[]) into v_order_ids from public.orders o where o.service_request_id=any(v_req_ids);
 
@@ -100,7 +97,7 @@ begin
   delete from public.client_requirements where id=v_id;
   v_summary:=jsonb_build_object('client_matter_deleted',true,'service_requests_deleted',coalesce(array_length(v_req_ids,1),0),'orders_deleted',coalesce(array_length(v_order_ids,1),0));
   insert into public.ils_admin_deletion_audit(entity_type,entity_id,actor_user_id,summary) values(p_entity_type,p_entity_id,v_actor,v_summary);
-  return jsonb_build_object('ok',true,'entity_type',p_entity_type,'entity_id',p_entity_id,'auth_user_id',v_user,'storage',coalesce(v_storage,'[]'::jsonb),'summary',v_summary);
+  return jsonb_build_object('ok',true,'entity_type',p_entity_type,'entity_id',p_entity_id,'auth_user_id',null,'storage',coalesce(v_storage,'[]'::jsonb),'summary',v_summary);
 end;
 $function$;
 
