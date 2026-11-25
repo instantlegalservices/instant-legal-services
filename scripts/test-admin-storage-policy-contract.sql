@@ -120,10 +120,6 @@ WITH CHECK (bucket_id='advocate-photo' AND (auth.jwt()->>'email')='fahat29@gmail
 CREATE POLICY "Admin manage matter document objects" ON storage.objects FOR ALL TO authenticated
 USING (bucket_id='client-matter-documents' AND (auth.jwt()->>'email')='fahat29@gmail.com')
 WITH CHECK (bucket_id='client-matter-documents' AND (auth.jwt()->>'email')='fahat29@gmail.com');
-CREATE POLICY "ils_public_approved_advocate_photo_read" ON storage.objects FOR SELECT TO anon, authenticated
-USING (bucket_id='advocate-photo' AND name LIKE 'approved/%');
-CREATE POLICY "ils_public_advocate_pending_insert" ON storage.objects FOR INSERT TO anon, authenticated
-WITH CHECK (bucket_id='advocate-photo-pending' AND name LIKE 'pending/%');
 CREATE POLICY "Public can upload advocate photos" ON storage.objects FOR INSERT TO anon, authenticated
 WITH CHECK (bucket_id='advocate-photo' AND (storage.foldername(name))[1]='pending');
 
