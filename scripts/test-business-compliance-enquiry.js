@@ -91,7 +91,7 @@ try {
     window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
   });
   await page.locator("#assistForm button[type=submit]").click();
-  await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹199 UPI payment" }).waitFor();
+  await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299 UPI payment" }).waitFor();
   const order = await page.evaluate(() => window.__orderCall);
   assert.equal(order[0], "ils-enquiry-fee-199", "GST route must use the existing fixed-price service");
   assert.equal(order[1].intake_source, "ils-universal-service-form");
