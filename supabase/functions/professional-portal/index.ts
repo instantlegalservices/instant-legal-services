@@ -13,6 +13,49 @@ const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{
 
 const clean=(v:unknown)=>String(v??"").trim();
 
+async function loadAdvocateAssignments(admin:any,advocateId:number,status:unknown,verificationStatus:unknown){
+  const approved=String(status||"").trim().toLowerCase()==="approved"
+    && String(verificationStatus||"").trim().toLowerCase()==="approved";
+  if(!approved) return [];
+
+  const {data:links,error:linksError}=await admin
+    .from("advocate_assignments")
+    .select("id,lead_id,status,assigned_at,client_can_see_contact")
+    .eq("advocate_id",advocateId)
+    .in("status",["Assigned","Active"])
+    .order("assigned_at",{ascending:false});
+  if(linksError) throw linksError;
+
+  const assignments=Array.isArray(links)?links:[];
+  const leadIds=[...new Set(assignments
+    .map((item:any)=>Number(item.lead_id))
+    .filter((id:number)=>Number.isSafeInteger(id)&&id>0))];
+  if(!leadIds.length) return [];
+
+  const {data:leads,error:leadsError}=await admin
+    .from("client_requirements")
+    .select("id,client_name,legal_matter,brief_requirement,state,district_city,status,priority,assigned_advocate_id,assigned_advocate,created_at")
+    .in("id",leadIds);
+  if(leadsError) throw leadsError;
+
+  const leadById=new Map((Array.isArray(leads)?leads:[])
+    .map((lead:any)=>[String(lead.id),lead]));
+  return assignments.flatMap((assignment:any)=>{
+    const leadId=Number(assignment.lead_id);
+    if(!Number.isSafeInteger(leadId)||leadId<=0) return [];
+    const lead=leadById.get(String(leadId));
+    if(!lead) return [];
+    return [{
+      assignment_id:assignment.id,
+      lead_id:leadId,
+      assigned_at:assignment.assigned_at,
+      status:assignment.status,
+      client_can_see_contact:assignment.client_can_see_contact===true,
+      client:lead
+    }];
+  });
+};
+
 Deno.serve(async(req)=>{
   if(req.method==="OPTIONS") return new Response("ok",{status:200,headers:corsHeaders});
   if(req.method!=="GET" && req.method!=="POST") return json({ok:false,message:"Method not allowed."},405);
@@ -44,9 +87,13 @@ Deno.serve(async(req)=>{
 
     if(adv?.[0]){
       const a=adv[0];
+      const assignments=await loadAdvocateAssignments(
+        admin,a.id,a.status,a.verification_status
+      );
       return json({
         ok:true,
         role:"advocate",
+        assignments,
         profile:{
           id:a.id,
           name:a.advocate_name,
