@@ -67,4 +67,25 @@ END
 $expiry$;
 RESET ROLE;
 
-\echo PASS: grants, empty search_path, threshold, expiry reset and invalid-input rejection verified on PostgreSQL 16.
+-- Stale rows are reclaimed even when this key has low request volume.
+INSERT INTO public.ils_ai_rate_limits(key_hash,window_seconds,window_started_at,request_count,updated_at)
+VALUES (repeat('f',64),60,clock_timestamp()-interval '3 hours',1,clock_timestamp()-interval '3 hours');
+SET ROLE service_role;
+DO $cleanup$
+DECLARE
+  v_result jsonb;
+BEGIN
+  v_result := public.ils_ai_rate_limit_check(repeat('e',64),10,60);
+  IF (v_result->>'allowed')::boolean IS NOT TRUE THEN RAISE EXCEPTION 'cleanup probe request should pass'; END IF;
+END
+$cleanup$;
+RESET ROLE;
+DO $cleanup_verify$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.ils_ai_rate_limits WHERE key_hash=repeat('f',64)) THEN
+    RAISE EXCEPTION 'stale rate-limit row was not reclaimed';
+  END IF;
+END
+$cleanup_verify$;
+
+\echo PASS: grants, empty search_path, threshold, expiry reset, stale-row cleanup and invalid-input rejection verified on PostgreSQL 16.
