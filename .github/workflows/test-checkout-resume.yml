@@ -56,7 +56,6 @@ jobs:
         run: node scripts/test-admin-pricing-loader.js
       
       - name: Verify live TEST Admin pricing read-only
-        if: ${{ github.event_name == 'push' && secrets.ILS_TEST_ADMIN_EMAIL != '' && secrets.ILS_TEST_ADMIN_PASSWORD != '' }}
         env:
           BASE_URL: http://127.0.0.1:4173
           ILS_TEST_ADMIN_EMAIL: ${{ secrets.ILS_TEST_ADMIN_EMAIL }}
