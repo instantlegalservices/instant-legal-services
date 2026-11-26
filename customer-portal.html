@@ -77,6 +77,10 @@ function show(mode){
  const login=mode==="login"; $("loginPanel").classList.toggle("hidden",!login);$("signupPanel").classList.toggle("hidden",login);
  $("tabLogin").classList.toggle("active",login);$("tabSignup").classList.toggle("active",!login);
 }
+// Direct account-entry links must honor mode=signup even when no checkout returnTo exists.
+const requestedMode=new URLSearchParams(location.search).get("mode");
+show(requestedMode==="signup"?"signup":"login");
+
 function paymentLabel(orderStatus,proofStatus){
  const o=String(orderStatus||"").toLowerCase(),p=String(proofStatus||"").toLowerCase();
  if(o==="paid")return "Paid · Verified";
