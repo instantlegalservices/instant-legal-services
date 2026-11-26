@@ -440,7 +440,7 @@ jobs:
                 return !!img && img.complete && img.naturalWidth > 0;
               }, null, { timeout: 10000 });
 
-              const checkoutIntentId = await page.evaluate(() => activeCheckoutIntentId);
+              const checkoutIntentId = await page.evaluate(() => window.__ilsActiveCheckoutIntentId);
               const result = await page.evaluate(async ({ startedAt, checkoutIntentId }) => {
                 const authKey = 'sb-bgsbuepolooybdqrzmoa-auth-token';
                 const session = JSON.parse(localStorage.getItem(authKey) || '{}');
