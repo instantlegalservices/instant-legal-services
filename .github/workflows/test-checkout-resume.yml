@@ -656,17 +656,29 @@ jobs:
                   poll();
                 });
                 // Reject any stale ILSTEST-only pending proofs left by earlier interrupted CI attempts.
+                const cleanupFailures = [];
                 for (const stale of upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
                   const cleanup = await sb.rpc('ils_admin_verify_upi_payment_proof', {
                     p_proof_id: stale.id,
                     p_decision: 'rejected',
                     p_notes: 'TEST cleanup only: synthetic ILSTEST proof from interrupted CI; no payment occurred.'
                   });
-                  // Another parallel CI attempt may have decided the same proof; the fresh list below is authoritative.
+                  if (cleanup.error || !cleanup.data?.ok) {
+                    cleanupFailures.push({
+                      proofId: String(stale.id).slice(0, 8),
+                      reason: cleanup.error?.message || cleanup.data?.message || 'ADMIN_REJECTION_NOT_CONFIRMED'
+                    });
+                  }
                 }
                 await loadUpiProofs();
-                if (upiProofRows.some(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
-                  return { ok: false, reason: 'SYNTHETIC_PENDING_PROOFS_REMAIN' };
+                const remainingPending = upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending');
+                if (remainingPending.length) {
+                  return {
+                    ok: false,
+                    reason: 'SYNTHETIC_PENDING_PROOFS_REMAIN',
+                    remainingCount: remainingPending.length,
+                    cleanupFailures
+                  };
                 }
                 const proof = upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected').sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0))[0];
                 if (!proof) return { ok: false, reason: 'ADMIN_UI_DID_NOT_REFRESH_REJECTED_PROOF' };
