@@ -106,6 +106,51 @@ Deno.serve(async(req)=>{
       });
     }
 
+    // Associate accounts are resolved only through the authenticated user's own trust profile.
+    // This maps the verified PROFESSIONAL_ASSOCIATE identity to the portal's existing role key,
+    // allowing the existing associate notification-center RPCs to be used without a new backend.
+    const {data:associate,error:associateError}=await admin
+      .from("ils_associate_trust_profiles")
+      .select("id,role_type,display_name,city,state,public_role_label,profile_status,identity_verified,qualification_verified,professional_registration_verified,capability_verified,public_profile_enabled")
+      .eq("user_id",uid)
+      .eq("role_type","PROFESSIONAL_ASSOCIATE")
+      .order("created_at",{ascending:false})
+      .limit(1);
+
+    if(associateError) return json({ok:false,message:"Unable to verify your associate profile.",code:"ASSOCIATE_PROFILE_LOOKUP_FAILED"},503);
+
+    if(associate?.[0]){
+      const a=associate[0];
+      const verified=a.identity_verified===true
+        && a.qualification_verified===true
+        && a.professional_registration_verified===true
+        && a.capability_verified===true;
+      const active=String(a.profile_status||"").toUpperCase()==="ACTIVE";
+      return json({
+        ok:true,
+        role:"assistant_associate",
+        profile:{
+          id:a.id,
+          name:a.display_name,
+          email:user.email,
+          mobile:null,
+          state:a.state,
+          city:a.city,
+          specialization:a.public_role_label||"Assistant / Associate",
+          experience:0
+        },
+        status:active?"Approved":String(a.profile_status||"Pending"),
+        verification_status:verified?"Approved":"Pending",
+        public_profile:a.public_profile_enabled===true,
+        approved_at:null,
+        undertaking_accepted:false,
+        capabilities:{
+          professional_tools:active&&verified,
+          research_ai:false
+        }
+      });
+    }
+
     return json({ok:false,message:"This login is not linked to an ILS professional registration.",code:"PROFILE_NOT_FOUND"},403);
   }catch(error){
     console.error("professional-portal:",error);
