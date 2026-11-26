@@ -107,7 +107,7 @@ const SUPABASE_KEY=window.ILS_SUPABASE_KEY || "sb_publishable_D5eFcgWFELtnym0K74
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 function esc(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
-function setWorkspaceView(view){const allowed=new Set(["overview","services","account","orders","notifications"]);const next=allowed.has(view)?view:"overview";document.querySelectorAll("[data-workspace-panel]").forEach(panel=>{panel.hidden=panel.dataset.workspacePanel!==next;});if($("workspaceNav"))$("workspaceNav").value=next;}
+function setWorkspaceView(view){const allowed=new Set(["overview","matters","services","account","orders","notifications"]);const next=allowed.has(view)?view:"overview";document.querySelectorAll("[data-workspace-panel]").forEach(panel=>{panel.hidden=panel.dataset.workspacePanel!==next;});if($("workspaceNav"))$("workspaceNav").value=next;}
 function status(msg,ok=false){$("status").textContent=msg;$("status").className="status "+(ok?"ok":"err");}
 const returnParam=new URLSearchParams(location.search).get("returnTo");
 function safeReturnTo(value){
