@@ -440,7 +440,8 @@ jobs:
                 return !!img && img.complete && img.naturalWidth > 0;
               }, null, { timeout: 10000 });
 
-              const result = await page.evaluate(async (startedAt) => {
+              const checkoutIntentId = await page.evaluate(() => activeCheckoutIntentId);
+              const result = await page.evaluate(async ({ startedAt, checkoutIntentId }) => {
                 const authKey = 'sb-bgsbuepolooybdqrzmoa-auth-token';
                 const session = JSON.parse(localStorage.getItem(authKey) || '{}');
                 if (!session.access_token) return { ok: false, reason: 'AUTH_SESSION_MISSING_AFTER_RESUME' };
@@ -454,7 +455,6 @@ jobs:
                 const user = await userResponse.json();
                 const requestUrl = new URL(base + '/rest/v1/service_requests');
                 // Isolate this exact checkout attempt; other CI jobs share the same protected TEST customer.
-                const checkoutIntentId = await page.evaluate(() => activeCheckoutIntentId);
                 if (typeof checkoutIntentId !== 'string' || !checkoutIntentId) {
                   return { ok: false, reason: 'CHECKOUT_INTENT_ID_MISSING' };
                 }
@@ -502,7 +502,7 @@ jobs:
                   return { ok: false, reason: 'REAL_UPI_PAYMENT_SCREEN_INCOMPLETE' };
                 }
                 return { ok: true, requestCount: requests.length, orderCount: orders.length, itemCount: items.length, proofCount: proofs.length, status: orders[0].status };
-              }, testStartedAt);
+              }, { startedAt: testStartedAt, checkoutIntentId });
 
               if (!result.ok) throw new Error(result.reason);
 
