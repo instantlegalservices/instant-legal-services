@@ -113,7 +113,7 @@ Deno.serve(async(req)=>{
       .from("ils_associate_trust_profiles")
       .select("id,role_type,display_name,city,state,public_role_label,profile_status,identity_verified,qualification_verified,professional_registration_verified,capability_verified,public_profile_enabled")
       .eq("user_id",uid)
-      .eq("role_type","PROFESSIONAL_ASSOCIATE")
+      .eq("role_type","ASSISTANT")
       .order("created_at",{ascending:false})
       .limit(1);
 
@@ -125,7 +125,7 @@ Deno.serve(async(req)=>{
         && a.qualification_verified===true
         && a.professional_registration_verified===true
         && a.capability_verified===true;
-      const active=String(a.profile_status||"").toUpperCase()==="ACTIVE";
+      const active=String(a.profile_status||"").toUpperCase()==="VERIFIED";
       return json({
         ok:true,
         role:"assistant_associate",
