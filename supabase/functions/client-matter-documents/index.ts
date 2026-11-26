@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
     if (!targetClient) return json({ ok: false, message: "Client matter could not be identified." }, 400);
     const adminAccess = await isAdmin(user);
     const advocateAccess = await isAssignedAdvocate(user, targetClient.id);
-    const clientAccess = !!(accessToken && mobile);
+    clientAccess = clientAccess || !!(accessToken && mobile);
     if (!adminAccess && !advocateAccess && !clientAccess) return json({ ok: false, message: "You are not authorized for this matter." }, 403);
 
     if (action === "list") {
