@@ -1031,57 +1031,49 @@ jobs:
               console.log('PASS: TEST customer RLS and checkout idempotency passed; ₹299 marketplace RPC created a pending INR 299 order; authenticated customer portal rendered a delivered source-event notification. No payment proof was submitted or approved.');
 
               // Verify a second, pre-provisioned TEST customer cannot read the first customer's source-event notification.
-              const secondContext = await browser.newContext();
-              try {
-                const secondPage = await secondContext.newPage();
-                await secondPage.addInitScript(({ url, key }) => {
-                  window.ILS_SUPABASE_URL = url;
-                  window.ILS_SUPABASE_KEY = key;
-                }, { url: process.env.ILS_TEST_SUPABASE_URL, key: process.env.ILS_TEST_SUPABASE_KEY });
-                await secondPage.goto(process.env.BASE_URL + '/customer-portal.html', { waitUntil: 'domcontentloaded' });
-                await secondPage.locator('#loginEmail').fill(process.env.ILS_TEST_SECOND_CUSTOMER_EMAIL);
-                await secondPage.locator('#loginPassword').fill(process.env.ILS_TEST_SECOND_CUSTOMER_PASSWORD);
-                await secondPage.locator('#loginBtn').click();
-                await secondPage.waitForFunction(() => {
-                  const dashboard = document.getElementById('clientDashboard');
-                  const statusText = document.getElementById('status')?.textContent?.trim();
-                  return (!!dashboard && !dashboard.classList.contains('hidden')) ||
-                    (!!statusText && statusText !== 'Ready');
-                }, null, { timeout: 20000 });
-                const secondLoginState = await secondPage.evaluate(() => ({
-                  dashboardVisible: !document.getElementById('clientDashboard')?.classList.contains('hidden'),
-                  statusText: document.getElementById('status')?.textContent?.trim() || ''
-                }));
-                if (!secondLoginState.dashboardVisible) {
-                  throw new Error('SECOND_CUSTOMER_LOGIN_FAILED: ' + (secondLoginState.statusText || 'No portal status message was rendered.'));
-                }
-                const isolation = await secondPage.evaluate(async ({ firstCustomerId, sourceRequestId }) => {
-                  const authKey = 'sb-bgsbuepolooybdqrzmoa-auth-token';
-                  let session;
-                  try { session = JSON.parse(localStorage.getItem(authKey) || '{}'); }
-                  catch { return { ok: false, reason: 'SECOND_CUSTOMER_SESSION_INVALID' }; }
-                  if (!session.access_token) return { ok: false, reason: 'SECOND_CUSTOMER_ACCESS_TOKEN_MISSING' };
-                  const base = window.ILS_SUPABASE_URL;
-                  const headers = { apikey: window.ILS_SUPABASE_KEY, Authorization: 'Bearer ' + session.access_token };
-                  const userResponse = await fetch(base + '/auth/v1/user', { headers });
-                  if (!userResponse.ok) return { ok: false, reason: 'SECOND_CUSTOMER_AUTH_USER_HTTP_' + userResponse.status };
-                  const user = await userResponse.json();
-                  if (!user.id || user.id === firstCustomerId) return { ok: false, reason: 'SECOND_CUSTOMER_ID_NOT_DISTINCT' };
-                  const url = new URL(base + '/rest/v1/ils_notification_customer_projection');
-                  url.searchParams.set('select', 'id,user_id');
-                  url.searchParams.set('source_record_id', 'eq.' + sourceRequestId);
-                  const response = await fetch(url, { headers });
-                  if (!response.ok) return { ok: false, reason: 'SECOND_CUSTOMER_PROJECTION_HTTP_' + response.status };
-                  const rows = await response.json();
-                  if (!Array.isArray(rows)) return { ok: false, reason: 'SECOND_CUSTOMER_PROJECTION_INVALID_RESPONSE' };
-                  if (rows.length !== 0) return { ok: false, reason: 'CROSS_CUSTOMER_NOTIFICATION_LEAK', visibleRows: rows.length };
-                  return { ok: true, distinctIdentity: true, visibleRows: 0 };
-                }, { firstCustomerId: verification.userId, sourceRequestId: verification.requestId });
-                if (!isolation.ok) throw new Error(isolation.reason);
-                console.log('PASS: second authenticated TEST customer has a distinct identity and cannot read the first customer source-event notification.');
-              } finally {
-                await secondContext.close();
+              // Authenticate directly against TEST Auth: RLS is the subject of this assertion,
+              // not the customer portal's browser rendering or session-storage behaviour.
+              const base = process.env.ILS_TEST_SUPABASE_URL;
+              const apiKey = process.env.ILS_TEST_SUPABASE_KEY;
+              const login = await fetch(base + '/auth/v1/token?grant_type=password', {
+                method: 'POST',
+                headers: { apikey: apiKey, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: process.env.ILS_TEST_SECOND_CUSTOMER_EMAIL,
+                  password: process.env.ILS_TEST_SECOND_CUSTOMER_PASSWORD
+                })
+              });
+              if (!login.ok) throw new Error('SECOND_CUSTOMER_AUTH_HTTP_' + login.status);
+              const session = await login.json();
+              if (!session.access_token || !session.user?.id) {
+                throw new Error('SECOND_CUSTOMER_AUTH_RESPONSE_INVALID');
               }
+              if (session.user.id === verification.userId) {
+                throw new Error('SECOND_CUSTOMER_ID_NOT_DISTINCT');
+              }
+              const headers = {
+                apikey: apiKey,
+                Authorization: 'Bearer ' + session.access_token
+              };
+              const userResponse = await fetch(base + '/auth/v1/user', { headers });
+              if (!userResponse.ok) throw new Error('SECOND_CUSTOMER_AUTH_USER_HTTP_' + userResponse.status);
+              const secondUser = await userResponse.json();
+              if (secondUser.id !== session.user.id || secondUser.id === verification.userId) {
+                throw new Error('SECOND_CUSTOMER_IDENTITY_VERIFICATION_FAILED');
+              }
+              const projectionUrl = new URL(base + '/rest/v1/ils_notification_customer_projection');
+              projectionUrl.searchParams.set('select', 'id,user_id');
+              projectionUrl.searchParams.set('source_record_id', 'eq.' + verification.requestId);
+              const projectionResponse = await fetch(projectionUrl, { headers });
+              if (!projectionResponse.ok) {
+                throw new Error('SECOND_CUSTOMER_PROJECTION_HTTP_' + projectionResponse.status);
+              }
+              const rows = await projectionResponse.json();
+              if (!Array.isArray(rows)) throw new Error('SECOND_CUSTOMER_PROJECTION_INVALID_RESPONSE');
+              if (rows.length !== 0) {
+                throw new Error('CROSS_CUSTOMER_NOTIFICATION_LEAK: visible rows=' + rows.length);
+              }
+              console.log('PASS: second authenticated TEST customer has a distinct identity and cannot read the first customer source-event notification.');
             } finally {
               if (browser) await browser.close();
             }
