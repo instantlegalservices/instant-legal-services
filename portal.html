@@ -217,8 +217,8 @@ async function loadPortal(){
   const p=r.data;
   currentProfessionalRole=p.role||null;
   $("loginPanel").classList.add("portal-hidden");
-  await loadProfessionalNotifications(client,session.user.id,currentProfessionalRole);
   $("portalPanel").classList.remove("portal-hidden");
+  void loadProfessionalNotifications(client,session.user.id,currentProfessionalRole);
   $("welcome").textContent=p.profile?.name||"Professional";
   $("roleBadge").textContent="✓ "+roleName(p.role);
   const status=(p.status||"Pending"), verification=(p.verification_status||"Pending");
