@@ -220,7 +220,7 @@ $("signupBtn").onclick=async()=>{
    const name=$("signupName").value.trim(),email=$("signupEmail").value.trim(),password=$("signupPassword").value;
    if(!name||!email||!password) throw new Error("Full name, email and password are required.");
    if(password.length<8) throw new Error("Password must be at least 8 characters.");
-   const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:name,mobile:$("signupMobile").value.trim()||null}}});
+   const {data,error}=await sb.auth.signUp({email,password,options:{data:{account_type:"customer",full_name:name,mobile:$("signupMobile").value.trim()||null}}});
    if(error) throw error;
    if(!data.user) throw new Error("AUTH_USER_NOT_CREATED");
    if(data.session){
