@@ -6,11 +6,13 @@ on:
     paths:
       - "index.html"
       - "customer-portal.html"
+      - "supabase/functions/client-matter-documents/index.ts"
       - "scripts/test-popular-assistance.js"
       - ".github/workflows/test-checkout-resume.yml"
   push:
     paths:
       - "customer-portal.html"
+      - "supabase/functions/client-matter-documents/index.ts"
       - "portal.html"
       - "supabase/functions/professional-portal/index.ts"
       - "assistance.html"
@@ -101,6 +103,28 @@ jobs:
               console.log('PASS: isolated Associate UI contract rendered unread count and notification safely, called the owner-scoped mark-read RPC, and refreshed the card to Read. This is not authenticated Associate E2E.');
             } finally { if (browser) await browser.close(); }
           })().catch(error => { console.error('ASSOCIATE_NOTIFICATION_UI_TEST_FAILURE:', error && error.stack ? error.stack : error); process.exitCode = 1; });
+          NODE
+
+      - name: Verify matter document upload validation contract
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const source = fs.readFileSync('supabase/functions/client-matter-documents/index.ts', 'utf8');
+          const checks = [
+            ['15 MB upload cap', /MAX_FILE_SIZE = 15 \* 1024 \* 1024/],
+            ['extension allowlist', /ALLOWED_DOCUMENT_TYPES/],
+            ['MIME and extension match', /rule\.mime\.includes\(mime\)/],
+            ['PDF signature', /rule\.signature === "pdf"/],
+            ['JPEG signature', /rule\.signature === "jpeg"/],
+            ['PNG signature', /rule\.signature === "png"/],
+            ['legacy Office signature', /rule\.signature === "ole"/],
+            ['DOCX structure', /word\/document\.xml/],
+            ['XLSX structure', /xl\/workbook\.xml/],
+            ['validation before storage write', /validateDocumentFile\(file\)[\s\S]*?Storage upload failed/]
+          ];
+          const failed = checks.filter(([name, pattern]) => !pattern.test(source)).map(([name]) => name);
+          if (failed.length) throw new Error('Document validation contract failed: ' + failed.join(', '));
+          console.log('PASS: document upload validation contract — ' + checks.length + ' checks. Static contract only; not a browser upload E2E.');
           NODE
 
       - name: Verify Popular Assistance marketplace and SEO journeys
