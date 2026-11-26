@@ -1045,7 +1045,8 @@ jobs:
                 await secondPage.waitForFunction(() => {
                   const dashboard = document.getElementById('clientDashboard');
                   const statusText = document.getElementById('status')?.textContent?.trim();
-                  return (!!dashboard && !dashboard.classList.contains('hidden')) || !!statusText;
+                  return (!!dashboard && !dashboard.classList.contains('hidden')) ||
+                    (!!statusText && statusText !== 'Ready');
                 }, null, { timeout: 20000 });
                 const secondLoginState = await secondPage.evaluate(() => ({
                   dashboardVisible: !document.getElementById('clientDashboard')?.classList.contains('hidden'),
