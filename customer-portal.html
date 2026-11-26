@@ -45,6 +45,13 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 <section id="clientDashboard" class="hidden" style="margin-top:20px;border-top:1px solid var(--line);padding-top:20px">
 <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2 style="margin:0">My Orders &amp; Payments</h2><p class="note">Your service orders and UPI payment verification status are visible only to your signed-in account.</p></div><button id="refreshPayments" type="button" class="tab" style="flex:0 0 auto">Refresh</button></div>
 <div id="paymentHistory" class="note" style="margin-top:12px">Loading your orders…</div>
+<div style="border-top:1px solid var(--line);margin-top:20px;padding-top:18px">
+ <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+  <div><h2 style="margin:0">Notifications</h2><p class="note">Recent account updates and service progress messages.</p></div>
+  <button id="refreshNotifications" type="button" class="tab" style="flex:0 0 auto">Refresh</button>
+ </div>
+ <div id="customerNotifications" class="note" style="margin-top:12px">Loading notifications…</div>
+</div>
 <button id="logoutBtn" type="button" class="tab" style="margin-top:14px">Sign out</button>
 </section>
 <div id="status" class="status">Ready.</div>
@@ -88,6 +95,44 @@ function paymentLabel(orderStatus,proofStatus){
  if(o==="pending")return "Payment pending";
  return orderStatus||"Status unavailable";
 }
+async function loadCustomerNotifications(userId){
+ const target=$("customerNotifications");
+ if(!target)return;
+ target.textContent="Loading recent notifications…";
+ try{
+  const {data,error}=await sb.from("ils_notification_customer_projection")
+   .select("id,notification_event_code,channel,status,safe_title,safe_message,created_at,delivered_at")
+   .eq("user_id",userId)
+   .eq("status","DELIVERED")
+   .order("created_at",{ascending:false})
+   .limit(20);
+  if(error)throw error;
+  target.replaceChildren();
+  if(!data?.length){target.textContent="No notifications yet. New service updates will appear here.";return;}
+  for(const item of data){
+   const card=document.createElement("article");
+   card.className="order-row";
+   const heading=document.createElement("strong");
+   heading.textContent=item.safe_title||"ILS update";
+   const message=document.createElement("div");
+   message.className="order-meta";
+   message.style.marginTop="5px";
+   message.textContent=item.safe_message||"You have a new account update.";
+   const meta=document.createElement("div");
+   meta.className="order-meta";
+   const when=item.created_at?new Date(item.created_at).toLocaleString("en-IN"):"";
+   meta.textContent=[item.status||"Update",item.channel||"IN_APP",when].filter(Boolean).join(" · ");
+   card.append(heading,message,meta);
+   target.append(card);
+  }
+ }catch(e){
+  target.textContent="Notifications are temporarily unavailable. Your orders and payment information remain available.";
+ }
+}
+$("refreshNotifications").onclick=async()=>{
+ const {data:{user}}=await sb.auth.getUser();
+ if(user)await loadCustomerNotifications(user.id);
+};
 async function loadPaymentHistory(){
  const panel=$("clientDashboard"),target=$("paymentHistory");
  $("loginPanel").classList.add("hidden");$("signupPanel").classList.add("hidden");
@@ -96,6 +141,7 @@ async function loadPaymentHistory(){
  try{
   const {data:{user},error:authError}=await sb.auth.getUser();
   if(authError||!user)throw new Error("Please sign in to view your payment history.");
+  void loadCustomerNotifications(user.id);
   const {data:orders,error}=await sb.from("orders").select("id,order_number,total,currency,status,created_at,service_request_id").eq("user_id",user.id).order("created_at",{ascending:false}).limit(100);
   if(error)throw error;
   if(!orders?.length){target.textContent="No service orders found for this account yet. Orders created after a service enquiry will appear here.";return;}

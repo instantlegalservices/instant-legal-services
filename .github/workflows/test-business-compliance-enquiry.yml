@@ -44,6 +44,11 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h 127.0.0.1 -U postgres -d ils_test -v ON_ERROR_STOP=1 -f scripts/test-business-compliance-postgres.sql
+      - name: Execute targeted customer notification migration on disposable PostgreSQL 16
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -d ils_test -v ON_ERROR_STOP=1 -f scripts/test-targeted-customer-notification-migration.sql
       - name: Install Playwright
         run: |
           npm install --no-save playwright@1.55.0
