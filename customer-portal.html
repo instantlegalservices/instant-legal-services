@@ -121,8 +121,7 @@ function safeReturnTo(value){
 }
 const returnTo=safeReturnTo(returnParam);
 function continueAfterAuth(){
- if(returnTo){$("status").textContent+="
-Returning you to your saved request…";setTimeout(()=>location.replace(returnTo),450);}
+ if(returnTo){$("status").textContent+="\\nReturning you to your saved request…";setTimeout(()=>location.replace(returnTo),450);}
 }
 function show(mode){
  const login=mode==="login"; $("loginPanel").classList.toggle("hidden",!login);$("signupPanel").classList.toggle("hidden",login);
@@ -370,8 +369,7 @@ $("signupBtn").onclick=async()=>{
    if(!data.user) throw new Error("AUTH_USER_NOT_CREATED");
    if(data.session){
      const p=await provision(data.user);
-     status("Customer account and profile provisioned successfully.
-Profile: "+p.customer_profile_id,true);
+     status("Customer account and profile provisioned successfully.\\nProfile: "+p.customer_profile_id,true);
      continueAfterAuth();
      show("login");
      if(!returnTo)await loadPaymentHistory();
@@ -388,9 +386,7 @@ $("loginBtn").onclick=async()=>{
    const {data,error}=await sb.auth.signInWithPassword({email,password});
    if(error) throw error;
    const profile=await ensureCustomerProfile(data.user);
-   status(profile.provisioned?"Signed in. Missing customer profile was safely provisioned.
-Profile: "+profile.id:"Signed in successfully.
-Welcome, "+profile.full_name+".",true);
+   status(profile.provisioned?"Signed in. Missing customer profile was safely provisioned.\\nProfile: "+profile.id:"Signed in successfully.\\nWelcome, "+profile.full_name+".",true);
    continueAfterAuth();
    if(!returnTo)await loadPaymentHistory();
  }catch(e){status(e.message||"Unable to sign in.");}
