@@ -1002,12 +1002,12 @@ jobs:
                   notificationResponse = response;
                 }
               });
-              const projectionResponse = page.waitForResponse(response =>
+              const secondProjectionResponse = page.waitForResponse(response =>
                 response.url().includes('/rest/v1/ils_notification_customer_projection?') && response.status() === 200,
                 { timeout: 20000 }
               );
               await page.goto(process.env.BASE_URL + '/customer-portal.html', { waitUntil: 'domcontentloaded' });
-              notificationResponse = await projectionResponse;
+              notificationResponse = await secondProjectionResponse;
               await page.waitForFunction(() => {
                 const panel = document.getElementById('customerNotifications');
                 return !!panel && panel.querySelectorAll('article').length > 0;
@@ -1064,11 +1064,11 @@ jobs:
               const projectionUrl = new URL(base + '/rest/v1/ils_notification_customer_projection');
               projectionUrl.searchParams.set('select', 'id,user_id');
               projectionUrl.searchParams.set('source_record_id', 'eq.' + verification.requestId);
-              const projectionResponse = await fetch(projectionUrl, { headers });
-              if (!projectionResponse.ok) {
-                throw new Error('SECOND_CUSTOMER_PROJECTION_HTTP_' + projectionResponse.status);
+              const secondProjectionResponse = await fetch(projectionUrl, { headers });
+              if (!secondProjectionResponse.ok) {
+                throw new Error('SECOND_CUSTOMER_PROJECTION_HTTP_' + secondProjectionResponse.status);
               }
-              const rows = await projectionResponse.json();
+              const rows = await secondProjectionResponse.json();
               if (!Array.isArray(rows)) throw new Error('SECOND_CUSTOMER_PROJECTION_INVALID_RESPONSE');
               if (rows.length !== 0) {
                 throw new Error('CROSS_CUSTOMER_NOTIFICATION_LEAK: visible rows=' + rows.length);
