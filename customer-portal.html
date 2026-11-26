@@ -27,7 +27,7 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 .client-service-card strong{font-size:16px;line-height:1.35}.client-service-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;flex:1}
 .client-service-card a{color:#f1c56a;font-weight:800;text-decoration:none}
 @media(max-width:560px){body{padding:14px}.card{padding:18px}.client-service-grid,.profile-grid{grid-template-columns:1fr}.client-service-card{min-height:0}}
-.client-finance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.client-finance-tile{padding:14px;border:1px solid #2a3b52;border-radius:13px;background:linear-gradient(145deg,#142338,#0b1523)}.client-finance-tile small{display:block;color:var(--muted);font-size:12px}.client-finance-tile strong{display:block;font-size:20px;margin-top:5px;color:#f1c56a}@media(max-width:560px){.client-finance-grid{grid-template-columns:1fr 1fr}.client-finance-tile:last-child{grid-column:1/-1}}</style>
+.client-workspace-nav{display:grid;gap:8px;padding:15px;border:1px solid rgba(215,168,79,.3);border-radius:15px;background:linear-gradient(135deg,rgba(215,168,79,.12),rgba(13,24,39,.9));margin:18px 0}.client-workspace-nav label{margin:0 0 2px;color:#e9c474}.client-workspace-nav select{width:100%;padding:13px 14px;border-radius:10px;border:1px solid #46566d;background:#091321;color:#fff;font-size:15px}.workspace-view[hidden]{display:none!important}.workspace-overview{padding:16px;border:1px solid #2a3b52;border-radius:14px;background:linear-gradient(145deg,#142338,#0b1523)}.workspace-overview p{color:var(--muted);line-height:1.5;margin:6px 0 0}.client-finance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.client-finance-tile{padding:14px;border:1px solid #2a3b52;border-radius:13px;background:linear-gradient(145deg,#142338,#0b1523)}.client-finance-tile small{display:block;color:var(--muted);font-size:12px}.client-finance-tile strong{display:block;font-size:20px;margin-top:5px;color:#f1c56a}@media(max-width:560px){.client-finance-grid{grid-template-columns:1fr 1fr}.client-finance-tile:last-child{grid-column:1/-1}}</style>
 </head>
 <body>
 <main>
@@ -56,18 +56,22 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 </section>
 
 <section id="clientDashboard" class="hidden" style="margin-top:20px;border-top:1px solid var(--line);padding-top:20px">
-<div class="workspace-intro"><strong>Your ILS Client Workspace</strong><p>Explore available services, track enquiries and orders, and review payment updates from one secure account.</p></div>
-<div class="client-section" style="border-top:0;padding-top:0"><div class="client-section-head"><div><h2>Account contact details</h2><p>Keep your mobile number updated so ILS can contact you about your request.</p></div></div><div class="profile-grid"><div><label for="profileName">Full name</label><input id="profileName" autocomplete="name"></div><div><label for="profileMobile">Mobile number</label><input id="profileMobile" type="tel" inputmode="tel" autocomplete="tel" placeholder="Enter mobile number"></div></div><button id="saveProfileBtn" class="primary" type="button">Save contact details</button><div id="profileStatus" class="note" aria-live="polite"></div></div>
-<div class="client-section"><div class="client-section-head"><div><h2>Explore ILS services</h2><p>Browse currently available assistance and open a service enquiry.</p></div><button id="refreshServicesBtn" type="button" class="tab" style="flex:0 0 auto">Refresh services</button></div><div id="clientServicesStatus" class="note">Loading available services…</div><div id="clientServicesGrid" class="client-service-grid"></div></div>
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2 style="margin:0">My Orders &amp; Payments</h2><p class="note">Your service orders and UPI payment verification status are visible only to your signed-in account.</p></div><button id="refreshPayments" type="button" class="tab" style="flex:0 0 auto">Refresh</button></div>
+<div class="workspace-intro"><strong>Your ILS Client Workspace</strong><p>Your secure space to explore services, manage your profile and follow ILS updates.</p></div>
+<div class="client-workspace-nav"><label for="workspaceNav">Workspace menu</label><select id="workspaceNav" aria-label="Choose client workspace section"><option value="overview">Dashboard overview</option><option value="services">Explore services</option><option value="account">Account details</option><option value="orders">My orders &amp; payments</option><option value="notifications">Notifications</option></select></div>
+<section id="workspaceOverview" class="workspace-overview workspace-view" data-workspace-panel="overview"><strong>Welcome to your ILS dashboard</strong><p>Choose a section from the menu above. Your orders and payment details stay tucked away until you open that section.</p><p id="workspaceOverviewStatus">Your account is ready.</p></section>
+<div class="client-section workspace-view" data-workspace-panel="account" style="border-top:0;padding-top:0"><div class="client-section-head"><div><h2>Account contact details</h2><p>Keep your mobile number updated so ILS can contact you about your request.</p></div></div><div class="profile-grid"><div><label for="profileName">Full name</label><input id="profileName" autocomplete="name"></div><div><label for="profileMobile">Mobile number</label><input id="profileMobile" type="tel" inputmode="tel" autocomplete="tel" placeholder="Enter mobile number"></div></div><button id="saveProfileBtn" class="primary" type="button">Save contact details</button><div id="profileStatus" class="note" aria-live="polite"></div></div>
+<div class="client-section workspace-view" data-workspace-panel="services"><div class="client-section-head"><div><h2>Explore ILS services</h2><p>Browse currently available assistance and open a service enquiry.</p></div><button id="refreshServicesBtn" type="button" class="tab" style="flex:0 0 auto">Refresh services</button></div><div id="clientServicesStatus" class="note">Loading available services…</div><div id="clientServicesGrid" class="client-service-grid"></div></div>
+<section class="client-section workspace-view" data-workspace-panel="orders"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2 style="margin:0">My Orders &amp; Payments</h2><p class="note">Your service orders and UPI payment verification status are visible only to your signed-in account.</p></div><button id="refreshPayments" type="button" class="tab" style="flex:0 0 auto">Refresh</button></div>
 <div class="client-finance-grid"><div class="client-finance-tile"><small>Total service orders</small><strong id="clientOrderCount">—</strong></div><div class="client-finance-tile"><small>Paid amount</small><strong id="clientPaidTotal">—</strong></div><div class="client-finance-tile"><small>Pending amount</small><strong id="clientPendingTotal">—</strong></div></div><div id="paymentHistory" class="note" style="margin-top:12px">Loading your orders…</div>
-<div style="border-top:1px solid var(--line);margin-top:20px;padding-top:18px">
+</section>
+<section class="client-section workspace-view" data-workspace-panel="notifications" style="border-top:0;padding-top:0">
  <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
   <div><h2 style="margin:0">Notifications</h2><p class="note">Recent account updates and service progress messages.</p></div>
   <button id="refreshNotifications" type="button" class="tab" style="flex:0 0 auto">Refresh</button>
  </div>
  <div id="customerNotifications" class="note" style="margin-top:12px">Loading notifications…</div>
 </div>
+</section>
 <button id="logoutBtn" type="button" class="tab" style="margin-top:14px">Sign out</button>
 </section>
 <div id="status" class="status">Ready.</div>
@@ -81,6 +85,8 @@ const SUPABASE_URL=window.ILS_SUPABASE_URL || "https://odqebkdzkjfxzyzbrndt.supa
 const SUPABASE_KEY=window.ILS_SUPABASE_KEY || "sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
+function esc(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+function setWorkspaceView(view){const allowed=new Set(["overview","services","account","orders","notifications"]);const next=allowed.has(view)?view:"overview";document.querySelectorAll("[data-workspace-panel]").forEach(panel=>{panel.hidden=panel.dataset.workspacePanel!==next;});if($("workspaceNav"))$("workspaceNav").value=next;}
 function status(msg,ok=false){$("status").textContent=msg;$("status").className="status "+(ok?"ok":"err");}
 const returnParam=new URLSearchParams(location.search).get("returnTo");
 function safeReturnTo(value){
@@ -174,6 +180,8 @@ async function loadClientServices(){
   }
  }catch(e){statusEl.textContent="Service list is temporarily unavailable. Visit Legal Assistance to explore services.";}
 }
+$("workspaceNav").onchange=event=>setWorkspaceView(event.target.value);
+setWorkspaceView("overview");
 $("refreshServicesBtn").onclick=loadClientServices;
 $("saveProfileBtn").onclick=async()=>{
  const btn=$("saveProfileBtn"),name=$("profileName").value.trim(),mobile=$("profileMobile").value.trim();
