@@ -1,5 +1,5 @@
 -- Targeted Production Phase 1: customer in-app notifications for service-request status events.
--- Deliberately excludes payments, complaints, government tasks, professionals, associates,
+-- Deliberately excludes payment statuses, complaints, government tasks, professionals, associates,
 -- SMS, email, push, and any external delivery provider.
 
 CREATE TABLE public.ils_notification_customer_projection (
@@ -22,7 +22,7 @@ CREATE INDEX ils_notification_customer_projection_user_created_idx
 
 ALTER TABLE public.ils_notification_customer_projection ENABLE ROW LEVEL SECURITY;
 
-REVOKE ALL ON TABLE public.ils_notification_customer_projection FROM PUBLIC, anon;
+REVOKE ALL ON TABLE public.ils_notification_customer_projection FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON TABLE public.ils_notification_customer_projection TO authenticated;
 GRANT ALL ON TABLE public.ils_notification_customer_projection TO service_role;
 
@@ -63,15 +63,19 @@ BEGIN
     v_message := 'We have received your service request. Current status: ';
   END IF;
 
+  -- Whitelist only ordinary service-request lifecycle states. Payment, refund,
+  -- assignment, complaint and government workflow statuses intentionally do not emit.
+  IF v_status NOT IN ('pending', 'processing', 'in_progress', 'completed', 'cancelled', 'rejected') THEN
+    RETURN NEW;
+  END IF;
+
   v_status_label := CASE v_status
     WHEN 'pending' THEN 'Pending'
-    WHEN 'paid' THEN 'Payment received'
     WHEN 'processing' THEN 'In progress'
     WHEN 'in_progress' THEN 'In progress'
     WHEN 'completed' THEN 'Completed'
     WHEN 'cancelled' THEN 'Cancelled'
     WHEN 'rejected' THEN 'Action required'
-    ELSE 'Updated'
   END;
 
   v_dedupe_key :=
