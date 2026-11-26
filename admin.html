@@ -514,7 +514,7 @@ function renderClientAccounts(){
  const body=$("clientAccountsBody");if(!body)return;
  const term=($("clientAccountSearch")?.value||"").trim().toLowerCase();
  const rows=clientAccountRows.filter(r=>[r.full_name,r.email,r.mobile,r.account_status].some(v=>String(v||"").toLowerCase().includes(term)));
- body.innerHTML=rows.length?rows.map(r=>'<tr><td>'+esc(r.registered_at?new Date(r.registered_at).toLocaleString("en-IN"):"—")+'</td><td><strong>'+esc(r.full_name||"—")+'</strong><br><small>'+esc(r.user_id||"")+'</small></td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td>'+esc(r.account_status||"—")+'</td><td>'+esc(r.client_requirement_id||"—")+'</td></tr>').join(""):'<tr><td colspan="6" style="text-align:center">No registered client accounts found.</td></tr>';
+ body.innerHTML=rows.length?rows.map(r=>'<tr><td>'+esc(r.registered_at?new Date(r.registered_at).toLocaleString("en-IN"):"—")+'</td><td><strong>'+esc(r.full_name||"—")+'</strong><br><small>Mobile: '+esc(r.mobile||"Not provided")+'</small><br><small>'+esc(r.user_id||"")+'</small></td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td>'+esc(r.account_status||"—")+'</td><td>'+esc(r.client_requirement_id||"—")+'</td></tr>').join(""):'<tr><td colspan="6" style="text-align:center">No registered client accounts found.</td></tr>';
 }
 let leadLoadSeq=0;
 async function loadLeads(){
