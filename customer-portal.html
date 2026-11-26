@@ -192,7 +192,8 @@ async function loadPaymentHistory(){
  try{
   const {data:{user},error:authError}=await sb.auth.getUser();
   if(authError||!user)throw new Error("Please sign in to view your payment history.");
-  void loadCustomerNotifications(user.id);\n  await Promise.all([loadCustomerProfile(user),loadClientServices()]);
+  void loadCustomerNotifications(user.id);
+  await Promise.all([loadCustomerProfile(user),loadClientServices()]);
   const {data:orders,error}=await sb.from("orders").select("id,order_number,total,currency,status,created_at,service_request_id").eq("user_id",user.id).order("created_at",{ascending:false}).limit(100);
   if(error)throw error;
   if(!orders?.length){target.textContent="No service orders found for this account yet. Orders created after a service enquiry will appear here.";return;}
@@ -270,8 +271,10 @@ $("signupBtn").onclick=async()=>{
  try{
    const name=$("signupName").value.trim(),email=$("signupEmail").value.trim(),password=$("signupPassword").value;
    if(!name||!email||!password||!$("signupMobile").value.trim()) throw new Error("Full name, mobile number, email and password are required.");
-   if(password.length<8) throw new Error("Password must be at least 8 characters.");\n   if(!/^[+0-9][0-9 +()-]{6,18}[0-9]$/.test($("signupMobile").value.trim())) throw new Error("Enter a valid mobile number.");
-   const redirect=new URL(location.pathname,location.origin);redirect.searchParams.set("mode","login");if(returnTo)redirect.searchParams.set("returnTo",returnTo);\n   const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:redirect.toString(),data:{account_type:"customer",full_name:name,mobile:$("signupMobile").value.trim()}}});
+   if(password.length<8) throw new Error("Password must be at least 8 characters.");
+   if(!/^[+0-9][0-9 +()-]{6,18}[0-9]$/.test($("signupMobile").value.trim())) throw new Error("Enter a valid mobile number.");
+   const redirect=new URL(location.pathname,location.origin);redirect.searchParams.set("mode","login");if(returnTo)redirect.searchParams.set("returnTo",returnTo);
+   const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:redirect.toString(),data:{account_type:"customer",full_name:name,mobile:$("signupMobile").value.trim()}}});
    if(error) throw error;
    if(!data.user) throw new Error("AUTH_USER_NOT_CREATED");
    if(data.session){
