@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - "customer-portal.html"
+      - "portal.html"
+      - "supabase/functions/professional-portal/index.ts"
       - "assistance.html"
       - "admin.html"
       - "assets/ils-tools.js"
