@@ -453,10 +453,14 @@ jobs:
                 if (!userResponse.ok) return { ok: false, reason: 'AUTH_USER_HTTP_' + userResponse.status };
                 const user = await userResponse.json();
                 const requestUrl = new URL(base + '/rest/v1/service_requests');
-                // Browser intent markers are deliberately cleared after re-entry; identify this fresh request by its test start time.
+                // Isolate this exact checkout attempt; other CI jobs share the same protected TEST customer.
+                const checkoutIntentId = await page.evaluate(() => activeCheckoutIntentId);
+                if (typeof checkoutIntentId !== 'string' || !checkoutIntentId) {
+                  return { ok: false, reason: 'CHECKOUT_INTENT_ID_MISSING' };
+                }
                 requestUrl.searchParams.set('select', 'id,details,created_at');
                 requestUrl.searchParams.set('user_id', 'eq.' + user.id);
-                requestUrl.searchParams.set('details->>problem', 'eq.cyber fraud');
+                requestUrl.searchParams.set('details->>checkout_intent_id', 'eq.' + checkoutIntentId);
                 requestUrl.searchParams.set('created_at', 'gte.' + startedAt);
                 requestUrl.searchParams.set('order', 'created_at.desc');
                 requestUrl.searchParams.set('limit', '5');
