@@ -135,6 +135,7 @@ async function loadProfessionalNotifications(client,userId){
   const {data,error}=await client.from("ils_notification_customer_projection")
    .select("id,notification_event_code,channel,status,safe_title,safe_message,created_at,delivered_at")
    .eq("user_id",userId)
+   .eq("status","DELIVERED")
    .order("created_at",{ascending:false})
    .limit(20);
   if(error)throw error;
