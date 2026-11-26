@@ -44,6 +44,29 @@ Deno.serve(async(req)=>{
 
     if(adv?.[0]){
       const a=adv[0];
+
+      // Preserve the Production advocate assignment workspace contract.
+      const {data: assignments, error: assignmentError}=await admin
+        .from("advocate_assignments")
+        .select("id,lead_id,assigned_at,status,client_can_see_contact")
+        .eq("advocate_id",a.id)
+        .in("status",["Assigned","Active"])
+        .order("assigned_at",{ascending:false});
+      if(assignmentError) throw assignmentError;
+
+      const leadIds=(assignments||[]).map(x=>x.lead_id);
+      let matters:any[]=[];
+      if(leadIds.length){
+        const {data:leadRows,error:leadError}=await admin
+          .from("client_requirements")
+          .select("id,client_name,legal_matter,brief_requirement,state,district_city,status,priority,assigned_advocate_id,assigned_advocate,created_at")
+          .in("id",leadIds)
+          .eq("assigned_advocate_id",a.id);
+        if(leadError) throw leadError;
+        const byId=new Map((leadRows||[]).map(x=>[x.id,x]));
+        matters=(assignments||[]).map(x=>({assignment_id:x.id,lead_id:x.lead_id,assigned_at:x.assigned_at,status:x.status,client_can_see_contact:x.client_can_see_contact===true,client:byId.get(x.lead_id)||null})).filter(x=>x.client);
+      }
+
       return json({
         ok:true,
         role:"advocate",
@@ -67,7 +90,8 @@ Deno.serve(async(req)=>{
         capabilities:{
           professional_tools:true,
           research_ai:String(a.status||"").toLowerCase()==="approved" && String(a.verification_status||"").toLowerCase()==="approved"
-        }
+        },
+        assignments:matters
       });
     }
 
@@ -117,7 +141,11 @@ Deno.serve(async(req)=>{
       .order("created_at",{ascending:false})
       .limit(1);
 
-    if(associateError) return json({ok:false,message:"Unable to verify your associate profile.",code:"ASSOCIATE_PROFILE_LOOKUP_FAILED"},503);
+    // Older Production deployments do not yet have the Associate trust table.
+    // Treat only a missing relation as "no Associate profile"; do not mask other DB failures.
+    if(associateError && !["PGRST205","42P01"].includes(String(associateError.code||""))){
+      return json({ok:false,message:"Unable to verify your associate profile.",code:"ASSOCIATE_PROFILE_LOOKUP_FAILED"},503);
+    }
 
     if(associate?.[0]){
       const a=associate[0];
