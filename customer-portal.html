@@ -121,7 +121,8 @@ function safeReturnTo(value){
 }
 const returnTo=safeReturnTo(returnParam);
 function continueAfterAuth(){
- if(returnTo){$("status").textContent+="\nReturning you to your saved request…";setTimeout(()=>location.replace(returnTo),450);}
+ if(returnTo){$("status").textContent+="
+Returning you to your saved request…";setTimeout(()=>location.replace(returnTo),450);}
 }
 function show(mode){
  const login=mode==="login"; $("loginPanel").classList.toggle("hidden",!login);$("signupPanel").classList.toggle("hidden",login);
@@ -178,7 +179,8 @@ $("refreshNotifications").onclick=async()=>{
 };
 function addEmpty(target,message){const box=document.createElement("div");box.className="empty-state";box.textContent=message;target.replaceChildren(box);}
 function makeMatterChip(value){const chip=document.createElement("span");chip.className="matter-chip";chip.textContent=value;return chip;}
-let activeClientMatterId=null;\nasync function loadMatterWorkspace(){
+let activeClientMatterId=null;
+async function loadMatterWorkspace(){
  const statusEl=$("matterWorkspaceStatus"),mattersEl=$("myMattersList"),advocatesEl=$("myAdvocatesList"),progressEl=$("myWorkProgressList"),docsEl=$("mySharedDocumentsList");
  if(!statusEl)return;statusEl.textContent="Loading your secure matter updates…";
  try{
@@ -193,7 +195,8 @@ let activeClientMatterId=null;\nasync function loadMatterWorkspace(){
   else{progressEl.replaceChildren();for(const u of updates){const item=document.createElement("article");item.className="progress-line";const title=document.createElement("h3");title.textContent=u.title||u.status||"Work update";const note=document.createElement("div");note.className="order-meta";note.textContent=u.work_note||"The ILS team has updated your matter.";const meta=document.createElement("div");meta.className="matter-meta";if(u.status)meta.append(makeMatterChip(u.status));if(u.next_fixed_date)meta.append(makeMatterChip("Next date: "+new Date(u.next_fixed_date+"T00:00:00").toLocaleDateString("en-IN")));if(u.work_done_on)meta.append(makeMatterChip("Completed: "+new Date(u.work_done_on+"T00:00:00").toLocaleDateString("en-IN")));item.append(title,note,meta);progressEl.append(item);}}
   if(!docs.length)addEmpty(docsEl,"No documents have been shared with you yet.");
   else{docsEl.replaceChildren();for(const d of docs){const item=document.createElement("article");item.className="document-card";const name=document.createElement("strong");name.textContent=d.file_name||"Shared document";const meta=document.createElement("div");meta.className="order-meta";meta.textContent=[d.mime_type,d.created_at?new Date(d.created_at).toLocaleString("en-IN"):""].filter(Boolean).join(" · ");const open=document.createElement("button");open.type="button";open.className="tab";open.textContent="View / Download";open.addEventListener("click",async()=>{try{const {data,error}=await sb.functions.invoke("client-matter-documents",{body:{action:"download",client_id:Number(d.requirement_id),document_id:Number(d.id)}});if(error||!data?.ok)throw new Error(error?.message||data?.message||"Unable to open document.");window.open(data.signed_url,"_blank","noopener,noreferrer");}catch(err){$("clientMatterDocumentStatus").textContent=err.message||"Document could not be opened.";}});item.append(name,meta,open);docsEl.append(item);}}
-  if(matters.length){await loadClientMatterChat(matters.map(m=>m.id));}else{const chat=$( "clientMatterChatThread");if(chat)chat.textContent="Chat becomes available after your matter is linked to this account.";}\n  statusEl.textContent=matters.length?"Matter workspace updated · "+matters.length+" linked matter(s).":"Your login is secure. No existing client requirement is linked to this account yet.";
+  if(matters.length){await loadClientMatterChat(matters.map(m=>m.id));}else{const chat=$( "clientMatterChatThread");if(chat)chat.textContent="Chat becomes available after your matter is linked to this account.";}
+  statusEl.textContent=matters.length?"Matter workspace updated · "+matters.length+" linked matter(s).":"Your login is secure. No existing client requirement is linked to this account yet.";
   $("workspaceOverviewStatus").textContent=matters.length?"Your matter workspace is connected and up to date.":"Your account is ready. Link your existing matter to see advocate assignments and progress.";
  }catch(e){statusEl.textContent="Matter workspace is temporarily unavailable. Please refresh or contact ILS support.";addEmpty(mattersEl,"Unable to load matter details right now.");addEmpty(advocatesEl,"Unable to load advocate assignments right now.");addEmpty(progressEl,"Unable to load progress updates right now.");addEmpty(docsEl,"Unable to load shared documents right now.");}
 }
@@ -222,7 +225,8 @@ async function loadClientMatterChat(ids){
 }
 $("sendClientMatterChat")?.addEventListener("click",async()=>{
  const input=$("clientMatterChatInput"),status=$("clientMatterChatStatus"),message=(input?.value||"").trim();
- if(!message){if(status)status.textContent="Enter a message first.";return;}\n if(!activeClientMatterId){if(status)status.textContent="No linked matter is available for chat.";return;}
+ if(!message){if(status)status.textContent="Enter a message first.";return;}
+ if(!activeClientMatterId){if(status)status.textContent="No linked matter is available for chat.";return;}
  const {data,error}=await sb.rpc("ils_customer_portal_send_message",{p_client_id:activeClientMatterId,p_message:message});
  if(error||!data?.ok){if(status)status.textContent=error?.message||data?.message||"Message could not be sent.";return;}
  input.value="";if(status)status.textContent="Message sent.";await loadMatterWorkspace();
@@ -366,7 +370,8 @@ $("signupBtn").onclick=async()=>{
    if(!data.user) throw new Error("AUTH_USER_NOT_CREATED");
    if(data.session){
      const p=await provision(data.user);
-     status("Customer account and profile provisioned successfully.\nProfile: "+p.customer_profile_id,true);
+     status("Customer account and profile provisioned successfully.
+Profile: "+p.customer_profile_id,true);
      continueAfterAuth();
      show("login");
      if(!returnTo)await loadPaymentHistory();
@@ -383,7 +388,9 @@ $("loginBtn").onclick=async()=>{
    const {data,error}=await sb.auth.signInWithPassword({email,password});
    if(error) throw error;
    const profile=await ensureCustomerProfile(data.user);
-   status(profile.provisioned?"Signed in. Missing customer profile was safely provisioned.\nProfile: "+profile.id:"Signed in successfully.\nWelcome, "+profile.full_name+".",true);
+   status(profile.provisioned?"Signed in. Missing customer profile was safely provisioned.
+Profile: "+profile.id:"Signed in successfully.
+Welcome, "+profile.full_name+".",true);
    continueAfterAuth();
    if(!returnTo)await loadPaymentHistory();
  }catch(e){status(e.message||"Unable to sign in.");}
