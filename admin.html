@@ -265,7 +265,7 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
   <p style="color:#9ca7b6;margin-top:-6px">Authenticated customer accounts are listed separately from service enquiries. Email confirmation does not hide a newly created customer account.</p>
   <div class="toolbar"><input id="clientAccountSearch" placeholder="Search client name, email or mobile…"><button id="refreshClientAccountsBtn" class="btnx secondary" type="button">↻ Refresh Accounts</button></div>
   <div id="clientAccountsMsg" class="msg"></div>
-  <div class="table-wrap"><table><thead><tr><th>Registered</th><th>Client</th><th>Email</th><th>Mobile</th><th>Account status</th><th>Requirement ID</th></tr></thead><tbody id="clientAccountsBody"><tr><td colspan="6" style="text-align:center">Loading client accounts…</td></tr></tbody></table></div>
+  <div class="table-wrap"><table><thead><tr><th>Registered</th><th>Client</th><th>Email</th><th>Mobile</th><th>Account status</th><th>Requirement ID</th><th>Link existing matter</th></tr></thead><tbody id="clientAccountsBody"><tr><td colspan="6" style="text-align:center">Loading client accounts…</td></tr></tbody></table></div>
 </section>
 
 <section class="panel admin-workspace-panel" id="clientCrmPanel" data-admin-workspace="clients">
@@ -510,12 +510,26 @@ async function loadClientAccounts(){
   if(note)msg("clientAccountsMsg","Client account list unavailable: "+(e?.message||"Admin access required."),"err");
  }
 }
+async function linkClientRequirement(userId){
+ const input=$("clientReqLink-"+userId),requirementId=Number(input?.value||0);
+ if(!Number.isSafeInteger(requirementId)||requirementId<1){msg("clientAccountsMsg","Enter a valid existing Requirement ID.","err");return;}
+ if(!confirm("Link this existing requirement to the selected client account? Verify the client identity and matter before continuing."))return;
+ try{
+  const {data,error}=await sb.rpc("ils_admin_link_customer_requirement",{p_user_id:userId,p_requirement_id:requirementId});
+  if(error)throw error;
+  if(!data?.ok)throw new Error("Requirement link was not confirmed.");
+  msg("clientAccountsMsg","Requirement #"+requirementId+" securely linked to the selected client account.","ok");
+  await loadClientAccounts();
+ }catch(e){msg("clientAccountsMsg",e.message||"Unable to link requirement.","err");}
+}
 function renderClientAccounts(){
  const body=$("clientAccountsBody");if(!body)return;
  const term=($("clientAccountSearch")?.value||"").trim().toLowerCase();
  const rows=clientAccountRows.filter(r=>[r.full_name,r.email,r.mobile,r.account_status].some(v=>String(v||"").toLowerCase().includes(term)));
- body.innerHTML=rows.length?rows.map(r=>'<tr><td>'+esc(r.registered_at?new Date(r.registered_at).toLocaleString("en-IN"):"—")+'</td><td><strong>'+esc(r.full_name||"—")+'</strong><br><small>Mobile: '+esc(r.mobile||"Not provided")+'</small><br><small>'+esc(r.user_id||"")+'</small></td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td>'+esc(r.account_status||"—")+'</td><td>'+esc(r.client_requirement_id||"—")+'</td></tr>').join(""):'<tr><td colspan="6" style="text-align:center">No registered client accounts found.</td></tr>';
+ body.innerHTML=rows.length?rows.map(r=>'<tr><td>'+esc(r.registered_at?new Date(r.registered_at).toLocaleString("en-IN"):"—")+'</td><td><strong>'+esc(r.full_name||"—")+'</strong><br><small>Mobile: '+esc(r.mobile||"Not provided")+'</small><br><small>'+esc(r.user_id||"")+'</small></td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td>'+esc(r.account_status||"—")+'</td><td>'+esc(r.client_requirement_id||"—")+'</td><td><div style="display:flex;gap:6px;min-width:150px"><input id="clientReqLink-'+esc(r.user_id)+'" type="number" min="1" placeholder="Requirement ID" value="'+esc(r.client_requirement_id||"")+'" style="width:100px;padding:7px"><button type="button" data-link-client="'+esc(r.user_id)+'" class="btnx secondary">Link</button></div></td></tr>').join(""):'<tr><td colspan="7" style="text-align:center">No registered client accounts found.</td></tr>';
 }
+$("clientAccountsBody")?.addEventListener("click",event=>{const btn=event.target.closest("[data-link-client]");if(btn)linkClientRequirement(btn.dataset.linkClient);});
+
 let leadLoadSeq=0;
 async function loadLeads(){
   const seq=++leadLoadSeq;
