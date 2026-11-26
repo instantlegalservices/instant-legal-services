@@ -178,12 +178,12 @@ $("refreshNotifications").onclick=async()=>{
 };
 function addEmpty(target,message){const box=document.createElement("div");box.className="empty-state";box.textContent=message;target.replaceChildren(box);}
 function makeMatterChip(value){const chip=document.createElement("span");chip.className="matter-chip";chip.textContent=value;return chip;}
-async function loadMatterWorkspace(){
+let activeClientMatterId=null;\nasync function loadMatterWorkspace(){
  const statusEl=$("matterWorkspaceStatus"),mattersEl=$("myMattersList"),advocatesEl=$("myAdvocatesList"),progressEl=$("myWorkProgressList"),docsEl=$("mySharedDocumentsList");
  if(!statusEl)return;statusEl.textContent="Loading your secure matter updates…";
  try{
   const {data,error}=await sb.rpc("ils_customer_portal_matter_workspace");if(error)throw error;
-  const matters=data?.requirements||[],advocates=data?.assigned_advocates||[],updates=data?.work_updates||[],docs=data?.shared_documents||[];
+  const matters=data?.requirements||[],advocates=data?.assigned_advocates||[],updates=data?.work_updates||[],docs=data?.shared_documents||[];activeClientMatterId=matters.length?Number(matters[0].id):null;
   $("overviewMatterCount").textContent=String(matters.length);$("overviewAdvocateCount").textContent=String(advocates.length);$("overviewUpdateCount").textContent=String(updates.length);
   if(!matters.length)addEmpty(mattersEl,"No matter is linked to this login yet. If you already submitted an ILS requirement, contact support to securely link that existing requirement to your account.");
   else{mattersEl.replaceChildren();for(const m of matters){const card=document.createElement("article");card.className="matter-card";const title=document.createElement("h3");title.textContent=m.matter||("Matter #"+m.id);const description=document.createElement("p");description.className="matter-description";description.textContent=m.description||"No matter description has been added yet.";const detail=document.createElement("div");detail.className="order-meta";detail.textContent="Matter ID: "+m.id+" · Added: "+(m.created_at?new Date(m.created_at).toLocaleDateString("en-IN"):"—");const chips=document.createElement("div");chips.className="matter-meta";chips.append(makeMatterChip(m.status||"Received"));if(m.district_city)chips.append(makeMatterChip(m.district_city));if(m.state)chips.append(makeMatterChip(m.state));if(m.next_follow_up)chips.append(makeMatterChip("Next date: "+new Date(m.next_follow_up+"T00:00:00").toLocaleDateString("en-IN")));card.append(title,description,detail,chips);mattersEl.append(card);}}
@@ -213,8 +213,8 @@ async function loadClientMatterChat(ids){
 }
 $("sendClientMatterChat")?.addEventListener("click",async()=>{
  const input=$("clientMatterChatInput"),status=$("clientMatterChatStatus"),message=(input?.value||"").trim();
- if(!message){if(status)status.textContent="Enter a message first.";return;}
- const {data,error}=await sb.rpc("ils_customer_portal_send_message",{p_client_id:null,p_message:message});
+ if(!message){if(status)status.textContent="Enter a message first.";return;}\n if(!activeClientMatterId){if(status)status.textContent="No linked matter is available for chat.";return;}
+ const {data,error}=await sb.rpc("ils_customer_portal_send_message",{p_client_id:activeClientMatterId,p_message:message});
  if(error||!data?.ok){if(status)status.textContent=error?.message||data?.message||"Message could not be sent.";return;}
  input.value="";if(status)status.textContent="Message sent.";await loadMatterWorkspace();
 });
