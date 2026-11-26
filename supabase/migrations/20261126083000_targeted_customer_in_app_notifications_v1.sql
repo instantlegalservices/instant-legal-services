@@ -65,17 +65,15 @@ BEGIN
 
   -- Whitelist only ordinary service-request lifecycle states. Payment, refund,
   -- assignment, complaint and government workflow statuses intentionally do not emit.
-  IF v_status NOT IN ('pending', 'processing', 'in_progress', 'completed', 'cancelled', 'rejected') THEN
+  IF v_status NOT IN ('pending', 'in_progress', 'completed', 'cancelled') THEN
     RETURN NEW;
   END IF;
 
   v_status_label := CASE v_status
     WHEN 'pending' THEN 'Pending'
-    WHEN 'processing' THEN 'In progress'
     WHEN 'in_progress' THEN 'In progress'
     WHEN 'completed' THEN 'Completed'
     WHEN 'cancelled' THEN 'Cancelled'
-    WHEN 'rejected' THEN 'Action required'
   END;
 
   v_dedupe_key :=
