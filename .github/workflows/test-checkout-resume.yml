@@ -926,7 +926,38 @@ jobs:
               });
 
               if (!verification.ok) throw new Error(verification.reason);
-              console.log('PASS: TEST customer RLS and checkout idempotency passed; ₹299 marketplace RPC created a pending INR 299 order. No payment proof was submitted or approved.');
+
+              // Reopen the customer portal in the same authenticated TEST browser session.
+              // The preceding idempotent service-order creation is the real source event;
+              // this verifies its delivered projection is rendered by the actual portal UI.
+              let notificationResponse = null;
+              page.on('response', response => {
+                if (response.url().includes('/rest/v1/ils_notification_customer_projection?')) {
+                  notificationResponse = response;
+                }
+              });
+              await page.goto(process.env.BASE_URL + '/customer-portal.html', { waitUntil: 'domcontentloaded' });
+              await page.waitForFunction(() => {
+                const panel = document.getElementById('customerNotifications');
+                return !!panel && !panel.textContent.includes('Loading recent notifications');
+              }, null, { timeout: 20000 });
+              if (!notificationResponse || !notificationResponse.ok()) {
+                throw new Error('CUSTOMER_NOTIFICATION_PROJECTION_QUERY_FAILED');
+              }
+              const notificationUi = await page.evaluate(() => ({
+                dashboardVisible: !document.getElementById('clientDashboard')?.classList.contains('hidden'),
+                panelText: document.getElementById('customerNotifications')?.innerText || '',
+                cards: document.querySelectorAll('#customerNotifications article').length
+              }));
+              if (!notificationUi.dashboardVisible) throw new Error('CUSTOMER_PORTAL_DASHBOARD_NOT_VISIBLE_AFTER_AUTH');
+              if (notificationUi.cards < 1) {
+                throw new Error('SOURCE_EVENT_NOTIFICATION_NOT_RENDERED: ' + notificationUi.panelText.slice(0, 180));
+              }
+              if (/SYNTHETIC_READY/i.test(notificationUi.panelText)) {
+                throw new Error('SYNTHETIC_NOTIFICATION_LEAKED_INTO_CUSTOMER_PORTAL');
+              }
+
+              console.log('PASS: TEST customer RLS and checkout idempotency passed; ₹299 marketplace RPC created a pending INR 299 order; authenticated customer portal rendered a delivered source-event notification. No payment proof was submitted or approved.');
             } finally {
               if (browser) await browser.close();
             }
