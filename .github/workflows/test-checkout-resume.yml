@@ -936,10 +936,15 @@ jobs:
                   notificationResponse = response;
                 }
               });
+              const projectionResponse = page.waitForResponse(response =>
+                response.url().includes('/rest/v1/ils_notification_customer_projection?') && response.status() === 200,
+                { timeout: 20000 }
+              );
               await page.goto(process.env.BASE_URL + '/customer-portal.html', { waitUntil: 'domcontentloaded' });
+              notificationResponse = await projectionResponse;
               await page.waitForFunction(() => {
                 const panel = document.getElementById('customerNotifications');
-                return !!panel && !panel.textContent.includes('Loading recent notifications');
+                return !!panel && panel.querySelectorAll('article').length > 0;
               }, null, { timeout: 20000 });
               if (!notificationResponse || !notificationResponse.ok()) {
                 throw new Error('CUSTOMER_NOTIFICATION_PROJECTION_QUERY_FAILED');
