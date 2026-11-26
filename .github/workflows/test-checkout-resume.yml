@@ -1044,8 +1044,16 @@ jobs:
                 await secondPage.locator('#loginBtn').click();
                 await secondPage.waitForFunction(() => {
                   const dashboard = document.getElementById('clientDashboard');
-                  return !!dashboard && !dashboard.classList.contains('hidden');
+                  const statusText = document.getElementById('status')?.textContent?.trim();
+                  return (!!dashboard && !dashboard.classList.contains('hidden')) || !!statusText;
                 }, null, { timeout: 20000 });
+                const secondLoginState = await secondPage.evaluate(() => ({
+                  dashboardVisible: !document.getElementById('clientDashboard')?.classList.contains('hidden'),
+                  statusText: document.getElementById('status')?.textContent?.trim() || ''
+                }));
+                if (!secondLoginState.dashboardVisible) {
+                  throw new Error('SECOND_CUSTOMER_LOGIN_FAILED: ' + (secondLoginState.statusText || 'No portal status message was rendered.'));
+                }
                 const isolation = await secondPage.evaluate(async ({ firstCustomerId, sourceRequestId }) => {
                   const authKey = 'sb-bgsbuepolooybdqrzmoa-auth-token';
                   let session;
