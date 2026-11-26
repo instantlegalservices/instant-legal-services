@@ -211,8 +211,9 @@ async function loadPaymentHistory(){
   if(proofResult.error)throw proofResult.error;
   if(paymentResult.error)throw paymentResult.error;
   const rupees=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});
-  const paidTotal=orders.filter(o=>String(o.status||"").toLowerCase()==="paid").reduce((sum,o)=>sum+Number(o.total||0),0);
-  const pendingTotal=orders.filter(o=>String(o.status||"").toLowerCase()!=="paid").reduce((sum,o)=>sum+Number(o.total||0),0);
+  const isPaid=o=>String(o.status||"").toLowerCase()==="paid"||(proofResult.data||[]).some(p=>p.order_id===o.id&&["verified","approved"].includes(String(p.status||"").toLowerCase()))||(paymentResult.data||[]).some(p=>p.order_id===o.id&&["paid","succeeded","success"].includes(String(p.status||"").toLowerCase()));
+  const paidTotal=orders.filter(isPaid).reduce((sum,o)=>sum+Number(o.total||0),0);
+  const pendingTotal=orders.filter(o=>!isPaid(o)).reduce((sum,o)=>sum+Number(o.total||0),0);
   $("clientOrderCount").textContent=String(orders.length);
   $("clientPaidTotal").textContent=rupees(paidTotal);
   $("clientPendingTotal").textContent=rupees(pendingTotal);
