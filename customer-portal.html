@@ -27,7 +27,7 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 .client-service-card strong{font-size:16px;line-height:1.35}.client-service-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;flex:1}
 .client-service-card a{color:#f1c56a;font-weight:800;text-decoration:none}
 @media(max-width:560px){body{padding:14px}.card{padding:18px}.client-service-grid,.profile-grid{grid-template-columns:1fr}.client-service-card{min-height:0}}
-</style>
+.client-finance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.client-finance-tile{padding:14px;border:1px solid #2a3b52;border-radius:13px;background:linear-gradient(145deg,#142338,#0b1523)}.client-finance-tile small{display:block;color:var(--muted);font-size:12px}.client-finance-tile strong{display:block;font-size:20px;margin-top:5px;color:#f1c56a}@media(max-width:560px){.client-finance-grid{grid-template-columns:1fr 1fr}.client-finance-tile:last-child{grid-column:1/-1}}</style>
 </head>
 <body>
 <main>
@@ -60,7 +60,7 @@ label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}input{width
 <div class="client-section" style="border-top:0;padding-top:0"><div class="client-section-head"><div><h2>Account contact details</h2><p>Keep your mobile number updated so ILS can contact you about your request.</p></div></div><div class="profile-grid"><div><label for="profileName">Full name</label><input id="profileName" autocomplete="name"></div><div><label for="profileMobile">Mobile number</label><input id="profileMobile" type="tel" inputmode="tel" autocomplete="tel" placeholder="Enter mobile number"></div></div><button id="saveProfileBtn" class="primary" type="button">Save contact details</button><div id="profileStatus" class="note" aria-live="polite"></div></div>
 <div class="client-section"><div class="client-section-head"><div><h2>Explore ILS services</h2><p>Browse currently available assistance and open a service enquiry.</p></div><button id="refreshServicesBtn" type="button" class="tab" style="flex:0 0 auto">Refresh services</button></div><div id="clientServicesStatus" class="note">Loading available services…</div><div id="clientServicesGrid" class="client-service-grid"></div></div>
 <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2 style="margin:0">My Orders &amp; Payments</h2><p class="note">Your service orders and UPI payment verification status are visible only to your signed-in account.</p></div><button id="refreshPayments" type="button" class="tab" style="flex:0 0 auto">Refresh</button></div>
-<div id="paymentHistory" class="note" style="margin-top:12px">Loading your orders…</div>
+<div class="client-finance-grid"><div class="client-finance-tile"><small>Total service orders</small><strong id="clientOrderCount">—</strong></div><div class="client-finance-tile"><small>Paid amount</small><strong id="clientPaidTotal">—</strong></div><div class="client-finance-tile"><small>Pending amount</small><strong id="clientPendingTotal">—</strong></div></div><div id="paymentHistory" class="note" style="margin-top:12px">Loading your orders…</div>
 <div style="border-top:1px solid var(--line);margin-top:20px;padding-top:18px">
  <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
   <div><h2 style="margin:0">Notifications</h2><p class="note">Recent account updates and service progress messages.</p></div>
@@ -161,7 +161,7 @@ async function loadClientServices(){
  try{
   const {data,error}=await sb.from("services").select("id,name,slug,description,category").eq("is_active",true).order("category").order("name");
   if(error)throw error;
-  const visible=(data||[]).filter(s=>! /accounting reports|professional tools|professional_tools|action assistance/i.test(s.category||"") && !/^tool-output-micro|^professional-report|^accounting-print/i.test(s.slug||""));
+  const visible=data||[];
   if(!visible.length){statusEl.textContent="Service catalogue is being updated. You can still submit a request through Legal Assistance.";return;}
   statusEl.textContent=visible.length+" services currently available";
   for(const s of visible){
@@ -196,7 +196,7 @@ async function loadPaymentHistory(){
   await Promise.all([loadCustomerProfile(user),loadClientServices()]);
   const {data:orders,error}=await sb.from("orders").select("id,order_number,total,currency,status,created_at,service_request_id").eq("user_id",user.id).order("created_at",{ascending:false}).limit(100);
   if(error)throw error;
-  if(!orders?.length){target.textContent="No service orders found for this account yet. Orders created after a service enquiry will appear here.";return;}
+  if(!orders?.length){$("clientOrderCount").textContent="0";$("clientPaidTotal").textContent="₹0";$("clientPendingTotal").textContent="₹0";target.textContent="No service orders yet. Explore the services above and submit an enquiry to start your first request.";return;}
   const requestIds=[...new Set(orders.map(x=>x.service_request_id).filter(Boolean))];
   let requests=[];
   if(requestIds.length){const r=await sb.from("service_requests").select("id,service_id,details").in("id",requestIds);if(r.error)throw r.error;requests=r.data||[];}
@@ -210,6 +210,12 @@ async function loadPaymentHistory(){
   ]);
   if(proofResult.error)throw proofResult.error;
   if(paymentResult.error)throw paymentResult.error;
+  const rupees=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});
+  const paidTotal=orders.filter(o=>String(o.status||"").toLowerCase()==="paid").reduce((sum,o)=>sum+Number(o.total||0),0);
+  const pendingTotal=orders.filter(o=>String(o.status||"").toLowerCase()!=="paid").reduce((sum,o)=>sum+Number(o.total||0),0);
+  $("clientOrderCount").textContent=String(orders.length);
+  $("clientPaidTotal").textContent=rupees(paidTotal);
+  $("clientPendingTotal").textContent=rupees(pendingTotal);
   const requestById=new Map(requests.map(x=>[x.id,x])),serviceById=new Map(services.map(x=>[x.id,x]));
   const intakeLabels={"legal-drafting":"Legal Drafting","money-recovery":"Money Recovery","gst-returns":"GST Assistance","consumer-banking-disputes":"Consumer & Banking Disputes","cyber-fraud-assistance":"Cyber Fraud Assistance","matrimonial-family":"Matrimonial & Family","property-documentation":"Property & Documentation","income-tax-itr":"Income Tax & ITR"};
   const proofByOrder=new Map(),gatewayByOrder=new Map();
