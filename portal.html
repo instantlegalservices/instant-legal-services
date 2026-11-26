@@ -66,6 +66,13 @@
 
 <div id="statusBox" class="portal-status" style="margin-top:15px"></div>
 <div id="usageBox" class="portal-status" style="margin-top:10px"></div>
+<div class="portal-card" style="margin-top:15px;background:rgba(0,0,0,.08)">
+ <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+  <div><h3 style="margin:0">Notifications</h3><p class="portal-note">Recent professional work and account updates.</p></div>
+  <button class="btn btn-ghost btn-small" id="refreshProfessionalNotifications" type="button">Refresh</button>
+ </div>
+ <div id="professionalNotifications" class="portal-note" style="margin-top:12px">Loading notifications…</div>
+</div>
 
 <div class="portal-card" style="margin-top:15px;background:rgba(0,0,0,.08)">
 <h3 style="margin-top:0">Profile &amp; verification</h3>
@@ -120,6 +127,43 @@ async function clientReady(){return window.ILS?.ready?.()||await window.ILS?.ini
 function showStatus(id,msg,type){const e=$(id);e.textContent=msg||"";e.className="status "+(type||"");e.style.display=msg?"block":"none"}
 function roleName(r){return roleNames[r]||"ILS Professional"}
 
+async function loadProfessionalNotifications(client,userId){
+ const target=$("professionalNotifications");
+ if(!target)return;
+ target.textContent="Loading recent notifications…";
+ try{
+  const {data,error}=await client.from("ils_notification_customer_projection")
+   .select("id,notification_event_code,channel,status,safe_title,safe_message,created_at,delivered_at")
+   .eq("user_id",userId)
+   .order("created_at",{ascending:false})
+   .limit(20);
+  if(error)throw error;
+  target.replaceChildren();
+  if(!data?.length){target.textContent="No notifications yet. New assigned-work updates will appear here.";return;}
+  for(const item of data){
+   const card=document.createElement("article");
+   card.className="matter-msg";
+   const title=document.createElement("strong");
+   title.textContent=item.safe_title||"ILS update";
+   const message=document.createElement("div");
+   message.style.marginTop="5px";
+   message.textContent=item.safe_message||"You have a new professional account update.";
+   const meta=document.createElement("div");
+   meta.className="matter-meta";
+   meta.textContent=[item.status||"Update",item.channel||"IN_APP",item.created_at?new Date(item.created_at).toLocaleString("en-IN"):""].filter(Boolean).join(" · ");
+   card.append(title,message,meta);
+   target.append(card);
+  }
+ }catch(e){
+  target.textContent="Notifications are temporarily unavailable. Your professional workspace remains available.";
+ }
+}
+$("refreshProfessionalNotifications").onclick=async()=>{
+ const client=await clientReady();
+ if(!client)return;
+ const {data:{user}}=await client.auth.getUser();
+ if(user)await loadProfessionalNotifications(client,user.id);
+};
 async function loadPortal(){
   const client=await clientReady();
   if(!client)return;
@@ -135,6 +179,7 @@ async function loadPortal(){
   }
   const p=r.data;
   $("loginPanel").classList.add("portal-hidden");
+  await loadProfessionalNotifications(client,session.user.id);
   $("portalPanel").classList.remove("portal-hidden");
   $("welcome").textContent=p.profile?.name||"Professional";
   $("roleBadge").textContent="✓ "+roleName(p.role);
