@@ -1080,7 +1080,9 @@ jobs:
               }
               const projectionUrl = new URL(base + '/rest/v1/ils_notification_customer_projection');
               projectionUrl.searchParams.set('select', 'id,user_id');
-              projectionUrl.searchParams.set('source_record_id', 'eq.' + verification.requestId);
+              // Filter to the first customer's identity; the RLS policy must hide every
+              // row owned by that user from the second authenticated customer.
+              projectionUrl.searchParams.set('user_id', 'eq.' + verification.userId);
               const isolatedProjectionResponse = await fetch(projectionUrl, { headers });
               if (!isolatedProjectionResponse.ok) {
                 throw new Error('SECOND_CUSTOMER_PROJECTION_HTTP_' + isolatedProjectionResponse.status);
