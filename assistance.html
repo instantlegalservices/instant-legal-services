@@ -209,6 +209,7 @@ async function pay(guided,rd,resumeIntent=null){
  checkoutInProgress=true;
  if(!activeCheckoutIntentId){
   activeCheckoutIntentId=resumeIntent?.checkoutIntentId||((window.crypto?.randomUUID)?window.crypto.randomUUID():("ils-"+Date.now()+"-"+Math.random().toString(36).slice(2)));
+  window.__ilsActiveCheckoutIntentId=activeCheckoutIntentId;
  }
  const btn=document.getElementById("payBtn");btn.disabled=true;
  try{
