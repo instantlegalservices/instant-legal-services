@@ -21,7 +21,7 @@ async function validateDocumentFile(file: File): Promise<string | null> {
   if (!rule) return "Unsupported file type. Upload PDF, JPG, PNG, DOC, DOCX, XLS or XLSX.";
   const mime = (file.type || "application/octet-stream").toLowerCase();
   if (!rule.mime.includes(mime)) return "File extension and content type do not match.";
-  const bytes = new Uint8Array(await file.slice(0, Math.min(file.size, 1024 * 1024)).arrayBuffer());
+  const bytes = new Uint8Array(await file.arrayBuffer());
   const starts = (...values: number[]) => values.every((value, index) => bytes[index] === value);
   if (rule.signature === "pdf" && !starts(0x25, 0x50, 0x44, 0x46, 0x2d)) return "Invalid PDF file.";
   if (rule.signature === "jpeg" && !(starts(0xff, 0xd8, 0xff))) return "Invalid JPEG image.";
