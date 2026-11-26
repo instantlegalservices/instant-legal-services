@@ -260,7 +260,15 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
       </p>
     </section>
 
-    <section class="panel admin-workspace-panel" id="clientCrmPanel" data-admin-workspace="clients">
+    <section class="panel admin-workspace-panel" id="clientAccountsPanel" data-admin-workspace="clients">
+  <h2>Registered Client Accounts</h2>
+  <p style="color:#9ca7b6;margin-top:-6px">Authenticated customer accounts are listed separately from service enquiries. Email confirmation does not hide a newly created customer account.</p>
+  <div class="toolbar"><input id="clientAccountSearch" placeholder="Search client name, email or mobile…"><button id="refreshClientAccountsBtn" class="btnx secondary" type="button">↻ Refresh Accounts</button></div>
+  <div id="clientAccountsMsg" class="msg"></div>
+  <div class="table-wrap"><table><thead><tr><th>Registered</th><th>Client</th><th>Email</th><th>Mobile</th><th>Account status</th><th>Requirement ID</th></tr></thead><tbody id="clientAccountsBody"><tr><td colspan="6" style="text-align:center">Loading client accounts…</td></tr></tbody></table></div>
+</section>
+
+<section class="panel admin-workspace-panel" id="clientCrmPanel" data-admin-workspace="clients">
       <h2>Client Requirements / CRM</h2>
       <div class="toolbar">
         <input id="leadSearch" placeholder="Search name, mobile, city, matter…">
@@ -486,6 +494,28 @@ function priorityOptions(current){
   return vals.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("");
 }
 
+let clientAccountRows=[];
+async function loadClientAccounts(){
+ const body=$("clientAccountsBody"),note=$("clientAccountsMsg");
+ if(!body)return;
+ body.innerHTML='<tr><td colspan="6" style="text-align:center">Loading registered accounts…</td></tr>';
+ try{
+  const {data,error}=await sb.rpc("ils_admin_list_customer_accounts");
+  if(error)throw error;
+  clientAccountRows=Array.isArray(data)?data:[];
+  renderClientAccounts();
+  if(note)msg("clientAccountsMsg",clientAccountRows.length+" registered client account(s).","ok");
+ }catch(e){
+  body.innerHTML='<tr><td colspan="6" style="text-align:center">Unable to load registered client accounts.</td></tr>';
+  if(note)msg("clientAccountsMsg","Client account list unavailable: "+(e?.message||"Admin access required."),"err");
+ }
+}
+function renderClientAccounts(){
+ const body=$("clientAccountsBody");if(!body)return;
+ const term=($("clientAccountSearch")?.value||"").trim().toLowerCase();
+ const rows=clientAccountRows.filter(r=>[r.full_name,r.email,r.mobile,r.account_status].some(v=>String(v||"").toLowerCase().includes(term)));
+ body.innerHTML=rows.length?rows.map(r=>'<tr><td>'+esc(r.registered_at?new Date(r.registered_at).toLocaleString("en-IN"):"—")+'</td><td><strong>'+esc(r.full_name||"—")+'</strong><br><small>'+esc(r.user_id||"")+'</small></td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td>'+esc(r.account_status||"—")+'</td><td>'+esc(r.client_requirement_id||"—")+'</td></tr>').join(""):'<tr><td colspan="6" style="text-align:center">No registered client accounts found.</td></tr>';
+}
 let leadLoadSeq=0;
 async function loadLeads(){
   const seq=++leadLoadSeq;
@@ -1650,7 +1680,7 @@ async function openApp(){
   $("appView").classList.remove("hidden");
   currentAdminUserId=check.session.user.id;
   $("adminUser").textContent="Signed in as "+(check.session.user.email||"administrator");
-  await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);
+  await Promise.all([loadStats(),loadLeads(),loadClientAccounts(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);
 }
 
 $("loginForm").addEventListener("submit",async e=>{
@@ -1671,7 +1701,7 @@ $("logoutBtn").addEventListener("click",async()=>{
   await sb.auth.signOut();
   location.href="admin.html";
 });
-$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
+$("refreshBtn").addEventListener("click",async()=>{msg("appMsg","Refreshing…","");await Promise.all([loadStats(),loadLeads(),loadClientAccounts(),loadAdvocates(),loadProfessionals(),loadRevenue(),loadClientDeletionRows(),loadPricingControls(),loadUpiProofs(),loadActionAssistanceQueue(),loadGovRouteVerification()]);msg("appMsg","Dashboard refreshed.","ok")});
 
 $("loadAdvocatesBtn").addEventListener("click",loadAdvocates);
 function positionSmartMenu(toggle,menu){
@@ -1729,6 +1759,8 @@ $("loadProfessionalsBtn").addEventListener("click",loadProfessionals);
 $("adminProfessionalSearch").addEventListener("input",()=>loadProfessionals());
 $("adminProfessionalStatus").addEventListener("change",()=>loadProfessionals());
 $("loadLeadsBtn").addEventListener("click",loadLeads);
+$("refreshClientAccountsBtn").addEventListener("click",loadClientAccounts);
+$("clientAccountSearch").addEventListener("input",renderClientAccounts);
 $("leadSearch").addEventListener("input",()=>loadLeads());
 $("leadSearch").addEventListener("keydown",e=>{if(e.key==="Enter")loadLeads()});
 sb.auth.onAuthStateChange(()=>{});
