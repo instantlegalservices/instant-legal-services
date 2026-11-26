@@ -29,12 +29,22 @@ async function getClientByAccess(accessToken: string, mobile: string) {
   if (data.client_access_expires_at && new Date(data.client_access_expires_at) <= new Date()) return null;
   return data;
 }
-async function getClientByUser(userId: string, clientId: number) {\n  const { data: profile } = await supabaseAdmin.from("customer_profiles").select("client_requirement_id").eq("user_id", userId).eq("status", "active").maybeSingle();\n  if (profile?.client_requirement_id === clientId) return await getClientById(clientId);\n  const { data: request } = await supabaseAdmin.from("service_requests").select("client_requirement_id").eq("user_id", userId).eq("client_requirement_id", clientId).maybeSingle();\n  return request?.client_requirement_id ? await getClientById(clientId) : null;\n}\nasync function getClientById(clientId: number) {
+async function getClientByUser(userId: string, clientId: number) {
+  const { data: profile } = await supabaseAdmin.from("customer_profiles").select("client_requirement_id").eq("user_id", userId).eq("status", "active").maybeSingle();
+  if (profile?.client_requirement_id === clientId) return await getClientById(clientId);
+  const { data: request } = await supabaseAdmin.from("service_requests").select("client_requirement_id").eq("user_id", userId).eq("client_requirement_id", clientId).maybeSingle();
+  return request?.client_requirement_id ? await getClientById(clientId) : null;
+}
+async function getClientById(clientId: number) {
   const { data, error } = await supabaseAdmin.from("client_requirements")
     .select("id, client_name, assigned_advocate_id").eq("id", clientId).maybeSingle();
   return error || !data ? null : data;
 }
-async function isAdmin(user: any) {\n  if (!user?.id) return false;\n  const { data, error } = await supabaseAdmin.from("ils_admin_users").select("user_id").eq("user_id", user.id).maybeSingle();\n  return !error && !!data;\n}
+async function isAdmin(user: any) {
+  if (!user?.id) return false;
+  const { data, error } = await supabaseAdmin.from("ils_admin_users").select("user_id").eq("user_id", user.id).maybeSingle();
+  return !error && !!data;
+}
 async function isAssignedAdvocate(user: any, clientId: number) {
   if (!user?.email) return false;
   const { data: advocate } = await supabaseAdmin.from("advocate_registrations")
