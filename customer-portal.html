@@ -141,7 +141,7 @@ async function loadPaymentHistory(){
  try{
   const {data:{user},error:authError}=await sb.auth.getUser();
   if(authError||!user)throw new Error("Please sign in to view your payment history.");
-  await loadCustomerNotifications(user.id);
+  void loadCustomerNotifications(user.id);
   const {data:orders,error}=await sb.from("orders").select("id,order_number,total,currency,status,created_at,service_request_id").eq("user_id",user.id).order("created_at",{ascending:false}).limit(100);
   if(error)throw error;
   if(!orders?.length){target.textContent="No service orders found for this account yet. Orders created after a service enquiry will appear here.";return;}
