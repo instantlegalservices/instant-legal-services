@@ -81,6 +81,15 @@ const { chromium } = require("playwright");
     }
     if(!customerPortal.includes("UPI proof submitted · Pending verification")||!customerPortal.includes("Paid · Verified")||!customerPortal.includes("UPI proof rejected"))throw new Error("Customer portal payment status labels are incomplete.");
     console.log("CUSTOMER_PORTAL_OWN_ORDERS_UPI_PAYMENT_STATUS=PASS");
+    await page.goto(base+"/");
+    const directSignupLink=page.locator('.account-entry-btn.account-join');
+    if(await directSignupLink.getAttribute("href")!=="customer-portal.html?mode=signup")throw new Error("Homepage Client Create Account must target direct signup mode.");
+    await page.goto(base+"/customer-portal.html?mode=signup");
+    if(!(await page.locator("#signupPanel").isVisible()))throw new Error("Direct client signup URL without returnTo must open the Create account panel.");
+    if(!(await page.locator("#signupEmail").isVisible())||!(await page.locator("#signupPassword").isVisible()))throw new Error("Direct client signup must expose email and password fields.");
+    await page.locator("#tabLogin").click();
+    if(!(await page.locator("#loginPanel").isVisible()))throw new Error("Existing clients must still be able to switch to Sign in.");
+    console.log("DIRECT_CLIENT_SIGNUP_ENTRY_AND_LOGIN_SWITCH=PASS");
     const toolsModule=await (await page.request.get(base+"/assets/ils-tools.js")).text();
     if(!toolsModule.includes("'ils-enquiry-fee-199':'ils-enquiry-fee-199'")||!toolsModule.includes("if(options.autoPay===true)"))throw new Error("Dedicated fixed-price UPI checkout is not registered for immediate form checkout.");
     const assistanceSource=await (await page.request.get(base+"/assistance.html")).text();
