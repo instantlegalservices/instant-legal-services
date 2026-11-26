@@ -107,7 +107,7 @@ Deno.serve(async(req)=>{
     }
 
     // Associate accounts are resolved only through the authenticated user's own trust profile.
-    // This maps the verified PROFESSIONAL_ASSOCIATE identity to the portal's existing role key,
+    // This maps the verified ASSISTANT trust profile to the portal's existing associate role key,
     // allowing the existing associate notification-center RPCs to be used without a new backend.
     const {data:associate,error:associateError}=await admin
       .from("ils_associate_trust_profiles")
