@@ -1055,7 +1055,12 @@ jobs:
                   password: process.env.ILS_TEST_SECOND_CUSTOMER_PASSWORD
                 })
               });
-              if (!login.ok) throw new Error('SECOND_CUSTOMER_AUTH_HTTP_' + login.status);
+              if (!login.ok) {
+                const authError = await login.json().catch(() => ({}));
+                const safeCode = String(authError.code || authError.error || 'unknown').slice(0, 80);
+                const safeMessage = String(authError.msg || authError.message || 'No Auth error message returned').slice(0, 180);
+                throw new Error('SECOND_CUSTOMER_AUTH_HTTP_' + login.status + ': ' + safeCode + ': ' + safeMessage);
+              }
               const session = await login.json();
               if (!session.access_token || !session.user?.id) {
                 throw new Error('SECOND_CUSTOMER_AUTH_RESPONSE_INVALID');
