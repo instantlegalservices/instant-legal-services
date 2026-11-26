@@ -22,7 +22,7 @@ INSERT INTO auth.users(id) VALUES
  ('80b895a6-476e-459e-869d-f52dde18792b'),
  ('a871e397-8d77-49cb-ad66-8c4951286d5d');
 
-\i supabase/migrations/20261126083000_targeted_customer_in_app_notifications_v1.sql
+\i supabase/migrations/20261126091138_targeted_customer_in_app_notifications_v1.sql
 
 DO $phase1_event_test$
 DECLARE
