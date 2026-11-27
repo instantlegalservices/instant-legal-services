@@ -11,6 +11,7 @@ on:
       - "popular-assistance.html"
       - "business-compliance.html"
       - "catalog/index.html"
+      - "assistance.html"
       - "scripts/test-service-catalog.js"
       - ".github/workflows/test-home-search-routing.yml"
   push:
