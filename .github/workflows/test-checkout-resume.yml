@@ -609,7 +609,7 @@ jobs:
                 await loadUpiProofs();
                 const body = document.getElementById('upiProofBody');
                 const row = Array.from(body.querySelectorAll('tr')).find(tr => tr.innerText.includes('ILSTEST'));
-                if (!row || !row.innerText.toLowerCase().includes('pending')) return { ok: false, reason: 'PENDING_TEST_PROOF_NOT_RENDERED' };
+                if (!row || !row.innerText.toLowerCase().includes('pending')) return { ok: false, reason: 'PENDING_TEST_PROOF_NOT_RENDERED: filter=' + document.getElementById('upiProofStatusFilter')?.value + '; table=' + (body?.innerText || '').slice(0,500) + '; rpcRows=' + (Array.isArray(upiProofRows) ? upiProofRows.length : 'not-array') + '; matching=' + JSON.stringify((Array.isArray(upiProofRows) ? upiProofRows : []).filter(x => String(x.transaction_ref || '').startsWith('ILSTEST')).map(x => ({status:x.status,ref:x.transaction_ref,order:x.order_id}))).slice(0,700) };
 
                 // The private object and admin RPC must not be available to an anonymous visitor.
                 const proofRow = upiProofRows.find(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending');
