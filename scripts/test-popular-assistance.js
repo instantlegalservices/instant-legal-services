@@ -152,7 +152,7 @@ const { chromium } = require("playwright");
     await page.goto(base+"/assistance.html?service=legal-drafting");
     await page.evaluate(()=>{
       window.__ilsInquiryTest={lead:null,order:null};
-      window.ILS.submitRequirement=async payload=>{window.__ilsInquiryTest.lead=payload;return {success:true};};
+      window.ILS.submitRequirement=async payload=>{window.__ilsInquiryTest.lead=payload;return 1234;};
       window.ILS_TOOLS={createOrder:async (slug,details,a,b,options)=>{window.__ilsInquiryTest.order={slug,details,options};return {success:true};}};
     });
     await page.locator("#name").fill("CI Checkout Test");
@@ -166,6 +166,7 @@ const { chromium } = require("playwright");
     const inquiryFlow=await page.evaluate(()=>window.__ilsInquiryTest);
     if(!inquiryFlow.lead||inquiryFlow.lead.state!=="Uttar Pradesh"||inquiryFlow.lead.mobile!=="9876543210")throw new Error("Catalogue enquiry CRM lead payload missing or incorrect.");
     if(inquiryFlow.order?.slug!=="ils-enquiry-fee-199"||inquiryFlow.order?.details?.mode!=="client-service-inquiry")throw new Error("Catalogue enquiry did not create the initial enquiry order.");
+    if(inquiryFlow.order?.details?.client_requirement_id!==1234)throw new Error("Catalogue enquiry order is not linked to the saved CRM requirement ID.");
     if(inquiryFlow.order?.options?.autoPay!==true||inquiryFlow.order?.options?.forceQr!==true||inquiryFlow.order?.options?.paymentContainerId!=="assistStatus")throw new Error("Catalogue enquiry did not launch UPI QR checkout.");
     if(!(await page.locator("#assistStatus").innerText()).includes("Preparing your ₹299"))throw new Error("Catalogue enquiry payment preparation status missing.");
     await page.goto(base+"/assistance.html?mode=guided&service=legal-drafting&problem=Traffic%20challan&route=Traffic%20Challan");
