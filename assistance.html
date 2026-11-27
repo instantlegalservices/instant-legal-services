@@ -358,17 +358,18 @@ document.addEventListener("DOMContentLoaded",()=>{
    const intakeService=new URLSearchParams(location.search).get("service")||"";
    const businessType=intakeService==="business-compliance"?(document.getElementById("businessType").value||""):"";
    const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
-   const paidIntakeServices=new Set(["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr","business-compliance"]);
-   const requiresPaidCheckout=paidIntakeServices.has(intakeService)&&
-    (intakeService!=="business-compliance"||selectedOption==="GST return / notice / portal issue");
-   if(requiresPaidCheckout){
+   const isClientServiceInquiry=Boolean(intakeService);
+   const inquiryPayload={name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief};
+   if(isClientServiceInquiry){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
-    const details={mode:"popular-assistance",intake_source:"ils-universal-service-form",intake_service:intakeService,service_option:selectedOption,business_type:businessType,name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value,matter:document.getElementById("matter").value,brief:finalBrief.slice(0,3000)};
-    s.className="status";s.textContent="Enquiry received. Preparing your ₹299 UPI payment…";
+    // Preserve the CRM lead and create the adjustable initial-enquiry payment order for every catalogue service.
+    await ILS.submitRequirement(inquiryPayload);
+    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,business_type:businessType,...inquiryPayload,brief:finalBrief.slice(0,3000)};
+    s.className="status";s.textContent="Enquiry saved. Preparing your ₹299 initial enquiry payment…";
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
    }
-   await ILS.submitRequirement({name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief});
+   await ILS.submitRequirement(inquiryPayload);
    s.className="status ok";s.textContent="Requirement submitted successfully. Please retain your details for follow-up.";form.reset()}catch(err){s.className="status err";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}
  );
 });
