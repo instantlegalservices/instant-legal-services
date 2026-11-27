@@ -61,7 +61,7 @@ window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY||"sb_publishable_D5eFcgWFELtnym0
 
 <section class="catalog-section" id="individual-services">
 <div class="catalog-heading"><div><span class="eyebrow">One-time assistance</span><h2>Individual services</h2><p>Choose and pay only for the specific service you need.</p></div></div>
-<div class="catalog-tools"><input id="catalogSearch" type="search" placeholder="Search services, e.g. legal notice or property" aria-label="Search services"><select id="catalogCategory" aria-label="Filter by category"><option value="all">All categories</option><option value="legal">Legal &amp; case support</option><option value="business">Business &amp; property</option><option value="government">Government &amp; digital assistance</option><option value="tools">Professional tools &amp; reports</option></select></div>
+<div class="catalog-tools"><input id="catalogSearch" type="search" placeholder="Search services, e.g. legal notice or property" aria-label="Search services"><select id="catalogCategory" aria-label="Filter by category"><option value="all">All categories</option><option value="legal">Legal &amp; dispute support</option><option value="tax">GST &amp; tax compliance</option><option value="business">Business &amp; property</option><option value="government">Government &amp; digital assistance</option><option value="professional">Professional services</option><option value="tools">Tools &amp; reports</option></select></div>
 <div id="catalogStatus" class="catalog-status" aria-live="polite">Loading available ILS services…</div>
 <div id="catalogGrid" class="catalog-grid"></div>
 <div class="catalog-disclosure">The displayed service price is the current active ILS catalogue price. Applicable taxes, government fees, stamp duty, portal charges and third-party costs are separate unless expressly stated. For eligible matters, the ₹299 initial enquiry fee is credited in full against ILS professional/service charges for the same matter if you proceed. Any additional fee is confirmed before work begins.</div>
@@ -89,12 +89,16 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const categoryFor=s=>{
  const c=String(s.category||"").toLowerCase();
  const slug=String(s.slug||"").toLowerCase();
- if(c.includes("professional")||c.includes("accounting")||slug.startsWith("tool-output")||slug.startsWith("accounting-print"))return "tools";
- if(c.includes("action")||slug.includes("official-route")||slug.includes("digital-form"))return "government";
- if(c.includes("business")||c.includes("property")||slug.includes("property"))return "business";
+ const name=String(s.name||"").toLowerCase();
+ if(slug.startsWith("tool-output")||c.includes("tool")||name.includes("tool"))return "tools";
+ if(c.includes("government")||c.includes("action")||slug.includes("official-route")||slug.includes("digital-form"))return "government";
+ if(c.includes("gst")||c.includes("tax")||c.includes("itr")||slug.includes("gst")||slug.includes("income-tax")||name.includes("tax"))return "tax";
+ if(c.includes("professional")||slug.startsWith("professional-report"))return "professional";
+ if(c.includes("business")||c.includes("property")||slug.includes("property")||slug.includes("business"))return "business";
+ if(slug.startsWith("accounting-print"))return "professional";
  return "legal";
 };
-const categoryLabel={legal:"Legal & case support",business:"Business & property",government:"Government & digital assistance",tools:"Professional tools & reports"};
+const categoryLabel={legal:"Legal & dispute support",tax:"GST & tax compliance",business:"Business & property",government:"Government & digital assistance",professional:"Professional services",tools:"Tools & reports"};
 let services=[];
 function render(){
  const q=$("catalogSearch").value.trim().toLowerCase();
