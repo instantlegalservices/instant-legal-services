@@ -197,6 +197,31 @@ const intakeContext=await browser.newContext({viewport:{width:390,height:844},se
   if(captured.order.slug!=="ils-enquiry-fee-199"||captured.order.details.selected_business_plan!=="Shopkeeper Starter"||captured.order.details.business_type!=="Retail shop"||captured.order.details.service_option!=="GST registration / amendment"||captured.order.details.intake_service!=="business-compliance")throw new Error("Existing ₹299 enquiry order did not preserve business plan metadata.");
   if(intakeErrors.length)throw new Error("Assistance intake browser errors: "+intakeErrors.join("; "));
   
+  const offerPage=await intakeContext.newPage(),offerErrors=[];
+  offerPage.on("pageerror",e=>offerErrors.push(e.message));
+  await offerPage.route(/https:\/\/(cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|unpkg\.com\/@supabase\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:intakeStub}));
+  await offerPage.goto(intakeBase+"/assistance.html?service=business-compliance&industry=Retail%20shop&option=GST%20Registration%20%E2%80%93%20Launch%20Offer");
+  await offerPage.locator("#assistForm").waitFor({state:"attached"});
+  if(await offerPage.locator("#serviceOption").inputValue()!=="GST Registration – Launch Offer")throw new Error("GST launch offer CTA did not preselect the exact offer in the enquiry form.");
+  await offerPage.locator("#name").fill("ILS GST Offer Test");
+  await offerPage.locator("#mobile").fill("9876543212");
+  await offerPage.locator("#state").fill("Uttar Pradesh");
+  await offerPage.locator("#city").fill("Bareilly");
+  await offerPage.locator("#consent").check();
+  await offerPage.evaluate(()=>{
+   window.__ilsOfferCapture={};
+   window.ILS={submitRequirement:async payload=>{window.__ilsOfferCapture.lead=payload;return {ok:true};}};
+   window.ILS_TOOLS={createOrder:async (...args)=>{window.__ilsOfferCapture.order={slug:args[0],details:args[1],options:args[4]};return {ok:true};}};
+  });
+  await offerPage.locator('#assistForm button[type="submit"]').click();
+  await offerPage.waitForFunction(()=>Boolean(window.__ilsOfferCapture?.order));
+  const offerCaptured=await offerPage.evaluate(()=>window.__ilsOfferCapture);
+  if(!offerCaptured.lead?.brief?.includes("Selected service: GST Registration – Launch Offer")||!offerCaptured.lead.brief.includes("Business type: Retail shop"))throw new Error("Launch offer selection did not reach the CRM lead payload.");
+  if(offerCaptured.order.slug!=="ils-enquiry-fee-199"||offerCaptured.order.details.service_option!=="GST Registration – Launch Offer"||offerCaptured.order.details.intake_service!=="business-compliance"||offerCaptured.order.details.business_type!=="Retail shop")throw new Error("Launch offer selection did not reach the initial enquiry order metadata.");
+  if(!offerCaptured.order.options?.resumeCheckout||!offerCaptured.order.options?.forceQr||!offerCaptured.order.options?.autoPay)throw new Error("Launch offer did not use the existing initial enquiry QR checkout flow.");
+  if(offerErrors.length)throw new Error("Launch offer enquiry browser errors: "+offerErrors.join("; "));
+  await offerPage.close();
+
   await intakePage.goto(intakeBase+"/assistance.html?service=business-compliance&plan=custom-business-plan&cycle=annual&industry=Hospital%20%2F%20Clinic&invoices=150&gstins=2&modules=gst-filing%2Creconciliation%2Clegal-desk&estimate=43960");
   await intakePage.locator("#assistForm").waitFor({state:"attached"});
   if(await intakePage.locator("#businessType").inputValue()!=="Hospital / Clinic")throw new Error("Custom package industry did not prefill business type.");
