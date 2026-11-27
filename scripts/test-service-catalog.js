@@ -149,7 +149,11 @@ const fs = require("fs");
   await intakePage.locator("#state").fill("Uttar Pradesh");
   await intakePage.locator("#city").fill("Bareilly");
   await intakePage.locator("#consent").check();
-  await intakePage.evaluate(()=>{window.__ilsCapture={};});
+  await intakePage.evaluate(()=>{
+   window.__ilsCapture={};
+   window.ILS={submitRequirement:async payload=>{window.__ilsCapture.lead=payload;return {ok:true};}};
+   window.ILS_TOOLS={createOrder:async (slug,details)=>{window.__ilsCapture.order={slug,details};return {ok:true};}};
+  });
   await intakePage.locator('#assistForm button[type="submit"]').click();
   await intakePage.waitForFunction(()=>Boolean(window.__ilsCapture?.order));
   const customCaptured=await intakePage.evaluate(()=>window.__ilsCapture);
