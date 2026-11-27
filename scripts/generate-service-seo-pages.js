@@ -8,6 +8,8 @@ const registry=JSON.parse(fs.readFileSync(registryPath,"utf8"));
 if(registry.site!==SITE||!Array.isArray(registry.services))throw new Error("Invalid ILS service registry.");
 const esc=value=>String(value||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 const seen=new Set();
+const seenTitles=new Set();
+const seenH1s=new Set();
 const generated=[];
 for(const service of registry.services){
  const slug=String(service.slug||"").trim();
@@ -15,6 +17,10 @@ for(const service of registry.services){
  if(seen.has(slug))throw new Error("Duplicate service slug: "+slug);
  seen.add(slug);
  if(!service.title||!service.h1||String(service.description||"").length<60)throw new Error("Service metadata incomplete: "+slug);
+ const titleKey=String(service.title).trim().toLowerCase(),h1Key=String(service.h1).trim().toLowerCase();
+ if(seenTitles.has(titleKey))throw new Error("Duplicate service title: "+service.title);
+ if(seenH1s.has(h1Key))throw new Error("Duplicate service H1: "+service.h1);
+ seenTitles.add(titleKey);seenH1s.add(h1Key);
  if(!Array.isArray(service.documents)||service.documents.length<3||service.documents.length>8)throw new Error("Service checklist must contain 3–8 items: "+slug);
  const route="/services/"+slug+"/";
  const file=path.join(root,"services",slug,"index.html");
@@ -38,7 +44,10 @@ const sitemapPath=path.join(root,"sitemap.xml");
 let sitemap=fs.readFileSync(sitemapPath,"utf8");
 for(const service of registry.services){
  const url=SITE+"/services/"+service.slug+"/";
- if(!sitemap.includes("<loc>"+url+"</loc>")){
+ const loc="<loc>"+url+"</loc>";
+ const occurrences=sitemap.split(loc).length-1;
+ if(occurrences>1)throw new Error("Duplicate sitemap canonical: "+url);
+ if(occurrences===0){
   if(process.argv.includes("--check"))throw new Error("Sitemap missing registry route: "+url);
   sitemap=sitemap.replace("</urlset>","  <url><loc>"+url+"</loc></url>\n</urlset>");
  }
