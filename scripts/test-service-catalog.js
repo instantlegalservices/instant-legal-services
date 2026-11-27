@@ -1,5 +1,6 @@
 "use strict";
 const { chromium } = require("playwright");
+const fs = require("fs");
 (async () => {
  const browser=await chromium.launch({headless:true}); const failures=[];
  try {
@@ -9,17 +10,17 @@ const { chromium } = require("playwright");
    const stub = [
     "window.__legacy="+(viewport.legacy?"true":"false")+";",
     "window.__query=async function(table,columns){",
-    "if(table==='services'){if(window.__legacy&&columns.includes('is_active'))return {data:null,error:{message:'legacy schema'}};return {data:[{id:'s1',slug:'legal-notice-draft',name:'Legal Notice Draft',description:'Draft a notice',category:'Drafting',status:'active'},{id:'s2',slug:'property-due-diligence',name:'Property Due Diligence',description:'Review property records',category:'Property',status:'active'},{id:'s3',slug:'official-route-guidance',name:'Official Route Guidance',description:'Understand official portals',category:'Action Assistance',status:'active'},{id:'s4',slug:'accounting-print-basic',name:'Accounting Report Basic',description:'Printable report',category:'Accounting Reports',status:'active'},{id:'s5',slug:'no-price-service',name:'Unpriced Service',description:'Must not show without active price',category:'Drafting',status:'active'}],error:null};}",
+    "if(table==='services'){if(window.__legacy&&columns.includes('is_active'))return {data:null,error:{message:'legacy schema'}};return {data:[{id:'s1',slug:'legal-notice-draft',name:'Legal Notice Draft',description:'Draft a notice',category:'Drafting',status:'active'},{id:'s2',slug:'property-due-diligence',name:'Property Due Diligence',description:'Review property records',category:'Property',status:'active'},{id:'s3',slug:'official-route-guidance',name:'Official Route Guidance',description:'Understand official portals',category:'Action Assistance',status:'active'},{id:'s4',slug:'accounting-print-basic',name:'Accounting Report Basic',description:'Printable report',category:'Accounting Reports',status:'active'},{id:'s5',slug:'no-price-service',name:'Unpriced Service',description:'Must not show without active price',category:'Drafting',status:'active'},{id:'s6',slug:'gst-assistance',name:'GST Assistance',description:'GST registration and returns',category:'GST & Tax',status:'active'}],error:null};}",
     "if(window.__legacy&&columns.includes('price'))return {data:null,error:{message:'legacy price column'}};",
-    "if(window.__legacy)return {data:[{service_id:'s1',amount:499},{service_id:'s2',amount:2999},{service_id:'s3',amount:19},{service_id:'s4',amount:45}],error:null};",
-    "return {data:[{service_id:'s1',price:499},{service_id:'s2',price:2999},{service_id:'s3',price:19},{service_id:'s4',price:45}],error:null};};",
+    "if(window.__legacy)return {data:[{service_id:'s1',amount:499},{service_id:'s2',amount:2999},{service_id:'s3',amount:19},{service_id:'s4',amount:45},{service_id:'s6',amount:399}],error:null};",
+    "return {data:[{service_id:'s1',price:499},{service_id:'s2',price:2999},{service_id:'s3',price:19},{service_id:'s4',price:45},{service_id:'s6',price:399}],error:null};};",
     "window.supabase={createClient:function(){return {from:function(table){return {select:function(columns){return {eq:function(){return {order:function(){return window.__query(table,columns);}};}};}};}};}};"
    ].join("\n");
    await page.route(/https:\/\/(cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|unpkg\.com\/@supabase\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:stub}));
    const base=(process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"");
    await page.goto(base+"/catalog/"); await page.waitForTimeout(500);
    if(failures.length)throw new Error("Browser JS errors: "+failures.join("; "));
-   if(await page.locator(".catalog-card").count()!==4)throw new Error("Only priced active services should render; status: "+await page.locator("#catalogStatus").innerText());
+   if(await page.locator(".catalog-card").count()!==5)throw new Error("Only priced active services should render; status: "+await page.locator("#catalogStatus").innerText());
    if(await page.locator(".plan-card").count()!==6)throw new Error("All six business plan enquiry cards must render.");
    if(!(await page.locator(".catalog-card").filter({hasText:"Legal Notice Draft"}).innerText()).includes("₹499"))throw new Error("Active service price not displayed.");
    if(await page.locator(".catalog-card").filter({hasText:"Unpriced Service"}).count()!==0)throw new Error("Unpriced service must not appear purchasable.");
@@ -34,6 +35,16 @@ const { chromium } = require("playwright");
    const href=await page.locator(".catalog-card").filter({hasText:"Legal Notice Draft"}).locator("a").getAttribute("href");
    if(href!=="../assistance.html?service=legal-notice-draft")throw new Error("Service CTA slug mismatch.");
    if(await page.locator(".plan-card a").count()!==6)throw new Error("Business plans must stay enquiry-led.");
+   const planSlugs=["shopkeeper-starter","retailer-plus","wholesaler-compliance","manufacturer-support","hospital-clinic-support","custom-business-plan"];
+   for(const slug of planSlugs){
+    const planLink=page.locator('.plan-card a[href*="plan='+slug+'"]');
+    if(await planLink.count()!==1)throw new Error("Business plan CTA missing exact plan handoff: "+slug);
+   }
+   const assistanceSource=fs.readFileSync("assistance.html","utf8");
+   for(const [slug,label] of [["shopkeeper-starter","Shopkeeper Starter"],["retailer-plus","Retailer Plus"],["wholesaler-compliance","Wholesaler Compliance"],["manufacturer-support","Manufacturer Support"],["hospital-clinic-support","Hospital & Clinic Support"],["custom-business-plan","Custom Business Plan"]]){
+    if(!assistanceSource.includes('"'+slug+'":"'+label+'"'))throw new Error("Assistance intake does not map plan "+slug);
+   }
+   if(!assistanceSource.includes("Selected business plan: \"+selectedBusinessPlan")||!assistanceSource.includes("selected_business_plan:selectedBusinessPlan||null")||!assistanceSource.includes("await ILS.submitRequirement(inquiryPayload)"))throw new Error("Business plan selection must be preserved in CRM lead and order metadata before checkout.");
    if(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth))throw new Error("Horizontal overflow at "+viewport.width+"px.");
    await context.close();
   }
