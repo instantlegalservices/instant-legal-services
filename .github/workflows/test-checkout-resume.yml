@@ -8,6 +8,7 @@ on:
       - "customer-portal.html"
       - "assistance.html"
       - "scripts/test-popular-assistance.js"
+      - "admin.html"
       - ".github/workflows/test-checkout-resume.yml"
   push:
     paths:
