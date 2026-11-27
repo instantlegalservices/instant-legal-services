@@ -462,6 +462,42 @@
         "State or department, where relevant",
         "Application or reference number, if already available",
         "Documents listed by the official authority"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Official portal and route identification",
+            "Step-by-step navigation summary",
+            "Eligibility and document checklist based on official information",
+            "Guidance on reference numbers and status checks"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Select the government service",
+            "ILS checks the official source and route",
+            "Guidance scope and fee are disclosed",
+            "You complete login, payment and submission on the official portal"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Guided assistance explains the route; you complete the official filing yourself.",
+            "No. Government and statutory charges are paid only through the official portal.",
+            "Get official route guidance →"
+          ]
+        }
       ]
     },
     {
@@ -474,6 +510,42 @@
         "No separate document upload is normally needed for tool-generated reports",
         "Keep source figures, invoices or statements available to verify your inputs",
         "Use the relevant tool fields and reporting period accurately"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Basic printable or PDF-ready output",
+            "Guided report with calculation summary and explanatory notes",
+            "Professional-format report with assumptions and guidance",
+            "Report output based on the inputs entered in the selected tool"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Open the relevant ILS accounting tool",
+            "Enter and review the calculation inputs",
+            "Choose the report tier shown in the tool",
+            "Unlock and download the generated report"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. A generated report is not statutory audit, certification or ongoing bookkeeping.",
+            "You should review all inputs and assumptions before purchasing the output.",
+            "Open accounting tools →"
+          ]
+        }
       ]
     },
     {
@@ -486,6 +558,42 @@
         "No separate upload is normally required for a report generated from the tool",
         "Keep relevant source documents available to validate inputs",
         "Check applicable dates, rates and assumptions in the tool"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Basic printable report",
+            "Guided report with steps and assumptions",
+            "Professional-format report with expanded explanation",
+            "Output based on the selected tool and supplied inputs"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Select the appropriate professional tool",
+            "Enter facts and figures carefully",
+            "Review the calculated result",
+            "Choose and unlock the report format"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No, unless a separate qualified professional engagement is expressly confirmed.",
+            "Users must verify inputs and applicable assumptions; outputs are informational.",
+            "Explore ILS professional tools →"
+          ]
+        }
       ]
     },
     {
