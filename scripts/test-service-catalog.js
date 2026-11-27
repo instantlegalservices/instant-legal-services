@@ -53,6 +53,27 @@ const fs = require("fs");
    const toolHref=await page.locator(".catalog-card").filter({hasText:"Accounting Report Basic"}).locator("a").getAttribute("href");
    if(toolHref!=="../tools.html")throw new Error("Accounting report must route to the existing 208-tool report checkout.");
    if(await page.locator(".plan-card a").count()!==6)throw new Error("Business plans must stay enquiry-led.");
+   if(await page.locator("#custom-plan-builder").count()!==1)throw new Error("Custom package builder is missing.");
+   if(!(await page.locator("#builderEstimate").innerText()).includes("₹999 / month"))throw new Error("Monthly package estimate does not start at the expected base.");
+   await page.locator("#builderCycle").selectOption("annual");
+   if(!(await page.locator("#builderEstimate").innerText()).includes("₹9,990 / year"))throw new Error("Annual estimate must apply the 10-month annual-prepay model.");
+   await page.locator('.builder-addon input[value="reconciliation"]').check();
+   if(!(await page.locator("#builderEstimate").innerText()).includes("₹13,980 / year"))throw new Error("Annual add-on estimate did not recalculate.");
+   await page.locator("#builderCycle").selectOption("one_time");
+   if(!(await page.locator("#builderEstimate").innerText()).includes("Scope-based quote"))throw new Error("One-time project must use a scope-based quote.");
+   await page.locator("#builderCycle").selectOption("monthly");
+   await page.locator("#builderInvoices").selectOption("150");
+   await page.locator("#builderGstins").selectOption("2");
+   await page.locator('.builder-addon input[value="legal-desk"]').check();
+   const customHref=await page.locator("#builderContinue").getAttribute("href");
+   const customUrl=new URL(customHref,"https://ils.example/catalog/");
+   if(customUrl.searchParams.get("cycle")!=="monthly"||customUrl.searchParams.get("industry")!=="Retail shop"||customUrl.searchParams.get("invoices")!=="150"||customUrl.searchParams.get("gstins")!=="2"||!customUrl.searchParams.get("modules").includes("legal-desk")||customUrl.searchParams.get("plan")!=="custom-business-plan")throw new Error("Custom plan builder did not pass the selected scope and billing preference.");
+   await page.locator("#builderCycle").selectOption("monthly");
+   await page.locator("#builderInvoices").selectOption("50");
+   await page.locator("#builderGstins").selectOption("1");
+   await page.locator('.builder-addon input[value="reconciliation"]').uncheck();
+   await page.locator('.builder-addon input[value="legal-desk"]').uncheck();
+
    const planSlugs=["shopkeeper-starter","retailer-plus","wholesaler-compliance","manufacturer-support","hospital-clinic-support","custom-business-plan"];
    for(const slug of planSlugs){
     const planLink=page.locator('.plan-card a[href*="plan='+slug+'"]');
@@ -68,6 +89,10 @@ const fs = require("fs");
     if(!assistanceSource.includes('"'+slug+'":{title:'))throw new Error("Service intake mapping missing for "+slug);
    }
    if(!assistanceSource.includes("industryParam")||!assistanceSource.includes("value===industryParam"))throw new Error("Business industry shortcut does not preselect CRM business type.");
+   for(const key of ["package_billing_cycle:packageCycle||null","package_modules:packageModules","package_estimate:packageCycle!==\"one_time\"?packageEstimate:null","Billing preference: "+packageCycleLabel"]){
+    if(!assistanceSource.includes(key))throw new Error("Custom plan metadata missing from CRM linkage: "+key);
+   }
+
    for(const option of ["GST input tax credit / reconciliation","Tax notice / demand response","TDS / payroll / salary compliance","Accounting / bookkeeping / bank reconciliation","E-way bill / e-invoice support","Shop & Establishment / Trade Licence","Udyam / MSME registration","FSSAI / Food licence","Trademark / Brand protection","Labour / PF / ESI compliance","MCA / ROC / annual filing assistance"]){
     if(!assistanceSource.includes(option))throw new Error("Business enquiry subcategory missing from CRM intake: "+option);
    }
@@ -107,6 +132,23 @@ const fs = require("fs");
   if(!captured.lead?.brief?.includes("Business type: Retail shop")||!captured.lead.brief.includes("Selected business plan: Shopkeeper Starter")||!captured.lead.brief.includes("Selected service: GST registration / amendment"))throw new Error("CRM lead payload did not preserve selected business type, plan and service.");
   if(captured.order.slug!=="ils-enquiry-fee-199"||captured.order.details.selected_business_plan!=="Shopkeeper Starter"||captured.order.details.business_type!=="Retail shop"||captured.order.details.service_option!=="GST registration / amendment"||captured.order.details.intake_service!=="business-compliance")throw new Error("Existing ₹299 enquiry order did not preserve business plan metadata.");
   if(intakeErrors.length)throw new Error("Assistance intake browser errors: "+intakeErrors.join("; "));
+  
+  await intakePage.goto(intakeBase+"/assistance.html?service=business-compliance&plan=custom-business-plan&cycle=annual&industry=Hospital%20%2F%20Clinic&invoices=150&gstins=2&modules=gst-filing%2Creconciliation%2Clegal-desk&estimate=43960");
+  await intakePage.locator("#assistForm").waitFor({state:"attached"});
+  if(await intakePage.locator("#businessType").inputValue()!=="Hospital / Clinic")throw new Error("Custom package industry did not prefill business type.");
+  await intakePage.locator("#name").fill("ILS Custom Plan Test");
+  await intakePage.locator("#mobile").fill("9876543211");
+  await intakePage.locator("#state").fill("Uttar Pradesh");
+  await intakePage.locator("#city").fill("Bareilly");
+  await intakePage.locator("#consent").check();
+  await intakePage.evaluate(()=>{window.__ilsCapture={};});
+  await intakePage.locator('#assistForm button[type="submit"]').click();
+  await intakePage.waitForFunction(()=>Boolean(window.__ilsCapture?.order));
+  const customCaptured=await intakePage.evaluate(()=>window.__ilsCapture);
+  if(!customCaptured.lead?.brief?.includes("Billing preference: Annual prepaid")||!customCaptured.lead.brief.includes("Business profile: Hospital / Clinic")||!customCaptured.lead.brief.includes("GSTIN count: 2")||!customCaptured.lead.brief.includes("Indicative package estimate: ₹43960 / year"))throw new Error("Custom package selection was not preserved in CRM lead details.");
+  if(customCaptured.order.details.package_billing_cycle!=="annual"||customCaptured.order.details.package_industry!=="Hospital / Clinic"||customCaptured.order.details.package_estimate!==43960||!customCaptured.order.details.package_modules.includes("reconciliation"))throw new Error("Custom package billing and module metadata were not preserved in order metadata.");
+  if(customCaptured.order.slug!=="ils-enquiry-fee-199")throw new Error("Custom package should continue through the existing initial enquiry checkout only.");
+
   await intakeContext.close();
   console.log("CATALOGUE_PRODUCTION_AND_LEGACY_TEST_SCHEMA_MOBILE_DESKTOP=PASS");
  } finally {await browser.close();}
