@@ -258,6 +258,24 @@ BEGIN
     RAISE EXCEPTION 'client catalogue service request did not link the submitted CRM requirement ID';
   END IF;
 
+  BEGIN
+    INSERT INTO public.service_requests(details)
+    VALUES (jsonb_build_object(
+      'intake_source', 'ils-client-portal-service-catalogue',
+      'client_requirement_id', v_lead_id,
+      'name', 'Client Catalogue Fixture',
+      'mobile', '9000000000',
+      'state', 'Uttar Pradesh',
+      'city', 'Bareilly',
+      'matter', 'Legal Drafting'
+    ));
+    RAISE EXCEPTION 'client catalogue trigger accepted a mismatched CRM identity';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'CLIENT_REQUIREMENT_NOT_FOUND_OR_IDENTITY_MISMATCH' THEN
+      RAISE;
+    END IF;
+  END;
+
   SELECT count(*) INTO v_lead_count
   FROM public.client_requirements
   WHERE id = v_lead_id;
