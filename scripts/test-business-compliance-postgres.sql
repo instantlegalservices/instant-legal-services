@@ -102,6 +102,7 @@ $$;
 \i supabase/migrations/20261117182100_align_admin_crm_uuid_authorization.sql
 \i supabase/migrations/20261124193000_link_universal_intake_to_existing_crm.sql
 \i supabase/migrations/20261127100200_link_client_catalogue_intake_to_existing_crm.sql
+\i supabase/migrations/20261127103000_add_authenticated_customer_requirement_rpc.sql
 
 DO $assert$
 DECLARE
@@ -143,6 +144,22 @@ BEGIN
   IF NOT has_table_privilege('authenticated', 'public.client_requirements', 'SELECT')
      OR NOT has_table_privilege('authenticated', 'public.client_requirements', 'UPDATE') THEN
     RAISE EXCEPTION 'authenticated CRM access was not preserved';
+  END IF;
+
+  IF NOT has_function_privilege('authenticated',
+       'public.ils_submit_customer_requirement(text,text,text,text,text,text)', 'EXECUTE')
+     OR has_function_privilege('anon',
+       'public.ils_submit_customer_requirement(text,text,text,text,text,text)', 'EXECUTE')
+     OR has_function_privilege('public',
+       'public.ils_submit_customer_requirement(text,text,text,text,text,text)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'authenticated customer CRM submit RPC grants are incorrect';
+  END IF;
+  SELECT pg_get_functiondef('public.ils_submit_customer_requirement(text,text,text,text,text,text)'::regprocedure)
+    INTO v_definition;
+  IF position('auth.uid()' in v_definition) = 0
+     OR position('SECURITY DEFINER' in v_definition) = 0
+     OR position('returning id into v_id' in v_definition) = 0 THEN
+    RAISE EXCEPTION 'authenticated customer CRM submit RPC is missing auth, definer, or ID-return safeguards';
   END IF;
 
   SELECT pg_get_functiondef('public.get_client_portal(text,text)'::regprocedure)
@@ -294,4 +311,4 @@ BEGIN
 END;
 $admin$;
 
-\echo PASS: CRM/portal migrations, universal intake creation, and client-catalogue CRM linking execute on PostgreSQL 16; anon grants remain column-scoped; authenticated CRM access, portal disclosure and Admin RPC guards verified.
+\echo PASS: CRM/portal migrations, universal intake creation, client-catalogue CRM linking, and authenticated customer submit RPC execute on PostgreSQL 16; anon grants remain column-scoped; portal disclosure and Admin RPC guards verified.
