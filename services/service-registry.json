@@ -606,6 +606,41 @@
         "No extra document upload is normally required",
         "Complete the selected tool inputs and review the result",
         "Keep your source data for your own records"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Selected basic, detailed or professional micro-report output",
+            "Download or print-ready result where supported",
+            "One-time checkout for the selected report SKU"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose a supported tool",
+            "Complete the calculation",
+            "Select the report output offered by that tool",
+            "Pay the displayed one-time fee and unlock the result"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "Many tools are available to use without charge; the report output is paid only where shown.",
+            "No. These are one-time report unlocks.",
+            "Open the 208 ILS tools →"
+          ]
+        }
       ]
     },
     {
@@ -620,6 +655,42 @@
         "Sales and purchase summaries or accounting records",
         "Bank, salary or income records relevant to the task",
         "Notice, demand or portal reference and due date, if any"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "GST registration, amendment and portal assistance",
+            "GST return filing and reconciliation enquiries",
+            "Income-tax return preparation and notice-response enquiries",
+            "TDS, payroll and tax-record organisation"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose the tax service and business type",
+            "Submit the period, issue and records available",
+            "ILS confirms eligibility, scope, professional fee and statutory charges",
+            "Work begins after written scope and payment terms are accepted"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Government, portal and statutory charges are separate unless expressly stated.",
+            "No. Never share passwords, OTPs, PINs or authentication codes.",
+            "Explore GST and tax assistance →"
+          ]
+        }
       ]
     },
     {
@@ -634,6 +705,42 @@
         "PAN and identity/address documents, when specifically requested",
         "Registered office proof and owner consent, where required",
         "Any existing registration, licence or prior filing details"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Private Limited and LLP incorporation assistance",
+            "Business and MSME registration guidance",
+            "Shop, trade and food licence assistance",
+            "MCA, ROC and recurring corporate compliance enquiries"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose the entity or registration requirement",
+            "ILS reviews basic facts and jurisdiction",
+            "Required documents, professional fee and statutory costs are confirmed",
+            "Filing or assistance begins after scope approval"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "They are separate unless the written quote expressly includes them.",
+            "No. Approval and processing are determined by the relevant authority.",
+            "Request business registration assistance →"
+          ]
+        }
       ]
     },
     {
