@@ -48,6 +48,7 @@ body{background:var(--cat-bg);color:var(--cat-text);font-family:system-ui,-apple
 .mart-category-copy small{color:#e2e8f0;line-height:1.4;margin-top:7px}
 .catalog-subcategory{display:inline-block;color:#d9c08e;font-size:11px;letter-spacing:.25px;margin:0 0 8px}
 .service-card-body .catalog-tag{margin-bottom:7px}
+.service-card-body .catalog-subcategory{line-height:1.45}.catalog-meta small{font-size:11px;color:var(--cat-muted);font-weight:600}.service-card-body a{margin-top:auto;padding-top:12px}
 .quick-need-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .quick-need{display:flex;flex-direction:column;gap:7px;padding:14px;border:1px solid var(--cat-line);border-radius:13px;background:rgba(255,255,255,.035);text-decoration:none;color:var(--cat-text);transition:transform .18s ease,border-color .18s ease}
 .quick-need:hover{transform:translateY(-3px);border-color:rgba(215,168,79,.55)}
@@ -192,7 +193,7 @@ function render(){
   const tool=isToolReport(s),href=tool?"../tools.html":"../assistance.html?service="+encodeURIComponent(s.slug);
   const action=tool?"Open 208 tools & choose report →":"Request this service →";
   const price=s.price!==null&&Number.isFinite(Number(s.price))?'₹'+Number(s.price).toLocaleString("en-IN",{maximumFractionDigits:2}):"Fee confirmed after scope review";
-  return '<article class="catalog-card"><div class="service-image"><img src="'+esc(categoryImage[categoryFor(s)])+'" alt="'+esc(s.name)+' illustrative photo" loading="lazy" decoding="async"></div><div class="service-card-body"><span class="catalog-tag">'+esc(categoryLabel[categoryFor(s)])+'</span><span class="catalog-subcategory">'+esc(subCategoryFor(s))+'</span><h3>'+esc(s.name)+'</h3><p>'+esc(s.description||"Service scope will be confirmed before work begins.")+'</p><div class="catalog-meta"><small>Listed service fee</small><br>'+price+'</div><a href="'+esc(href)+'">'+action+'</a></div></article>';
+  return '<article class="catalog-card"><div class="service-image"><img src="'+esc(categoryImage[categoryFor(s)])+'" alt="'+esc(s.name)+' illustrative photo" loading="lazy" decoding="async"></div><div class="service-card-body"><span class="catalog-tag">'+esc(categoryLabel[categoryFor(s)])+'</span><span class="catalog-subcategory">'+esc(subCategoryFor(s))+'</span><h3>'+esc(s.name)+'</h3><p>'+esc(s.description||"Service scope will be confirmed before work begins.")+'</p><div class="catalog-meta"><small>Listed service fee</small><br>'+price+'</div>'+(tool?'<span class="catalog-subcategory">Pay only when you unlock the report in the tool.</span>':'<span class="catalog-subcategory">₹299 initial enquiry; credited against eligible same-matter ILS fees.</span>')+'<a href="'+esc(href)+'">'+action+'</a></div></article>';
  }).join("");
  $("catalogStatus").textContent=list.length?("Showing "+list.length+" of "+services.length+" currently active individual services."):"No matching services. Try another search or category.";
 }
