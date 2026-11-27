@@ -29,11 +29,11 @@ All prices below are proposed professional/service fees in INR, before applicabl
 | Individual service | Proposed starting fee | Strict scope boundary |
 |---|---:|---|
 | Nil GST return | ₹199 / GSTIN / period | Truly nil activity; no books clean-up or notices |
-| Regular GST return — up to 50 invoices | ₹699 / GSTIN / month | GSTR-1 and GSTR-3B; source data supplied in agreed format |
-| GST return — 51–150 invoices | ₹999 / GSTIN / month | Same filings; invoice cap applies to sales + purchase records reviewed |
+| Regular GST return — up to 50 invoices | ₹499 / GSTIN / month | GSTR-1 and GSTR-3B; source data supplied in agreed format |
+| GST return — 51–150 invoices | ₹899 / GSTIN / month | Same filings; invoice cap applies to sales + purchase records reviewed |
 | GST return — 151–300 invoices | ₹1,499 / GSTIN / month | Same filings; no full bookkeeping |
 | GST reconciliation add-on — up to 50 invoices | ₹399 / month | Books/register vs GSTR-2B mismatch summary |
-| GST reconciliation add-on — 51–150 invoices | ₹799 / month | Same scope, higher volume |
+| GST reconciliation add-on — 51–150 invoices | ₹699 / month | Same scope, higher volume |
 | GST registration — proprietorship | ₹1,499 one-time | Application preparation and normal follow-up; no approval guarantee |
 | GST registration — partnership/LLP/company | ₹2,499 onwards | Entity/document complexity and query handling quoted separately |
 | GST amendment | ₹799 onwards | One defined amendment request |
