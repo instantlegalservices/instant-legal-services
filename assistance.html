@@ -108,7 +108,7 @@ const industryParam=params.get("industry")||"";
  const allowedPackageModules=["gst-filing","reconciliation","bookkeeping","tds-payroll","roc","legal-desk"];
  const packageModules=(params.get("modules")||"").split(",").filter(x=>allowedPackageModules.includes(x));
  const packageEstimateRaw=params.get("estimate")||"";
- const packageEstimate=/^\\d{1,7}$/.test(packageEstimateRaw)?Number(packageEstimateRaw):null;
+ const packageEstimate=/^\d{1,7}$/.test(packageEstimateRaw)?Number(packageEstimateRaw):null;
 
  const businessPlans={"shopkeeper-starter":"Shopkeeper Starter","retailer-plus":"Retailer Plus","wholesaler-compliance":"Wholesaler Compliance","manufacturer-support":"Manufacturer Support","hospital-clinic-support":"Hospital & Clinic Support","custom-business-plan":"Custom Business Plan"};
  const selectedBusinessPlan=service==="business-compliance"?(businessPlans[planParam]||""):"";
@@ -379,7 +379,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    wrap.classList.remove("hide");
    select.required=true;
    choices.forEach(label=>{const option=document.createElement("option");option.value=label;option.textContent=label;select.appendChild(option);});
-   if(serviceOption&&choices.includes(serviceOption))select.value=serviceOption;
+   if(serviceOption&&choices.includes(serviceOption))select.value=serviceOption;else if(selectedBusinessPlan){const planOption=document.createElement("option");planOption.value=selectedBusinessPlan;planOption.textContent=selectedBusinessPlan;select.appendChild(planOption);select.value=selectedBusinessPlan;}
   }
  }
  showMode();
