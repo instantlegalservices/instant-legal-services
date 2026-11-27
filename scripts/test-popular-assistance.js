@@ -140,6 +140,7 @@ const { chromium } = require("playwright");
     await page.goto(base+"/business-compliance.html#business-enquiry");
     if(await page.locator("#businessEnquiryForm").count()!==0)throw new Error("Business page still contains a duplicate enquiry form.");
     await page.locator("#universalBusinessEnquiry").click();
+    await page.waitForURL(/assistance\.html\?service=business-compliance/, {timeout:10000});
     if(await page.locator("#assistForm").count()!==1)throw new Error("Business enquiry did not open the single universal form.");
     await page.locator("#businessFields").waitFor({state:"visible",timeout:10000});
     if(!(await page.locator("#businessFields").isVisible()))throw new Error("Universal business-type field did not appear.");
