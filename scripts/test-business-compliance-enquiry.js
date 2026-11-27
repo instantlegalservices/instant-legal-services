@@ -96,7 +96,7 @@ try {
     window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
   });
   await page.locator("#assistForm button[type=submit]").click();
-  await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299 UPI payment" }).waitFor();
+  await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299 initial enquiry payment" }).waitFor();
   const order = await page.evaluate(() => window.__orderCall);
   assert.equal(order[0], "ils-enquiry-fee-199", "GST route must use the existing fixed-price service");
   assert.equal(order[1].intake_source, "ils-client-portal-service-catalogue");
@@ -106,7 +106,7 @@ try {
   assert.equal(order[1].city, "Bareilly");
 
   assert.deepEqual(pageErrors, [], "page should not produce JavaScript errors");
-  console.log("PASS: one universal business form; free and paid GST paths; CRM payload and payment order wiring verified.");
+  console.log("PASS: one universal business form; business and GST catalogue checkout paths; CRM payload and payment-order linkage verified.");
 } finally {
   await browser.close();
 }
