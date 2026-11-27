@@ -98,6 +98,9 @@ const problem=params.get("problem")||"";
 const route=params.get("route")||"";
 const service=params.get("service")||"";
 const serviceOption=params.get("option")||"";
+ const planParam=params.get("plan")||"";
+ const businessPlans={"shopkeeper-starter":"Shopkeeper Starter","retailer-plus":"Retailer Plus","wholesaler-compliance":"Wholesaler Compliance","manufacturer-support":"Manufacturer Support","hospital-clinic-support":"Hospital & Clinic Support","custom-business-plan":"Custom Business Plan"};
+ const selectedBusinessPlan=service==="business-compliance"?(businessPlans[planParam]||""):"";
 const serviceIntake={
  "legal-drafting":{title:"Legal Drafting Assistance",matter:"Other",brief:"I need legal drafting assistance (for example, a notice, agreement, affidavit or application). Please contact me to understand the document, facts and applicable scope."},
  "money-recovery":{title:"Money Recovery Assistance",matter:"Other",brief:"I need assistance regarding recovery of an outstanding amount. Please contact me to understand the transaction, amount, supporting documents and appropriate next steps."},
@@ -326,7 +329,7 @@ const serviceOptionChoices={
 document.addEventListener("DOMContentLoaded",()=>{
  if(!mode&&serviceIntake[service]){
   const intake=serviceIntake[service];
-  document.querySelector("#standardHelp h1").textContent=intake.title;
+  document.querySelector("#standardHelp h1").textContent=intake.title+(selectedBusinessPlan?" — "+selectedBusinessPlan:"");
   document.querySelector("#standardHelp p").textContent="Share the basic details below. ILS will review your request and clarify the scope and applicable fee before any work begins.";
   document.getElementById("matter").value=intake.matter;
   document.getElementById("brief").value=intake.brief;
@@ -357,14 +360,14 @@ document.addEventListener("DOMContentLoaded",()=>{
    const baseBrief=document.getElementById("brief").value.trim();
    const intakeService=new URLSearchParams(location.search).get("service")||"";
    const businessType=intakeService==="business-compliance"?(document.getElementById("businessType").value||""):"";
-   const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
+   const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedBusinessPlan?"Selected business plan: "+selectedBusinessPlan+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
    const isClientServiceInquiry=Boolean(intakeService);
    const inquiryPayload={name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief};
    if(isClientServiceInquiry){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
     // Preserve the CRM lead and create the adjustable initial-enquiry payment order for every catalogue service.
     await ILS.submitRequirement(inquiryPayload);
-    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,business_type:businessType,...inquiryPayload,brief:finalBrief.slice(0,3000)};
+    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,business_type:businessType,selected_business_plan:selectedBusinessPlan||null,...inquiryPayload,brief:finalBrief.slice(0,3000)};
     s.className="status";s.textContent="Enquiry saved. Preparing your ₹299 initial enquiry payment…";
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
