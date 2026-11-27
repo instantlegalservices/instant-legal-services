@@ -22,6 +22,14 @@ const fs = require("fs");
    if(failures.length)throw new Error("Browser JS errors: "+failures.join("; "));
    if(await page.locator(".catalog-card").count()!==5)throw new Error("Only priced active services should render; status: "+await page.locator("#catalogStatus").innerText());
    if(await page.locator(".plan-card").count()!==6)throw new Error("All six business plan enquiry cards must render.");
+   if(await page.locator(".plan-card .plan-price").count()!==6)throw new Error("All six plans must show transparent pricing or a scope-based quote.");
+   if(!(await page.locator(".plan-card").filter({hasText:"Shopkeeper Starter"}).innerText()).includes("₹999"))throw new Error("Shopkeeper Starter monthly starting price missing.");
+   if(!(await page.locator(".plan-card").filter({hasText:"Retailer Plus"}).innerText()).includes("₹1,999"))throw new Error("Retailer Plus monthly starting price missing.");
+   if(!(await page.locator(".plan-card").filter({hasText:"Wholesaler Compliance"}).innerText()).includes("₹3,999"))throw new Error("Wholesaler monthly starting price missing.");
+   if(await page.locator('section[aria-label="Government portal assistance subcategories"] .quick-need').count()!==14)throw new Error("Government portal subcategories are incomplete.");
+   if(await page.locator('section[aria-label="Professional tool subcategories"] .quick-need').count()!==9)throw new Error("Professional tool subcategories are incomplete.");
+   if(await page.locator("#custom-plan-builder .builder-addon").count()!==6)throw new Error("Custom plan builder must expose all six support modules.");
+
    if(await page.locator(".mart-category-card").count()!==6||await page.locator(".mart-category-card img").count()!==6)throw new Error("All six visual category cards must render with photos.");
    if(await page.locator(".catalog-card img").count()!==5)throw new Error("Each purchasable catalogue service must have a relevant photo.");
    if(await page.locator(".plan-card .plan-image img").count()!==6)throw new Error("Business plan cards must include relevant photos.");
