@@ -26,7 +26,7 @@ const fs = require("fs");
    const expectedOffers=[
     ["GST Registration","₹1,499","₹999","GST Registration – Launch Offer"],
     ["Private Limited Company Registration","₹4,999","₹3,999","Private Limited Company Registration – Launch Offer"],
-    ["Society Registration","₹3,999","₹2,999","Society Registration – Launch Offer"],
+    ["LLP Registration","₹3,499","₹2,499","LLP Registration – Launch Offer"],
     ["GST Return Filing","₹499","₹399","GST Return Filing – Launch Offer"],
     ["Bookkeeping","₹1,999/month","₹1,499/month","Bookkeeping – Launch Offer"]
    ];
