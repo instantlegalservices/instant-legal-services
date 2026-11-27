@@ -82,6 +82,23 @@ body{background:var(--cat-bg);color:var(--cat-text);font-family:system-ui,-apple
 .builder-disclaimer{font-size:12px;color:var(--cat-muted);line-height:1.6;margin-top:12px}
 @media(max-width:560px){.builder-grid,.builder-addons{grid-template-columns:1fr}}
 
+
+.ils-offers{margin-top:24px;padding:20px;border:1px solid rgba(215,168,79,.32);border-radius:20px;background:linear-gradient(135deg,rgba(215,168,79,.09),rgba(16,29,45,.88))}
+.ils-offer-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px}
+.ils-offer-card{display:flex;flex-direction:column;min-width:0;padding:14px;border:1px solid var(--cat-line);border-radius:15px;background:linear-gradient(160deg,#17283c,#0d1928)}
+.ils-offer-top{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.ils-offer-tag{font-size:9px;font-weight:900;letter-spacing:.6px;color:#201808;background:#e8c16f;padding:5px 7px;border-radius:999px}
+.ils-offer-save{font-size:10px;font-weight:850;color:#8de2b4}
+.ils-offer-card h3{font-size:15px;line-height:1.3;margin:13px 0 7px}
+.ils-offer-scope{font-size:11px;color:var(--cat-muted);line-height:1.5;min-height:66px;margin:0 0 9px}
+.ils-offer-prices{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:auto}
+.ils-offer-prices del{font-size:11px;color:#9aa8b7}
+.ils-offer-prices strong{font-size:22px;color:var(--cat-gold)}
+.ils-offer-card a{display:inline-block;margin-top:10px;color:var(--cat-gold);font-size:12px;font-weight:850;text-decoration:none}
+.ils-offer-disclosure{font-size:11px;color:var(--cat-muted);line-height:1.6;margin:14px 0 0}
+@media(max-width:1000px){.ils-offer-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.ils-offers{padding:14px}.ils-offer-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:5px}.ils-offer-card{flex:0 0 78%;scroll-snap-align:start}.ils-offer-scope{min-height:0}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2';"></script>
 <script>
@@ -98,6 +115,40 @@ window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY||"sb_publishable_D5eFcgWFELtnym0
 <div class="catalog-actions"><a class="catalog-btn" href="#individual-services">Browse individual services</a><a class="catalog-btn secondary" href="#business-plans">Explore business plans</a></div>
 </section>
 
+<section class="catalog-section ils-offers" aria-label="Special offers on taxation and business services">
+<div class="catalog-heading"><div><span class="eyebrow">Special launch offers</span><h2>Tax &amp; Business Services at Offer Prices</h2><p>Popular registration, filing and bookkeeping assistance at introductory professional fees.</p></div><span class="catalog-tag">5 launch offers</span></div>
+<div class="ils-offer-grid"><article class="ils-offer-card">
+<div class="ils-offer-top"><span class="ils-offer-tag">LAUNCH OFFER</span><span class="ils-offer-save">SAVE ₹500</span></div>
+<h3>GST Registration</h3><p class="ils-offer-scope">One GSTIN · proprietorship · one state · document checklist and application assistance</p>
+<div class="ils-offer-prices"><del>₹1,499</del><strong>₹999</strong></div>
+<a href="../assistance.html?service=business-compliance&amp;option=GST%20Registration%20%E2%80%93%20Launch%20Offer">Get this offer →</a>
+</article>
+<article class="ils-offer-card">
+<div class="ils-offer-top"><span class="ils-offer-tag">LAUNCH OFFER</span><span class="ils-offer-save">SAVE ₹1,000</span></div>
+<h3>Private Limited Company Registration</h3><p class="ils-offer-scope">Basic incorporation assistance · up to 2 directors · government fees, stamp duty and DSC extra</p>
+<div class="ils-offer-prices"><del>₹4,999</del><strong>₹3,999</strong></div>
+<a href="../assistance.html?service=business-compliance&amp;option=Private%20Limited%20Company%20Registration%20%E2%80%93%20Launch%20Offer">Get this offer →</a>
+</article>
+<article class="ils-offer-card">
+<div class="ils-offer-top"><span class="ils-offer-tag">LAUNCH OFFER</span><span class="ils-offer-save">SAVE ₹1,000</span></div>
+<h3>Society Registration</h3><p class="ils-offer-scope">Basic society formation documentation and filing coordination · state fees extra</p>
+<div class="ils-offer-prices"><del>₹3,999</del><strong>₹2,999</strong></div>
+<a href="../assistance.html?service=business-compliance&amp;option=Society%20Registration%20%E2%80%93%20Launch%20Offer">Get this offer →</a>
+</article>
+<article class="ils-offer-card">
+<div class="ils-offer-top"><span class="ils-offer-tag">LAUNCH OFFER</span><span class="ils-offer-save">SAVE ₹100</span></div>
+<h3>GST Return Filing</h3><p class="ils-offer-scope">GSTR-1 and GSTR-3B · up to 50 invoices per tax period · nil return from ₹149</p>
+<div class="ils-offer-prices"><del>₹499</del><strong>₹399</strong></div>
+<a href="../assistance.html?service=business-compliance&amp;option=GST%20Return%20Filing%20%E2%80%93%20Launch%20Offer">Get this offer →</a>
+</article>
+<article class="ils-offer-card">
+<div class="ils-offer-top"><span class="ils-offer-tag">LAUNCH OFFER</span><span class="ils-offer-save">SAVE ₹500</span></div>
+<h3>Bookkeeping</h3><p class="ils-offer-scope">Monthly bookkeeping · up to 50 transactions · one bank account · monthly summary</p>
+<div class="ils-offer-prices"><del>₹1,999/month</del><strong>₹1,499/month</strong></div>
+<a href="../assistance.html?service=business-compliance&amp;option=Bookkeeping%20%E2%80%93%20Launch%20Offer">Get this offer →</a>
+</article></div>
+<p class="ils-offer-disclosure">Offer fees are ILS professional service fees, subject to the scope shown. Applicable GST, government charges, stamp duty, DSC/provider charges and statutory fees are extra. GST registration on the government portal is free; this is a fee for optional assisted service. The ₹299 initial enquiry fee is credited against eligible ILS professional fees for the same matter if you proceed; it is not an extra fee on top of the quoted ILS fee. No work or recurring plan starts until scope and final quotation are confirmed.</p>
+</section>
 <section class="catalog-section" aria-label="Browse service categories">
 <div class="catalog-heading"><div><span class="eyebrow">Choose your need</span><h2>Explore by category</h2><p>Start broad, then narrow down to the exact service or support option.</p></div></div>
 <div class="mart-category-grid">
