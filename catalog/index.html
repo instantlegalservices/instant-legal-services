@@ -161,6 +161,18 @@ window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY||"sb_publishable_D5eFcgWFELtnym0
 </div>
 </section>
 
+<section class="catalog-section" aria-label="Explore ILS professional service branches">
+<div class="catalog-heading"><div><span class="eyebrow">Explore every field</span><h2>Professional service branches</h2><p>Choose a specialist field to see its services, starting documents and enquiry route.</p></div><a class="catalog-btn secondary" href="../services/">All service branches →</a></div>
+<div class="quick-need-grid">
+<a class="quick-need" href="../services/taxation-compliance/"><strong>GST &amp; Taxation</strong><small>GST registration, returns, reconciliation, ITR, TDS and tax notices</small></a>
+<a class="quick-need" href="../services/corporate-business-registration/"><strong>Company &amp; Business Registration</strong><small>Private Limited, LLP, licences, Udyam and MCA/ROC assistance</small></a>
+<a class="quick-need" href="../services/accounting-bookkeeping/"><strong>Accounting &amp; Bookkeeping</strong><small>Books, bank reconciliation, GST data and monthly accounts support</small></a>
+<a class="quick-need" href="../services/labour-hr-compliance/"><strong>Labour &amp; HR Compliance</strong><small>Employment documents, payroll, PF, ESI and workforce support</small></a>
+<a class="quick-need" href="../services/professional-services-network/"><strong>CA, CS, HR &amp; GST Professionals</strong><small>Professional assignment routing, subject to credentials and availability</small></a>
+<a class="quick-need" href="../services/criminal-bail-ndps/"><strong>Criminal, Bail &amp; NDPS</strong><small>Criminal case assessment, bail enquiries and court-document preparation</small></a>
+</div>
+</section>
+
 <section class="catalog-section" id="individual-services">
 <div class="catalog-heading"><div><span class="eyebrow">One-time assistance</span><h2>Individual services</h2><p>Choose and pay only for the specific service you need.</p></div></div>
 <div class="catalog-tools"><input id="catalogSearch" type="search" placeholder="Search services, e.g. legal notice or property" aria-label="Search services"><select id="catalogCategory" aria-label="Filter by category"><option value="all">All categories</option><option value="legal">Legal &amp; disputes</option><option value="tax">GST &amp; tax</option><option value="business">Business &amp; property</option><option value="government">Government &amp; digital</option><option value="professional">Professional services</option><option value="tools">Tools &amp; reports</option></select><select id="catalogSubcategory" aria-label="Filter by subcategory"><option value="all">All subcategories</option></select></div>
@@ -348,6 +360,26 @@ const subCategoryFor=s=>{
 };
 const categoryImage={legal:"https://images.unsplash.com/photo-1767972159871-b9f5d320be2b?auto=format&fit=crop&w=900&q=78",tax:"https://images.unsplash.com/photo-1772588627527-db42040f3a8b?auto=format&fit=crop&w=900&q=78",business:"https://images.unsplash.com/photo-1771575519616-f39754f93cbe?auto=format&fit=crop&w=900&q=78",government:"https://images.unsplash.com/photo-1735825764485-93a381fd5779?auto=format&fit=crop&w=900&q=78",professional:"https://images.unsplash.com/photo-1758691462878-6edc3d3da1be?auto=format&fit=crop&w=900&q=78",tools:"https://images.unsplash.com/photo-1772588627527-db42040f3a8b?auto=format&fit=crop&w=900&q=78"};
 const isToolReport=s=>/^(accounting-print|professional-report|tool-output)/.test(String(s.slug||""));
+const servicePageFor=slug=>{
+ const key=String(slug||"");
+ if(key.startsWith("accounting-print"))return "../services/accounting-reports/";
+ if(key.startsWith("professional-report"))return "../services/professional-tool-reports/";
+ if(key.startsWith("tool-output"))return "../services/tool-report-unlock/";
+ const routes={
+  "digital-form-assistance":"digital-form-assistance",
+  "official-route-guidance":"official-route-guidance",
+  "business-legal-review":"business-legal-review",
+  "case-preparation-pack":"case-preparation",
+  "legal-consultation":"legal-consultation",
+  "advocate-reviewed-draft":"advocate-reviewed-draft",
+  "custom-legal-drafting":"legal-drafting",
+  "document-review":"legal-document-review",
+  "legal-notice-draft":"legal-notice-drafting",
+  "property-due-diligence":"property-due-diligence",
+  "legal-research-report":"legal-research"
+ };
+ return routes[key]?"../services/"+routes[key]+"/":"../assistance.html?service="+encodeURIComponent(key);
+};
 let services=[];
 function updateSubcategories(){
  const cat=$("catalogCategory").value,select=$("catalogSubcategory"),previous=select.value;
@@ -359,8 +391,8 @@ function render(){
  const q=$("catalogSearch").value.trim().toLowerCase(),cat=$("catalogCategory").value,sub=$("catalogSubcategory").value;
  const list=services.filter(s=>(cat==="all"||categoryFor(s)===cat)&&(sub==="all"||subCategoryFor(s)===sub)&&(!q||[s.name,s.description,s.category,s.slug,subCategoryFor(s)].join(" ").toLowerCase().includes(q)));
  $("catalogGrid").innerHTML=list.map(s=>{
-  const tool=isToolReport(s),href=tool?"../tools.html":"../assistance.html?service="+encodeURIComponent(s.slug);
-  const action=tool?"Open 208 tools & choose report →":"Request this service →";
+  const tool=isToolReport(s),href=servicePageFor(s.slug);
+  const action=tool?"View report details & open tools →":"View service details & documents →";
   const price=s.price!==null&&Number.isFinite(Number(s.price))?'₹'+Number(s.price).toLocaleString("en-IN",{maximumFractionDigits:2}):"Fee confirmed after scope review";
   return '<article class="catalog-card"><div class="service-image"><img src="'+esc(categoryImage[categoryFor(s)])+'" alt="'+esc(s.name)+' illustrative photo" loading="lazy" decoding="async"></div><div class="service-card-body"><span class="catalog-tag">'+esc(categoryLabel[categoryFor(s)])+'</span><span class="catalog-subcategory">'+esc(subCategoryFor(s))+'</span><h3>'+esc(s.name)+'</h3><p>'+esc(s.description||"Service scope will be confirmed before work begins.")+'</p><div class="catalog-meta"><small>Listed service fee</small><br>'+price+'</div>'+(tool?'<span class="catalog-subcategory">Pay only when you unlock the report in the tool.</span>':'<span class="catalog-subcategory">₹299 initial enquiry; credited against eligible same-matter ILS fees.</span>')+'<a href="'+esc(href)+'">'+action+'</a></div></article>';
  }).join("");
