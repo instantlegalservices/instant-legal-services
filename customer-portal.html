@@ -129,14 +129,13 @@ function show(mode){
 }
 // First-time checkout visitors should see account creation immediately; existing customers can switch to Sign in.
 show(new URLSearchParams(location.search).get("mode")==="signup" ? "signup" : "login");
-function paymentLabel(orderStatus,proofStatus){
- const o=String(orderStatus||"").toLowerCase(),p=String(proofStatus||"").toLowerCase();
- if(o==="paid")return "Paid · Verified";
+function paymentLabel(orderStatus,proofStatus,gatewayStatus){
+ const o=String(orderStatus||"").toLowerCase(),p=String(proofStatus||"").toLowerCase(),g=String(gatewayStatus||"").toLowerCase();
+ if(o==="paid"||["paid","succeeded","success"].includes(g)||["verified","approved"].includes(p))return "Paid · Verified";
  if(p==="pending")return "UPI proof submitted · Pending verification";
  if(p==="rejected")return "UPI proof rejected · Please contact ILS support";
- if(p==="verified"||p==="approved")return "Proof verified · Order status updating";
- if(o==="pending")return "Payment pending";
- return orderStatus||"Status unavailable";
+ if(o==="pending"||["pending","created","initiated"].includes(g))return "Payment pending";
+ return orderStatus||gatewayStatus||"Status unavailable";
 }
 async function loadCustomerNotifications(userId){
  const target=$("customerNotifications");
@@ -278,7 +277,7 @@ async function loadPaymentHistory(){
    const intakeKey=req?.details?.intake_service;
    const trafficRoute=[req?.details?.route,req?.details?.problem,req?.details?.official_route].filter(Boolean).join(" ");
    const serviceLabel=intakeLabels[intakeKey]||(req?.details?.mode==="guided"&&/traffic.*echallan|echallan.*traffic/i.test(trafficRoute)?"Traffic Challan Assistance":(svc?.name||svc?.slug||"ILS Service"));
-   const state=paymentLabel(o.status,proof?.status||gateway?.status);
+   const state=paymentLabel(o.status,proof?.status,gateway?.status);
    const ref=proof?.transaction_ref?String(proof.transaction_ref).replace(/^(.{4}).*(.{4})$/,"$1••••$2"):"";
    const date=o.created_at?new Date(o.created_at).toLocaleString("en-IN"):"—";
    return '<article class="order-row"><strong>'+esc(serviceLabel)+'</strong><div class="order-meta">Order: '+esc(o.order_number||o.id)+' · '+esc(date)+'</div><div style="font-weight:800;margin-top:5px">'+esc(o.currency||"INR")+' '+esc(Number(o.total||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}))+'</div><span class="payment-pill">'+esc(state)+'</span>'+(ref?'<div class="order-meta">UPI reference: '+esc(ref)+'</div>':"")+(proof?.submitted_at?'<div class="order-meta">Proof submitted: '+esc(new Date(proof.submitted_at).toLocaleString("en-IN"))+'</div>':"")+(proof?.verified_at?'<div class="order-meta">Verified: '+esc(new Date(proof.verified_at).toLocaleString("en-IN"))+'</div>':"")+(proof?.status==="rejected"&&proof?.verification_notes?'<div class="order-meta">Review note: '+esc(proof.verification_notes)+'</div>':"")+'</article>';

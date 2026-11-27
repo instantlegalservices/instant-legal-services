@@ -171,6 +171,16 @@ const { chromium } = require("playwright");
     await page.goto(base+"/assistance.html?mode=guided&service=legal-drafting&problem=Traffic%20challan&route=Traffic%20Challan");
     if(!(await page.locator("#routeMode").isVisible()))throw new Error("Existing guided mode was not preserved.");
     if(await page.locator("#standardFormSection").isVisible())throw new Error("Service prefill incorrectly overrode guided mode.");
+    await page.goto(base+"/customer-portal.html");
+    const paymentLabels=await page.evaluate(()=>({
+      gatewayPaid:paymentLabel("pending",null,"succeeded"),
+      verifiedProof:paymentLabel("pending","verified",null),
+      pendingProof:paymentLabel("pending","pending",null),
+      rejectedProof:paymentLabel("pending","rejected",null),
+      pendingOrder:paymentLabel("pending",null,"pending")
+    }));
+    if(paymentLabels.gatewayPaid!=="Paid · Verified"||paymentLabels.verifiedProof!=="Paid · Verified")throw new Error("Client portal must show paid when the gateway payment or UPI proof is verified: "+JSON.stringify(paymentLabels));
+    if(paymentLabels.pendingProof!=="UPI proof submitted · Pending verification"||paymentLabels.rejectedProof!=="UPI proof rejected · Please contact ILS support"||paymentLabels.pendingOrder!=="Payment pending")throw new Error("Client portal payment pending/rejected labels regressed: "+JSON.stringify(paymentLabels));
     if(pageErrors.length)throw new Error("Browser page errors: "+pageErrors.join(" | "));
     console.log("POPULAR_ASSISTANCE_POSITION=PASS");
     console.log("POPULAR_ASSISTANCE_MULTILINGUAL=PASS (English/Hindi)");
