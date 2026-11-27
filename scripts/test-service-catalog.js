@@ -23,6 +23,7 @@ const fs = require("fs");
    if(await page.locator(".catalog-card").count()!==5)throw new Error("Only priced active services should render; status: "+await page.locator("#catalogStatus").innerText());
    if(await page.locator(".plan-card").count()!==6)throw new Error("All six business plan enquiry cards must render.");
    if(await page.locator(".ils-offer-card").count()!==5)throw new Error("Five launch offer cards must render above the catalogue.");
+   if(await page.locator(".ils-offer-card").filter({hasText:"Society Registration"}).count()!==0)throw new Error("Society Registration must not appear as a launch offer.");
    const expectedOffers=[
     ["GST Registration","₹1,499","₹999","GST Registration – Launch Offer"],
     ["Private Limited Company Registration","₹4,999","₹3,999","Private Limited Company Registration – Launch Offer"],
@@ -138,6 +139,9 @@ const fs = require("fs");
   await homePage.goto((process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"")+"/",{waitUntil:"domcontentloaded"});
   await homePage.locator("#language").waitFor({state:"visible"});
   if(await homePage.locator(".ils-home-offer").count()!==5)throw new Error("Homepage must show five tax/business launch offers above Popular Assistance.");
+  const llpHomeOffer=homePage.locator(".ils-home-offer").filter({hasText:"LLP Registration"});
+  if(await llpHomeOffer.count()!==1||!(await llpHomeOffer.innerText()).includes("₹3,499")||!(await llpHomeOffer.innerText()).includes("₹2,499"))throw new Error("Homepage LLP offer title or ILS pricing is incorrect.");
+  if(await homePage.locator(".ils-home-offer").filter({hasText:"Society Registration"}).count()!==0)throw new Error("Society offer must be removed from homepage.");
   if(await homePage.locator("#ils-launch-offers").evaluate(el=>el.compareDocumentPosition(document.querySelector("#popular-assistance"))&Node.DOCUMENT_POSITION_FOLLOWING)===0)throw new Error("Homepage launch offers must appear before Popular Assistance.");
   for(const [lang,expected] of [["en-IN","Tax & Business Services at Offer Prices"],["hi-IN","GST और बिज़नेस सेवाएँ — ऑफर कीमतों पर"],["hinglish","GST & Business Services — Offer Prices"],["ur-IN","ٹیکس اور کاروباری خدمات رعایتی قیمتوں پر"],["bn-IN","কর ও ব্যবসায়িক পরিষেবা অফার মূল্যে"]]){
    await homePage.locator("#language").selectOption(lang);
