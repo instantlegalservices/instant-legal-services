@@ -28,6 +28,8 @@ const fs = require("fs");
    if(await page.locator(".catalog-card").count()!==1||!(await page.locator(".catalog-card").first().innerText()).includes("Property Due Diligence"))throw new Error("Search filter failed.");
    await page.locator("#catalogSearch").fill("");
    if(!viewport.legacy){
+    await page.locator("#catalogCategory").selectOption("tax");
+    if(await page.locator(".catalog-card").count()!==1||!(await page.locator(".catalog-card").first().innerText()).includes("GST Assistance"))throw new Error("GST & tax category filter failed.");
     await page.locator("#catalogCategory").selectOption("government");
     if(await page.locator(".catalog-card").count()!==1||!(await page.locator(".catalog-card").first().innerText()).includes("Official Route Guidance"))throw new Error("Category filter failed.");
     await page.locator("#catalogCategory").selectOption("all");
