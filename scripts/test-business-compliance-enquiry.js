@@ -49,8 +49,8 @@ try {
   assert.equal(await page.locator("#serviceOption option").count(), 9, "business service choices must be available");
   assert.equal(await page.locator("#matter").inputValue(), "Commercial / Corporate");
 
-  // A previously free business option must still create the existing CRM enquiry
-  // and must not unexpectedly open the ₹199 payment checkout.
+  // All catalogue service enquiries now use the configurable initial enquiry fee
+  // and must retain the CRM requirement ID in the checkout payload.
   await page.locator("#name").fill("Test Business Owner");
   await page.locator("#mobile").fill("9876543210");
   await page.locator("#state").fill("Uttar Pradesh");
@@ -61,18 +61,22 @@ try {
   await page.locator("#consent").check();
   await page.evaluate(() => {
     window.__submittedLead = null;
-    window.ILS.submitRequirement = async payload => { window.__submittedLead = payload; };
+    window.__orderCall = null;
+    window.ILS.submitRequirement = async payload => { window.__submittedLead = payload; return 4321; };
+    window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
   });
   await page.locator("#assistForm button[type=submit]").click();
-  await page.locator("#assistStatus").filter({ hasText: "Requirement submitted successfully" }).waitFor();
+  await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299 initial enquiry payment" }).waitFor();
   const lead = await page.evaluate(() => window.__submittedLead);
+  const businessOrder = await page.evaluate(() => window.__orderCall);
   assert.equal(lead.name, "Test Business Owner");
   assert.equal(lead.mobile, "9876543210");
   assert.equal(lead.state, "Uttar Pradesh", "state must be passed to the existing CRM insert");
   assert.equal(lead.city, "Bareilly", "city must be passed to the existing CRM insert");
   assert.ok(lead.brief.includes("Wholesale / Trading"));
   assert.ok(lead.brief.includes("Business registration"));
-  assert.equal(await page.evaluate(() => window.__orderCall), null, "free business options must not create a paid order");
+  assert.equal(businessOrder[0], "ils-enquiry-fee-199");
+  assert.equal(businessOrder[1].client_requirement_id, 4321, "business catalogue order must link its saved CRM lead");
 
   // Legacy GST URL continues to open the same form with its paid option preselected.
   await page.goto(new URL("business-compliance.html?service=gst-returns", baseUrl).toString(), { waitUntil: "domcontentloaded" });
@@ -88,13 +92,15 @@ try {
   await page.locator("#consent").check();
   await page.evaluate(() => {
     window.__orderCall = null;
+    window.ILS.submitRequirement = async payload => { window.__submittedLead = payload; return 4322; };
     window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
   });
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299 UPI payment" }).waitFor();
   const order = await page.evaluate(() => window.__orderCall);
   assert.equal(order[0], "ils-enquiry-fee-199", "GST route must use the existing fixed-price service");
-  assert.equal(order[1].intake_source, "ils-universal-service-form");
+  assert.equal(order[1].intake_source, "ils-client-portal-service-catalogue");
+  assert.equal(order[1].client_requirement_id, 4322);
   assert.equal(order[1].business_type, "Wholesale / Trading");
   assert.equal(order[1].state, "Uttar Pradesh");
   assert.equal(order[1].city, "Bareilly");
