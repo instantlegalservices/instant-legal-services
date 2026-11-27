@@ -176,11 +176,14 @@ const fs = require("fs");
   await homePage.goto((process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"")+"/",{waitUntil:"domcontentloaded"});
   await homePage.locator("#language").waitFor({state:"visible"});
   if(await homePage.locator(".ils-home-offer").count()!==5)throw new Error("Homepage must show five tax/business launch offers above Popular Assistance.");
-  const llpHomeOffer=homePage.locator(".ils-home-offer").filter({hasText:"LLP Registration"});
-  if(await llpHomeOffer.count()!==1||!(await llpHomeOffer.innerText()).includes("₹3,499")||!(await llpHomeOffer.innerText()).includes("₹2,499"))throw new Error("Homepage LLP offer title or ILS pricing is incorrect.");
+  const llpHomeOffer=homePage.locator(".ils-home-offer").filter({hasText:"सीमित दायित्व भागीदारी (LLP) का पंजीकरण"});
+  if(await llpHomeOffer.count()!==1||!(await llpHomeOffer.innerText()).includes("₹3,499")||!(await llpHomeOffer.innerText()).includes("₹2,499"))throw new Error("Homepage Hindi LLP offer title or ILS pricing is incorrect.");
+  await homePage.locator("#language").selectOption("en-IN");
+  const llpEnglishOffer=homePage.locator(".ils-home-offer").filter({hasText:"LLP Registration"});
+  if(await llpEnglishOffer.count()!==1||!(await llpEnglishOffer.innerText()).includes("₹3,499")||!(await llpEnglishOffer.innerText()).includes("₹2,499"))throw new Error("Homepage English LLP offer title or ILS pricing is incorrect.");
   if(await homePage.locator(".ils-home-offer").filter({hasText:"Society Registration"}).count()!==0)throw new Error("Society offer must be removed from homepage.");
   if(await homePage.locator("#ils-launch-offers").evaluate(el=>el.compareDocumentPosition(document.querySelector("#popular-assistance"))&Node.DOCUMENT_POSITION_FOLLOWING)===0)throw new Error("Homepage launch offers must appear before Popular Assistance.");
-  for(const [lang,expected] of [["en-IN","Tax & Business Services at Offer Prices"],["hi-IN","GST और बिज़नेस सेवाएँ — ऑफर कीमतों पर"],["hinglish","GST & Business Services — Offer Prices"],["ur-IN","ٹیکس اور کاروباری خدمات رعایتی قیمتوں پر"],["bn-IN","কর ও ব্যবসায়িক পরিষেবা অফার মূল্যে"]]){
+  for(const [lang,expected] of [["en-IN","Tax & Business Services at Offer Prices"],["hi-IN","जीएसटी और व्यवसाय सेवाएँ — विशेष कीमतों पर"],["hinglish","GST & Business Services — Offer Prices"],["ur-IN","ٹیکس اور کاروباری خدمات رعایتی قیمتوں پر"],["bn-IN","কর ও ব্যবসায়িক পরিষেবা অফার মূল্যে"]]){
    await homePage.locator("#language").selectOption(lang);
    if((await homePage.locator("#ils-launch-offers h2").innerText())!==expected)throw new Error("Homepage launch offer translation missing for "+lang);
   }
