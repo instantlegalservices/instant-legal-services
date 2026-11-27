@@ -1583,12 +1583,17 @@ async function loadPricingControls(){
   pricingPriceColumn="price";pricingAdjustmentColumnsAvailable=true;
   let b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,fee_adjustment_enabled,fee_adjustment_amount,created_at").eq("is_active",true).order("created_at",{ascending:false});
   if(missingColumnError(b.error)){
-   pricingAdjustmentColumnsAvailable=false;
    b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   if(!b.error)pricingAdjustmentColumnsAvailable=false;
   }
   if(missingColumnError(b.error)){
    pricingPriceColumn="amount";
-   b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   pricingAdjustmentColumnsAvailable=true;
+   b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,fee_adjustment_enabled,fee_adjustment_amount,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   if(missingColumnError(b.error)){
+    pricingAdjustmentColumnsAvailable=false;
+    b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   }
   }
   if(b.error)throw b.error;
   if(!pricingAdjustmentColumnsAvailable)msg("pricingMsg","Service pricing remains available. Fee-credit controls will activate after the approved database migration is applied.","");
