@@ -150,8 +150,7 @@ BEGIN
        'public.ils_submit_customer_requirement(text,text,text,text,text,text)', 'EXECUTE')
      OR has_function_privilege('anon',
        'public.ils_submit_customer_requirement(text,text,text,text,text,text)', 'EXECUTE')
-     OR has_function_privilege('public',
-       'public.ils_submit_customer_requirement(text,text,text,text,text,text)', 'EXECUTE') THEN
+ THEN
     RAISE EXCEPTION 'authenticated customer CRM submit RPC grants are incorrect';
   END IF;
   SELECT pg_get_functiondef('public.ils_submit_customer_requirement(text,text,text,text,text,text)'::regprocedure)
