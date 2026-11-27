@@ -28,7 +28,7 @@ for(const service of registry.services){
  if(fs.existsSync(file)){
   const html=fs.readFileSync(file,"utf8");
   if(!html.includes('<link rel="canonical" href="'+canonical+'">'))throw new Error("Existing page canonical mismatch: "+route);
-  const pageH1=(html.match(/<h1\\b[^>]*>([\\s\\S]*?)<\\/h1>/i)||[])[1]||"";
+  const h1Start=html.indexOf("<h1");const h1OpenEnd=html.indexOf(">",h1Start);const h1End=html.indexOf("</h1>",h1OpenEnd);const pageH1=h1Start>=0&&h1OpenEnd>=0&&h1End>=0?html.slice(h1OpenEnd+1,h1End):"";
   const normalizedH1=pageH1.replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;/g,"\'").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/<[^>]*>/g,"").trim();
   if(normalizedH1!==String(service.h1).trim())throw new Error("Existing page H1 mismatch: "+route);
   if(!html.includes(esc(service.description)))throw new Error("Existing page description/scope mismatch: "+route);
