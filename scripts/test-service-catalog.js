@@ -75,9 +75,9 @@ const fs = require("fs");
     await page.locator("#catalogCategory").selectOption("all");
    }
    const href=await page.locator(".catalog-card").filter({hasText:"Legal Notice Draft"}).locator("a").getAttribute("href");
-   if(href!=="../assistance.html?service=legal-notice-draft")throw new Error("Service CTA slug mismatch.");
+   if(href!=="../services/legal-notice-drafting/")throw new Error("Legal Notice Draft CTA must open its dedicated service detail page.");
    const toolHref=await page.locator(".catalog-card").filter({hasText:"Accounting Report Basic"}).locator("a").getAttribute("href");
-   if(toolHref!=="../tools.html")throw new Error("Accounting report must route to the existing 208-tool report checkout.");
+   if(toolHref!=="../services/accounting-reports/")throw new Error("Accounting report CTA must open its dedicated report detail page.");
    if(await page.locator(".plan-card a").count()!==6)throw new Error("Business plans must stay enquiry-led.");
    if(await page.locator("#custom-plan-builder").count()!==1)throw new Error("Custom package builder is missing.");
    if(!(await page.locator("#builderEstimate").innerText()).includes("₹999 / month"))throw new Error("Monthly package estimate does not start at the expected base.");
