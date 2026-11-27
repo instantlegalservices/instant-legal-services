@@ -10,6 +10,8 @@ on:
       - "scripts/test-popular-assistance.js"
       - "popular-assistance.html"
       - "business-compliance.html"
+      - "catalog/index.html"
+      - "scripts/test-service-catalog.js"
       - ".github/workflows/test-home-search-routing.yml"
   push:
     branches:
@@ -59,3 +61,8 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:4173/
         run: node scripts/test-popular-assistance.js
+
+      - name: Run unified service catalogue browser regression
+        env:
+          BASE_URL: http://127.0.0.1:4173/
+        run: node scripts/test-service-catalog.js
