@@ -152,6 +152,7 @@ const { chromium } = require("playwright");
     await page.goto(base+"/assistance.html?service=legal-drafting");
     await page.evaluate(()=>{
       window.__ilsInquiryTest={lead:null,order:null};
+      window.ILS.ready=()=>({auth:{getUser:async()=>({data:{user:{id:"ci-client-user"}},error:null})}});
       window.ILS.submitRequirement=async payload=>{window.__ilsInquiryTest.lead=payload;return 1234;};
       window.ILS_TOOLS={createOrder:async (slug,details,a,b,options)=>{window.__ilsInquiryTest.order={slug,details,options};return {success:true};}};
     });
