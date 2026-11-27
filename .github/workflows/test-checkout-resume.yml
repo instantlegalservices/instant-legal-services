@@ -6,6 +6,7 @@ on:
     paths:
       - "index.html"
       - "customer-portal.html"
+      - "assistance.html"
       - "scripts/test-popular-assistance.js"
       - ".github/workflows/test-checkout-resume.yml"
   push:
