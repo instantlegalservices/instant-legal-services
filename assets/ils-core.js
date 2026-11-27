@@ -491,15 +491,30 @@ window.ILS = (() => {
         String(payload.brief || "").trim()
     };
 
-    const { data, error } = await client
-      .from("client_requirements")
-      .insert([lead])
-      .select("id")
-      .single();
+    const { data: authData, error: authError } = await client.auth.getUser();
+    if (authError) throw authError;
 
+    if (authData?.user) {
+      // Authenticated customers cannot SELECT CRM rows under the Admin-only RLS policy.
+      // Use the narrowly scoped SECURITY DEFINER RPC to save the lead and return its ID.
+      const { data, error } = await client.rpc("ils_submit_customer_requirement", {
+        p_client_name: lead.client_name,
+        p_mobile: lead.mobile,
+        p_state: lead.state || null,
+        p_district_city: lead.district_city || null,
+        p_legal_matter: lead.legal_matter || null,
+        p_brief_requirement: lead.brief_requirement
+      });
+      if (error) throw error;
+      const id = Number(data);
+      if (!Number.isSafeInteger(id) || id < 1) throw new Error("CRM requirement was saved but its ID could not be confirmed.");
+      return id;
+    }
+
+    // Preserve the existing public enquiry path; anonymous users do not receive a CRM row ID.
+    const { error } = await client.from("client_requirements").insert([lead]);
     if (error) throw error;
-    if (!data?.id) throw new Error("CRM requirement was saved but its ID could not be confirmed.");
-    return data.id;
+    return null;
   }
 
   /* =========================================================
