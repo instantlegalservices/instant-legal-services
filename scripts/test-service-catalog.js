@@ -50,6 +50,13 @@ const fs = require("fs");
 
    if(await page.locator(".mart-category-card").count()!==6||await page.locator(".mart-category-card img").count()!==6)throw new Error("All six visual category cards must render with photos.");
    if(await page.locator(".catalog-card img").count()!==5)throw new Error("Each purchasable catalogue service must have a relevant photo.");
+   const renderedImages=await page.locator(".catalog-card img").evaluateAll(imgs=>({urls:imgs.map(img=>img.src),alts:imgs.map(img=>img.alt),lazy:imgs.every(img=>img.loading==="lazy"&&img.decoding==="async")}));
+   if(new Set(renderedImages.urls).size!==5||renderedImages.alts.some(alt=>!alt.includes("illustrative service image"))||!renderedImages.lazy)throw new Error("Each visible service card must have a distinct, descriptive, lazy-loaded image.");
+   const catalogueSource=fs.readFileSync("catalog/index.html","utf8");
+   const imageMapBlock=catalogueSource.split("const serviceImageBySlug={")[1]?.split("};")[0]||"";
+   const mappedImages=[...imageMapBlock.matchAll(/"([^"]+)":photo\("(photo-[^"]+)"\)/g)];
+   if(mappedImages.length!==21||new Set(mappedImages.map(match=>match[2])).size!==21)throw new Error("All 21 Production paid-service SKUs must have their own distinct image mapping.");
+   if(!catalogueSource.includes("animation:ils-service-photo-pan 26s ease-in-out infinite alternate")||!catalogueSource.includes("@media(prefers-reduced-motion:reduce){.catalog-card .service-image img{animation:none!important;object-position:center}}"))throw new Error("Service image motion must be subtle and disabled for reduced-motion preferences.");
    if(await page.locator(".plan-card .plan-image img").count()!==6)throw new Error("Business plan cards must include relevant photos.");
    if(await page.locator('section[aria-label="Popular legal assistance areas"] .quick-need').count()!==9)throw new Error("All nine SEO-linked legal need shortcuts must remain visible.");
    if(await page.locator('section[aria-label="GST and tax service subcategories"] .quick-need').count()!==6)throw new Error("GST and tax enquiry subcategories are incomplete.");
