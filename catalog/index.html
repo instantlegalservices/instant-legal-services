@@ -28,6 +28,7 @@ body{background:var(--cat-bg);color:var(--cat-text);font-family:system-ui,-apple
 .catalog-heading h2{margin:0;font-size:clamp(22px,3vw,30px)}
 .catalog-heading p{margin:6px 0 0;color:var(--cat-muted)}
 .catalog-tools{display:grid;grid-template-columns:minmax(220px,1fr) minmax(190px,260px);gap:10px;margin:18px 0}
+.catalog-tools{grid-template-columns:minmax(220px,1fr) minmax(160px,220px) minmax(160px,220px)}
 .catalog-tools input,.catalog-tools select{width:100%;min-height:46px;padding:10px 13px;border-radius:11px;border:1px solid var(--cat-line);background:#0c1928;color:var(--cat-text)}
 .catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .catalog-card,.plan-card{border:1px solid var(--cat-line);border-radius:17px;background:var(--cat-panel);padding:0;display:flex;flex-direction:column;min-height:205px;overflow:hidden;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
@@ -62,7 +63,7 @@ body{background:var(--cat-bg);color:var(--cat-text);font-family:system-ui,-apple
 .plan-card .plan-cta{margin-top:auto;padding-top:12px}
 .catalog-disclosure{margin-top:18px;padding:15px 17px;border:1px solid var(--cat-line);border-radius:14px;color:var(--cat-muted);font-size:13px;line-height:1.6}
 .catalog-status{color:var(--cat-muted);padding:16px;border:1px dashed var(--cat-line);border-radius:12px}
-@media(max-width:850px){.catalog-grid,.plan-grid,.mart-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-need-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){.catalog-grid,.plan-grid,.mart-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-tools{grid-template-columns:1fr 1fr}.quick-need-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.catalog-wrap{width:min(100% - 22px,1180px);padding-top:16px}.catalog-grid,.plan-grid,.catalog-tools,.mart-category-grid,.quick-need-grid{grid-template-columns:1fr}.catalog-card{min-height:175px}.mart-category-card,.mart-category-copy{min-height:150px}.catalog-hero{border-radius:18px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2';"></script>
@@ -94,9 +95,34 @@ window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY||"sb_publishable_D5eFcgWFELtnym0
 
 <section class="catalog-section" id="individual-services">
 <div class="catalog-heading"><div><span class="eyebrow">One-time assistance</span><h2>Individual services</h2><p>Choose and pay only for the specific service you need.</p></div></div>
-<div class="catalog-tools"><input id="catalogSearch" type="search" placeholder="Search services, e.g. legal notice or property" aria-label="Search services"><select id="catalogCategory" aria-label="Filter by category"><option value="all">All categories</option><option value="legal">Legal &amp; disputes</option><option value="tax">GST &amp; tax</option><option value="business">Business &amp; property</option><option value="government">Government &amp; digital</option><option value="professional">Professional services</option><option value="tools">Tools &amp; reports</option></select><select id="catalogSubcategory" aria-label="Filter by subcategory"><option value="all">All subcategories</option></select></div>
+<div class="catalog-tools"><input id="catalogSearch" type="search" placeholder="Search services, e.g. legal notice or property" aria-label="Search services"><select id="catalogCategory" aria-label="Filter by category"><option value="all">All categories</option><option value="legal">Legal &amp; disputes</option><option value="tax">GST &amp; tax</option><option value="business">Business &amp; property</option><option value="government">Government &amp; digital</option><option value="professional">Professional services</option><option value="tools">Tools &amp; reports</option></select><select id="catalogSubcategory" aria-label="Filter by subcategory"><option value="all">All subcategories</option></select><select id="catalogSubcategory" aria-label="Filter by subcategory"><option value="all">All subcategories</option></select></div>
 <div id="catalogStatus" class="catalog-status" aria-live="polite">Loading available ILS services…</div>
 <div id="catalogGrid" class="catalog-grid"></div>
+<section class="catalog-section" aria-label="Popular legal assistance areas">
+<div class="catalog-heading"><div><span class="eyebrow">Find by matter</span><h2>Popular legal &amp; dispute areas</h2><p>Explore a focused guide first, then submit your requirement through the service page.</p></div></div>
+<div class="quick-need-grid">
+<a class="quick-need" href="../services/legal-drafting/"><strong>Legal Drafting</strong><small>Notices, agreements, affidavits and applications</small></a>
+<a class="quick-need" href="../services/money-recovery/"><strong>Money Recovery</strong><small>Business dues, loans, cheque bounce and recovery</small></a>
+<a class="quick-need" href="../services/consumer-banking-disputes/"><strong>Consumer &amp; Banking</strong><small>Refunds, service deficiency and banking disputes</small></a>
+<a class="quick-need" href="../services/cyber-fraud-assistance/"><strong>Cyber Fraud</strong><small>Urgent reporting steps, records and legal assistance</small></a>
+<a class="quick-need" href="../services/matrimonial-family/"><strong>Matrimonial &amp; Family</strong><small>Divorce, maintenance and family settlements</small></a>
+<a class="quick-need" href="../services/property-documentation/"><strong>Property &amp; Documentation</strong><small>Title review, agreements and property disputes</small></a>
+<a class="quick-need" href="../services/traffic-challan/"><strong>Traffic Challan</strong><small>Challan status, official route and assistance</small></a>
+<a class="quick-need" href="../services/income-tax-itr/"><strong>Income Tax &amp; ITR</strong><small>Return filing, tax notices and corrections</small></a>
+<a class="quick-need" href="../services/gst-assistance/"><strong>GST Assistance</strong><small>Registration, returns, portal issues and notices</small></a>
+</div>
+</section>
+<section class="catalog-section" aria-label="GST and tax service subcategories">
+<div class="catalog-heading"><div><span class="eyebrow">Business tax desk</span><h2>GST &amp; Tax assistance</h2><p>Choose the closest requirement. The team will confirm documents, eligibility, scope and fee.</p></div></div>
+<div class="quick-need-grid">
+<a class="quick-need" href="../assistance.html?service=business-compliance&amp;option=GST%20registration%20%2F%20amendment"><strong>GST Registration &amp; Amendment</strong><small>New GSTIN, core/non-core amendments and profile updates</small></a>
+<a class="quick-need" href="../assistance.html?service=business-compliance&amp;option=GST%20return%20%2F%20notice%20%2F%20portal%20issue"><strong>GST Returns &amp; Notices</strong><small>Return filing, portal errors, notices and response assistance</small></a>
+<a class="quick-need" href="../assistance.html?service=business-compliance&amp;option=Income%20tax%20%2F%20ITR%20assistance"><strong>Income Tax &amp; ITR</strong><small>Individual, proprietor and business tax filing assistance</small></a>
+<a class="quick-need" href="../assistance.html?service=business-compliance&amp;option=Monthly%20%2F%20recurring%20compliance"><strong>Monthly Compliance</strong><small>Recurring GST coordination and compliance calendar</small></a>
+<a class="quick-need" href="../assistance.html?service=business-compliance&amp;option=Business%20registration"><strong>Business Registration</strong><small>Entity and business registration route assessment</small></a>
+<a class="quick-need" href="../assistance.html?service=business-compliance&amp;option=Outstanding%20payment%20%2F%20recovery"><strong>Business Payment Recovery</strong><small>Unpaid invoices, receivables and recovery documentation</small></a>
+</div>
+</section>
 <div class="catalog-disclosure">The displayed service price is the current active ILS catalogue price. Applicable taxes, government fees, stamp duty, portal charges and third-party costs are separate unless expressly stated. For eligible matters, the ₹299 initial enquiry fee is credited in full against ILS professional/service charges for the same matter if you proceed. Any additional fee is confirmed before work begins.</div>
 </section>
 
@@ -111,6 +137,10 @@ window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY||"sb_publishable_D5eFcgWFELtnym0
 <article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1735825764485-93a381fd5779?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="custom business plan illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Custom requirements</span><h3>Custom Business Plan</h3><p>For multiple GSTINs, entities, branches, payroll, TDS or complex reporting needs. Work is scoped before a written quotation.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan">Request a scope review →</a></div></div></article>
 </div>
 <p class="catalog-note">Illustrative photos are sourced from Unsplash and used under the Unsplash License. They are not client or ILS case photographs.</p>
+<section class="catalog-section" aria-label="Business support by industry">
+<div class="catalog-heading"><div><span class="eyebrow">Choose your industry</span><h2>Business support by industry</h2><p>Start with your business type. We will map the relevant GST, tax, documentation and legal-support needs.</p></div></div>
+<div class="quick-need-grid"><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Retail%20shop"><strong>Retail / Kirana &amp; FMCG</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Wholesale%20%2F%20Trading"><strong>Wholesale &amp; Distribution</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Distributor%20%2F%20C%26amp%3BF%20Agent"><strong>Distributors &amp; C&amp;F</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=E-commerce%20%2F%20Marketplace%20Seller"><strong>E-commerce Sellers</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Manufacturer"><strong>Manufacturing Units</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Factory%20%2F%20Workshop"><strong>Factories &amp; Workshops</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Hospital%20%2F%20Clinic"><strong>Hospitals &amp; Clinics</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Diagnostic%20Lab%20%2F%20Pharmacy"><strong>Labs &amp; Pharmacies</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Restaurant%20%2F%20Food%20Business"><strong>Restaurants &amp; Food</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Professional%20%2F%20Freelancer"><strong>Professionals &amp; Freelancers</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Contractor%20%2F%20Construction"><strong>Contractors &amp; Construction</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Import%20%2F%20Export"><strong>Import &amp; Export</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Education%20%2F%20Training"><strong>Education &amp; Training</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=NGO%20%2F%20Trust%20%2F%20Society"><strong>NGOs, Trusts &amp; Societies</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Real%20Estate%20%2F%20Property"><strong>Real Estate &amp; Property</strong><small>Get a tailored scope review →</small></a><a class="quick-need" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan&amp;industry=Service%20%2F%20Consultancy"><strong>Service Businesses</strong><small>Get a tailored scope review →</small></a></div>
+</section>
 <div class="catalog-disclosure">Business plans are currently enquiry-led, not automatic subscriptions. No recurring charge is taken from this page. ILS confirms the included work, transaction limits, exclusions, professional allocation, renewal terms and final written fee before activation.</div>
 </section>
 <p class="catalog-note"><a href="../index.html" style="color:var(--cat-gold)">← Back to ILS home</a> · <a href="../services/gst-assistance/" style="color:var(--cat-gold)">GST assistance</a> · <a href="../services/income-tax-itr/" style="color:var(--cat-gold)">Income tax &amp; ITR</a> · <a href="../services/legal-drafting/" style="color:var(--cat-gold)">Legal drafting</a></p>
@@ -121,24 +151,49 @@ window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY||"sb_publishable_D5eFcgWFELtnym0
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const categoryFor=s=>{
- const c=String(s.category||"").toLowerCase();
- const slug=String(s.slug||"").toLowerCase();
- const name=String(s.name||"").toLowerCase();
- if(slug.startsWith("tool-output")||c.includes("tool")||name.includes("tool"))return "tools";
+ const c=String(s.category||"").toLowerCase(),slug=String(s.slug||"").toLowerCase(),name=String(s.name||"").toLowerCase();
+ if(slug.startsWith("accounting-print")||c.includes("gst")||c.includes("tax")||c.includes("itr")||slug.includes("gst")||slug.includes("income-tax")||name.includes("tax"))return "tax";
+ if(slug.startsWith("tool-output")||slug.startsWith("professional-report")||c.includes("tool")||name.includes("tool"))return "tools";
  if(c.includes("government")||c.includes("action")||slug.includes("official-route")||slug.includes("digital-form"))return "government";
- if(c.includes("gst")||c.includes("tax")||c.includes("itr")||slug.includes("gst")||slug.includes("income-tax")||name.includes("tax"))return "tax";
- if(c.includes("professional")||slug.startsWith("professional-report"))return "professional";
+ if(slug==="advocate-reviewed-draft"||slug==="legal-research-report"||c.includes("professional"))return "professional";
  if(c.includes("business")||c.includes("property")||slug.includes("property")||slug.includes("business"))return "business";
- if(slug.startsWith("accounting-print"))return "professional";
  return "legal";
 };
-const categoryLabel={legal:"Legal & dispute support",tax:"GST & tax compliance",business:"Business & property",government:"Government & digital assistance",professional:"Professional services",tools:"Tools & reports"};
+const categoryLabel={legal:"Legal & disputes",tax:"GST & tax",business:"Business & property",government:"Government & digital",professional:"Professional services",tools:"Tools & reports"};
+const subCategoryFor=s=>{
+ const slug=String(s.slug||"").toLowerCase();
+ if(slug.startsWith("accounting-print"))return "Accounting & bookkeeping reports";
+ if(slug.startsWith("tool-output"))return "Quick paid tool outputs";
+ if(slug.startsWith("professional-report"))return "Professional tool reports";
+ if(slug==="official-route-guidance")return "Official portal guidance";
+ if(slug==="digital-form-assistance")return "Digital form assistance";
+ if(slug==="business-legal-review")return "Business legal review";
+ if(slug==="property-due-diligence")return "Property due diligence";
+ if(slug==="legal-consultation")return "Consultation & issue assessment";
+ if(slug==="case-preparation-pack")return "Case preparation";
+ if(slug==="legal-research-report")return "Legal research";
+ if(slug==="advocate-reviewed-draft")return "Advocate-reviewed work";
+ if(["legal-notice-draft","custom-legal-drafting","document-review"].includes(slug))return "Drafting & document review";
+ return "Other services";
+};
+const categoryImage={legal:"https://images.unsplash.com/photo-1767972159871-b9f5d320be2b?auto=format&fit=crop&w=900&q=78",tax:"https://images.unsplash.com/photo-1772588627527-db42040f3a8b?auto=format&fit=crop&w=900&q=78",business:"https://images.unsplash.com/photo-1771575519616-f39754f93cbe?auto=format&fit=crop&w=900&q=78",government:"https://images.unsplash.com/photo-1735825764485-93a381fd5779?auto=format&fit=crop&w=900&q=78",professional:"https://images.unsplash.com/photo-1758691462878-6edc3d3da1be?auto=format&fit=crop&w=900&q=78",tools:"https://images.unsplash.com/photo-1772588627527-db42040f3a8b?auto=format&fit=crop&w=900&q=78"};
+const isToolReport=s=>/^(accounting-print|professional-report|tool-output)/.test(String(s.slug||""));
 let services=[];
+function updateSubcategories(){
+ const cat=$("catalogCategory").value,select=$("catalogSubcategory"),previous=select.value;
+ const values=[...new Set(services.filter(s=>cat==="all"||categoryFor(s)===cat).map(subCategoryFor))].sort((a,b)=>a.localeCompare(b));
+ select.innerHTML='<option value="all">All subcategories</option>'+values.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
+ select.value=values.includes(previous)?previous:"all";
+}
 function render(){
- const q=$("catalogSearch").value.trim().toLowerCase();
- const cat=$("catalogCategory").value;
- const list=services.filter(s=>(cat==="all"||categoryFor(s)===cat)&&(!q||[s.name,s.description,s.category,s.slug].join(" ").toLowerCase().includes(q)));
- $("catalogGrid").innerHTML=list.map(s=>'<article class="catalog-card"><span class="catalog-tag">'+esc(categoryLabel[categoryFor(s)])+'</span><h3>'+esc(s.name)+'</h3><p>'+esc(s.description||"Service scope will be confirmed before work begins.")+'</p><div class="catalog-meta">'+(s.price!==null&&Number.isFinite(Number(s.price))?'₹'+Number(s.price).toLocaleString("en-IN",{maximumFractionDigits:2}):"Fee confirmed")+'</div><a href="../assistance.html?service='+encodeURIComponent(s.slug)+'">View service &amp; continue →</a></article>').join("");
+ const q=$("catalogSearch").value.trim().toLowerCase(),cat=$("catalogCategory").value,sub=$("catalogSubcategory").value;
+ const list=services.filter(s=>(cat==="all"||categoryFor(s)===cat)&&(sub==="all"||subCategoryFor(s)===sub)&&(!q||[s.name,s.description,s.category,s.slug,subCategoryFor(s)].join(" ").toLowerCase().includes(q)));
+ $("catalogGrid").innerHTML=list.map(s=>{
+  const tool=isToolReport(s),href=tool?"../tools.html":"../assistance.html?service="+encodeURIComponent(s.slug);
+  const action=tool?"Open 208 tools & choose report →":"Request this service →";
+  const price=s.price!==null&&Number.isFinite(Number(s.price))?'₹'+Number(s.price).toLocaleString("en-IN",{maximumFractionDigits:2}):"Fee confirmed after scope review";
+  return '<article class="catalog-card"><div class="service-image"><img src="'+esc(categoryImage[categoryFor(s)])+'" alt="'+esc(s.name)+' illustrative photo" loading="lazy" decoding="async"></div><div class="service-card-body"><span class="catalog-tag">'+esc(categoryLabel[categoryFor(s)])+'</span><span class="catalog-subcategory">'+esc(subCategoryFor(s))+'</span><h3>'+esc(s.name)+'</h3><p>'+esc(s.description||"Service scope will be confirmed before work begins.")+'</p><div class="catalog-meta"><small>Listed service fee</small><br>'+price+'</div><a href="'+esc(href)+'">'+action+'</a></div></article>';
+ }).join("");
  $("catalogStatus").textContent=list.length?("Showing "+list.length+" of "+services.length+" currently active individual services."):"No matching services. Try another search or category.";
 }
 async function load(){
@@ -161,11 +216,14 @@ async function load(){
  }
  const prices=new Map();
  (pr.data||[]).forEach(p=>{if(!prices.has(p.service_id))prices.set(p.service_id,p);});
- services=(sr.data||[]).map(s=>({...s,price:prices.get(s.id)?.price??null})).filter(s=>prices.has(s.id));
+ services=(sr.data||[]).filter(s=>s.slug!=="ils-enquiry-fee-199").map(s=>({...s,price:prices.get(s.id)?.price??null})).filter(s=>prices.has(s.id));
+ updateSubcategories();
  render();
 }
 $("catalogSearch").addEventListener("input",render);
-$("catalogCategory").addEventListener("change",render);
+$("catalogCategory").addEventListener("change",()=>{updateSubcategories();render();});
+$("catalogSubcategory").addEventListener("change",render);
+document.querySelectorAll(".mart-category-card").forEach(card=>card.addEventListener("click",()=>{$("catalogCategory").value=card.dataset.category;updateSubcategories();render();document.getElementById("individual-services").scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}));
 load().catch(()=>{$("catalogStatus").textContent="Unable to load the live catalogue. Please try again later.";});
 })();
 </script>
