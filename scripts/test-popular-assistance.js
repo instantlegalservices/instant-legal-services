@@ -103,16 +103,9 @@ const { chromium } = require("playwright");
     const toolsModule=await (await page.request.get(base+"/assets/ils-tools.js")).text();
     if(!toolsModule.includes("'ils-enquiry-fee-199':'ils-enquiry-fee-199'")||!toolsModule.includes("if(options.autoPay===true)"))throw new Error("Dedicated fixed-price UPI checkout is not registered for immediate form checkout.");
     const assistanceSource=await (await page.request.get(base+"/assistance.html")).text();
-    for(const key of ["legal-drafting","money-recovery","consumer-banking-disputes","cyber-fraud-assistance","matrimonial-family","property-documentation","income-tax-itr","business-compliance"]){
-      if(!assistanceSource.includes('"'+key+'"'))throw new Error("Marketplace enquiry checkout mapping missing: "+key);
-    }
-    if(!assistanceSource.includes('paidMarketplaceTraffic')||!assistanceSource.includes('isPaidMarketplaceTraffic'))throw new Error("Traffic Challan marketplace checkout mapping missing.");
-    const businessSource=await (await page.request.get(base+"/business-compliance.html")).text();
-    if(businessSource.includes('id="businessEnquiryForm"'))throw new Error("Business page must not create a second service enquiry form.");
-    if(!businessSource.includes('href="assistance.html?service=business-compliance"'))throw new Error("Business enquiry must route to the universal existing form.");
-
-    if(!assistanceSource.includes('"business-compliance"')||!assistanceSource.includes('intake_source:"ils-universal-service-form"'))throw new Error("Universal form business intake mapping/CRM marker missing.");
-    if(!assistanceSource.includes('intakeService!=="business-compliance"||selectedOption==="GST return / notice / portal issue"'))throw new Error("Only the previously paid GST business route may open the ₹299 checkout; other business enquiries must remain free.");
+    if(!assistanceSource.includes("const isClientServiceInquiry=Boolean(intakeService)")||!assistanceSource.includes("intake_source:\"ils-client-portal-service-catalogue\""))throw new Error("All client service catalogue enquiries must enter the payment checkout with the correct CRM source marker.");
+    if(!assistanceSource.includes("await ILS.submitRequirement(inquiryPayload)")||assistanceSource.indexOf("await ILS.submitRequirement(inquiryPayload)")>assistanceSource.indexOf('await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199"'))throw new Error("Client service enquiry must be saved to CRM before creating the ₹299 checkout order.");
+    if(!assistanceSource.includes('createOrder("ils-enquiry-fee-199"')||!assistanceSource.includes("Boolean(intakeService)"))throw new Error("All service slugs must use the configured initial enquiry fee checkout.");
     if(!assistanceSource.includes("₹299")||assistanceSource.includes("₹199"))throw new Error("Customer checkout must display ₹299 and must not retain ₹199 pricing copy.");
     if(!toolsModule.includes('requiresReentry:true')||toolsModule.includes('details:savedDetails'))throw new Error("Unauthenticated checkout must not persist customer intake details in browser storage.");
     if(!assistanceSource.includes('pending.requiresReentry')||!assistanceSource.includes('your enquiry details were not saved in the browser'))throw new Error("Assistance privacy-safe post-login re-entry notice is missing.");
