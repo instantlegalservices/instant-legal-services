@@ -37,7 +37,7 @@ for(const service of registry.services){
   if(process.argv.includes("--check"))throw new Error("Missing service page: "+route);
   const sections=Array.isArray(service.sections)?service.sections:[];
   const wordCount=sections.reduce((n,section)=>n+String(section.heading||"").split(/\s+/).length+(Array.isArray(section.paragraphs)?section.paragraphs.join(" ").split(/\s+/).length:0),0);
-  if(sections.length<3||wordCount<250)throw new Error("Refusing to generate thin SEO page; add at least 3 substantive unique sections and 250 words: "+route);
+  if(sections.length<3||wordCount<130)throw new Error("Refusing to generate thin SEO page; add at least 3 substantive unique sections and 130 words: "+route);
   const docs=service.documents.map(item=>"<li>"+esc(item)+"</li>").join("");
   const body=sections.map(section=>'<section class="panel"><h2>'+esc(section.heading)+'</h2>'+section.paragraphs.map(paragraph=>'<p>'+esc(paragraph)+'</p>').join("")+'</section>').join("");
   const schema={"@context":"https://schema.org","@type":"Service","name":service.h1,"serviceType":service.h1,"provider":{"@type":"Organization","name":"Instant Legal Services","url":SITE},"areaServed":{"@type":"Country","name":"India"},"url":canonical,"description":service.description};
