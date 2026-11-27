@@ -27,6 +27,9 @@ const fs = require("fs");
    if(await page.locator(".plan-card .plan-image img").count()!==6)throw new Error("Business plan cards must include relevant photos.");
    if(await page.locator('section[aria-label="Popular legal assistance areas"] .quick-need').count()!==9)throw new Error("All nine SEO-linked legal need shortcuts must remain visible.");
    if(await page.locator('section[aria-label="GST and tax service subcategories"] .quick-need').count()!==6)throw new Error("GST and tax enquiry subcategories are incomplete.");
+   if(await page.locator('section[aria-label="Additional GST and tax support"] .quick-need').count()!==5)throw new Error("Additional GST and tax subcategories are incomplete.");
+   if(await page.locator('section[aria-label="Business registrations and licences"] .quick-need').count()!==6)throw new Error("Business registration and licence subcategories are incomplete.");
+   if(await page.locator('section[aria-label="Business legal and workforce support"] .quick-need').count()!==4)throw new Error("Business legal and workforce subcategories are incomplete.");
    if(await page.locator('section[aria-label="Business support by industry"] .quick-need').count()!==16)throw new Error("Industry-specific business entry points are incomplete.");
    if(!(await page.locator(".catalog-card").filter({hasText:"Legal Notice Draft"}).innerText()).includes("₹499"))throw new Error("Active service price not displayed.");
    if(!(await page.locator(".catalog-card").filter({hasText:"Legal Notice Draft"}).innerText()).includes("₹299 initial enquiry"))throw new Error("Service enquiry-credit disclosure is missing.");
@@ -65,6 +68,10 @@ const fs = require("fs");
     if(!assistanceSource.includes('"'+slug+'":{title:'))throw new Error("Service intake mapping missing for "+slug);
    }
    if(!assistanceSource.includes("industryParam")||!assistanceSource.includes("value===industryParam"))throw new Error("Business industry shortcut does not preselect CRM business type.");
+   for(const option of ["GST input tax credit / reconciliation","Tax notice / demand response","TDS / payroll / salary compliance","Accounting / bookkeeping / bank reconciliation","E-way bill / e-invoice support","Shop & Establishment / Trade Licence","Udyam / MSME registration","FSSAI / Food licence","Trademark / Brand protection","Labour / PF / ESI compliance","MCA / ROC / annual filing assistance"]){
+    if(!assistanceSource.includes(option))throw new Error("Business enquiry subcategory missing from CRM intake: "+option);
+   }
+
    for(const industry of ["Retail shop","Kirana / FMCG / Grocery","Showroom / General Retail","Wholesale / Trading","Distributor / C&F Agent","E-commerce / Marketplace Seller","Manufacturer","Factory / Workshop","Import / Export","Restaurant / Food Business","Hospital / Clinic","Diagnostic Lab / Pharmacy","Professional / Freelancer","Service / Consultancy","Contractor / Construction","Real Estate / Property","Education / Training","NGO / Trust / Society"]){
     if(!assistanceSource.includes("<option>"+industry.replace(/&/g,"&amp;")+"</option>"))throw new Error("Business type option missing: "+industry);
    }
