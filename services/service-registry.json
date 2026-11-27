@@ -755,6 +755,42 @@
         "Expense vouchers and payment records",
         "Opening balances and prior books, if available",
         "GSTIN, PAN and payroll data only as relevant to the agreed scope"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Monthly bookkeeping and ledger updates",
+            "Bank reconciliation and transaction classification",
+            "GST data preparation and reconciliation support",
+            "TDS/payroll coordination and management reports"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Share business type and monthly transaction volume",
+            "ILS assesses records, GSTIN count and reporting needs",
+            "Monthly or one-time scope and fee are confirmed",
+            "Work starts after secure document-sharing instructions are agreed"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Audit and certification require a separate eligible professional engagement.",
+            "No. Business plans are enquiry-led; no recurring charge starts without written agreement.",
+            "Request bookkeeping support →"
+          ]
+        }
       ]
     },
     {
@@ -769,6 +805,42 @@
         "Existing PF/ESI or labour registration details, if any",
         "Relevant employment contracts, notices or payroll summaries",
         "Compliance period and issue details"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Employment and HR document drafting enquiries",
+            "PF and ESI registration or compliance coordination",
+            "Payroll and TDS support enquiries",
+            "Workplace policy and statutory-register assistance"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Select the workforce or labour requirement",
+            "Share establishment and employee details",
+            "ILS confirms applicable law, scope and professional availability",
+            "Fee and deliverables are approved before work begins"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Requirements vary by state, establishment category, employee count and applicable law.",
+            "No. Review depends on accurate records and the agreed scope.",
+            "Request labour and HR compliance →"
+          ]
+        }
       ]
     },
     {
@@ -782,6 +854,42 @@
         "Business constitution, location and registration details",
         "Relevant records or notices, if available",
         "Deadline and preferred mode of communication"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "CA support enquiries for accounts, tax and audit-related work",
+            "CS support enquiries for company law and ROC matters",
+            "HR professional support for payroll and workforce processes",
+            "GST practitioner support for registration, returns and reconciliation"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose the professional category and assignment",
+            "ILS checks scope and suitable network availability",
+            "Credentials, fee and engagement terms are confirmed",
+            "The professional assignment proceeds after acceptance"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Statutory certification is issued only by an eligible professional engaged for that purpose.",
+            "Availability and jurisdiction are confirmed for each enquiry.",
+            "Find professional assistance →"
+          ]
+        }
       ]
     },
     {
