@@ -22,6 +22,23 @@ const fs = require("fs");
    if(failures.length)throw new Error("Browser JS errors: "+failures.join("; "));
    if(await page.locator(".catalog-card").count()!==5)throw new Error("Only priced active services should render; status: "+await page.locator("#catalogStatus").innerText());
    if(await page.locator(".plan-card").count()!==6)throw new Error("All six business plan enquiry cards must render.");
+   if(await page.locator(".ils-offer-card").count()!==5)throw new Error("Five launch offer cards must render above the catalogue.");
+   const expectedOffers=[
+    ["GST Registration","₹1,499","₹999","GST Registration – Launch Offer"],
+    ["Private Limited Company Registration","₹4,999","₹3,999","Private Limited Company Registration – Launch Offer"],
+    ["Society Registration","₹3,999","₹2,999","Society Registration – Launch Offer"],
+    ["GST Return Filing","₹499","₹399","GST Return Filing – Launch Offer"],
+    ["Bookkeeping","₹1,999/month","₹1,499/month","Bookkeeping – Launch Offer"]
+   ];
+   for(const [name,regular,offer,option] of expectedOffers){
+    const card=page.locator(".ils-offer-card").filter({hasText:name});
+    if(await card.count()!==1||(await card.locator("del").innerText())!==regular||(await card.locator("strong").innerText())!==offer)throw new Error("Offer price or regular fee mismatch: "+name);
+    const href=await card.locator("a").getAttribute("href");
+    if(!href.includes("service=business-compliance")||!decodeURIComponent(href).includes(option))throw new Error("Offer CTA does not preserve service selection: "+name);
+   }
+   const offerAssistance=fs.readFileSync("assistance.html","utf8");
+   for(const [, , ,option] of expectedOffers)if(!offerAssistance.includes(option))throw new Error("Business intake option missing for launch offer: "+option);
+
    if(await page.locator(".plan-card .plan-price").count()!==6)throw new Error("All six plans must show transparent pricing or a scope-based quote.");
    if(!(await page.locator(".plan-card").filter({hasText:"Shopkeeper Starter"}).innerText()).includes("₹999"))throw new Error("Shopkeeper Starter monthly starting price missing.");
    if(!(await page.locator(".plan-card").filter({hasText:"Retailer Plus"}).innerText()).includes("₹1,999"))throw new Error("Retailer Plus monthly starting price missing.");
@@ -113,7 +130,20 @@ const fs = require("fs");
    await context.close();
   }
 
-  const intakeContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:"block"});
+  
+  const homePage=await browser.newPage({viewport:{width:390,height:844}});
+  const homeErrors=[];homePage.on("pageerror",e=>homeErrors.push(e.message));
+  await homePage.goto((process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"")+"/");
+  if(await homePage.locator(".ils-home-offer").count()!==5)throw new Error("Homepage must show five tax/business launch offers above Popular Assistance.");
+  if(await homePage.locator("#ils-launch-offers").evaluate(el=>el.compareDocumentPosition(document.querySelector("#popular-assistance"))&Node.DOCUMENT_POSITION_FOLLOWING)===0)throw new Error("Homepage launch offers must appear before Popular Assistance.");
+  for(const [lang,expected] of [["en-IN","Tax & Business Services at Offer Prices"],["hi-IN","GST और बिज़नेस सेवाएँ — ऑफर कीमतों पर"],["hinglish","GST & Business Services — Offer Prices"],["ur-IN","ٹیکس اور کاروباری خدمات رعایتی قیمتوں پر"],["bn-IN","কর ও ব্যবসায়িক পরিষেবা অফার মূল্যে"]]){
+   await homePage.evaluate(v=>setLang(v),lang);
+   if((await homePage.locator("#ils-launch-offers h2").innerText())!==expected)throw new Error("Homepage launch offer translation missing for "+lang);
+  }
+  if(homeErrors.length)throw new Error("Homepage offer browser errors: "+homeErrors.join("; "));
+  await homePage.close();
+
+const intakeContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:"block"});
   const intakePage=await intakeContext.newPage(),intakeErrors=[];
   intakePage.on("pageerror",e=>intakeErrors.push(e.message));
   const intakeStub="window.supabase={createClient:function(){return {auth:{getSession:async()=>({data:{session:null}})}};}};";
