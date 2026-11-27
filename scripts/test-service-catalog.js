@@ -137,7 +137,7 @@ const fs = require("fs");
   if(await homePage.locator(".ils-home-offer").count()!==5)throw new Error("Homepage must show five tax/business launch offers above Popular Assistance.");
   if(await homePage.locator("#ils-launch-offers").evaluate(el=>el.compareDocumentPosition(document.querySelector("#popular-assistance"))&Node.DOCUMENT_POSITION_FOLLOWING)===0)throw new Error("Homepage launch offers must appear before Popular Assistance.");
   for(const [lang,expected] of [["en-IN","Tax & Business Services at Offer Prices"],["hi-IN","GST और बिज़नेस सेवाएँ — ऑफर कीमतों पर"],["hinglish","GST & Business Services — Offer Prices"],["ur-IN","ٹیکس اور کاروباری خدمات رعایتی قیمتوں پر"],["bn-IN","কর ও ব্যবসায়িক পরিষেবা অফার মূল্যে"]]){
-   await homePage.evaluate(v=>setLang(v),lang);
+   await homePage.locator("#language").selectOption(lang);
    if((await homePage.locator("#ils-launch-offers h2").innerText())!==expected)throw new Error("Homepage launch offer translation missing for "+lang);
   }
   if(homeErrors.length)throw new Error("Homepage offer browser errors: "+homeErrors.join("; "));
