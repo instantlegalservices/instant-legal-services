@@ -289,6 +289,7 @@ BEGIN
     'client_requirement_id', v_lead_id,
     'name', 'Client Catalogue Fixture',
     'mobile', '9876543211',
+    'matter', 'Legal Drafting',
     'intake_service', 'legal-drafting'
   ))
   RETURNING id, client_requirement_id INTO v_request_id, v_linked_lead_id;
