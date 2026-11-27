@@ -3,6 +3,24 @@ const { chromium } = require("playwright");
 const fs = require("fs");
 (async () => {
  const browser=await chromium.launch({headless:true}); const failures=[];
+ const home=fs.readFileSync("index.html","utf8");
+ const homeOfferStart=home.indexOf('id="ils-launch-offers"');
+ const homeOfferEnd=home.indexOf('id="popular-assistance"',homeOfferStart);
+ if(homeOfferStart<0||homeOfferEnd<0)throw new Error("Homepage launch-offer section is missing or out of order.");
+ const homeOffer=home.slice(homeOfferStart,homeOfferEnd);
+ if((homeOffer.match(/class="ils-home-offer"/g)||[]).length!==5)throw new Error("Homepage must display all five ILS launch offers.");
+ if(/society\\s+registration/i.test(homeOffer))throw new Error("Society Registration must not appear in homepage launch offers.");
+ const homeOfferTargets=[
+  "GST%20Registration%20%E2%80%93%20Launch%20Offer",
+  "Private%20Limited%20Company%20Registration%20%E2%80%93%20Launch%20Offer",
+  "LLP%20Registration%20%E2%80%93%20Launch%20Offer",
+  "GST%20Return%20Filing%20%E2%80%93%20Launch%20Offer",
+  "Bookkeeping%20%E2%80%93%20Launch%20Offer"
+ ];
+ for(const target of homeOfferTargets)if(!homeOffer.includes(target))throw new Error("Homepage launch-offer CTA is missing its exact service selection: "+target);
+ if(!home.includes("@media(max-width:600px){.ils-home-offers")||!home.includes(".ils-home-offers-grid{display:flex;overflow-x:auto")||!home.includes(".ils-home-offer{flex:0 0 78%"))throw new Error("Homepage launch offers must remain swipeable and readable on mobile.");
+ if(!home.includes(".ils-home-offers-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))"))throw new Error("Homepage desktop launch-offer grid must display five balanced cards.");
+ console.log("HOMEPAGE_FIVE_LAUNCH_OFFERS_AND_RESPONSIVE_LAYOUT=PASS");
  try {
   for(const viewport of [{width:390,height:844,legacy:false},{width:1440,height:900,legacy:true}]){
    const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},serviceWorkers:"block",reducedMotion:"reduce"});
