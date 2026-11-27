@@ -114,7 +114,7 @@ const { chromium } = require("playwright");
     if(!portalSource.includes('"/business-compliance.html"'))throw new Error("Customer portal does not allow the safe GST enquiry return path.");
     if(!portalSource.includes('const intakeLabels=')||!portalSource.includes('"gst-returns":"GST Assistance"'))throw new Error("Client portal does not show marketplace-specific service names.");
     if(!toolsModule.includes("containerId='toolStatus'")||!toolsModule.includes("getElementById(containerId)"))throw new Error("UPI payment screen is not rendered in the visible marketplace form container.");
-    if(!assistanceSource.includes('const mode=params.get("mode")')||!assistanceSource.includes('mode==="guided"')||!assistanceSource.includes('mode:"popular-assistance"'))throw new Error("Assistance marketplace/Traffic checkout mode handling is incomplete.");
+    if(!assistanceSource.includes('const mode=params.get("mode")')||!assistanceSource.includes('mode==="guided"')||!assistanceSource.includes('mode:"client-service-inquiry"'))throw new Error("Assistance marketplace/Traffic checkout mode handling is incomplete.");
     const migration=await (await page.request.get(base+"/supabase/migrations/20261124175000_add_ils_enquiry_fee_199.sql")).text().catch(()=> "");
     if(migration&&!migration.includes("'ils-enquiry-fee-199'"))throw new Error("₹199 service migration does not contain its dedicated service slug.");
     const crmMigration=await (await page.request.get(base+"/supabase/migrations/20261124193000_link_universal_intake_to_existing_crm.sql")).text().catch(()=> "");
