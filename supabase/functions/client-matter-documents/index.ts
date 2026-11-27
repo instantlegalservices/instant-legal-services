@@ -5,6 +5,37 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
 const BUCKET = "client-matter-documents";
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
+const ALLOWED_DOCUMENT_TYPES: Record<string, { mime: string[]; signature: string }> = {
+  pdf: { mime: ["application/pdf"], signature: "pdf" },
+  jpg: { mime: ["image/jpeg"], signature: "jpeg" },
+  jpeg: { mime: ["image/jpeg"], signature: "jpeg" },
+  png: { mime: ["image/png"], signature: "png" },
+  doc: { mime: ["application/msword", "application/octet-stream"], signature: "ole" },
+  xls: { mime: ["application/vnd.ms-excel", "application/octet-stream"], signature: "ole" },
+  docx: { mime: ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip", "application/octet-stream"], signature: "docx" },
+  xlsx: { mime: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/zip", "application/octet-stream"], signature: "xlsx" }
+};
+async function validateDocumentFile(file: File): Promise<string | null> {
+  const ext = file.name.split(".").pop()?.toLowerCase() || "";
+  const rule = ALLOWED_DOCUMENT_TYPES[ext];
+  if (!rule) return "Unsupported file type. Upload PDF, JPG, PNG, DOC, DOCX, XLS or XLSX.";
+  const mime = (file.type || "application/octet-stream").toLowerCase();
+  if (!rule.mime.includes(mime)) return "File extension and content type do not match.";
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const starts = (...values: number[]) => values.every((value, index) => bytes[index] === value);
+  if (rule.signature === "pdf" && !starts(0x25, 0x50, 0x44, 0x46, 0x2d)) return "Invalid PDF file.";
+  if (rule.signature === "jpeg" && !(starts(0xff, 0xd8, 0xff))) return "Invalid JPEG image.";
+  if (rule.signature === "png" && !starts(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)) return "Invalid PNG image.";
+  if (rule.signature === "ole" && !starts(0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1)) return "Invalid legacy Office document.";
+  if (rule.signature === "docx" || rule.signature === "xlsx") {
+    if (!starts(0x50, 0x4b, 0x03, 0x04)) return "Invalid Office Open XML document.";
+    const head = new TextDecoder("latin1").decode(bytes);
+    const required = rule.signature === "docx" ? "word/document.xml" : "xl/workbook.xml";
+    if (!head.includes(required) || !head.includes("[Content_Types].xml")) return "Office document structure could not be verified.";
+  }
+  return null;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -29,12 +60,22 @@ async function getClientByAccess(accessToken: string, mobile: string) {
   if (data.client_access_expires_at && new Date(data.client_access_expires_at) <= new Date()) return null;
   return data;
 }
+async function getClientByUser(userId: string, clientId: number) {
+  const { data: profile } = await supabaseAdmin.from("customer_profiles").select("client_requirement_id").eq("user_id", userId).eq("status", "active").maybeSingle();
+  if (profile?.client_requirement_id === clientId) return await getClientById(clientId);
+  const { data: request } = await supabaseAdmin.from("service_requests").select("client_requirement_id").eq("user_id", userId).eq("client_requirement_id", clientId).maybeSingle();
+  return request?.client_requirement_id ? await getClientById(clientId) : null;
+}
 async function getClientById(clientId: number) {
   const { data, error } = await supabaseAdmin.from("client_requirements")
     .select("id, client_name, assigned_advocate_id").eq("id", clientId).maybeSingle();
   return error || !data ? null : data;
 }
-async function isAdmin(user: any) { return user?.email === "fahat29@gmail.com"; }
+async function isAdmin(user: any) {
+  if (!user?.id) return false;
+  const { data, error } = await supabaseAdmin.from("ils_admin_users").select("user_id").eq("user_id", user.id).maybeSingle();
+  return !error && !!data;
+}
 async function isAssignedAdvocate(user: any, clientId: number) {
   if (!user?.email) return false;
   const { data: advocate } = await supabaseAdmin.from("advocate_registrations")
@@ -69,9 +110,14 @@ Deno.serve(async (req) => {
     }
     const user = await getAuthUser(req);
     let targetClient: any = null;
+    let clientAccess = false;
     if (accessToken && mobile) {
       targetClient = await getClientByAccess(accessToken, mobile);
       if (!targetClient) return json({ ok: false, message: "Invalid or expired client access." }, 403);
+      clientAccess = true;
+    } else if (user?.id && clientId) {
+      targetClient = await getClientByUser(user.id, clientId);
+      clientAccess = !!targetClient;
     }
     if (!targetClient && clientId) {
       targetClient = await getClientById(clientId);
@@ -80,7 +126,7 @@ Deno.serve(async (req) => {
     if (!targetClient) return json({ ok: false, message: "Client matter could not be identified." }, 400);
     const adminAccess = await isAdmin(user);
     const advocateAccess = await isAssignedAdvocate(user, targetClient.id);
-    const clientAccess = !!(accessToken && mobile);
+    clientAccess = clientAccess || !!(accessToken && mobile);
     if (!adminAccess && !advocateAccess && !clientAccess) return json({ ok: false, message: "You are not authorized for this matter." }, 403);
 
     if (action === "list") {
@@ -100,6 +146,8 @@ Deno.serve(async (req) => {
       if (!file) return json({ ok: false, message: "Please select a document." }, 400);
       if (file.size > MAX_FILE_SIZE) return json({ ok: false, message: "Maximum file size is 15 MB." }, 400);
       if (file.size <= 0) return json({ ok: false, message: "Invalid empty file." }, 400);
+      const fileValidationError = await validateDocumentFile(file);
+      if (fileValidationError) return json({ ok: false, message: fileValidationError }, 400);
       let uploaderRole = "client", uploaderName = targetClient.client_name || "Client";
       if (adminAccess) { uploaderRole = "admin"; uploaderName = "Instant Legal Services"; }
       else if (advocateAccess) {

@@ -202,7 +202,15 @@ function showMode(){
  const returnTo=location.pathname+location.search+location.hash;
  document.getElementById("loginBtn").href="customer-portal.html?returnTo="+encodeURIComponent(returnTo);
 }
+let checkoutInProgress=false;
+let activeCheckoutIntentId=null;
 async function pay(guided,rd,resumeIntent=null){
+ if(checkoutInProgress)return;
+ checkoutInProgress=true;
+ if(!activeCheckoutIntentId){
+  activeCheckoutIntentId=resumeIntent?.checkoutIntentId||((window.crypto?.randomUUID)?window.crypto.randomUUID():("ils-"+Date.now()+"-"+Math.random().toString(36).slice(2)));
+  window.__ilsActiveCheckoutIntentId=activeCheckoutIntentId;
+ }
  const btn=document.getElementById("payBtn");btn.disabled=true;
  try{
   if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
@@ -222,7 +230,7 @@ async function pay(guided,rd,resumeIntent=null){
    mobile:guided?"":document.getElementById("assistMobile").value.trim(),
    state:guided?"":document.getElementById("assistState").value.trim(),
    city:guided?"":document.getElementById("assistCity").value.trim(),
-   ...(resumeIntent?.checkoutIntentId?{checkout_intent_id:resumeIntent.checkoutIntentId}: {})
+   checkout_intent_id:activeCheckoutIntentId
   };
   const isPaidMarketplaceTraffic=guided&&/traffic.*echallan|echallan.*traffic/i.test([problem,route,rd?.title||""].join(" "));
   const serviceSlug=isPaidMarketplaceTraffic?"ils-enquiry-fee-199":(guided?"official-route-guidance":"digital-form-assistance");
@@ -280,7 +288,7 @@ async function pay(guided,rd,resumeIntent=null){
  }catch(e){
   const msg=String(e?.message||e);
   status(msg.includes("Please sign in")||msg.includes("Please login")?"Please sign in or create your ILS customer account, then return here to continue.":msg,"err");
- }finally{btn.disabled=false;}
+ }finally{btn.disabled=false;checkoutInProgress=false;}
 }
 async function resumePendingCheckout(){
  try{
