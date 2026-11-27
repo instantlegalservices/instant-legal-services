@@ -904,6 +904,34 @@
         "Arrest, custody or hearing status and relevant dates",
         "Bail orders, remand papers or court notices, if available",
         "Name of court and case number, if already filed"
+      ],
+      "sections": [
+        {
+          "heading": "Available assistance areas",
+          "paragraphs": [
+            "Criminal complaint and case assessment",
+            "Regular or anticipatory bail enquiry",
+            "NDPS matter and procedural assistance enquiry",
+            "Court-document and hearing preparation"
+          ]
+        },
+        {
+          "heading": "How it works",
+          "paragraphs": [
+            "Submit location, case stage and urgency.",
+            "ILS checks advocate availability and jurisdiction.",
+            "Advocate engagement, fee and scope are confirmed.",
+            "Documents and next steps are reviewed with the appointed advocate."
+          ]
+        },
+        {
+          "heading": "Important information",
+          "paragraphs": [
+            "No bail or case outcome is guaranteed. Courts decide applications on facts, evidence and law. For arrest, custody or imminent deadlines, contact a qualified local advocate immediately; do not wait for an online response. ILS confirms professional availability and fees before engagement. The ₹299 initial enquiry fee, where applicable, is credited against eligible same-matter ILS fees if you proceed; it is not a court or government fee.",
+            "Never share OTPs, passwords, PINs, CVV or remote-access permissions.",
+            "Browse all ILS services →"
+          ]
+        }
       ]
     }
   ]
