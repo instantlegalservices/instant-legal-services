@@ -101,6 +101,7 @@ $$;
 \i supabase/migrations/20261117182000_harden_client_portal_advocate_disclosure.sql
 \i supabase/migrations/20261117182100_align_admin_crm_uuid_authorization.sql
 \i supabase/migrations/20261124193000_link_universal_intake_to_existing_crm.sql
+\i supabase/migrations/20261127100200_link_client_catalogue_intake_to_existing_crm.sql
 
 DO $assert$
 DECLARE
@@ -210,6 +211,46 @@ BEGIN
 END;
 $universal_intake$;
 
+-- A client-catalogue enquiry saves its CRM lead before checkout. The trigger
+-- must attach that exact lead ID and must not create a duplicate CRM row.
+DO $client_catalogue_intake$
+DECLARE
+  v_lead_id bigint;
+  v_request_id uuid;
+  v_linked_lead_id bigint;
+  v_lead_count integer;
+BEGIN
+  INSERT INTO public.client_requirements
+    (client_name, mobile, state, district_city, legal_matter, brief_requirement)
+  VALUES
+    ('Client Catalogue Fixture', '9876543211', 'Uttar Pradesh', 'Bareilly',
+     'Legal Drafting', 'Catalogue enquiry fixture')
+  RETURNING id INTO v_lead_id;
+
+  INSERT INTO public.service_requests(details)
+  VALUES (jsonb_build_object(
+    'intake_source', 'ils-client-portal-service-catalogue',
+    'mode', 'client-service-inquiry',
+    'client_requirement_id', v_lead_id,
+    'name', 'Client Catalogue Fixture',
+    'mobile', '9876543211',
+    'intake_service', 'legal-drafting'
+  ))
+  RETURNING id, client_requirement_id INTO v_request_id, v_linked_lead_id;
+
+  IF v_linked_lead_id IS DISTINCT FROM v_lead_id THEN
+    RAISE EXCEPTION 'client catalogue service request did not link the submitted CRM requirement ID';
+  END IF;
+
+  SELECT count(*) INTO v_lead_count
+  FROM public.client_requirements
+  WHERE id = v_lead_id;
+  IF v_lead_count <> 1 THEN
+    RAISE EXCEPTION 'client catalogue trigger created a duplicate CRM requirement';
+  END IF;
+END;
+$client_catalogue_intake$;
+
 -- Exercise the rewritten portal function: contact is hidden unless both the
 -- lead release switch and assignment-specific visibility flag are true.
 INSERT INTO public.client_requirements(client_name, mobile, brief_requirement, release_advocate_contact)
@@ -253,4 +294,4 @@ BEGIN
 END;
 $admin$;
 
-\echo PASS: CRM/portal migrations and universal intake CRM trigger execute on PostgreSQL 16; anon grants remain column-scoped; authenticated CRM access, portal disclosure and Admin RPC guards verified.
+\echo PASS: CRM/portal migrations, universal intake creation, and client-catalogue CRM linking execute on PostgreSQL 16; anon grants remain column-scoped; authenticated CRM access, portal disclosure and Admin RPC guards verified.
