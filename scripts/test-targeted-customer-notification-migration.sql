@@ -1,7 +1,7 @@
 -- Disposable PostgreSQL 16 integration test for the exact Phase-1 migration.
 -- Run after scripts/test-business-compliance-postgres.sql in CI. No production data.
-CREATE SCHEMA auth;
-CREATE TABLE auth.users (id uuid PRIMARY KEY);
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE TABLE IF NOT EXISTS auth.users (id uuid PRIMARY KEY);
 CREATE OR REPLACE FUNCTION auth.uid()
 RETURNS uuid
 LANGUAGE sql
