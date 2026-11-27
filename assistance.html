@@ -100,6 +100,16 @@ const service=params.get("service")||"";
 const serviceOption=params.get("option")||"";
 const industryParam=params.get("industry")||"";
  const planParam=params.get("plan")||"";
+ const packageCycleRaw=params.get("cycle")||"";
+ const packageCycle=["one_time","monthly","annual"].includes(packageCycleRaw)?packageCycleRaw:"";
+ const packageIndustry=params.get("industry")||"";
+ const packageInvoices=params.get("invoices")||"";
+ const packageGstins=params.get("gstins")||"";
+ const allowedPackageModules=["gst-filing","reconciliation","bookkeeping","tds-payroll","roc","legal-desk"];
+ const packageModules=(params.get("modules")||"").split(",").filter(x=>allowedPackageModules.includes(x));
+ const packageEstimateRaw=params.get("estimate")||"";
+ const packageEstimate=/^\\d{1,7}$/.test(packageEstimateRaw)?Number(packageEstimateRaw):null;
+
  const businessPlans={"shopkeeper-starter":"Shopkeeper Starter","retailer-plus":"Retailer Plus","wholesaler-compliance":"Wholesaler Compliance","manufacturer-support":"Manufacturer Support","hospital-clinic-support":"Hospital & Clinic Support","custom-business-plan":"Custom Business Plan"};
  const selectedBusinessPlan=service==="business-compliance"?(businessPlans[planParam]||""):"";
 const serviceIntake={
@@ -384,14 +394,23 @@ document.addEventListener("DOMContentLoaded",()=>{
    const baseBrief=document.getElementById("brief").value.trim();
    const intakeService=new URLSearchParams(location.search).get("service")||"";
    const businessType=intakeService==="business-compliance"?(document.getElementById("businessType").value||""):"";
-   const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedBusinessPlan?"Selected business plan: "+selectedBusinessPlan+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
+   const packageCycleLabel=packageCycle==="annual"?"Annual prepaid":packageCycle==="monthly"?"Monthly":packageCycle==="one_time"?"One-time project":"";
+   const packageSummary=selectedBusinessPlan==="Custom Business Plan"?[
+    packageCycleLabel?"Billing preference: "+packageCycleLabel:"",
+    packageIndustry?"Business profile: "+packageIndustry:"",
+    packageInvoices?"Monthly invoice volume band: "+packageInvoices:"",
+    packageGstins?"GSTIN count: "+packageGstins:"",
+    packageModules.length?"Selected package modules: "+packageModules.join(", "):"",
+    packageEstimate!==null&&packageCycle!=="one_time"?"Indicative package estimate: ₹"+packageEstimate+(packageCycle==="annual"?" / year":" / month"):""
+   ].filter(Boolean).join(" | "):"";
+   const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedBusinessPlan?"Selected business plan: "+selectedBusinessPlan+" | ":"")+(packageSummary?packageSummary+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
    const isClientServiceInquiry=Boolean(intakeService);
    const inquiryPayload={name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief};
    if(isClientServiceInquiry){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
     // Preserve the CRM lead and create the adjustable initial-enquiry payment order for every catalogue service.
     await ILS.submitRequirement(inquiryPayload);
-    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,business_type:businessType,selected_business_plan:selectedBusinessPlan||null,...inquiryPayload,brief:finalBrief.slice(0,3000)};
+    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,business_type:businessType,selected_business_plan:selectedBusinessPlan||null,package_billing_cycle:packageCycle||null,package_industry:packageIndustry||null,package_invoice_volume:packageInvoices||null,package_gstin_count:packageGstins||null,package_modules:packageModules,package_estimate:packageCycle!=="one_time"?packageEstimate:null,...inquiryPayload,brief:finalBrief.slice(0,3000)};
     s.className="status";s.textContent="Enquiry saved. Preparing your ₹299 initial enquiry payment…";
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
