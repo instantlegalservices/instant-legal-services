@@ -363,9 +363,19 @@ document.addEventListener("DOMContentLoaded",()=>{
    if(isClientServiceInquiry){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
     // Preserve the CRM lead and create the adjustable initial-enquiry payment order for every catalogue service.
+    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,business_type:businessType,...inquiryPayload,brief:finalBrief.slice(0,3000)};
+    const client=window.ILS?.ready?.();
+    if(!client)throw new Error("Service connection unavailable. Please refresh and try again.");
+    const {data:{user},error:authError}=await client.auth.getUser();
+    if(authError)throw authError;
+    if(!user){
+     s.className="status";s.textContent="Please sign in to save your enquiry and continue to payment…";
+     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
+     return;
+    }
     const clientRequirementId=await ILS.submitRequirement(inquiryPayload);
     if(!Number.isSafeInteger(Number(clientRequirementId))||Number(clientRequirementId)<1)throw new Error("CRM enquiry was saved but its link could not be confirmed. Please contact ILS support before payment.");
-    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",client_requirement_id:Number(clientRequirementId),intake_service:intakeService,service_option:selectedOption,business_type:businessType,...inquiryPayload,brief:finalBrief.slice(0,3000)};
+    details.client_requirement_id=Number(clientRequirementId);
     s.className="status";s.textContent="Enquiry saved. Preparing your ₹299 initial enquiry payment…";
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
