@@ -14,6 +14,42 @@
         "Short explanation of the transaction and business objective",
         "Specific clauses or risks you want reviewed",
         "Related emails, notices or prior drafts, if relevant"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Contract and agreement review",
+            "Vendor, customer and service-provider terms",
+            "Commercial risk observations and clause-level issues",
+            "Policy, notice and business correspondence review"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Share the document type and business context",
+            "ILS checks scope, jurisdiction and document volume",
+            "Applicable professional fee and deliverables are confirmed",
+            "Review observations are shared through the agreed channel"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. A review identifies issues within the agreed scope; it cannot eliminate every commercial or legal risk.",
+            "Yes, but the review will be limited to the supplied material and context.",
+            "Request a business legal review →"
+          ]
+        }
       ]
     },
     {
@@ -28,6 +64,42 @@
         "Orders, notices and relevant correspondence",
         "Evidence or records relevant to the dispute",
         "A short factual timeline and immediate objective"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Chronology of material events",
+            "Index of supplied documents and evidence",
+            "Issue and question checklist",
+            "Hearing or consultation preparation notes, as agreed"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Submit the case type and available records",
+            "ILS checks volume, urgency and requested deliverables",
+            "Fee and preparation scope are confirmed",
+            "The structured pack is prepared for review with your advocate"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Court appearance or representation requires a separate engagement with an eligible advocate.",
+            "Start with relevant records only. Additional documents will be requested if needed.",
+            "Request case preparation →"
+          ]
+        }
       ]
     },
     {
@@ -42,6 +114,42 @@
         "Any notice, order, agreement or case number",
         "Names of parties and their relationship to the matter",
         "Urgent deadlines or upcoming hearing date, if any"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Initial discussion of the legal issue",
+            "Identification of relevant jurisdiction and urgency",
+            "Preliminary document and next-step checklist",
+            "Clarification of further professional work, if required"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Submit a short issue summary",
+            "ILS checks category, location and professional availability",
+            "Consultation format, fee and scope are confirmed",
+            "Consultation is scheduled after acceptance"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. The ₹299 initial enquiry fee, where applicable, is separate and credited against eligible same-matter ILS fees if you proceed. Consultation fees are confirmed separately.",
+            "No outcome is guaranteed. Advice depends on facts, documents and applicable law.",
+            "Request a legal consultation →"
+          ]
+        }
       ]
     },
     {
