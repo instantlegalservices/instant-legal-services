@@ -1067,6 +1067,10 @@ jobs:
                 if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED' };
                 const check = await isAdmin();
                 if (!check.ok) return { ok: false, reason: 'TEST_ADMIN_AUTHZ_FAILED' };
+                if (typeof loadPricingControls !== 'function') return { ok: false, reason: 'PRICING_LOADER_NOT_AVAILABLE' };
+                await loadPricingControls();
+                const pricingText = document.getElementById('pricingBody')?.innerText || '';
+                if (/Pricing unavailable:|Loading pricing/i.test(pricingText)) return { ok: false, reason: 'TEST_ADMIN_PRICING_LOADER_FAILED: ' + pricingText.slice(0, 240) };
                 document.getElementById('upiProofStatusFilter').value = 'rejected';
                 await loadUpiProofs();
                 const body = document.getElementById('upiProofBody');
