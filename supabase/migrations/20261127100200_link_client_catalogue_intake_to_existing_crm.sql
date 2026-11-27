@@ -30,9 +30,20 @@ begin
       raise exception 'CLIENT_REQUIREMENT_LINK_REQUIRED';
     end if;
 
-    perform 1 from public.client_requirements where id = v_lead_id;
+    if v_name is null or v_mobile is null then
+      raise exception 'CLIENT_REQUIREMENT_IDENTITY_REQUIRED';
+    end if;
+
+    perform 1
+    from public.client_requirements cr
+    where cr.id = v_lead_id
+      and cr.client_name = v_name
+      and cr.mobile = v_mobile
+      and coalesce(cr.state,'') = coalesce(nullif(trim(coalesce(new.details->>'state','')),'') ,'')
+      and coalesce(cr.district_city,'') = coalesce(nullif(trim(coalesce(new.details->>'city','')),''),'')
+      and coalesce(cr.legal_matter,'') = coalesce(v_matter,'');
     if not found then
-      raise exception 'CLIENT_REQUIREMENT_NOT_FOUND';
+      raise exception 'CLIENT_REQUIREMENT_NOT_FOUND_OR_IDENTITY_MISMATCH';
     end if;
 
     new.client_requirement_id := v_lead_id;
