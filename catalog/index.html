@@ -64,7 +64,7 @@ body{background:var(--cat-bg);color:var(--cat-text);font-family:system-ui,-apple
 .plan-card .plan-cta{margin-top:auto;padding-top:12px}
 .catalog-disclosure{margin-top:18px;padding:15px 17px;border:1px solid var(--cat-line);border-radius:14px;color:var(--cat-muted);font-size:13px;line-height:1.6}
 .catalog-status{color:var(--cat-muted);padding:16px;border:1px dashed var(--cat-line);border-radius:12px}
-@media(max-width:850px){.catalog-grid,.plan-grid,.mart-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-tools{grid-template-columns:1fr 1fr}.quick-need-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){.catalog-grid,.plan-grid,.mart-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-tools{grid-template-columns:1fr 1fr}.catalog-tools input{grid-column:1/-1}.quick-need-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.catalog-wrap{width:min(100% - 22px,1180px);padding-top:16px}.catalog-grid,.plan-grid,.catalog-tools,.mart-category-grid,.quick-need-grid{grid-template-columns:1fr}.catalog-card{min-height:175px}.mart-category-card,.mart-category-copy{min-height:150px}.catalog-hero{border-radius:18px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2';"></script>
