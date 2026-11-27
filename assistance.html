@@ -359,7 +359,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    const businessType=intakeService==="business-compliance"?(document.getElementById("businessType").value||""):"";
    const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
    const isClientServiceInquiry=Boolean(intakeService);
-   const inquiryPayload={name:document.getElementById("name").value.trim(),mobile,state,city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief};
+   const inquiryPayload={name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief};
    if(isClientServiceInquiry){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
     // Preserve the CRM lead and create the adjustable initial-enquiry payment order for every catalogue service.
