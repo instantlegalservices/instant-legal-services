@@ -97,7 +97,7 @@ const fs = require("fs");
     if(!assistanceSource.includes('"'+slug+'":{title:'))throw new Error("Service intake mapping missing for "+slug);
    }
    if(!assistanceSource.includes("industryParam")||!assistanceSource.includes("value===industryParam"))throw new Error("Business industry shortcut does not preselect CRM business type.");
-   for(const key of ["package_billing_cycle:packageCycle||null","package_modules:packageModules","package_estimate:packageCycle!==\"one_time\"?packageEstimate:null","Billing preference: "+packageCycleLabel"]){
+   for(const key of ["package_billing_cycle:packageCycle||null","package_modules:packageModules","package_estimate:packageCycle!==\"one_time\"?packageEstimate:null",'Billing preference: "+packageCycleLabel']){
     if(!assistanceSource.includes(key))throw new Error("Custom plan metadata missing from CRM linkage: "+key);
    }
 
