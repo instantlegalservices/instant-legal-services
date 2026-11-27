@@ -36,6 +36,10 @@ body{background:var(--cat-bg);color:var(--cat-text);font-family:system-ui,-apple
 .catalog-card .service-image,.plan-card .plan-image{height:142px;overflow:hidden;background:#17263a}
 .catalog-card .service-image img,.plan-card .plan-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s ease}
 .catalog-card:hover .service-image img,.plan-card:hover .plan-image img{transform:scale(1.055)}
+@keyframes ils-service-photo-pan{from{object-position:47% 50%}to{object-position:53% 50%}}
+.catalog-card .service-image img{animation:ils-service-photo-pan 26s ease-in-out infinite alternate}
+.catalog-card:hover .service-image img{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.catalog-card .service-image img{animation:none!important;object-position:center}}
 .service-card-body,.plan-card-body{padding:17px;display:flex;flex-direction:column;flex:1}
 .mart-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .mart-category-card{position:relative;isolation:isolate;min-height:190px;padding:0;border:1px solid var(--cat-line);border-radius:18px;overflow:hidden;text-align:left;background:#122238;color:#fff;cursor:pointer;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
@@ -358,7 +362,32 @@ const subCategoryFor=s=>{
  if(["legal-notice-draft","custom-legal-drafting","document-review"].includes(slug))return "Drafting & document review";
  return "Other services";
 };
-const categoryImage={legal:"https://images.unsplash.com/photo-1767972159871-b9f5d320be2b?auto=format&fit=crop&w=900&q=78",tax:"https://images.unsplash.com/photo-1772588627527-db42040f3a8b?auto=format&fit=crop&w=900&q=78",business:"https://images.unsplash.com/photo-1771575519616-f39754f93cbe?auto=format&fit=crop&w=900&q=78",government:"https://images.unsplash.com/photo-1735825764485-93a381fd5779?auto=format&fit=crop&w=900&q=78",professional:"https://images.unsplash.com/photo-1758691462878-6edc3d3da1be?auto=format&fit=crop&w=900&q=78",tools:"https://images.unsplash.com/photo-1772588627527-db42040f3a8b?auto=format&fit=crop&w=900&q=78"};
+const photo=id=>"https://images.unsplash.com/"+id+"?auto=format&fit=crop&w=720&q=72";
+const categoryImage={legal:photo("photo-1767972159871-b9f5d320be2b"),tax:photo("photo-1772588627527-db42040f3a8b"),business:photo("photo-1771575519616-f39754f93cbe"),government:photo("photo-1735825764485-93a381fd5779"),professional:photo("photo-1758691462878-6edc3d3da1be"),tools:photo("photo-1772588627527-db42040f3a8b")};
+const serviceImageBySlug={
+ "accounting-print-basic":photo("photo-1772588627483-d036793569e8"),
+ "accounting-print-guided":photo("photo-1772588627327-1eeddcf73c11"),
+ "accounting-print-professional":photo("photo-1762427354051-a9bdb181ae3b"),
+ "digital-form-assistance":photo("photo-1743796055651-41c743ff2465"),
+ "official-route-guidance":photo("photo-1735825764485-93a381fd5779"),
+ "business-legal-review":photo("photo-1758518727613-00192aed759b"),
+ "case-preparation-pack":photo("photo-1758876020343-c8c2add9d527"),
+ "legal-consultation":photo("photo-1758518729912-bf3a84c400e0"),
+ "advocate-reviewed-draft":photo("photo-1764106813759-9ef7bf42a0af"),
+ "custom-legal-drafting":photo("photo-1764231467852-b609a742e082"),
+ "document-review":photo("photo-1775163024488-e88e4a71179f"),
+ "legal-notice-draft":photo("photo-1758611972678-bc3b29b4718f"),
+ "professional-report-basic":photo("photo-1767423802472-f5fd07dfdb10"),
+ "professional-report-guided":photo("photo-1762831063004-bbd3ea38ba3a"),
+ "professional-report-professional":photo("photo-1758518727929-4506fc031e1c"),
+ "tool-output-micro-19":photo("photo-1772588627342-5ec373e236d8"),
+ "tool-output-micro-29":photo("photo-1767972159871-b9f5d320be2b"),
+ "tool-output-micro-39":photo("photo-1758691462878-6edc3d3da1be"),
+ "tool-output-micro-9":photo("photo-1771575519616-f39754f93cbe"),
+ "property-due-diligence":photo("photo-1759429255330-51145b170dad"),
+ "legal-research-report":photo("photo-1772588627527-db42040f3a8b")
+};
+const serviceImageFor=s=>serviceImageBySlug[String(s.slug||"")]||categoryImage[categoryFor(s)]||categoryImage.legal;
 const isToolReport=s=>/^(accounting-print|professional-report|tool-output)/.test(String(s.slug||""));
 const servicePageFor=slug=>{
  const key=String(slug||"");
@@ -394,7 +423,7 @@ function render(){
   const tool=isToolReport(s),href=servicePageFor(s.slug);
   const action=tool?"View report details & open tools →":"View service details & documents →";
   const price=s.price!==null&&Number.isFinite(Number(s.price))?'₹'+Number(s.price).toLocaleString("en-IN",{maximumFractionDigits:2}):"Fee confirmed after scope review";
-  return '<article class="catalog-card"><div class="service-image"><img src="'+esc(categoryImage[categoryFor(s)])+'" alt="'+esc(s.name)+' illustrative photo" loading="lazy" decoding="async"></div><div class="service-card-body"><span class="catalog-tag">'+esc(categoryLabel[categoryFor(s)])+'</span><span class="catalog-subcategory">'+esc(subCategoryFor(s))+'</span><h3>'+esc(s.name)+'</h3><p>'+esc(s.description||"Service scope will be confirmed before work begins.")+'</p><div class="catalog-meta"><small>Listed service fee</small><br>'+price+'</div>'+(tool?'<span class="catalog-subcategory">Pay only when you unlock the report in the tool.</span>':'<span class="catalog-subcategory">₹299 initial enquiry; credited against eligible same-matter ILS fees.</span>')+'<a href="'+esc(href)+'">'+action+'</a></div></article>';
+  return '<article class="catalog-card"><div class="service-image"><img src="'+esc(serviceImageFor(s))+'" alt="'+esc(s.name)+' illustrative photo" loading="lazy" decoding="async"></div><div class="service-card-body"><span class="catalog-tag">'+esc(categoryLabel[categoryFor(s)])+'</span><span class="catalog-subcategory">'+esc(subCategoryFor(s))+'</span><h3>'+esc(s.name)+'</h3><p>'+esc(s.description||"Service scope will be confirmed before work begins.")+'</p><div class="catalog-meta"><small>Listed service fee</small><br>'+price+'</div>'+(tool?'<span class="catalog-subcategory">Pay only when you unlock the report in the tool.</span>':'<span class="catalog-subcategory">₹299 initial enquiry; credited against eligible same-matter ILS fees.</span>')+'<a href="'+esc(href)+'">'+action+'</a></div></article>';
  }).join("");
  $("catalogStatus").textContent=list.length?("Showing "+list.length+" of "+services.length+" currently active individual services."):"No matching services. Try another search or category.";
 }
