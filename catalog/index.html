@@ -106,11 +106,21 @@ function render(){
 async function load(){
  if(!window.supabase||!window.supabase.createClient){$("catalogStatus").textContent="Service catalogue could not load right now. You can still enquire through the business-compliance page.";return;}
  const sb=window.supabase.createClient(window.ILS_SUPABASE_URL,window.ILS_SUPABASE_KEY);
- const [sr,pr]=await Promise.all([
-  sb.from("services").select("id,slug,name,description,category").eq("is_active",true).order("name"),
+ let [sr,pr]=await Promise.all([
+  sb.from("services").select("id,slug,name,description,category,is_active").eq("is_active",true).order("name"),
   sb.from("service_prices").select("service_id,price,currency,billing_type,created_at").eq("is_active",true).order("created_at",{ascending:false})
  ]);
- if(sr.error||pr.error){$("catalogStatus").textContent="Live prices are temporarily unavailable. Please contact ILS for the current service scope and fee.";return;}
+ // TEST still has the legacy service schema (status/amount). Fall back read-only; never mutate schema.
+ if(sr.error){
+  const legacy=await sb.from("services").select("id,slug,name,status").eq("status","active").order("name");
+  if(legacy.error){$("catalogStatus").textContent="Service catalogue is temporarily unavailable. Please contact ILS.";return;}
+  sr={data:(legacy.data||[]).map(x=>({...x,description:"Service scope will be confirmed before work begins.",category:"Other"})),error:null};
+ }
+ if(pr.error){
+  const legacy=await sb.from("service_prices").select("service_id,amount,currency,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+  if(legacy.error){$("catalogStatus").textContent="Live service prices are temporarily unavailable. Please contact ILS.";return;}
+  pr={data:(legacy.data||[]).map(x=>({...x,price:x.amount})),error:null};
+ }
  const prices=new Map();
  (pr.data||[]).forEach(p=>{if(!prices.has(p.service_id))prices.set(p.service_id,p);});
  services=(sr.data||[]).map(s=>({...s,price:prices.get(s.id)?.price??null})).filter(s=>prices.has(s.id));
