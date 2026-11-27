@@ -200,25 +200,38 @@ const intakeContext=await browser.newContext({viewport:{width:390,height:844},se
   const offerPage=await intakeContext.newPage(),offerErrors=[];
   offerPage.on("pageerror",e=>offerErrors.push(e.message));
   await offerPage.route(/https:\/\/(cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|unpkg\.com\/@supabase\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:intakeStub}));
-  await offerPage.goto(intakeBase+"/assistance.html?service=business-compliance&industry=Retail%20shop&option=GST%20Registration%20%E2%80%93%20Launch%20Offer");
-  await offerPage.locator("#assistForm").waitFor({state:"attached"});
-  if(await offerPage.locator("#serviceOption").inputValue()!=="GST Registration – Launch Offer")throw new Error("GST launch offer CTA did not preselect the exact offer in the enquiry form.");
-  await offerPage.locator("#name").fill("ILS GST Offer Test");
-  await offerPage.locator("#mobile").fill("9876543212");
-  await offerPage.locator("#state").fill("Uttar Pradesh");
-  await offerPage.locator("#city").fill("Bareilly");
-  await offerPage.locator("#consent").check();
-  await offerPage.evaluate(()=>{
-   window.__ilsOfferCapture={};
-   window.ILS={submitRequirement:async payload=>{window.__ilsOfferCapture.lead=payload;return {ok:true};}};
-   window.ILS_TOOLS={createOrder:async (...args)=>{window.__ilsOfferCapture.order={slug:args[0],details:args[1],options:args[4]};return {ok:true};}};
-  });
-  await offerPage.locator('#assistForm button[type="submit"]').click();
-  await offerPage.waitForFunction(()=>Boolean(window.__ilsOfferCapture?.order));
-  const offerCaptured=await offerPage.evaluate(()=>window.__ilsOfferCapture);
-  if(!offerCaptured.lead?.brief?.includes("Selected service: GST Registration – Launch Offer")||!offerCaptured.lead.brief.includes("Business type: Retail shop"))throw new Error("Launch offer selection did not reach the CRM lead payload.");
-  if(offerCaptured.order.slug!=="ils-enquiry-fee-199"||offerCaptured.order.details.service_option!=="GST Registration – Launch Offer"||offerCaptured.order.details.intake_service!=="business-compliance"||offerCaptured.order.details.business_type!=="Retail shop")throw new Error("Launch offer selection did not reach the initial enquiry order metadata.");
-  if(!offerCaptured.order.options?.resumeCheckout||!offerCaptured.order.options?.forceQr||!offerCaptured.order.options?.autoPay)throw new Error("Launch offer did not use the existing initial enquiry QR checkout flow.");
+  const launchOffers=[
+   ["GST Registration – Launch Offer","ILS GST Offer Test","9876543212"],
+   ["Private Limited Company Registration – Launch Offer","ILS Pvt Ltd Offer Test","9876543213"],
+   ["LLP Registration – Launch Offer","ILS LLP Offer Test","9876543214"],
+   ["GST Return Filing – Launch Offer","ILS GST Return Offer Test","9876543215"],
+   ["Bookkeeping – Launch Offer","ILS Bookkeeping Offer Test","9876543216"]
+  ];
+  for(const [option,name,mobile] of launchOffers){
+   const offerUrl=new URL(intakeBase+"/assistance.html");
+   offerUrl.searchParams.set("service","business-compliance");
+   offerUrl.searchParams.set("industry","Retail shop");
+   offerUrl.searchParams.set("option",option);
+   await offerPage.goto(offerUrl.toString());
+   await offerPage.locator("#assistForm").waitFor({state:"attached"});
+   if(await offerPage.locator("#serviceOption").inputValue()!==option)throw new Error("Launch offer CTA did not preselect the exact offer: "+option);
+   await offerPage.locator("#name").fill(name);
+   await offerPage.locator("#mobile").fill(mobile);
+   await offerPage.locator("#state").fill("Uttar Pradesh");
+   await offerPage.locator("#city").fill("Bareilly");
+   await offerPage.locator("#consent").check();
+   await offerPage.evaluate(()=>{
+    window.__ilsOfferCapture={};
+    window.ILS={submitRequirement:async payload=>{window.__ilsOfferCapture.lead=payload;return {ok:true};}};
+    window.ILS_TOOLS={createOrder:async (...args)=>{window.__ilsOfferCapture.order={slug:args[0],details:args[1],options:args[4]};return {ok:true};}};
+   });
+   await offerPage.locator('#assistForm button[type="submit"]').click();
+   await offerPage.waitForFunction(()=>Boolean(window.__ilsOfferCapture?.order));
+   const offerCaptured=await offerPage.evaluate(()=>window.__ilsOfferCapture);
+   if(!offerCaptured.lead?.brief?.includes("Selected service: "+option)||!offerCaptured.lead.brief.includes("Business type: Retail shop"))throw new Error("Launch offer selection did not reach the CRM lead payload: "+option);
+   if(offerCaptured.order.slug!=="ils-enquiry-fee-199"||offerCaptured.order.details.service_option!==option||offerCaptured.order.details.intake_service!=="business-compliance"||offerCaptured.order.details.business_type!=="Retail shop")throw new Error("Launch offer selection did not reach the initial enquiry order metadata: "+option);
+   if(!offerCaptured.order.options?.resumeCheckout||!offerCaptured.order.options?.forceQr||!offerCaptured.order.options?.autoPay)throw new Error("Launch offer did not use the existing initial enquiry QR checkout flow: "+option);
+  }
   if(offerErrors.length)throw new Error("Launch offer enquiry browser errors: "+offerErrors.join("; "));
   await offerPage.close();
 
