@@ -9,7 +9,7 @@ const fs = require("fs");
  if(homeOfferStart<0||homeOfferEnd<0)throw new Error("Homepage launch-offer section is missing or out of order.");
  const homeOffer=home.slice(homeOfferStart,homeOfferEnd);
  if((homeOffer.match(/class="ils-home-offer"/g)||[]).length!==5)throw new Error("Homepage must display all five ILS launch offers.");
- if(/society\\s+registration/i.test(homeOffer))throw new Error("Society Registration must not appear in homepage launch offers.");
+ if(/society\s+registration/i.test(homeOffer))throw new Error("Society Registration must not appear in homepage launch offers.");
  const homeOfferTargets=[
   "GST%20Registration%20%E2%80%93%20Launch%20Offer",
   "Private%20Limited%20Company%20Registration%20%E2%80%93%20Launch%20Offer",
