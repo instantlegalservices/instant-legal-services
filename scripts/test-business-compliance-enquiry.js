@@ -62,6 +62,7 @@ try {
   await page.evaluate(() => {
     window.__submittedLead = null;
     window.__orderCall = null;
+    window.ILS.ready = () => ({ auth: { getUser: async () => ({ data: { user: { id: "ci-business-client" } }, error: null }) } });
     window.ILS.submitRequirement = async payload => { window.__submittedLead = payload; return 4321; };
     window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
   });
@@ -92,6 +93,7 @@ try {
   await page.locator("#consent").check();
   await page.evaluate(() => {
     window.__orderCall = null;
+    window.ILS.ready = () => ({ auth: { getUser: async () => ({ data: { user: { id: "ci-gst-client" } }, error: null }) } });
     window.ILS.submitRequirement = async payload => { window.__submittedLead = payload; return 4322; };
     window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
   });
