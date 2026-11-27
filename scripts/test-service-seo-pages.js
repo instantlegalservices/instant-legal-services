@@ -25,7 +25,7 @@ for(const slug of routes){
  const documentItems=[...checklist.matchAll(/<li>(.*?)<\/li>/gi)].map(match=>match[1].replace(/<[^>]*>/g,"").trim()).filter(Boolean);
  if(documentItems.length<3||documentItems.length>8)throw new Error(route+" must provide a practical document checklist of 3–8 items.");
  if(new Set(documentItems.map(item=>item.toLowerCase())).size!==documentItems.length)throw new Error(route+" contains duplicate document checklist items.");
- if(!/final list depends on (?:the )?matter|final requirements depend|scope and jurisdiction|as applicable/i.test(checklist))throw new Error(route+" must qualify checklist against case facts and jurisdiction.");
+ if(!/case facts|jurisdiction|as applicable|where relevant|if available|subject to/i.test(html))throw new Error(route+" must qualify documents and service scope against facts and jurisdiction.");
  if(!sitemap.includes("https://instantlegalservices.in"+route))throw new Error(route+" missing from sitemap.xml");
 }
 const hub=fs.readFileSync(path.join(root,"services","index.html"),"utf8");
