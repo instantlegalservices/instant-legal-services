@@ -491,11 +491,15 @@ window.ILS = (() => {
         String(payload.brief || "").trim()
     };
 
-    const { error } = await client
+    const { data, error } = await client
       .from("client_requirements")
-      .insert([lead]);
+      .insert([lead])
+      .select("id")
+      .single();
 
     if (error) throw error;
+    if (!data?.id) throw new Error("CRM requirement was saved but its ID could not be confirmed.");
+    return data.id;
   }
 
   /* =========================================================
