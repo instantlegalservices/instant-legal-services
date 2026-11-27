@@ -66,6 +66,22 @@ body{background:var(--cat-bg);color:var(--cat-text);font-family:system-ui,-apple
 .catalog-status{color:var(--cat-muted);padding:16px;border:1px dashed var(--cat-line);border-radius:12px}
 @media(max-width:850px){.catalog-grid,.plan-grid,.mart-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-tools{grid-template-columns:1fr 1fr}.catalog-tools input{grid-column:1/-1}.quick-need-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.catalog-wrap{width:min(100% - 22px,1180px);padding-top:16px}.catalog-grid,.plan-grid,.catalog-tools,.mart-category-grid,.quick-need-grid{grid-template-columns:1fr}.catalog-card{min-height:175px}.mart-category-card,.mart-category-copy{min-height:150px}.catalog-hero{border-radius:18px}}
+
+.plan-price{color:var(--cat-gold);font-size:19px;font-weight:850;margin:8px 0 4px}.plan-price small{display:block;color:var(--cat-muted);font-size:11px;font-weight:600;line-height:1.45;margin-top:3px}
+.plan-builder{padding:20px;border:1px solid rgba(215,168,79,.38);border-radius:20px;background:linear-gradient(145deg,#12243a,#0c1726)}
+.builder-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.builder-field label{display:block;color:var(--cat-muted);font-size:12px;font-weight:750;margin:0 0 6px}
+.builder-field select{width:100%;min-height:44px;padding:10px;border:1px solid var(--cat-line);border-radius:10px;background:#081522;color:var(--cat-text)}
+.builder-addons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:15px 0}
+.builder-addon{display:flex;gap:9px;align-items:flex-start;padding:12px;border:1px solid var(--cat-line);border-radius:11px;background:rgba(255,255,255,.035);font-size:13px;line-height:1.45}
+.builder-addon input{accent-color:var(--cat-gold);margin-top:3px}
+.builder-result{margin-top:16px;padding:17px;border-radius:14px;background:#071321;border:1px solid rgba(215,168,79,.35)}
+.builder-result strong{display:block;color:var(--cat-gold);font-size:25px;margin:4px 0}
+.builder-result p{color:var(--cat-muted);font-size:12px;line-height:1.55;margin:5px 0}
+.builder-result .catalog-btn{margin-top:9px;border:0;cursor:pointer}
+.builder-disclaimer{font-size:12px;color:var(--cat-muted);line-height:1.6;margin-top:12px}
+@media(max-width:560px){.builder-grid,.builder-addons{grid-template-columns:1fr}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2';"></script>
 <script>
@@ -160,13 +176,35 @@ window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY||"sb_publishable_D5eFcgWFELtnym0
 <section class="catalog-section" id="business-plans">
 <div class="catalog-heading"><div><span class="eyebrow">Ongoing support</span><h2>Business support plans</h2><p>Recurring support is separate from individual one-time services.</p></div></div>
 <div class="plan-grid">
-<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1771575519616-f39754f93cbe?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="shopkeeper starter illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Retail &amp; small shops</span><h3>Shopkeeper Starter</h3><p>For a small shop needing a regular compliance calendar, basic GST coordination and reminders. Exact return and document limits are confirmed after reviewing the business.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=shopkeeper-starter">Discuss this plan →</a></div></div></article>
-<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1771575519616-f39754f93cbe?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="retailer plus illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Growing retailers</span><h3>Retailer Plus</h3><p>For retailers needing recurring GST support, basic reconciliation and periodic compliance reviews within agreed transaction limits.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=retailer-plus">Discuss this plan →</a></div></div></article>
-<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1715783058277-812b50959e10?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="wholesaler compliance illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Wholesale businesses</span><h3>Wholesaler Compliance</h3><p>For higher invoice volumes, supplier/customer reconciliation and coordinated GST and tax-compliance support.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=wholesaler-compliance">Discuss this plan →</a></div></div></article>
-<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1715783058277-812b50959e10?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="manufacturer support illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Manufacturing</span><h3>Manufacturer Support</h3><p>Scope-led GST, documentation and recurring business-compliance coordination for manufacturers.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=manufacturer-support">Discuss this plan →</a></div></div></article>
-<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1758691462878-6edc3d3da1be?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="hospital clinic support illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Healthcare organisations</span><h3>Hospital &amp; Clinic Support</h3><p>Coordinated tax, documentation and business-compliance assistance, subject to the organisation's structure and applicable requirements.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=hospital-clinic-support">Discuss this plan →</a></div></div></article>
-<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1735825764485-93a381fd5779?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="custom business plan illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Custom requirements</span><h3>Custom Business Plan</h3><p>For multiple GSTINs, entities, branches, payroll, TDS or complex reporting needs. Work is scoped before a written quotation.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan">Request a scope review →</a></div></div></article>
+<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1771575519616-f39754f93cbe?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="shopkeeper starter illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Retail &amp; small shops</span><h3>Shopkeeper Starter</h3><div class="plan-price">₹999 <small>per month · Annual: ₹9,990 (2 months’ equivalent saving)</small></div><p>For a small shop needing a regular compliance calendar, basic GST coordination and reminders. Exact return and document limits are confirmed after reviewing the business.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=shopkeeper-starter">Discuss this plan →</a></div></div></article>
+<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1771575519616-f39754f93cbe?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="retailer plus illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Growing retailers</span><h3>Retailer Plus</h3><div class="plan-price">₹1,999 <small>per month · Annual: ₹19,990 (2 months’ equivalent saving)</small></div><p>For retailers needing recurring GST support, basic reconciliation and periodic compliance reviews within agreed transaction limits.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=retailer-plus">Discuss this plan →</a></div></div></article>
+<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1715783058277-812b50959e10?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="wholesaler compliance illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Wholesale businesses</span><h3>Wholesaler Compliance</h3><div class="plan-price">₹3,999 <small>per month · Annual: ₹39,990 (2 months’ equivalent saving)</small></div><p>For higher invoice volumes, supplier/customer reconciliation and coordinated GST and tax-compliance support.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=wholesaler-compliance">Discuss this plan →</a></div></div></article>
+<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1715783058277-812b50959e10?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="manufacturer support illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Manufacturing</span><h3>Manufacturer Support</h3><div class="plan-price">From ₹6,999 <small>per month · Annual quote after volume and compliance review</small></div><p>Scope-led GST, documentation and recurring business-compliance coordination for manufacturers.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=manufacturer-support">Discuss this plan →</a></div></div></article>
+<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1758691462878-6edc3d3da1be?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="hospital clinic support illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Healthcare organisations</span><h3>Hospital &amp; Clinic Support</h3><div class="plan-price">From ₹6,999 <small>per month · Annual quote after entity and compliance review</small></div><p>Coordinated tax, documentation and business-compliance assistance, subject to the organisation's structure and applicable requirements.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=hospital-clinic-support">Discuss this plan →</a></div></div></article>
+<article class="plan-card"><div class="plan-image"><img src="https://images.unsplash.com/photo-1735825764485-93a381fd5779?auto=format&amp;fit=crop&amp;w=900&amp;q=78" alt="custom business plan illustrative photo" loading="lazy" decoding="async"></div><div class="plan-card-body"><span class="catalog-tag">Custom requirements</span><h3>Custom Business Plan</h3><div class="plan-price">Scope-based quote <small>One-time, monthly or annual billing options</small></div><p>For multiple GSTINs, entities, branches, payroll, TDS or complex reporting needs. Work is scoped before a written quotation.</p><div class="plan-cta"><a href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan">Request a scope review →</a></div></div></article>
 </div>
+<section class="catalog-section" id="custom-plan-builder">
+<div class="catalog-heading"><div><span class="eyebrow">Build your own package</span><h2>Customise your business plan</h2><p>Select the work you need and choose one-time, monthly or annual billing. The estimate updates as you customise.</p></div></div>
+<div class="plan-builder">
+<div class="builder-grid">
+<div class="builder-field"><label for="builderBusiness">Business type</label><select id="builderBusiness"><option value="Retail shop">Retail shop</option><option value="Wholesale / Trading">Wholesale / Trading</option><option value="Manufacturer">Manufacturer</option><option value="Factory / Workshop">Factory / Workshop</option><option value="Hospital / Clinic">Hospital / Clinic</option><option value="Service business">Service business</option><option value="Other">Other</option></select></div>
+<div class="builder-field"><label for="builderInvoices">Monthly invoice volume</label><select id="builderInvoices"><option value="50">Up to 50 invoices</option><option value="150">51–150 invoices</option><option value="400">151–400 invoices</option><option value="401">More than 400 (custom quote)</option></select></div>
+<div class="builder-field"><label for="builderGstins">Number of GST registrations (GSTINs)</label><select id="builderGstins"><option value="1">1 GSTIN</option><option value="2">2 GSTINs</option><option value="3">3 GSTINs</option><option value="4">4 GSTINs</option><option value="5">5 or more GSTINs (custom quote)</option></select></div>
+<div class="builder-field"><label for="builderCycle">Billing preference</label><select id="builderCycle"><option value="one_time">One-time project</option><option value="monthly" selected>Monthly support</option><option value="annual">Annual prepaid support</option></select></div>
+</div>
+<p><strong>Choose your support modules</strong></p>
+<div class="builder-addons">
+<label class="builder-addon"><input type="checkbox" value="gst-filing" checked><span><strong>GST return coordination</strong><br>Monthly return preparation and filing coordination</span></label>
+<label class="builder-addon"><input type="checkbox" value="reconciliation"><span><strong>ITC / GSTR-2B reconciliation</strong><br>Mismatch summary and follow-up checklist</span></label>
+<label class="builder-addon"><input type="checkbox" value="bookkeeping"><span><strong>Bookkeeping &amp; bank reconciliation</strong><br>Agreed periodic books and bank matching</span></label>
+<label class="builder-addon"><input type="checkbox" value="tds-payroll"><span><strong>TDS &amp; payroll coordination</strong><br>Payroll / deduction compliance support</span></label>
+<label class="builder-addon"><input type="checkbox" value="roc"><span><strong>MCA / ROC compliance</strong><br>Company / LLP annual and event-based compliance</span></label>
+<label class="builder-addon"><input type="checkbox" value="legal-desk"><span><strong>Business legal document desk</strong><br>Routine document review and drafting coordination</span></label>
+</div>
+<div class="builder-result" aria-live="polite"><span class="catalog-tag">Indicative package estimate</span><strong id="builderEstimate">₹999 / month</strong><p id="builderEstimateNote">Based on selected invoice volume, GSTIN count and support modules. Final scope and fee are confirmed before activation.</p><a class="catalog-btn" id="builderContinue" href="../assistance.html?service=business-compliance&amp;plan=custom-business-plan">Continue with this package</a></div>
+<div class="builder-disclaimer">Pricing guide: monthly base starts at ₹999 (up to 50 invoices), ₹1,999 (up to 150), ₹3,999 (up to 400); above 400 invoices or 4+ GSTINs requires a custom quote. Indicative monthly add-ons: reconciliation ₹399, bookkeeping ₹1,000, TDS/payroll ₹799, MCA/ROC ₹1,499 and legal desk ₹1,499. Annual prepayment is modelled at 10 months of the monthly estimate (2 months’ equivalent saving), subject to agreed scope. One-time work is quoted separately after review. Taxes, government/portal charges and third-party costs are extra where applicable.</div>
+</div>
+</section>
 <p class="catalog-note">Illustrative photos are sourced from Unsplash and used under the Unsplash License. They are not client or ILS case photographs.</p>
 <section class="catalog-section" aria-label="Business support by industry">
 <div class="catalog-heading"><div><span class="eyebrow">Choose your industry</span><h2>Business support by industry</h2><p>Start with your business type. We will map the relevant GST, tax, documentation and legal-support needs.</p></div></div>
@@ -180,6 +218,23 @@ window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY||"sb_publishable_D5eFcgWFELtnym0
 (function(){
 "use strict";
 const $=id=>document.getElementById(id);
+const builderRates={"reconciliation":399,"bookkeeping":1000,"tds-payroll":799,"roc":1499,"legal-desk":1499};
+function updateBuilder(){
+ const invoices=Number($("builderInvoices").value),gstins=Number($("builderGstins").value),cycle=$("builderCycle").value;
+ const modules=[...document.querySelectorAll(".builder-addon input:checked")].map(x=>x.value);
+ const base=invoices<=50?999:invoices<=150?1999:invoices<=400?3999:6999;
+ const monthly=base+Math.max(0,gstins-1)*499+modules.reduce((n,k)=>n+(builderRates[k]||0),0);
+ let display="",estimate="",note="";
+ if(cycle==="one_time"){display="Scope-based quote";note="One-time project pricing depends on deliverables and document volume. The ₹299 initial enquiry is credited against eligible same-matter ILS fees if you proceed.";}
+ else if(invoices>400||gstins>=5){display="Custom quote required";note="Your volume or GSTIN count is above the standard range. ILS will prepare a written monthly or annual quote after reviewing the scope.";}
+ else if(cycle==="annual"){const annual=monthly*10;display="₹"+annual.toLocaleString("en-IN")+" / year";estimate=String(annual);note="Modelled at 10 months of the monthly estimate (2 months’ equivalent saving). Annual scope and renewal terms are confirmed in writing.";}
+ else{display="₹"+monthly.toLocaleString("en-IN")+" / month";estimate=String(monthly);note="Indicative monthly estimate; no automatic debit. Work begins only after scope, fee and payment terms are agreed.";}
+ $("builderEstimate").textContent=display;
+ $("builderEstimateNote").textContent=note+" Selected modules: "+(modules.length?modules.join(", "):"Core coordination only")+".";
+ const params=new URLSearchParams({service:"business-compliance",plan:"custom-business-plan",cycle,business:$("builderBusiness").value,invoices:String(invoices),gstins:String(gstins),modules:modules.join(","),estimate,estimated_period:cycle==="annual"?"annual":cycle==="monthly"?"monthly":"one-time"});
+ $("builderContinue").href="../assistance.html?"+params.toString();
+}
+
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const categoryFor=s=>{
  const c=String(s.category||"").toLowerCase(),slug=String(s.slug||"").toLowerCase(),name=String(s.name||"").toLowerCase();
@@ -251,6 +306,8 @@ async function load(){
  updateSubcategories();
  render();
 }
+document.querySelectorAll("#custom-plan-builder select,#custom-plan-builder input").forEach(el=>el.addEventListener("change",updateBuilder));
+updateBuilder();
 $("catalogSearch").addEventListener("input",render);
 $("catalogCategory").addEventListener("change",()=>{updateSubcategories();render();});
 $("catalogSubcategory").addEventListener("change",render);
