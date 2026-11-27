@@ -663,17 +663,29 @@ jobs:
                   poll();
                 });
                 // Reject any stale ILSTEST-only pending proofs left by earlier interrupted CI attempts.
+                const cleanupFailures = [];
                 for (const stale of upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
                   const cleanup = await sb.rpc('ils_admin_verify_upi_payment_proof', {
                     p_proof_id: stale.id,
                     p_decision: 'rejected',
                     p_notes: 'TEST cleanup only: synthetic ILSTEST proof from interrupted CI; no payment occurred.'
                   });
-                  // Another parallel CI attempt may have decided the same proof; the fresh list below is authoritative.
+                  if (cleanup.error || !cleanup.data?.ok) {
+                    cleanupFailures.push({
+                      proofId: String(stale.id).slice(0, 8),
+                      reason: cleanup.error?.message || cleanup.data?.message || 'ADMIN_REJECTION_NOT_CONFIRMED'
+                    });
+                  }
                 }
                 await loadUpiProofs();
-                if (upiProofRows.some(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending')) {
-                  return { ok: false, reason: 'SYNTHETIC_PENDING_PROOFS_REMAIN' };
+                const remainingPending = upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'pending');
+                if (remainingPending.length) {
+                  return {
+                    ok: false,
+                    reason: 'SYNTHETIC_PENDING_PROOFS_REMAIN',
+                    remainingCount: remainingPending.length,
+                    cleanupFailures
+                  };
                 }
                 const proof = upiProofRows.filter(x => x.transaction_ref?.startsWith('ILSTEST') && x.status === 'rejected').sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0))[0];
                 if (!proof) return { ok: false, reason: 'ADMIN_UI_DID_NOT_REFRESH_REJECTED_PROOF' };
@@ -769,6 +781,8 @@ jobs:
       BASE_URL: http://127.0.0.1:4173
       ILS_TEST_NONADMIN_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_EMAIL }}
       ILS_TEST_NONADMIN_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_NONADMIN_CUSTOMER_PASSWORD }}
+      ILS_TEST_SECOND_CUSTOMER_EMAIL: ${{ secrets.ILS_TEST_SECOND_CUSTOMER_EMAIL }}
+      ILS_TEST_SECOND_CUSTOMER_PASSWORD: ${{ secrets.ILS_TEST_SECOND_CUSTOMER_PASSWORD }}
       ILS_TEST_SUPABASE_URL: https://bgsbuepolooybdqrzmoa.supabase.co
       ILS_TEST_SUPABASE_KEY: sb_publishable_eTuM4uU9TG_BqNvrcOd7cg_HWvk-Gl2
     steps:
@@ -777,6 +791,10 @@ jobs:
         run: |
           if [[ -z "$ILS_TEST_NONADMIN_CUSTOMER_EMAIL" || -z "$ILS_TEST_NONADMIN_CUSTOMER_PASSWORD" ]]; then
             echo "::error::Configure ILS_TEST_NONADMIN_CUSTOMER_EMAIL and ILS_TEST_NONADMIN_CUSTOMER_PASSWORD in repository Actions secrets."
+            exit 1
+          fi
+          if [[ -z "$ILS_TEST_SECOND_CUSTOMER_EMAIL" || -z "$ILS_TEST_SECOND_CUSTOMER_PASSWORD" ]]; then
+            echo "::error::Configure ILS_TEST_SECOND_CUSTOMER_EMAIL and ILS_TEST_SECOND_CUSTOMER_PASSWORD in repository Actions secrets."
             exit 1
           fi
 
@@ -988,7 +1006,7 @@ jobs:
                   return { ok: false, reason: 'ILS_299_MARKETPLACE_ORDER_INVALID: ' + (feeOrder.message || feeResponse.status) };
                 }
 
-                return { ok: true, idempotency: true, unpaid: true, marketplace299: true };
+                return { ok: true, idempotency: true, unpaid: true, marketplace299: true, userId: user.id, requestId: requests[0].id };
 
               });
 
@@ -1003,12 +1021,12 @@ jobs:
                   notificationResponse = response;
                 }
               });
-              const projectionResponse = page.waitForResponse(response =>
+              const secondProjectionResponse = page.waitForResponse(response =>
                 response.url().includes('/rest/v1/ils_notification_customer_projection?') && response.status() === 200,
                 { timeout: 20000 }
               );
               await page.goto(process.env.BASE_URL + '/customer-portal.html', { waitUntil: 'domcontentloaded' });
-              notificationResponse = await projectionResponse;
+              notificationResponse = await secondProjectionResponse;
               await page.waitForFunction(() => {
                 const panel = document.getElementById('customerNotifications');
                 return !!panel && panel.querySelectorAll('article').length > 0;
@@ -1030,6 +1048,58 @@ jobs:
               }
 
               console.log('PASS: TEST customer RLS and checkout idempotency passed; ₹299 marketplace RPC created a pending INR 299 order; authenticated customer portal rendered a delivered source-event notification. No payment proof was submitted or approved.');
+
+              // Verify a second, pre-provisioned TEST customer cannot read the first customer's source-event notification.
+              // Authenticate directly against TEST Auth: RLS is the subject of this assertion,
+              // not the customer portal's browser rendering or session-storage behaviour.
+              const base = process.env.ILS_TEST_SUPABASE_URL;
+              const apiKey = process.env.ILS_TEST_SUPABASE_KEY;
+              const login = await fetch(base + '/auth/v1/token?grant_type=password', {
+                method: 'POST',
+                headers: { apikey: apiKey, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: process.env.ILS_TEST_SECOND_CUSTOMER_EMAIL,
+                  password: process.env.ILS_TEST_SECOND_CUSTOMER_PASSWORD
+                })
+              });
+              if (!login.ok) {
+                const authError = await login.json().catch(() => ({}));
+                const safeCode = String(authError.code || authError.error || 'unknown').slice(0, 80);
+                const safeMessage = String(authError.msg || authError.message || 'No Auth error message returned').slice(0, 180);
+                throw new Error('SECOND_CUSTOMER_AUTH_HTTP_' + login.status + ': ' + safeCode + ': ' + safeMessage);
+              }
+              const session = await login.json();
+              if (!session.access_token || !session.user?.id) {
+                throw new Error('SECOND_CUSTOMER_AUTH_RESPONSE_INVALID');
+              }
+              if (session.user.id === verification.userId) {
+                throw new Error('SECOND_CUSTOMER_ID_NOT_DISTINCT');
+              }
+              const headers = {
+                apikey: apiKey,
+                Authorization: 'Bearer ' + session.access_token
+              };
+              const userResponse = await fetch(base + '/auth/v1/user', { headers });
+              if (!userResponse.ok) throw new Error('SECOND_CUSTOMER_AUTH_USER_HTTP_' + userResponse.status);
+              const secondUser = await userResponse.json();
+              if (secondUser.id !== session.user.id || secondUser.id === verification.userId) {
+                throw new Error('SECOND_CUSTOMER_IDENTITY_VERIFICATION_FAILED');
+              }
+              const projectionUrl = new URL(base + '/rest/v1/ils_notification_customer_projection');
+              projectionUrl.searchParams.set('select', 'id,user_id');
+              // Filter to the first customer's identity; the RLS policy must hide every
+              // row owned by that user from the second authenticated customer.
+              projectionUrl.searchParams.set('user_id', 'eq.' + verification.userId);
+              const isolatedProjectionResponse = await fetch(projectionUrl, { headers });
+              if (!isolatedProjectionResponse.ok) {
+                throw new Error('SECOND_CUSTOMER_PROJECTION_HTTP_' + isolatedProjectionResponse.status);
+              }
+              const rows = await isolatedProjectionResponse.json();
+              if (!Array.isArray(rows)) throw new Error('SECOND_CUSTOMER_PROJECTION_INVALID_RESPONSE');
+              if (rows.length !== 0) {
+                throw new Error('CROSS_CUSTOMER_NOTIFICATION_LEAK: visible rows=' + rows.length);
+              }
+              console.log('PASS: second authenticated TEST customer has a distinct identity and cannot read the first customer source-event notification.');
             } finally {
               if (browser) await browser.close();
             }
