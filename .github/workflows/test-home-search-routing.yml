@@ -11,6 +11,9 @@ on:
       - "popular-assistance.html"
       - "business-compliance.html"
       - "catalog/index.html"
+      - "services/**"
+      - "sitemap.xml"
+      - "scripts/test-service-seo-pages.js"
       - "assistance.html"
       - "scripts/test-service-catalog.js"
       - ".github/workflows/test-home-search-routing.yml"
@@ -62,6 +65,9 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:4173/
         run: node scripts/test-popular-assistance.js
+
+      - name: Run service SEO and sitemap regression
+        run: node scripts/test-service-seo-pages.js
 
       - name: Run unified service catalogue browser regression
         env:
