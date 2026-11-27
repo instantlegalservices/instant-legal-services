@@ -289,6 +289,8 @@ BEGIN
     'client_requirement_id', v_lead_id,
     'name', 'Client Catalogue Fixture',
     'mobile', '9876543211',
+    'state', 'Uttar Pradesh',
+    'city', 'Bareilly',
     'matter', 'Legal Drafting',
     'intake_service', 'legal-drafting'
   ))
