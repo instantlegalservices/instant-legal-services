@@ -23,11 +23,13 @@ const fs = require("fs");
    if(await page.locator(".catalog-card").count()!==5)throw new Error("Only priced active services should render; status: "+await page.locator("#catalogStatus").innerText());
    if(await page.locator(".plan-card").count()!==6)throw new Error("All six business plan enquiry cards must render.");
    if(await page.locator(".mart-category-card").count()!==6||await page.locator(".mart-category-card img").count()!==6)throw new Error("All six visual category cards must render with photos.");
+   if(await page.locator(".catalog-card img").count()!==5)throw new Error("Each purchasable catalogue service must have a relevant photo.");
    if(await page.locator(".plan-card .plan-image img").count()!==6)throw new Error("Business plan cards must include relevant photos.");
    if(await page.locator('section[aria-label="Popular legal assistance areas"] .quick-need').count()!==9)throw new Error("All nine SEO-linked legal need shortcuts must remain visible.");
    if(await page.locator('section[aria-label="GST and tax service subcategories"] .quick-need').count()!==6)throw new Error("GST and tax enquiry subcategories are incomplete.");
    if(await page.locator('section[aria-label="Business support by industry"] .quick-need').count()!==16)throw new Error("Industry-specific business entry points are incomplete.");
    if(!(await page.locator(".catalog-card").filter({hasText:"Legal Notice Draft"}).innerText()).includes("₹499"))throw new Error("Active service price not displayed.");
+   if(!(await page.locator(".catalog-card").filter({hasText:"Legal Notice Draft"}).innerText()).includes("₹299 initial enquiry"))throw new Error("Service enquiry-credit disclosure is missing.");
    if(await page.locator(".catalog-card").filter({hasText:"Unpriced Service"}).count()!==0)throw new Error("Unpriced service must not appear purchasable.");
    if(await page.locator(".catalog-card").filter({hasText:"ILS Initial Enquiry"}).count()!==0)throw new Error("Internal ₹299 enquiry checkout SKU must not appear as a standalone service.");
    await page.locator("#catalogSearch").fill("property");
@@ -63,6 +65,10 @@ const fs = require("fs");
     if(!assistanceSource.includes('"'+slug+'":{title:'))throw new Error("Service intake mapping missing for "+slug);
    }
    if(!assistanceSource.includes("industryParam")||!assistanceSource.includes("value===industryParam"))throw new Error("Business industry shortcut does not preselect CRM business type.");
+   for(const industry of ["Retail shop","Kirana / FMCG / Grocery","Showroom / General Retail","Wholesale / Trading","Distributor / C&F Agent","E-commerce / Marketplace Seller","Manufacturer","Factory / Workshop","Import / Export","Restaurant / Food Business","Hospital / Clinic","Diagnostic Lab / Pharmacy","Professional / Freelancer","Service / Consultancy","Contractor / Construction","Real Estate / Property","Education / Training","NGO / Trust / Society"]){
+    if(!assistanceSource.includes("<option>"+industry.replace(/&/g,"&amp;")+"</option>"))throw new Error("Business type option missing: "+industry);
+   }
+
    if(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth))throw new Error("Horizontal overflow at "+viewport.width+"px.");
    await context.close();
   }
