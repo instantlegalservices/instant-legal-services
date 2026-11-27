@@ -164,6 +164,42 @@
         "Relevant facts and supporting records",
         "Jurisdiction and applicable transaction or proceeding",
         "Any deadline for issue, filing or execution"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Review of the supplied draft",
+            "Observations on clarity, missing information and legal issues",
+            "Corrections or suggested changes within the agreed scope",
+            "Separate quote if substantial redrafting is required"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Upload or describe the draft securely through the approved channel",
+            "ILS confirms document type and review scope",
+            "Professional fee and turnaround are agreed",
+            "Review comments or revised draft are delivered as agreed"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "Not automatically. Substantial redrafting is separately scoped and quoted.",
+            "Certification, attestation or notarisation is not included unless specifically agreed and legally available.",
+            "Request advocate draft review →"
+          ]
+        }
       ]
     },
     {
@@ -178,6 +214,42 @@
         "Names and roles of the parties",
         "Related agreement, notice or correspondence, if any",
         "Specific concerns or clauses requiring attention"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Clause and obligation review",
+            "Key dates, payment and termination terms",
+            "Potential gaps, ambiguities and risk observations",
+            "Written summary or marked-up review, as agreed"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Identify the document type and page count",
+            "Confirm scope, jurisdiction and professional availability",
+            "Agree fee and deliverable format",
+            "Receive the review through the agreed channel"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Verification of title, records or authenticity requires a separate due-diligence scope.",
+            "No. Applicable statutory, registry and third-party charges are separate.",
+            "Request document review →"
+          ]
+        }
       ]
     },
     {
@@ -192,6 +264,42 @@
         "Payment proof and outstanding amount calculation, if relevant",
         "Emails, messages and earlier demands or replies",
         "A clear chronology and desired resolution"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Review of the underlying transaction or dispute",
+            "Drafting based on supplied facts and records",
+            "Relief, response and deadline language as professionally advised",
+            "Separate review of service or dispatch requirements"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose the notice category and submit the basic facts",
+            "ILS checks urgency, jurisdiction and document sufficiency",
+            "Drafting scope and fee are confirmed",
+            "Draft is prepared and shared for review"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Court proceedings and representation are separate engagements.",
+            "The draft depends on facts and available evidence; gaps will be flagged where relevant.",
+            "Request legal notice drafting →"
+          ]
+        }
       ]
     },
     {
