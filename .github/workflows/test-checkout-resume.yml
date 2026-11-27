@@ -8,6 +8,7 @@ on:
       - "customer-portal.html"
       - "assistance.html"
       - "scripts/test-popular-assistance.js"
+      - "admin.html"
       - ".github/workflows/test-checkout-resume.yml"
   push:
     paths:
@@ -1066,6 +1067,18 @@ jobs:
                 if (error) return { ok: false, reason: 'TEST_ADMIN_LOGIN_FAILED' };
                 const check = await isAdmin();
                 if (!check.ok) return { ok: false, reason: 'TEST_ADMIN_AUTHZ_FAILED' };
+                if (typeof loadPricingControls !== 'function') return { ok: false, reason: 'PRICING_LOADER_NOT_AVAILABLE' };
+                await loadPricingControls();
+                const pricingBody = document.getElementById('pricingBody');
+                const pricingText = pricingBody?.innerText || '';
+                if (/Pricing unavailable:|Loading pricing/i.test(pricingText)) return { ok: false, reason: 'TEST_ADMIN_PRICING_LOADER_FAILED: ' + pricingText.slice(0, 240) };
+                const enquiryRow = [...(pricingBody?.querySelectorAll('tr') || [])].find(row => row.innerText.includes('ILS Initial Enquiry & Coordination'));
+                if (!enquiryRow || !/₹299(?:\.00)?/.test(enquiryRow.innerText)) return { ok: false, reason: 'TEST_ADMIN_ENQUIRY_PRICE_299_NOT_RENDERED' };
+                const adjustmentToggle = enquiryRow.querySelector('.pricingAdjustmentEnabled');
+                const adjustmentAmount = enquiryRow.querySelector('.pricingAdjustmentAmount');
+                if (!adjustmentToggle || !adjustmentToggle.checked || adjustmentToggle.disabled || Number(adjustmentAmount?.value) !== 299 || adjustmentAmount.disabled) {
+                  return { ok: false, reason: 'TEST_ADMIN_FEE_ADJUSTMENT_299_NOT_ACTIVE' };
+                }
                 document.getElementById('upiProofStatusFilter').value = 'rejected';
                 await loadUpiProofs();
                 const body = document.getElementById('upiProofBody');

@@ -1570,28 +1570,39 @@ async function loadPricingControls(){
  const pb=$("pricingBody"),fb=$("professionalFeeBody"),ab=$("pricingAuditBody");if(pb)pb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading pricing…</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading fees…</td></tr>';
  try{
   const [a,d,e]=await Promise.all([
-   sb.from("services").select("id,slug,name,category,is_active").order("name"),
+   sb.from("services").select("id,slug,name").order("name"),
    sb.from("professional_fee_catalog").select("id,professional_type,fee_code,fee_name,amount,currency,billing_type,is_active,notes,updated_at").order("professional_type").order("fee_name"),
    sb.from("ils_admin_pricing_audit").select("entity_type,entity_id,old_value,new_value,changed_at").order("changed_at",{ascending:false}).limit(20)
   ]);
-  for(const x of [a,d,e])if(x.error)throw x.error;
+  if(a.error)throw a.error;
   const missingColumnError=err=>Boolean(err&&["42703","PGRST204"].includes(err.code));
+  const missingRelationError=err=>Boolean(err&&["42P01","PGRST205"].includes(err.code));
+  const feeCatalogAvailable=!d.error;
+  if(d.error&&!missingRelationError(d.error))throw d.error;
+  if(e.error&&!missingRelationError(e.error))throw e.error;
   pricingPriceColumn="price";pricingAdjustmentColumnsAvailable=true;
   let b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,fee_adjustment_enabled,fee_adjustment_amount,created_at").eq("is_active",true).order("created_at",{ascending:false});
   if(missingColumnError(b.error)){
-   pricingAdjustmentColumnsAvailable=false;
    b=await sb.from("service_prices").select("id,service_id,price,currency,billing_type,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   if(!b.error)pricingAdjustmentColumnsAvailable=false;
   }
   if(missingColumnError(b.error)){
    pricingPriceColumn="amount";
-   b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   pricingAdjustmentColumnsAvailable=true;
+   b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,fee_adjustment_enabled,fee_adjustment_amount,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   if(missingColumnError(b.error)){
+    pricingAdjustmentColumnsAvailable=false;
+    b=await sb.from("service_prices").select("id,service_id,amount,currency,is_active,created_at").eq("is_active",true).order("created_at",{ascending:false});
+   }
   }
   if(b.error)throw b.error;
   if(!pricingAdjustmentColumnsAvailable)msg("pricingMsg","Service pricing remains available. Fee-credit controls will activate after the approved database migration is applied.","");
   const latest={};(b.data||[]).forEach(p=>{if(!latest[p.service_id])latest[p.service_id]=p;});
   pricingServiceRows=(a.data||[]).map(s=>({...s,price:latest[s.id]||null}));
-  professionalFeeRows=d.data||[];renderPricingRows();renderProfessionalFees();
-  ab.innerHTML=(e.data||[]).length?(e.data||[]).map(r=>'<tr><td>'+esc(r.entity_type)+'</td><td>'+esc(r.entity_id)+'</td><td>'+esc(String(r.old_value?.price??r.old_value?.amount??"—"))+'</td><td>'+esc(String(r.new_value?.price??r.new_value?.amount??"—"))+'</td><td>'+esc(r.changed_at?new Date(r.changed_at).toLocaleString("en-IN"):"—")+'</td></tr>').join(""):'<tr><td colspan="5" style="text-align:center">No pricing changes recorded yet.</td></tr>';
+  professionalFeeRows=feeCatalogAvailable?(d.data||[]):[];renderPricingRows();
+  if(feeCatalogAvailable){renderProfessionalFees();$("saveProfessionalFeeBtn").disabled=false;}
+  else{if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Professional fee catalog is not provisioned in this TEST database. Fee management is unavailable here; no schema changes were made.</td></tr>';const save=$("saveProfessionalFeeBtn");if(save)save.disabled=true;}
+  if(ab)ab.innerHTML=(e.data||[]).length?(e.data||[]).map(r=>'<tr><td>'+esc(r.entity_type)+'</td><td>'+esc(r.entity_id)+'</td><td>'+esc(String(r.old_value?.price??r.old_value?.amount??"—"))+'</td><td>'+esc(String(r.new_value?.price??r.new_value?.amount??"—"))+'</td><td>'+esc(r.changed_at?new Date(r.changed_at).toLocaleString("en-IN"):"—")+'</td></tr>').join(""):(e.error?'<tr><td colspan="5" style="text-align:center">Pricing audit table is not provisioned in this TEST database.</td></tr>':'<tr><td colspan="5" style="text-align:center">No pricing changes recorded yet.</td></tr>');
  }catch(e){console.error("Pricing controls:",e);if(pb)pb.innerHTML='<tr><td colspan="8" style="text-align:center">Pricing unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Fees unavailable: '+esc(e?.message||"Administrator access required.")+'</td></tr>';}
 }
 function renderProfessionalFees(){
