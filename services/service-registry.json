@@ -1,0 +1,263 @@
+{
+  "version": 1,
+  "site": "https://instantlegalservices.in",
+  "services": [
+    {
+      "slug": "business-legal-review",
+      "title": "Business Legal Review | Instant Legal Services",
+      "description": "Review business contracts, policies and commercial documents with a clear scope, issue list and practical next steps.",
+      "h1": "Business Legal Review",
+      "summary": "Review business contracts, policies and commercial documents with a clear scope, issue list and practical next steps.",
+      "documents": [
+        "Complete document with schedules and annexures",
+        "Names and roles of the parties",
+        "Short explanation of the transaction and business objective",
+        "Specific clauses or risks you want reviewed",
+        "Related emails, notices or prior drafts, if relevant"
+      ]
+    },
+    {
+      "slug": "case-preparation",
+      "title": "Case Preparation Pack | Instant Legal Services",
+      "description": "Organise case facts, chronology, documents, issues and research requirements into a structured preparation pack.",
+      "h1": "Case Preparation Pack",
+      "summary": "Organise case facts, chronology, documents, issues and research requirements into a structured preparation pack.",
+      "documents": [
+        "Case number, court and next date, if available",
+        "Existing pleadings, applications and replies",
+        "Orders, notices and relevant correspondence",
+        "Evidence or records relevant to the dispute",
+        "A short factual timeline and immediate objective"
+      ]
+    },
+    {
+      "slug": "legal-consultation",
+      "title": "Initial Legal Consultation | Instant Legal Services",
+      "description": "Arrange an initial legal issue assessment with an appropriate independent legal professional, subject to availability and confirmed scope.",
+      "h1": "Initial Legal Consultation",
+      "summary": "Arrange an initial legal issue assessment with an appropriate independent legal professional, subject to availability and confirmed scope.",
+      "documents": [
+        "Brief summary of the issue and desired outcome",
+        "Relevant dates and location",
+        "Any notice, order, agreement or case number",
+        "Names of parties and their relationship to the matter",
+        "Urgent deadlines or upcoming hearing date, if any"
+      ]
+    },
+    {
+      "slug": "advocate-reviewed-draft",
+      "title": "Advocate-Reviewed Draft | Instant Legal Services",
+      "description": "Have an existing draft reviewed by an advocate for clarity, legal issues and corrections within an agreed scope.",
+      "h1": "Advocate-Reviewed Draft",
+      "summary": "Have an existing draft reviewed by an advocate for clarity, legal issues and corrections within an agreed scope.",
+      "documents": [
+        "Editable draft or readable PDF",
+        "Purpose and intended recipient of the document",
+        "Relevant facts and supporting records",
+        "Jurisdiction and applicable transaction or proceeding",
+        "Any deadline for issue, filing or execution"
+      ]
+    },
+    {
+      "slug": "legal-document-review",
+      "title": "Legal Document Review | Instant Legal Services",
+      "description": "Understand key clauses, obligations, dates and potential issues in a supplied legal or commercial document.",
+      "h1": "Legal Document Review",
+      "summary": "Understand key clauses, obligations, dates and potential issues in a supplied legal or commercial document.",
+      "documents": [
+        "Complete document and annexures",
+        "Purpose for which the document will be used",
+        "Names and roles of the parties",
+        "Related agreement, notice or correspondence, if any",
+        "Specific concerns or clauses requiring attention"
+      ]
+    },
+    {
+      "slug": "legal-notice-drafting",
+      "title": "Legal Notice Drafting | Instant Legal Services",
+      "description": "Prepare a fact-based legal notice draft for review and issue through the appropriate channel, subject to professional scope.",
+      "h1": "Legal Notice Drafting",
+      "summary": "Prepare a fact-based legal notice draft for review and issue through the appropriate channel, subject to professional scope.",
+      "documents": [
+        "Names and correct addresses of parties",
+        "Agreement, invoice, cheque or transaction records, as applicable",
+        "Payment proof and outstanding amount calculation, if relevant",
+        "Emails, messages and earlier demands or replies",
+        "A clear chronology and desired resolution"
+      ]
+    },
+    {
+      "slug": "property-due-diligence",
+      "title": "Property Legal Due Diligence | Instant Legal Services",
+      "description": "Review available property documents and identify title, ownership, transaction and record issues within a defined scope.",
+      "h1": "Property Legal Due Diligence",
+      "summary": "Review available property documents and identify title, ownership, transaction and record issues within a defined scope.",
+      "documents": [
+        "Property location, plot or survey details and land type",
+        "Available sale deed, title deed, allotment or lease documents",
+        "Latest revenue or municipal records, if available",
+        "Encumbrance, loan or registry search records, if available",
+        "Agreement, payment proof, possession details and existing notices"
+      ]
+    },
+    {
+      "slug": "legal-research",
+      "title": "Legal Research Report | Instant Legal Services",
+      "description": "Request structured legal research on a defined question using relevant statutes, judgments and procedural sources.",
+      "h1": "Legal Research Report",
+      "summary": "Request structured legal research on a defined question using relevant statutes, judgments and procedural sources.",
+      "documents": [
+        "Exact legal question or issue",
+        "Jurisdiction, court or forum involved",
+        "Relevant facts and dates",
+        "Existing case papers or citations, if any",
+        "Purpose and deadline for the research"
+      ]
+    },
+    {
+      "slug": "digital-form-assistance",
+      "title": "Digital Form Assistance | Instant Legal Services",
+      "description": "Get non-legal assistance organising information and completing a digital form, with sensitive authentication kept on the official portal.",
+      "h1": "Digital Form Assistance",
+      "summary": "Get non-legal assistance organising information and completing a digital form, with sensitive authentication kept on the official portal.",
+      "documents": [
+        "Name of the official portal and form",
+        "Application or reference number, if already created",
+        "Relevant supporting documents required by the authority",
+        "A list of fields or steps where assistance is needed"
+      ]
+    },
+    {
+      "slug": "official-route-guidance",
+      "title": "Official Route Guided Assistance | Instant Legal Services",
+      "description": "Understand the correct official portal, application steps, eligibility and document checklist while completing the process yourself.",
+      "h1": "Official Route Guided Assistance",
+      "summary": "Understand the correct official portal, application steps, eligibility and document checklist while completing the process yourself.",
+      "documents": [
+        "Name of the government service or scheme",
+        "State or department, where relevant",
+        "Application or reference number, if already available",
+        "Documents listed by the official authority"
+      ]
+    },
+    {
+      "slug": "accounting-reports",
+      "title": "Accounting Reports | Instant Legal Services",
+      "description": "Unlock a printable or guided accounting report generated from the relevant ILS accounting tool result.",
+      "h1": "Accounting Reports",
+      "summary": "Unlock a printable or guided accounting report generated from the relevant ILS accounting tool result.",
+      "documents": [
+        "No separate document upload is normally needed for tool-generated reports",
+        "Keep source figures, invoices or statements available to verify your inputs",
+        "Use the relevant tool fields and reporting period accurately"
+      ]
+    },
+    {
+      "slug": "professional-tool-reports",
+      "title": "Professional Tool Reports | Instant Legal Services",
+      "description": "Unlock guided or professional-format reports from supported ILS professional tools after reviewing the entered inputs.",
+      "h1": "Professional Tool Reports",
+      "summary": "Unlock guided or professional-format reports from supported ILS professional tools after reviewing the entered inputs.",
+      "documents": [
+        "No separate upload is normally required for a report generated from the tool",
+        "Keep relevant source documents available to validate inputs",
+        "Check applicable dates, rates and assumptions in the tool"
+      ]
+    },
+    {
+      "slug": "tool-report-unlock",
+      "title": "ILS Tool Report Unlocks | Instant Legal Services",
+      "description": "Unlock selected micro-reports from ILS tools at the price shown for the chosen output.",
+      "h1": "ILS Tool Report Unlocks",
+      "summary": "Unlock selected micro-reports from ILS tools at the price shown for the chosen output.",
+      "documents": [
+        "No extra document upload is normally required",
+        "Complete the selected tool inputs and review the result",
+        "Keep your source data for your own records"
+      ]
+    },
+    {
+      "slug": "taxation-compliance",
+      "title": "GST, Taxation &amp; Return Compliance | Instant Legal Services",
+      "description": "Explore GST registration, returns, reconciliation, income-tax filing, notices and related tax-compliance assistance.",
+      "h1": "GST, Taxation &amp; Return Compliance",
+      "summary": "Explore GST registration, returns, reconciliation, income-tax filing, notices and related tax-compliance assistance.",
+      "documents": [
+        "PAN and business constitution details, as applicable",
+        "GSTIN and prior return acknowledgements, if registered",
+        "Sales and purchase summaries or accounting records",
+        "Bank, salary or income records relevant to the task",
+        "Notice, demand or portal reference and due date, if any"
+      ]
+    },
+    {
+      "slug": "corporate-business-registration",
+      "title": "Company, LLP &amp; Business Registration | Instant Legal Services",
+      "description": "Explore company and LLP incorporation, business registrations, licences and ongoing corporate compliance support.",
+      "h1": "Company, LLP &amp; Business Registration",
+      "summary": "Explore company and LLP incorporation, business registrations, licences and ongoing corporate compliance support.",
+      "documents": [
+        "Proposed business name and activity",
+        "Constitution and ownership or partner details",
+        "PAN and identity/address documents, when specifically requested",
+        "Registered office proof and owner consent, where required",
+        "Any existing registration, licence or prior filing details"
+      ]
+    },
+    {
+      "slug": "accounting-bookkeeping",
+      "title": "Accounting &amp; Bookkeeping Services | Instant Legal Services",
+      "description": "Explore bookkeeping, bank reconciliation, GST data preparation, TDS and management-report support for businesses.",
+      "h1": "Accounting &amp; Bookkeeping Services",
+      "summary": "Explore bookkeeping, bank reconciliation, GST data preparation, TDS and management-report support for businesses.",
+      "documents": [
+        "Bank statements for the agreed period",
+        "Sales and purchase invoices or summaries",
+        "Expense vouchers and payment records",
+        "Opening balances and prior books, if available",
+        "GSTIN, PAN and payroll data only as relevant to the agreed scope"
+      ]
+    },
+    {
+      "slug": "labour-hr-compliance",
+      "title": "Labour, HR, PF &amp; ESI Compliance | Instant Legal Services",
+      "description": "Explore employment documentation, payroll coordination, PF/ESI and workplace compliance assistance for employers.",
+      "h1": "Labour, HR, PF &amp; ESI Compliance",
+      "summary": "Explore employment documentation, payroll coordination, PF/ESI and workplace compliance assistance for employers.",
+      "documents": [
+        "Establishment name, address and nature of business",
+        "Employee count and broad wage structure",
+        "Existing PF/ESI or labour registration details, if any",
+        "Relevant employment contracts, notices or payroll summaries",
+        "Compliance period and issue details"
+      ]
+    },
+    {
+      "slug": "professional-services-network",
+      "title": "CA, CS, HR &amp; GST Professional Services | Instant Legal Services",
+      "description": "Connect with relevant independent CA, CS, HR and GST professionals for business, finance and compliance requirements.",
+      "h1": "CA, CS, HR &amp; GST Professional Services",
+      "summary": "Connect with relevant independent CA, CS, HR and GST professionals for business, finance and compliance requirements.",
+      "documents": [
+        "Nature of the assignment and expected deliverable",
+        "Business constitution, location and registration details",
+        "Relevant records or notices, if available",
+        "Deadline and preferred mode of communication"
+      ]
+    },
+    {
+      "slug": "criminal-bail-ndps",
+      "title": "Criminal Law, Bail & NDPS Assistance | Instant Legal Services",
+      "description": "Request criminal law, bail, anticipatory bail and NDPS legal assistance through Instant Legal Services, subject to advocate availability and confirmed scope.",
+      "h1": "Criminal Law, Bail & NDPS Assistance",
+      "summary": "Services directory / Criminal law",
+      "documents": [
+        "FIR or complaint number and police station, if available",
+        "Sections mentioned in the FIR or notice",
+        "Arrest, custody or hearing status and relevant dates",
+        "Bail orders, remand papers or court notices, if available",
+        "Name of court and case number, if already filed"
+      ]
+    }
+  ]
+}
