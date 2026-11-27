@@ -231,7 +231,7 @@ function updateBuilder(){
  else{display="₹"+monthly.toLocaleString("en-IN")+" / month";estimate=String(monthly);note="Indicative monthly estimate; no automatic debit. Work begins only after scope, fee and payment terms are agreed.";}
  $("builderEstimate").textContent=display;
  $("builderEstimateNote").textContent=note+" Selected modules: "+(modules.length?modules.join(", "):"Core coordination only")+".";
- const params=new URLSearchParams({service:"business-compliance",plan:"custom-business-plan",cycle,business:$("builderBusiness").value,invoices:String(invoices),gstins:String(gstins),modules:modules.join(","),estimate,estimated_period:cycle==="annual"?"annual":cycle==="monthly"?"monthly":"one-time"});
+ const params=new URLSearchParams({service:"business-compliance",plan:"custom-business-plan",cycle,industry:$("builderBusiness").value,invoices:String(invoices),gstins:String(gstins),modules:modules.join(","),estimate,estimated_period:cycle==="annual"?"annual":cycle==="monthly"?"monthly":"one-time"});
  $("builderContinue").href="../assistance.html?"+params.toString();
 }
 
