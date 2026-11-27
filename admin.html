@@ -1570,7 +1570,7 @@ async function loadPricingControls(){
  const pb=$("pricingBody"),fb=$("professionalFeeBody"),ab=$("pricingAuditBody");if(pb)pb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading pricing…</td></tr>';if(fb)fb.innerHTML='<tr><td colspan="8" style="text-align:center">Loading fees…</td></tr>';
  try{
   const [a,d,e]=await Promise.all([
-   sb.from("services").select("id,slug,name,category").order("name"),
+   sb.from("services").select("id,slug,name").order("name"),
    sb.from("professional_fee_catalog").select("id,professional_type,fee_code,fee_name,amount,currency,billing_type,is_active,notes,updated_at").order("professional_type").order("fee_name"),
    sb.from("ils_admin_pricing_audit").select("entity_type,entity_id,old_value,new_value,changed_at").order("changed_at",{ascending:false}).limit(20)
   ]);
