@@ -79,6 +79,35 @@ const fs = require("fs");
    if(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth))throw new Error("Horizontal overflow at "+viewport.width+"px.");
    await context.close();
   }
+
+  const intakeContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:"block"});
+  const intakePage=await intakeContext.newPage(),intakeErrors=[];
+  intakePage.on("pageerror",e=>intakeErrors.push(e.message));
+  const intakeStub="window.supabase={createClient:function(){return {auth:{getSession:async()=>({data:{session:null})}};}};";
+  await intakePage.route(/https:\/\/(cdn\\.jsdelivr\\.net\\/npm\\/@supabase\\/supabase-js@2|unpkg\\.com\\/@supabase\\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:intakeStub}));
+  const intakeBase=(process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\\/$/,"");
+  await intakePage.goto(intakeBase+"/assistance.html?service=business-compliance&plan=shopkeeper-starter&industry=Retail%20shop&option=GST%20registration%20%2F%20amendment");
+  await intakePage.locator("#assistForm").waitFor({state:"attached"});
+  if(await intakePage.locator("#businessType").inputValue()!=="Retail shop")throw new Error("Industry entry point did not prefill business type.");
+  if(await intakePage.locator("#serviceOption").inputValue()!=="GST registration / amendment")throw new Error("GST subcategory did not preselect the requested service.");
+  if(!(await intakePage.locator("#standardHelp h1").innerText()).includes("Shopkeeper Starter"))throw new Error("Selected business plan did not prefill the enquiry heading.");
+  await intakePage.locator("#name").fill("ILS Test Customer");
+  await intakePage.locator("#mobile").fill("9876543210");
+  await intakePage.locator("#state").fill("Uttar Pradesh");
+  await intakePage.locator("#city").fill("Bareilly");
+  await intakePage.locator("#consent").check();
+  await intakePage.evaluate(()=>{
+   window.__ilsCapture={};
+   window.ILS={submitRequirement:async payload=>{window.__ilsCapture.lead=payload;return {ok:true};}};
+   window.ILS_TOOLS={createOrder:async (slug,details)=>{window.__ilsCapture.order={slug,details};return {ok:true};}};
+  });
+  await intakePage.locator('#assistForm button[type="submit"]').click();
+  await intakePage.waitForFunction(()=>Boolean(window.__ilsCapture?.order));
+  const captured=await intakePage.evaluate(()=>window.__ilsCapture);
+  if(!captured.lead?.brief?.includes("Business type: Retail shop")||!captured.lead.brief.includes("Selected business plan: Shopkeeper Starter")||!captured.lead.brief.includes("Selected service: GST registration / amendment"))throw new Error("CRM lead payload did not preserve selected business type, plan and service.");
+  if(captured.order.slug!=="ils-enquiry-fee-199"||captured.order.details.selected_business_plan!=="Shopkeeper Starter"||captured.order.details.business_type!=="Retail shop"||captured.order.details.service_option!=="GST registration / amendment"||captured.order.details.intake_service!=="business-compliance")throw new Error("Existing ₹299 enquiry order did not preserve business plan metadata.");
+  if(intakeErrors.length)throw new Error("Assistance intake browser errors: "+intakeErrors.join("; "));
+  await intakeContext.close();
   console.log("CATALOGUE_PRODUCTION_AND_LEGACY_TEST_SCHEMA_MOBILE_DESKTOP=PASS");
  } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
