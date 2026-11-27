@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ILS Service & Business Catalogue | Legal, Compliance & Digital Assistance</title>
+<meta name="description" content="Browse individual legal, business, property, government-route and professional-tool services from Instant Legal Services, or explore ongoing business support plans.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://instantlegalservices.in/catalog/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Instant Legal Services">
+<meta property="og:title" content="ILS Service & Business Catalogue">
+<meta property="og:description" content="Choose a one-time service or explore ongoing business support. Clear scope and fees before work begins.">
+<link rel="stylesheet" href="../assets/ils.css">
+<style>
+:root{--cat-bg:#07101c;--cat-panel:#101d2d;--cat-line:rgba(255,255,255,.12);--cat-gold:#d7a84f;--cat-text:#f5f7fa;--cat-muted:#b5c0ce}
+body{background:var(--cat-bg);color:var(--cat-text);font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+.catalog-wrap{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:34px 0 70px}
+.catalog-hero{padding:clamp(24px,5vw,54px);border:1px solid var(--cat-line);border-radius:24px;background:radial-gradient(circle at 90% 0%,rgba(215,168,79,.18),transparent 38%),linear-gradient(135deg,#102238,#0b1523)}
+.eyebrow{color:var(--cat-gold);font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase}
+.catalog-hero h1{font-size:clamp(30px,5vw,48px);line-height:1.08;margin:12px 0}
+.catalog-hero p,.catalog-note{color:var(--cat-muted);line-height:1.65;max-width:760px}
+.catalog-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+.catalog-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:12px;background:var(--cat-gold);color:#17130b;text-decoration:none;font-weight:800}
+.catalog-btn.secondary{background:transparent;color:var(--cat-text);border:1px solid var(--cat-line)}
+.catalog-section{margin-top:38px}
+.catalog-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.catalog-heading h2{margin:0;font-size:clamp(22px,3vw,30px)}
+.catalog-heading p{margin:6px 0 0;color:var(--cat-muted)}
+.catalog-tools{display:grid;grid-template-columns:minmax(220px,1fr) minmax(190px,260px);gap:10px;margin:18px 0}
+.catalog-tools input,.catalog-tools select{width:100%;min-height:46px;padding:10px 13px;border-radius:11px;border:1px solid var(--cat-line);background:#0c1928;color:var(--cat-text)}
+.catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.catalog-card,.plan-card{border:1px solid var(--cat-line);border-radius:17px;background:var(--cat-panel);padding:19px;display:flex;flex-direction:column;min-height:205px}
+.catalog-card h3,.plan-card h3{margin:0 0 8px;font-size:18px}
+.catalog-card p,.plan-card p{color:var(--cat-muted);font-size:14px;line-height:1.55;margin:0 0 14px}
+.catalog-meta{color:var(--cat-gold);font-weight:800;font-size:18px;margin-top:auto;padding:8px 0}
+.catalog-card a,.plan-card a{color:var(--cat-gold);font-weight:800;text-decoration:none;margin-top:8px}
+.catalog-tag{font-size:11px;color:var(--cat-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
+.plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.plan-card{min-height:190px}
+.plan-card .plan-cta{margin-top:auto;padding-top:12px}
+.catalog-disclosure{margin-top:18px;padding:15px 17px;border:1px solid var(--cat-line);border-radius:14px;color:var(--cat-muted);font-size:13px;line-height:1.6}
+.catalog-status{color:var(--cat-muted);padding:16px;border:1px dashed var(--cat-line);border-radius:12px}
+@media(max-width:850px){.catalog-grid,.plan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.catalog-wrap{width:min(100% - 22px,1180px);padding-top:16px}.catalog-grid,.plan-grid,.catalog-tools{grid-template-columns:1fr}.catalog-card{min-height:175px}.catalog-hero{border-radius:18px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2';"></script>
+<script>
+window.ILS_SUPABASE_URL=window.ILS_SUPABASE_URL||"https://odqebkdzkjfxzyzbrndt.supabase.co";
+window.ILS_SUPABASE_KEY=window.ILS_SUPABASE_KEY||"sb_publishable_D5eFcgWFELtnym0K74inYg_BGn7rRUi";
+</script>
+</head>
+<body>
+<main class="catalog-wrap">
+<section class="catalog-hero">
+<span class="eyebrow">Instant Legal Services · One catalogue, clear choices</span>
+<h1>Find the right service for your requirement</h1>
+<p>Choose a one-time service when you need a specific task completed. If your shop or organisation needs regular support, explore the separate business-support plans. Scope, documents, professional involvement and applicable fees are confirmed before work begins.</p>
+<div class="catalog-actions"><a class="catalog-btn" href="#individual-services">Browse individual services</a><a class="catalog-btn secondary" href="#business-plans">Explore business plans</a></div>
+</section>
+
+<section class="catalog-section" id="individual-services">
+<div class="catalog-heading"><div><span class="eyebrow">One-time assistance</span><h2>Individual services</h2><p>Choose and pay only for the specific service you need.</p></div></div>
+<div class="catalog-tools"><input id="catalogSearch" type="search" placeholder="Search services, e.g. legal notice or property" aria-label="Search services"><select id="catalogCategory" aria-label="Filter by category"><option value="all">All categories</option><option value="legal">Legal &amp; case support</option><option value="business">Business &amp; property</option><option value="government">Government &amp; digital assistance</option><option value="tools">Professional tools &amp; reports</option></select></div>
+<div id="catalogStatus" class="catalog-status" aria-live="polite">Loading available ILS services…</div>
+<div id="catalogGrid" class="catalog-grid"></div>
+<div class="catalog-disclosure">The displayed service price is the current active ILS catalogue price. Applicable taxes, government fees, stamp duty, portal charges and third-party costs are separate unless expressly stated. For eligible matters, the ₹299 initial enquiry fee is credited in full against ILS professional/service charges for the same matter if you proceed. Any additional fee is confirmed before work begins.</div>
+</section>
+
+<section class="catalog-section" id="business-plans">
+<div class="catalog-heading"><div><span class="eyebrow">Ongoing support</span><h2>Business support plans</h2><p>Recurring support is separate from individual one-time services.</p></div></div>
+<div class="plan-grid">
+<article class="plan-card"><span class="catalog-tag">Retail &amp; small shops</span><h3>Shopkeeper Starter</h3><p>For a small shop needing a regular compliance calendar, basic GST coordination and reminders. Exact return and document limits are confirmed after reviewing the business.</p><div class="plan-cta"><a href="../business-compliance.html">Discuss this plan →</a></div></article>
+<article class="plan-card"><span class="catalog-tag">Growing retailers</span><h3>Retailer Plus</h3><p>For retailers needing recurring GST support, basic reconciliation and periodic compliance reviews within agreed transaction limits.</p><div class="plan-cta"><a href="../business-compliance.html">Discuss this plan →</a></div></article>
+<article class="plan-card"><span class="catalog-tag">Wholesale businesses</span><h3>Wholesaler Compliance</h3><p>For higher invoice volumes, supplier/customer reconciliation and coordinated GST and tax-compliance support.</p><div class="plan-cta"><a href="../business-compliance.html">Discuss this plan →</a></div></article>
+<article class="plan-card"><span class="catalog-tag">Manufacturing</span><h3>Manufacturer Support</h3><p>Scope-led GST, documentation and recurring business-compliance coordination for manufacturers.</p><div class="plan-cta"><a href="../business-compliance.html">Discuss this plan →</a></div></article>
+<article class="plan-card"><span class="catalog-tag">Healthcare organisations</span><h3>Hospital &amp; Clinic Support</h3><p>Coordinated tax, documentation and business-compliance assistance, subject to the organisation's structure and applicable requirements.</p><div class="plan-cta"><a href="../business-compliance.html">Discuss this plan →</a></div></article>
+<article class="plan-card"><span class="catalog-tag">Custom requirements</span><h3>Custom Business Plan</h3><p>For multiple GSTINs, entities, branches, payroll, TDS or complex reporting needs. Work is scoped before a written quotation.</p><div class="plan-cta"><a href="../business-compliance.html">Request a scope review →</a></div></article>
+</div>
+<div class="catalog-disclosure">Business plans are currently enquiry-led, not automatic subscriptions. No recurring charge is taken from this page. ILS confirms the included work, transaction limits, exclusions, professional allocation, renewal terms and final written fee before activation.</div>
+</section>
+<p class="catalog-note"><a href="../index.html" style="color:var(--cat-gold)">← Back to ILS home</a> · <a href="../services/gst-assistance/" style="color:var(--cat-gold)">GST assistance</a> · <a href="../services/income-tax-itr/" style="color:var(--cat-gold)">Income tax &amp; ITR</a> · <a href="../services/legal-drafting/" style="color:var(--cat-gold)">Legal drafting</a></p>
+</main>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const categoryFor=s=>{
+ const c=String(s.category||"").toLowerCase();
+ const slug=String(s.slug||"").toLowerCase();
+ if(c.includes("professional")||c.includes("accounting")||slug.startsWith("tool-output")||slug.startsWith("accounting-print"))return "tools";
+ if(c.includes("action")||slug.includes("official-route")||slug.includes("digital-form"))return "government";
+ if(c.includes("business")||c.includes("property")||slug.includes("property"))return "business";
+ return "legal";
+};
+const categoryLabel={legal:"Legal & case support",business:"Business & property",government:"Government & digital assistance",tools:"Professional tools & reports"};
+let services=[];
+function render(){
+ const q=$("catalogSearch").value.trim().toLowerCase();
+ const cat=$("catalogCategory").value;
+ const list=services.filter(s=>(cat==="all"||categoryFor(s)===cat)&&(!q||[s.name,s.description,s.category,s.slug].join(" ").toLowerCase().includes(q)));
+ $("catalogGrid").innerHTML=list.map(s=>'<article class="catalog-card"><span class="catalog-tag">'+esc(categoryLabel[categoryFor(s)])+'</span><h3>'+esc(s.name)+'</h3><p>'+esc(s.description||"Service scope will be confirmed before work begins.")+'</p><div class="catalog-meta">'+(Number.isFinite(Number(s.price))?'₹'+Number(s.price).toLocaleString("en-IN",{maximumFractionDigits:2}):"Fee confirmed")+'</div><a href="../assistance.html?service='+encodeURIComponent(s.slug)+'">View service &amp; continue →</a></article>').join("");
+ $("catalogStatus").textContent=list.length?("Showing "+list.length+" of "+services.length+" currently active individual services."):"No matching services. Try another search or category.";
+}
+async function load(){
+ if(!window.supabase||!window.supabase.createClient){$("catalogStatus").textContent="Service catalogue could not load right now. You can still enquire through the business-compliance page.";return;}
+ const sb=window.supabase.createClient(window.ILS_SUPABASE_URL,window.ILS_SUPABASE_KEY);
+ const [sr,pr]=await Promise.all([
+  sb.from("services").select("id,slug,name,description,category").eq("is_active",true).order("name"),
+  sb.from("service_prices").select("service_id,price,currency,billing_type").eq("is_active",true)
+ ]);
+ if(sr.error||pr.error){$("catalogStatus").textContent="Live prices are temporarily unavailable. Please contact ILS for the current service scope and fee.";return;}
+ const prices=new Map();
+ (pr.data||[]).forEach(p=>{if(!prices.has(p.service_id))prices.set(p.service_id,p);});
+ services=(sr.data||[]).map(s=>({...s,price:prices.get(s.id)?.price??null})).filter(s=>prices.has(s.id));
+ render();
+}
+$("catalogSearch").addEventListener("input",render);
+$("catalogCategory").addEventListener("change",render);
+load().catch(()=>{$("catalogStatus").textContent="Unable to load the live catalogue. Please try again later.";});
+})();
+</script>
+</body>
+</html>
