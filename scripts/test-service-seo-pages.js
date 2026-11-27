@@ -28,9 +28,15 @@ for(const slug of routes){
  if(!/case facts|jurisdiction|as applicable|where relevant|if available|subject to/i.test(html))throw new Error(route+" must qualify documents and service scope against facts and jurisdiction.");
  if(!sitemap.includes("https://instantlegalservices.in"+route))throw new Error(route+" missing from sitemap.xml");
 }
+for(const slug of routes){
+ const html=fs.readFileSync(path.join(root,"services",slug,"index.html"),"utf8");
+ if(/href="\.\.\/assistance\.html(?:\?|")/i.test(html))throw new Error("/services/"+slug+"/ has a broken relative assistance link; use the root assistance route.");
+ if(/href="[^"]*assistance\.html(?:\?|")/i.test(html)&&!/href="\/assistance\.html\?/i.test(html))throw new Error("/services/"+slug+"/ assistance CTA must target the root assistance page.");
+}
 const hub=fs.readFileSync(path.join(root,"services","index.html"),"utf8");
 for(const token of ['<link rel="canonical" href="https://instantlegalservices.in/services/">','<h1>Find the right professional service','<script type="application/ld+json">'])if(!hub.includes(token))throw new Error("Services directory missing "+token);
 if(!sitemap.includes("https://instantlegalservices.in/services/"))throw new Error("Services directory missing from sitemap.xml");
+if(!hub.includes('href="/services/property-due-diligence/"')||hub.includes('href="/services/property-documentation/"'))throw new Error("Services directory property branch must point to the canonical property due-diligence route.");
 const oldRoutes=["consumer-banking-disputes","cyber-fraud-assistance","gst-assistance","income-tax-itr","legal-drafting","matrimonial-family","money-recovery","property-documentation","traffic-challan"];
 for(const slug of oldRoutes){
  const route="/services/"+slug+"/";
