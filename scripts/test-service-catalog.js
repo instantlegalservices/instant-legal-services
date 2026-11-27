@@ -133,7 +133,10 @@ const fs = require("fs");
   
   const homePage=await browser.newPage({viewport:{width:390,height:844}});
   const homeErrors=[];homePage.on("pageerror",e=>homeErrors.push(e.message));
-  await homePage.goto((process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"")+"/");
+  const homeSupabaseStub="window.supabase={createClient:function(){return {auth:{getSession:async()=>({data:{session:null}})}};}};";
+  await homePage.route(/https:\/\/(cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|unpkg\.com\/@supabase\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:homeSupabaseStub}));
+  await homePage.goto((process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"")+"/",{waitUntil:"domcontentloaded"});
+  await homePage.locator("#language").waitFor({state:"visible"});
   if(await homePage.locator(".ils-home-offer").count()!==5)throw new Error("Homepage must show five tax/business launch offers above Popular Assistance.");
   if(await homePage.locator("#ils-launch-offers").evaluate(el=>el.compareDocumentPosition(document.querySelector("#popular-assistance"))&Node.DOCUMENT_POSITION_FOLLOWING)===0)throw new Error("Homepage launch offers must appear before Popular Assistance.");
   for(const [lang,expected] of [["en-IN","Tax & Business Services at Offer Prices"],["hi-IN","GST और बिज़नेस सेवाएँ — ऑफर कीमतों पर"],["hinglish","GST & Business Services — Offer Prices"],["ur-IN","ٹیکس اور کاروباری خدمات رعایتی قیمتوں پر"],["bn-IN","কর ও ব্যবসায়িক পরিষেবা অফার মূল্যে"]]){
