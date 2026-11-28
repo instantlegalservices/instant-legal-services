@@ -255,10 +255,10 @@ const intakeContext=await browser.newContext({viewport:{width:390,height:844},se
    await offerPage.locator('#assistForm button[type="submit"]').click();
    await offerPage.waitForFunction(()=>Boolean(window.__ilsOfferCapture?.order));
    const offerCaptured=await offerPage.evaluate(()=>window.__ilsOfferCapture);
-   if(!offerCaptured.lead?.brief?.includes("Selected service: "+option)||!offerCaptured.lead.brief.includes("Business type: Retail shop"))throw new Error("Launch offer selection did not reach the CRM lead payload: "+option);
+   if(!offerCaptured.order.details.brief?.includes("Selected service: "+option)||!offerCaptured.order.details.brief.includes("Business type: Retail shop"))throw new Error("Launch offer selection did not reach the atomic CRM trigger payload: "+option);
    const offerPricing={"GST Registration \u2013 Launch Offer":["gst-registration-launch",999,"one_time"],"Private Limited Company Registration \u2013 Launch Offer":["private-limited-launch",3999,"one_time"],"LLP Registration \u2013 Launch Offer":["llp-registration-launch",2499,"one_time"],"GST Return Filing \u2013 Launch Offer":["gst-return-filing-launch",399,"per_return"],"Bookkeeping \u2013 Launch Offer":["bookkeeping-launch",1499,"monthly"]}[option];
    if(offerCaptured.order.slug!=="ils-enquiry-fee-199"||offerCaptured.order.details.service_option!==option||offerCaptured.order.details.intake_service!=="business-compliance"||offerCaptured.order.details.business_type!=="Retail shop"||offerCaptured.order.details.catalogue_offer_code!==offerPricing[0]||offerCaptured.order.details.catalogue_offer_displayed_price_inr!==offerPricing[1]||offerCaptured.order.details.catalogue_offer_period!==offerPricing[2])throw new Error("Launch offer or quotation metadata did not reach enquiry order: "+option);
-   if(!offerCaptured.lead.brief.includes("Catalogue offer: "+offerPricing[0])||!offerCaptured.lead.brief.includes("quotation only; not collected at enquiry checkout"))throw new Error("CRM lead does not distinguish offer quotation from enquiry checkout: "+option);
+   if(!offerCaptured.order.details.brief.includes("Catalogue offer: "+offerPricing[0])||!offerCaptured.order.details.brief.includes("quotation only; not collected at enquiry checkout"))throw new Error("Atomic CRM trigger payload does not distinguish offer quotation from enquiry checkout: "+option);
    if(!offerCaptured.order.options?.resumeCheckout||!offerCaptured.order.options?.forceQr||!offerCaptured.order.options?.autoPay)throw new Error("Launch offer did not use the existing initial enquiry QR checkout flow: "+option);
   }
   if(offerErrors.length)throw new Error("Launch offer enquiry browser errors: "+offerErrors.join("; "));
@@ -280,7 +280,7 @@ const intakeContext=await browser.newContext({viewport:{width:390,height:844},se
   await intakePage.locator('#assistForm button[type="submit"]').click();
   await intakePage.waitForFunction(()=>Boolean(window.__ilsCapture?.order));
   const customCaptured=await intakePage.evaluate(()=>window.__ilsCapture);
-  if(!customCaptured.lead?.brief?.includes("Billing preference: Annual prepaid")||!customCaptured.lead.brief.includes("Business profile: Hospital / Clinic")||!customCaptured.lead.brief.includes("GSTIN count: 2")||!customCaptured.lead.brief.includes("Indicative package estimate: ₹43960 / year"))throw new Error("Custom package selection was not preserved in CRM lead details.");
+  if(!customCaptured.order.details.brief?.includes("Billing preference: Annual prepaid")||!customCaptured.order.details.brief.includes("Business profile: Hospital / Clinic")||!customCaptured.order.details.brief.includes("GSTIN count: 2")||!customCaptured.order.details.brief.includes("Indicative package estimate: ₹43960 / year"))throw new Error("Custom package selection was not preserved in the atomic CRM trigger payload.");
   if(customCaptured.order.details.package_billing_cycle!=="annual"||customCaptured.order.details.package_industry!=="Hospital / Clinic"||customCaptured.order.details.package_estimate!==43960||!customCaptured.order.details.package_modules.includes("reconciliation"))throw new Error("Custom package billing and module metadata were not preserved in order metadata.");
   if(customCaptured.order.slug!=="ils-enquiry-fee-199")throw new Error("Custom package should continue through the existing initial enquiry checkout only.");
 
