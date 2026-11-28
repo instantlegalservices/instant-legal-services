@@ -207,4 +207,40 @@ BEGIN
 END;
 $security$;
 
-\echo PASS: quote create/send, customer ownership, same-matter one-time ₹299 credit, no credit reuse across quotations, final order idempotency and direct-table access controls.
+
+-- A zero-balance quote must create a paid final order and activate its entitlement
+-- without requiring a payment handoff. The prior enquiry credit is already consumed.
+DO $zero_balance_entitlement$
+DECLARE v_quote jsonb; v_quote_id uuid; v_accept jsonb; v_order_id uuid; v_service_id uuid;
+BEGIN
+  PERFORM set_config('test.user_id','22222222-2222-4222-8222-222222222222',true);
+  PERFORM set_config('test.is_admin','true',true);
+  v_quote:=public.ils_admin_save_matter_quote(
+    null,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',0,0,0,0,
+    'No-charge follow-up review',
+    '["Initial review"]'::jsonb,'[]'::jsonb,
+    now()+interval '7 days',null,null
+  );
+  v_quote_id:=(v_quote->>'quote_id')::uuid;
+  PERFORM public.ils_admin_send_matter_quote(v_quote_id);
+  PERFORM set_config('test.user_id','11111111-1111-4111-8111-111111111111',true);
+  PERFORM set_config('test.is_admin','false',true);
+  v_accept:=public.ils_customer_accept_matter_quote(v_quote_id);
+  IF (v_accept->>'amount')::numeric<>0 OR (v_accept->>'payment_required')::boolean THEN
+    RAISE EXCEPTION 'zero-balance quote must not require payment: %',v_accept;
+  END IF;
+  v_order_id:=(v_accept->>'order_id')::uuid;
+  SELECT service_id INTO v_service_id FROM public.service_requests
+    WHERE id=(SELECT final_service_request_id FROM public.ils_matter_quotes WHERE id=v_quote_id);
+  IF NOT EXISTS(SELECT 1 FROM public.orders WHERE id=v_order_id AND total=0 AND status='paid') THEN
+    RAISE EXCEPTION 'zero-balance final order must be recorded as paid';
+  END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.entitlements WHERE order_id=v_order_id
+      AND user_id='11111111-1111-4111-8111-111111111111'
+      AND service_id=v_service_id AND status='active') THEN
+    RAISE EXCEPTION 'zero-balance acceptance must activate the service entitlement';
+  END IF;
+END;
+$zero_balance_entitlement$;
+
+\echo PASS: quote create/send, customer ownership, same-matter one-time ₹299 credit, no credit reuse across quotations, final order idempotency zero-balance entitlement and direct-table access controls.
