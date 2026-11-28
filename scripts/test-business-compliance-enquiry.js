@@ -39,6 +39,31 @@ await page.route("**/assets/ils-tools.js*", route =>
   route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
 );
 
+// Re-assert the doubles in the page's main world after each navigation and
+// after the universal form has initialized. This makes the capture independent
+// of init-script ordering and any page-global replacement during navigation.
+async function installFormDoubles() {
+  await page.evaluate(() => {
+    window.__submittedLead = null;
+    window.__orderCall = null;
+    window.ILS = {
+      ...(window.ILS || {}),
+      init: async () => ({}),
+      submitRequirement: async payload => {
+        window.__submittedLead = JSON.parse(JSON.stringify(payload));
+        return { ok: true };
+      }
+    };
+    window.ILS_TOOLS = {
+      ...(window.ILS_TOOLS || {}),
+      createOrder: async (...args) => {
+        window.__orderCall = JSON.parse(JSON.stringify(args));
+        return { ok: true };
+      }
+    };
+  });
+}
+
 try {
   // Both the multilingual service router and the dedicated GST page must
   // point straight to the single universal form with the GST option preselected.
@@ -77,10 +102,7 @@ try {
   await page.locator("#serviceOption").selectOption({ label: "Business registration" });
   await page.locator("#brief").fill("Need Udyam and shop registration guidance.");
   await page.locator("#consent").check();
-  await page.evaluate(() => {
-    window.__submittedLead = null;
-    window.__orderCall = null;
-  });
+  await installFormDoubles();
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299" }).waitFor();
   const lead = await page.evaluate(() => window.__submittedLead);
@@ -108,10 +130,7 @@ try {
   await page.locator("#businessType").selectOption({ label: "Wholesale / Trading" });
   await page.locator("#brief").fill("Need monthly GST return assistance.");
   await page.locator("#consent").check();
-  await page.evaluate(() => {
-    window.__orderCall = null;
-    // Reuse the payment test double installed before DOMContentLoaded.
-  });
+  await installFormDoubles();
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299 UPI payment" }).waitFor();
   const order = await page.evaluate(() => window.__orderCall);
