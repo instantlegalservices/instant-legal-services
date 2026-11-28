@@ -80,7 +80,8 @@ main{width:min(760px,100%);margin:20px auto}.card{border-color:rgba(134,164,198,
 <div class="workspace-intro"><strong>Your ILS Client Workspace</strong><p>Your secure space to explore services, manage your profile and follow ILS updates.</p></div>
 <div class="client-workspace-nav"><label for="workspaceNav">Workspace menu</label><select id="workspaceNav" aria-label="Choose client workspace section"><option value="overview">Dashboard overview</option><option value="matters">My case &amp; assigned advocate</option><option value="services">Explore services</option><option value="account">Account details</option><option value="orders">My orders &amp; payments</option><option value="notifications">Notifications</option></select></div>
 <section id="workspaceOverview" class="workspace-overview workspace-view" data-workspace-panel="overview"><strong>Welcome to your ILS dashboard</strong><p>Your legal service workspace, all in one place. Track your matter, meet your assigned advocate and follow verified work updates.</p><div class="workspace-kpis"><div class="workspace-kpi"><small>My matters</small><strong id="overviewMatterCount">—</strong></div><div class="workspace-kpi"><small>Assigned team</small><strong id="overviewAdvocateCount">—</strong></div><div class="workspace-kpi"><small>Work updates</small><strong id="overviewUpdateCount">—</strong></div></div><p id="workspaceOverviewStatus">Your account is ready.</p></section>
-<section class="client-section workspace-view" data-workspace-panel="matters" style="border-top:0;padding-top:0"><div class="client-section-head"><div><h2>My Case &amp; Assigned Advocate</h2><p>Private matter updates shared with you by the ILS team.</p></div><button id="refreshMatterWorkspace" type="button" class="tab" style="flex:0 0 auto">Refresh</button></div><div id="matterWorkspaceStatus" class="note" aria-live="polite">Loading your matter workspace…</div><h3 class="workspace-subhead">My matters</h3><div id="myMattersList"></div><h3 class="workspace-subhead">Assigned advocate</h3><div id="myAdvocatesList"></div><h3 class="workspace-subhead">Work progress &amp; next dates</h3><div id="myWorkProgressList"></div><h3 class="workspace-subhead">Documents shared by ILS</h3><div id="mySharedDocumentsList"></div></section><div class="client-section workspace-view" data-workspace-panel="account" style="border-top:0;padding-top:0"><div class="client-section-head"><div><h2>Account contact details</h2><p>Keep your mobile number updated so ILS can contact you about your request.</p></div></div><div class="profile-grid"><div><label for="profileName">Full name</label><input id="profileName" autocomplete="name"></div><div><label for="profileMobile">Mobile number</label><input id="profileMobile" type="tel" inputmode="tel" autocomplete="tel" placeholder="Enter mobile number"></div></div><button id="saveProfileBtn" class="primary" type="button">Save contact details</button><div id="profileStatus" class="note" aria-live="polite"></div></div>
+<section class="client-section workspace-view" data-workspace-panel="matters" style="border-top:0;padding-top:0"><div class="client-section-head"><div><h2>My Case &amp; Assigned Advocate</h2><p>Private matter updates shared with you by the ILS team.</p></div><button id="refreshMatterWorkspace" type="button" class="tab" style="flex:0 0 auto">Refresh</button></div><div id="matterWorkspaceStatus" class="note" aria-live="polite">Loading your matter workspace…</div><h3 class="workspace-subhead">My matters</h3><div id="myMattersList"></div><h3 class="workspace-subhead">My Quotations</h3><div id="myMatterQuotes" class="crm-progress">Loading your quotations…</div><div id="matterQuotePaymentStatus" class="note" aria-live="polite" style="margin-top:10px"></div>
+<h3 class="workspace-subhead">Assigned advocate</h3><div id="myAdvocatesList"></div><h3 class="workspace-subhead">Work progress &amp; next dates</h3><div id="myWorkProgressList"></div><h3 class="workspace-subhead">Documents shared by ILS</h3><div id="mySharedDocumentsList"></div></section><div class="client-section workspace-view" data-workspace-panel="account" style="border-top:0;padding-top:0"><div class="client-section-head"><div><h2>Account contact details</h2><p>Keep your mobile number updated so ILS can contact you about your request.</p></div></div><div class="profile-grid"><div><label for="profileName">Full name</label><input id="profileName" autocomplete="name"></div><div><label for="profileMobile">Mobile number</label><input id="profileMobile" type="tel" inputmode="tel" autocomplete="tel" placeholder="Enter mobile number"></div></div><button id="saveProfileBtn" class="primary" type="button">Save contact details</button><div id="profileStatus" class="note" aria-live="polite"></div></div>
 <div class="client-section workspace-view" data-workspace-panel="services"><div class="client-section-head"><div><h2>Explore ILS services</h2><p>Browse currently available assistance and open a service enquiry.</p></div><button id="refreshServicesBtn" type="button" class="tab" style="flex:0 0 auto">Refresh services</button></div><div id="clientServicesStatus" class="note">Loading available services…</div><div id="clientServicesGrid" class="client-service-grid"></div></div>
 <section class="client-section workspace-view" data-workspace-panel="orders"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2 style="margin:0">My Orders &amp; Payments</h2><p class="note">Your service orders and UPI payment verification status are visible only to your signed-in account.</p></div><button id="refreshPayments" type="button" class="tab" style="flex:0 0 auto">Refresh</button></div>
 <div class="client-finance-grid"><div class="client-finance-tile"><small>Total service orders</small><strong id="clientOrderCount">—</strong></div><div class="client-finance-tile"><small>Paid amount</small><strong id="clientPaidTotal">—</strong></div><div class="client-finance-tile"><small>Pending amount</small><strong id="clientPendingTotal">—</strong></div></div><div id="paymentHistory" class="note" style="margin-top:12px">Loading your orders…</div>
@@ -100,6 +101,8 @@ main{width:min(760px,100%);margin:20px auto}.card{border-color:rgba(134,164,198,
 </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/ils-core.js"></script>
+<script src="assets/ils-tools.js"></script>
 <script>
 "use strict";
 const SUPABASE_URL=window.ILS_SUPABASE_URL || "https://odqebkdzkjfxzyzbrndt.supabase.co";
@@ -192,9 +195,82 @@ async function loadMatterWorkspace(){
   else{progressEl.replaceChildren();for(const u of updates){const item=document.createElement("article");item.className="progress-line";const title=document.createElement("h3");title.textContent=u.title||u.status||"Work update";const note=document.createElement("div");note.className="order-meta";note.textContent=u.work_note||"The ILS team has updated your matter.";const meta=document.createElement("div");meta.className="matter-meta";if(u.status)meta.append(makeMatterChip(u.status));if(u.next_fixed_date)meta.append(makeMatterChip("Next date: "+new Date(u.next_fixed_date+"T00:00:00").toLocaleDateString("en-IN")));if(u.work_done_on)meta.append(makeMatterChip("Completed: "+new Date(u.work_done_on+"T00:00:00").toLocaleDateString("en-IN")));item.append(title,note,meta);progressEl.append(item);}}
   if(!docs.length)addEmpty(docsEl,"No documents have been shared with you yet.");
   else{docsEl.replaceChildren();for(const d of docs){const item=document.createElement("article");item.className="document-card";const name=document.createElement("strong");name.textContent=d.file_name||"Shared document";const meta=document.createElement("div");meta.className="order-meta";meta.textContent=[d.mime_type,d.created_at?new Date(d.created_at).toLocaleString("en-IN"):""].filter(Boolean).join(" · ");item.append(name,meta);docsEl.append(item);}}
+  await loadCustomerMatterQuotes();
   statusEl.textContent=matters.length?"Matter workspace updated · "+matters.length+" linked matter(s).":"Your login is secure. No existing client requirement is linked to this account yet.";
   $("workspaceOverviewStatus").textContent=matters.length?"Your matter workspace is connected and up to date.":"Your account is ready. Link your existing matter to see advocate assignments and progress.";
  }catch(e){statusEl.textContent="Matter workspace is temporarily unavailable. Please refresh or contact ILS support.";addEmpty(mattersEl,"Unable to load matter details right now.");addEmpty(advocatesEl,"Unable to load advocate assignments right now.");addEmpty(progressEl,"Unable to load progress updates right now.");addEmpty(docsEl,"Unable to load shared documents right now.");}
+}
+async function loadCustomerMatterQuotes(){
+ const target=$("myMatterQuotes");if(!target)return;
+ target.textContent="Loading quotations…";
+ try{
+  const {data,error}=await sb.rpc("ils_customer_matter_quotes");if(error)throw error;
+  const quotes=Array.isArray(data)?data:[];
+  target.replaceChildren();
+  if(!quotes.length){addEmpty(target,"No quotation has been issued for your linked matter yet.");return;}
+  for(const q of quotes){
+   const card=document.createElement("article");card.className="matter-card";
+   const title=document.createElement("h3");title.textContent=(q.quote_number||"ILS Quotation")+" · "+q.quote_status;
+   const scope=document.createElement("p");scope.textContent=q.scope_of_work||"Scope not available";
+   const rows=[
+    ["Government / statutory fee",q.government_fee],["ILS service fee",q.ils_fee],
+    ["Professional fee",q.professional_fee],["Tax",q.tax_amount],
+    ["Total before credit",q.total_before_credit],["Same-matter enquiry credit",q.enquiry_credit_amount],
+    ["Customer payable",q.total_customer_payable]
+   ];
+   const breakdown=document.createElement("div");breakdown.className="order-meta";
+   breakdown.textContent=rows.map(([label,value])=>label+": ₹"+Number(value||0).toLocaleString("en-IN",{maximumFractionDigits:2})).join(" · ");
+   const valid=document.createElement("div");valid.className="order-meta";
+   valid.textContent="Valid until "+(q.valid_until?new Date(q.valid_until).toLocaleString("en-IN"):"—");
+   const terms=document.createElement("div");terms.className="order-meta";
+   terms.textContent="Inclusions: "+(Array.isArray(q.inclusions)?q.inclusions.join(", "):"—")+" · Exclusions: "+(Array.isArray(q.exclusions)?q.exclusions.join(", "):"—");
+   card.append(title,scope,breakdown,valid,terms);
+   if(q.cancellation_rule||q.refund_rule){const rules=document.createElement("div");rules.className="order-meta";rules.textContent="Cancellation: "+(q.cancellation_rule||"As agreed")+" · Refund: "+(q.refund_rule||"As per applicable terms");card.append(rules);}
+   const actions=document.createElement("div");actions.className="crm-comms-actions";
+   if(q.quote_status==="SENT"){
+    const accept=document.createElement("button");accept.type="button";accept.className="primary";accept.textContent="Accept & Continue";
+    accept.onclick=()=>respondToMatterQuote(q.id,"accept",accept);
+    const decline=document.createElement("button");decline.type="button";decline.className="tab";decline.textContent="Decline";
+    decline.onclick=()=>respondToMatterQuote(q.id,"decline",decline);
+    actions.append(accept,decline);
+   }else if(q.quote_status==="ACCEPTED"&&q.final_order_id){
+    const pay=document.createElement("button");pay.type="button";pay.className="primary";pay.textContent="View / Pay Final Order";
+    pay.onclick=()=>payMatterQuoteOrder(q.final_order_id,pay);
+    actions.append(pay);
+   }
+   if(actions.childElementCount)card.append(actions);
+   target.append(card);
+  }
+ }catch(e){target.textContent="Unable to load quotations: "+(e.message||"service unavailable");}
+}
+async function respondToMatterQuote(quoteId,action,button){
+ const statusEl=$("matterQuotePaymentStatus");button.disabled=true;
+ try{
+  const {data,error}=await sb.rpc(action==="accept"?"ils_customer_accept_matter_quote":"ils_customer_decline_matter_quote",{p_quote_id:quoteId});
+  if(error||!data?.ok)throw new Error(error?.message||data?.message||"Unable to update quotation.");
+  if(action==="accept"&&data.payment_required){
+   statusEl.textContent="Quote accepted. Preparing your final service order payment…";
+   await payMatterQuoteOrder(data.order_id,button);
+  }else{
+   statusEl.textContent=action==="accept"?"Quotation accepted. No additional payment is due; your order has been activated.":"Quotation declined.";
+  }
+  await loadCustomerMatterQuotes();
+  await loadPaymentHistory();
+ }catch(e){statusEl.textContent=e.message||"Unable to process quotation.";button.disabled=false;}
+}
+async function payMatterQuoteOrder(orderId,button){
+ const statusEl=$("matterQuotePaymentStatus");
+ try{
+  const {data:order,error}=await sb.from("orders").select("id,order_number,total,currency,status").eq("id",orderId).maybeSingle();
+  if(error||!order)throw new Error(error?.message||"Final order could not be loaded.");
+  if(order.status==="paid"){statusEl.textContent="This final order is already paid and verified.";return;}
+  if(order.status!=="pending")throw new Error("This final order is not currently payable.");
+  if(!window.ILS_TOOLS?.payExistingOrder)throw new Error("Payment module is not ready. Refresh the page and try again.");
+  await window.ILS_TOOLS.payExistingOrder({
+   order_id:order.id,order_number:order.order_number,amount:Number(order.total),
+   currency:order.currency,service_name:"ILS Quoted Service",status:order.status
+  },{forceQr:true,paymentContainerId:"matterQuotePaymentStatus"});
+ }catch(e){statusEl.textContent=e.message||"Unable to start final order payment.";}
 }
 $("refreshMatterWorkspace").onclick=loadMatterWorkspace;
 async function loadCustomerProfile(user){
