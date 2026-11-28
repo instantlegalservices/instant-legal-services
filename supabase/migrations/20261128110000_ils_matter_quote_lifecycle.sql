@@ -243,6 +243,7 @@ declare
   v_source public.service_requests%rowtype;
   v_enquiry_order public.orders%rowtype;
   v_credit numeric(12,2):=0;
+  v_enquiry_credit_available numeric(12,2):=0;
   v_final_due numeric(12,2);
   v_final_request uuid;
   v_final_order uuid;
@@ -288,7 +289,13 @@ begin
     )
   order by o.created_at desc limit 1;
   if found and v_quote.ils_fee>0 then
-    v_credit:=least(v_enquiry_order.total,v_quote.ils_fee);
+    -- Credit only the paid line amount for the enquiry SKU, never unrelated
+    -- items that may share the same order.
+    select coalesce(sum(oi.line_total),0) into v_enquiry_credit_available
+    from public.order_items oi
+    join public.services enquiry_service on enquiry_service.id=oi.service_id
+    where oi.order_id=v_enquiry_order.id and enquiry_service.slug='ils-enquiry-fee-199';
+    v_credit:=least(v_enquiry_credit_available,v_quote.ils_fee);
     if v_credit>0 then
       insert into public.ils_matter_quote_credit_ledger(enquiry_order_id,quote_id,client_requirement_id,amount)
       values(v_enquiry_order.id,v_quote.id,v_quote.client_requirement_id,v_credit);
