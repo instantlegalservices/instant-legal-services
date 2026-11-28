@@ -41,7 +41,13 @@ console.log("UNIVERSAL_INTAKE_CRM_LINKAGE=PASS");
    ].join("\n");
    await page.route(/https:\/\/(cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|unpkg\.com\/@supabase\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:stub}));
    const base=(process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"");
-   await page.goto(base+"/catalog/"); await page.waitForTimeout(500);
+   await page.goto(base+"/catalog/"); await page.waitForTimeout(100);
+   if(await page.locator(".hub-card").count()!==6)throw new Error("The simplified service hub must show exactly six clear department choices.");
+   for(const target of ["/services/","/business-compliance.html","/government/","/advocates.html","/tools.html","full.html#business-plans"]){
+    if(!await page.locator(".hub-card[href]").evaluateAll(links=>links.some(a=>a.getAttribute("href").includes(target))))throw new Error("Service hub department route missing: "+target);
+   }
+   if(await page.locator(".ils-offer-card, .catalog-card, .plan-card").count()!==0)throw new Error("The simplified hub must not display the full catalogue, offer list or plans together.");
+   await page.goto(base+"/catalog/full.html"); await page.waitForTimeout(500);
    if(failures.length)throw new Error("Browser JS errors: "+failures.join("; "));
    if(await page.locator(".catalog-card").count()!==5)throw new Error("Only priced active services should render; status: "+await page.locator("#catalogStatus").innerText());
    if(await page.locator(".plan-card").count()!==6)throw new Error("All six business plan enquiry cards must render.");
