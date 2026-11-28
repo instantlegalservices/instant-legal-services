@@ -658,6 +658,7 @@ async function saveLead(id,button){
 // Full Client Requirements / CRM management restored.
 async function openLeadManager(id){
   const leadId=Number(id);
+  activeMatterQuoteDraftId=null;
   const lead=window.__ilsLeads?.find(x=>Number(x.id)===leadId);
   if(!lead){ msg("appMsg","Client record is not available. Refresh CRM and try again.","err"); return; }
   $("manageLeadId").value=leadId;
@@ -682,6 +683,7 @@ async function openLeadManager(id){
 }
 
 
+let activeMatterQuoteDraftId=null;
 async function loadMatterQuoteManager(leadId){
  const statusEl=$("matterQuoteStatus"),history=$("matterQuoteHistory"),select=$("matterQuoteServiceRequest");
  if(!statusEl||!history||!select)return;
@@ -700,6 +702,7 @@ async function loadMatterQuoteManager(leadId){
   }
   if(!select.options.length){const option=document.createElement("option");option.value="";option.textContent="No linked service request — a secure customer-linked request is required";select.append(option);}
   const rows=(Array.isArray(quotes)?quotes:[]).filter(q=>Number(q.client_requirement_id)===Number(leadId));
+  activeMatterQuoteDraftId=rows.find(q=>q.quote_status==="DRAFT")?.id||null;
   history.replaceChildren();
   if(!rows.length){history.textContent="No quotations have been created for this matter yet.";}
   else for(const q of rows){
@@ -725,7 +728,7 @@ async function saveMatterQuote(sendNow){
  try{
   const validUntil=new Date(validDate+"T23:59:59+05:30");
   const {data,error}=await sb.rpc("ils_admin_save_matter_quote",{
-   p_quote_id:null,p_service_request_id:requestId,
+   p_quote_id:activeMatterQuoteDraftId,p_service_request_id:requestId,
    p_government_fee:amount("matterQuoteGovernmentFee"),p_ils_fee:amount("matterQuoteIlsFee"),
    p_professional_fee:amount("matterQuoteProfessionalFee"),p_tax_amount:amount("matterQuoteTaxAmount"),
    p_scope_of_work:scope,p_inclusions:$("matterQuoteInclusions").value.split("\n").map(x=>x.trim()).filter(Boolean),
@@ -734,9 +737,11 @@ async function saveMatterQuote(sendNow){
    p_refund_rule:$("matterQuoteRefund").value.trim()||null
   });
   if(error||!data?.ok)throw new Error(error?.message||data?.message||"Quote could not be saved.");
+  activeMatterQuoteDraftId=data.quote_id;
   if(sendNow){
    const sent=await sb.rpc("ils_admin_send_matter_quote",{p_quote_id:data.quote_id});
    if(sent.error||!sent.data?.ok)throw new Error(sent.error?.message||sent.data?.message||"Draft saved but could not be sent.");
+   activeMatterQuoteDraftId=null;
    statusEl.textContent="Quote "+data.quote_number+" sent to the customer's Client Portal.";
   }else statusEl.textContent="Draft "+data.quote_number+" saved. Review and use Create & Send Quote when ready.";
   await loadMatterQuoteManager(leadId);
