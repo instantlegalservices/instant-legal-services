@@ -704,6 +704,13 @@ async function loadMatterQuoteManager(leadId){
   const rows=(Array.isArray(quotes)?quotes:[]).filter(q=>Number(q.client_requirement_id)===Number(leadId));
   const activeDraft=rows.find(q=>q.quote_status==="DRAFT")||null;
   activeMatterQuoteDraftId=activeDraft?.id||null;
+  if(!activeDraft){
+   select.value=select.options[0]?.value||"";
+   $("matterQuoteGovernmentFee").value="0";$("matterQuoteIlsFee").value="0";
+   $("matterQuoteProfessionalFee").value="0";$("matterQuoteTaxAmount").value="0";
+   $("matterQuoteScope").value="";$("matterQuoteInclusions").value="";$("matterQuoteExclusions").value="";
+   $("matterQuoteValidUntil").value="";$("matterQuoteCancellation").value="";$("matterQuoteRefund").value="";
+  }
   if(activeDraft){
    select.value=activeDraft.source_service_request_id||select.value;
    $("matterQuoteGovernmentFee").value=activeDraft.government_fee??0;
