@@ -211,7 +211,7 @@ async function loadCustomerMatterQuotes(){
   for(const q of quotes){
    const card=document.createElement("article");card.className="matter-card";
    const isExpired=q.quote_status==="SENT"&&q.valid_until&&new Date(q.valid_until).getTime()<=Date.now();
-   const title=document.createElement("h3");title.textContent=(q.quote_number||"ILS Quotation")+" · "+(isExpired?"EXPIRED":q.quote_status);
+   const title=document.createElement("h3");title.textContent=(q.quote_number||"ILS Quotation")+" · "+(isExpired?"EXPIRED":q.quote_status)+(q.quote_status==="ACCEPTED"?" · PAYMENT "+String(q.final_order_status||"pending").toUpperCase():"");
    const scope=document.createElement("p");scope.textContent=q.scope_of_work||"Scope not available";
    const rows=[
     ["Government / statutory fee",q.government_fee],["ILS service fee",q.ils_fee],
@@ -235,10 +235,13 @@ async function loadCustomerMatterQuotes(){
     const decline=document.createElement("button");decline.type="button";decline.className="tab";decline.textContent="Decline";
     decline.onclick=()=>respondToMatterQuote(q.id,"decline",decline);
     actions.append(accept,decline);
-   }else if(q.quote_status==="ACCEPTED"&&q.final_order_id){
+   }else if(q.quote_status==="ACCEPTED"&&q.final_order_id&&q.final_order_status!=="paid"){
     const pay=document.createElement("button");pay.type="button";pay.className="primary";pay.textContent="View / Pay Final Order";
     pay.onclick=()=>payMatterQuoteOrder(q.final_order_id,pay);
     actions.append(pay);
+   }else if(q.quote_status==="ACCEPTED"&&q.final_order_status==="paid"){
+    const paid=document.createElement("span");paid.className="note ok";paid.textContent="Payment verified · Your final order is paid.";
+    actions.append(paid);
    }
    if(actions.childElementCount)card.append(actions);
    target.append(card);
