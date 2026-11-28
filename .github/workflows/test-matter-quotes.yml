@@ -11,9 +11,15 @@ on:
       - "assets/ils-tools.js"
       - ".github/workflows/test-matter-quotes.yml"
   push:
+    branches:
+      - main
     paths:
       - "supabase/migrations/20261128110000_ils_matter_quote_lifecycle.sql"
       - "scripts/test-matter-quotes-postgres.sql"
+      - "scripts/test-matter-quote-ui.js"
+      - "admin.html"
+      - "customer-portal.html"
+      - "assets/ils-tools.js"
       - ".github/workflows/test-matter-quotes.yml"
 
 jobs:
