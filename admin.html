@@ -731,7 +731,8 @@ async function loadMatterQuoteManager(leadId){
    const title=document.createElement("strong");title.textContent=q.quote_number+" · "+q.quote_status;
    const amount=document.createElement("div");amount.textContent="Government ₹"+Number(q.government_fee).toLocaleString("en-IN")+" · ILS ₹"+Number(q.ils_fee).toLocaleString("en-IN")+" · Professional ₹"+Number(q.professional_fee).toLocaleString("en-IN")+" · Tax ₹"+Number(q.tax_amount).toLocaleString("en-IN");
    const total=document.createElement("div");total.textContent="Total ₹"+Number(q.total_customer_payable).toLocaleString("en-IN")+" · Valid until "+new Date(q.valid_until).toLocaleDateString("en-IN");
-   card.append(title,amount,total);history.append(card);
+   const payment=document.createElement("div");payment.textContent=q.final_order_id?"Final order: "+q.final_order_id+" · Payment: "+String(q.final_order_status||"pending").toUpperCase():"Final order not created";
+   card.append(title,amount,total,payment);history.append(card);
   }
   statusEl.textContent=(requests||[]).length+" linked service request(s) · "+rows.length+" quotation(s).";
  }catch(e){statusEl.textContent="Unable to load quotations: "+(e.message||"service unavailable");history.textContent="Quotation data could not be loaded.";}
