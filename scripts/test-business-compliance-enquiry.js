@@ -14,7 +14,7 @@ await page.route("**/assets/ils-core.js*", route =>
   route.fulfill({
     status: 200,
     contentType: "application/javascript",
-    body: "window.__submittedLead=null;window.ILS={submitRequirement:async payload=>{window.__submittedLead=payload;}};"
+    body: "window.__submittedLead=null;window.ILS={init:async()=>{},submitRequirement:async payload=>{window.__submittedLead=payload;}};"
   })
 );
 await page.route("**/assets/ils-payments.js*", route =>
