@@ -115,8 +115,7 @@ BEGIN
   BEGIN
     PERFORM public.ils_admin_list_matter_quotes(10);
     RAISE EXCEPTION 'non-admin could list matter quotes';
-  EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM='non-admin could list matter quotes' THEN RAISE; END IF;
+  EXCEPTION WHEN SQLSTATE '42501' THEN
     IF SQLERRM<>'ADMIN_REQUIRED' THEN RAISE; END IF;
   END;
 END;
