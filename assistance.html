@@ -411,9 +411,9 @@ document.addEventListener("DOMContentLoaded",()=>{
    const inquiryPayload={name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief};
    if(isClientServiceInquiry){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
-    // Preserve the CRM lead and create the adjustable initial-enquiry payment order for every catalogue service.
-    await ILS.submitRequirement(inquiryPayload);
-    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,catalogue_offer_code:catalogueOffer?catalogueOffer.code:null,catalogue_offer_displayed_price_inr:catalogueOffer?catalogueOffer.displayedPrice:null,catalogue_offer_period:catalogueOffer?catalogueOffer.period:null,business_type:businessType,selected_business_plan:selectedBusinessPlan||null,package_billing_cycle:packageCycle||null,package_industry:packageIndustry||null,package_invoice_volume:packageInvoices||null,package_gstin_count:packageGstins||null,package_modules:packageModules,package_estimate:packageCycle!=="one_time"?packageEstimate:null,...inquiryPayload,brief:finalBrief.slice(0,3000)};
+    // The order-creation trigger creates and links the CRM lead atomically to this service request.
+    // Do not insert a second standalone lead before checkout.
+    const details={mode:"client-service-inquiry",intake_source:"ils-universal-service-form",intake_service:intakeService,service_option:selectedOption,catalogue_offer_code:catalogueOffer?catalogueOffer.code:null,catalogue_offer_displayed_price_inr:catalogueOffer?catalogueOffer.displayedPrice:null,catalogue_offer_period:catalogueOffer?catalogueOffer.period:null,business_type:businessType,selected_business_plan:selectedBusinessPlan||null,package_billing_cycle:packageCycle||null,package_industry:packageIndustry||null,package_invoice_volume:packageInvoices||null,package_gstin_count:packageGstins||null,package_modules:packageModules,package_estimate:packageCycle!=="one_time"?packageEstimate:null,...inquiryPayload,brief:finalBrief.slice(0,3000)};
     s.className="status";s.textContent="Enquiry saved. Preparing your ₹299 initial enquiry payment…";
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
