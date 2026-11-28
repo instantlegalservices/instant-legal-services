@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "business-compliance.html"
+      - "assistance.html"
+      - "scripts/test-popular-assistance.js"
       - "assets/ils-core.js"
       - "scripts/test-business-compliance-enquiry.js"
       - "scripts/test-public-lead-privileges.js"
