@@ -7,25 +7,36 @@ const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const pageErrors = [];
 page.on("pageerror", error => pageErrors.push(error.message));
 
+// Install deterministic test globals before any deferred application script runs.
+await page.addInitScript(() => {
+  window.__submittedLead = null;
+  window.__orderCall = null;
+  window.ILS = {
+    init: async () => {},
+    submitRequirement: async payload => {
+      window.__submittedLead = structuredClone(payload);
+      return { ok: true };
+    }
+  };
+  window.ILS_TOOLS = {
+    createOrder: async (...args) => {
+      window.__orderCall = structuredClone(args);
+      return { ok: true };
+    }
+  };
+});
+
 await page.route("https://unpkg.com/@supabase/supabase-js@2", route =>
   route.fulfill({ status: 200, contentType: "application/javascript", body: "window.supabase={};" })
 );
 await page.route("**/assets/ils-core.js*", route =>
-  route.fulfill({
-    status: 200,
-    contentType: "application/javascript",
-    body: "window.__submittedLead=null;window.ILS={init:async()=>{},submitRequirement:async payload=>{window.__submittedLead=payload;}};"
-  })
+  route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
 );
 await page.route("**/assets/ils-payments.js*", route =>
   route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
 );
 await page.route("**/assets/ils-tools.js*", route =>
-  route.fulfill({
-    status: 200,
-    contentType: "application/javascript",
-    body: "window.__orderCall=null;window.ILS_TOOLS={createOrder:async(...args)=>{window.__orderCall=args;}};"
-  })
+  route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
 );
 
 try {
@@ -69,8 +80,6 @@ try {
   await page.evaluate(() => {
     window.__submittedLead = null;
     window.__orderCall = null;
-    // Both test doubles are installed before DOMContentLoaded so the form and
-    // payment module resolve the same deterministic global objects.
   });
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299" }).waitFor();
