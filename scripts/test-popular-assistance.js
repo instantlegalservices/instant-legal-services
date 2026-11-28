@@ -172,7 +172,7 @@ if(!inquiryFlow||inquiryFlow.includes("ILS.submitRequirement"))throw new Error("
     await page.locator("#assistForm button[type=submit]").click();
     await page.waitForFunction(()=>window.__ilsInquiryTest?.order!==null);
     const inquiryFlow=await page.evaluate(()=>window.__ilsInquiryTest);
-    if(!inquiryFlow.lead||inquiryFlow.lead.state!=="Uttar Pradesh"||inquiryFlow.lead.mobile!=="9876543210")throw new Error("Catalogue enquiry CRM lead payload missing or incorrect.");
+    if(inquiryFlow.lead!==null||inquiryFlow.order?.details?.intake_source!=="ils-universal-service-form"||inquiryFlow.order?.details?.name!=="CI Checkout Test"||inquiryFlow.order?.details?.mobile!=="9876543210"||inquiryFlow.order?.details?.state!=="Uttar Pradesh"||inquiryFlow.order?.details?.city!=="Bareilly")throw new Error("Catalogue enquiry must pass the complete CRM lead payload to the atomic service-order trigger without a duplicate standalone lead insert.");
     if(inquiryFlow.order?.slug!=="ils-enquiry-fee-199"||inquiryFlow.order?.details?.mode!=="client-service-inquiry")throw new Error("Catalogue enquiry did not create the initial enquiry order.");
     if(inquiryFlow.order?.options?.autoPay!==true||inquiryFlow.order?.options?.forceQr!==true||inquiryFlow.order?.options?.paymentContainerId!=="assistStatus")throw new Error("Catalogue enquiry did not launch UPI QR checkout.");
     if(!(await page.locator("#assistStatus").innerText()).includes("Preparing your ₹299"))throw new Error("Catalogue enquiry payment preparation status missing.");
