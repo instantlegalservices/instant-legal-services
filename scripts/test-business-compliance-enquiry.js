@@ -45,7 +45,11 @@ try {
   await page.waitForURL(/assistance\.html\?service=business-compliance/);
   assert.equal(await page.locator("#assistForm").count(), 1, "the existing universal form must be the only business intake form");
   assert.equal(await page.locator("#businessFields").isVisible(), true, "business-type field must appear for business service");
-  assert.equal(await page.locator("#businessType option").count(), 7, "business-type choices must be available");
+  assert.equal(await page.locator("#businessType option").count(), 20, "all current business-type choices, including the placeholder, must be available");
+  const businessTypes = await page.locator("#businessType option").allTextContents();
+  for (const choice of ["Retail shop", "Kirana / FMCG / Grocery", "Wholesale / Trading", "Manufacturer", "Import / Export", "Restaurant / Food Business", "NGO / Trust / Society", "Other"]) {
+    assert.ok(businessTypes.includes(choice), "business-type choice must remain available: " + choice);
+  }
   assert.equal(await page.locator("#serviceOption option").count(), 9, "business service choices must be available");
   assert.equal(await page.locator("#matter").inputValue(), "Commercial / Corporate");
 
