@@ -254,23 +254,32 @@ begin
   if v_quote.quote_status='ACCEPTED' and v_quote.final_order_id is not null then
     return jsonb_build_object('ok',true,'quote_id',v_quote.id,'order_id',v_quote.final_order_id,
       'order_number',(select order_number from public.orders where id=v_quote.final_order_id),
-      'amount',(select total from public.orders where id=v_quote.final_order_id),'status','ACCEPTED');
+      'amount',(select total from public.orders where id=v_quote.final_order_id),
+      'credit_applied',v_quote.enquiry_credit_amount,
+      'payment_required',coalesce((select status='pending' from public.orders where id=v_quote.final_order_id),false),
+      'status','ACCEPTED');
   end if;
   if v_quote.quote_status<>'SENT' then raise exception 'QUOTE_NOT_ACCEPTABLE'; end if;
   if v_quote.valid_until<=now() then
     update public.ils_matter_quotes set quote_status='EXPIRED',updated_at=now() where id=v_quote.id;
-    raise exception 'QUOTE_EXPIRED';
+    return jsonb_build_object('ok',false,'quote_id',v_quote.id,'status','EXPIRED','message','QUOTE_EXPIRED');
   end if;
   select * into v_source from public.service_requests
    where id=v_quote.source_service_request_id and user_id=v_user
      and client_requirement_id=v_quote.client_requirement_id for update;
   if not found then raise exception 'QUOTE_MATTER_OWNERSHIP_MISMATCH' using errcode='42501'; end if;
 
+  -- The initial ₹299 enquiry order may belong to an earlier request under
+  -- the same CRM matter. Resolve credit by authenticated customer + CRM matter,
+  -- not only by the particular service request selected for this quotation.
   select o.* into v_enquiry_order
   from public.orders o
   join public.order_items oi on oi.order_id=o.id
   join public.services s on s.id=oi.service_id
-  where o.service_request_id=v_source.id and o.user_id=v_user
+  join public.service_requests paid_request on paid_request.id=o.service_request_id
+  where paid_request.client_requirement_id=v_quote.client_requirement_id
+    and paid_request.user_id=v_user
+    and o.user_id=v_user
     and o.status='paid' and s.slug='ils-enquiry-fee-199'
   order by o.created_at desc limit 1;
   if found and v_quote.ils_fee>0 then
