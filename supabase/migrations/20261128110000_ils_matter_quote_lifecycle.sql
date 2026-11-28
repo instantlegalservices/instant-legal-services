@@ -225,8 +225,7 @@ begin
     from public.ils_matter_quotes q
     join public.service_requests sr on sr.id=q.source_service_request_id
     where q.user_id=v_user and sr.user_id=v_user
-      and (q.client_requirement_id=v_profile.client_requirement_id
-           or sr.client_requirement_id=q.client_requirement_id)
+      and sr.client_requirement_id=q.client_requirement_id
       and q.quote_status in ('SENT','ACCEPTED','DECLINED','EXPIRED')
   ),'[]'::jsonb);
 end;
