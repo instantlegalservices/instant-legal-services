@@ -127,6 +127,34 @@ BEGIN
 END;
 $customer_accept$;
 
+-- Verify that the customer quotation RPC reflects the server-side order state
+-- after the existing payment-verification flow marks the final order paid.
+DO $payment_status_projection$
+DECLARE v_quote_id uuid; v_order_id uuid; v_quotes jsonb;
+BEGIN
+  v_quote_id:=current_setting('test.quote_id')::uuid;
+  SELECT final_order_id INTO v_order_id FROM public.ils_matter_quotes WHERE id=v_quote_id;
+  IF (SELECT status FROM public.orders WHERE id=v_order_id)<>'pending' THEN
+    RAISE EXCEPTION 'new final order should begin pending';
+  END IF;
+  UPDATE public.orders SET status='paid' WHERE id=v_order_id;
+  PERFORM set_config('test.user_id','11111111-1111-4111-8111-111111111111',true);
+  v_quotes:=public.ils_customer_matter_quotes();
+  IF v_quotes->0->>'final_order_status'<>'paid' THEN
+    RAISE EXCEPTION 'customer quotation view did not reflect paid order status: %',v_quotes;
+  END IF;
+  PERFORM set_config('test.user_id','22222222-2222-4222-8222-222222222222',true);
+  PERFORM set_config('test.is_admin','true',true);
+  v_quotes:=public.ils_admin_list_matter_quotes(10);
+  IF NOT EXISTS (
+    SELECT 1 FROM jsonb_array_elements(v_quotes) q
+    WHERE q->>'id'=v_quote_id::text AND q->>'final_order_status'='paid'
+  ) THEN
+    RAISE EXCEPTION 'admin quotation history did not reflect paid order status: %',v_quotes;
+  END IF;
+END;
+$payment_status_projection$;
+
 -- A second quote for the same CRM matter may proceed, but cannot reuse the
 -- already-consumed ₹299 enquiry payment.
 DO $second_quote_no_reuse$
