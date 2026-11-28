@@ -42,6 +42,9 @@ console.log("UNIVERSAL_INTAKE_CRM_LINKAGE=PASS");
    await page.route(/https:\/\/(cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|unpkg\.com\/@supabase\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:stub}));
    const base=(process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"");
    await page.goto(base+"/catalog/"); await page.waitForTimeout(100);
+   const hubLogo=page.locator(".hub-brand img");
+   if(await hubLogo.getAttribute("src")!=="../assets/ils-logo.jpg")throw new Error("Service hub must use the existing ILS logo asset.");
+   if(await hubLogo.evaluate(img=>getComputedStyle(img).objectFit)!=="contain")throw new Error("Service hub must show the complete original logo without cropping.");
    if(await page.locator(".primary-card").count()!==3)throw new Error("The simplified service hub must show exactly three primary customer paths.");
    const primaryRoutes=await page.locator(".primary-card[href]").evaluateAll(links=>links.map(a=>a.getAttribute("href")));
    for(const target of ["/services/","/business-compliance.html","/government/"]){
