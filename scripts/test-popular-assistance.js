@@ -4,7 +4,7 @@ const fs = require("node:fs");
 
 const assistanceSource=fs.readFileSync("assistance.html","utf8");
 if(!assistanceSource.includes('intake_source:"ils-universal-service-form"'))throw new Error("Catalogue checkout must use the database CRM-link trigger source marker.");
-const inquiryFlow=assistanceSource.split("if(isClientServiceInquiry){")[1]?.split("\\n   }\\n   await ILS.submitRequirement")[0]||"";
+const inquiryFlow=assistanceSource.split("if(isClientServiceInquiry){")[1]?.split("\n   }\n   await ILS.submitRequirement")[0]||"";
 if(!inquiryFlow||inquiryFlow.includes("ILS.submitRequirement"))throw new Error("Catalogue enquiry must create its CRM lead through the linked service-order transaction, not a duplicate standalone insert.");
 
 (async () => {
