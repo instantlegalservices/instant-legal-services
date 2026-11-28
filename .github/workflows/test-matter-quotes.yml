@@ -35,6 +35,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
+      - name: Verify Admin CRM, customer portal and final-order payment handoff
+        run: node scripts/test-matter-quote-ui.js
       - name: Execute matter quotation lifecycle on disposable PostgreSQL 16
         env:
           PGPASSWORD: postgres
