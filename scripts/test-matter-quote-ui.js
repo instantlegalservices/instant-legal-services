@@ -1,0 +1,17 @@
+"use strict";
+const fs=require("node:fs");
+const vm=require("node:vm");
+const admin=fs.readFileSync("admin.html","utf8");
+const portal=fs.readFileSync("customer-portal.html","utf8");
+const tools=fs.readFileSync("assets/ils-tools.js","utf8");
+const migration=fs.readFileSync("supabase/migrations/20261128110000_ils_matter_quote_lifecycle.sql","utf8");
+for(const id of ["matterQuoteServiceRequest","matterQuoteGovernmentFee","matterQuoteIlsFee","matterQuoteProfessionalFee","matterQuoteTaxAmount","matterQuoteScope","saveMatterQuoteDraftBtn","sendMatterQuoteBtn","matterQuoteHistory"])if(!admin.includes('id="'+id+'"'))throw new Error("Admin quotation control missing: "+id);
+for(const rpc of ["ils_admin_list_matter_quotes","ils_admin_save_matter_quote","ils_admin_send_matter_quote"])if(!admin.includes(rpc))throw new Error("Admin quotation RPC not wired: "+rpc);
+for(const id of ["myMatterQuotes","matterQuotePaymentStatus"])if(!portal.includes('id="'+id+'"'))throw new Error("Customer quotation workspace element missing: "+id);
+for(const rpc of ["ils_customer_matter_quotes","ils_customer_accept_matter_quote","ils_customer_decline_matter_quote"])if(!portal.includes(rpc))throw new Error("Customer quotation RPC not wired: "+rpc);
+if(!portal.includes('assets/ils-core.js')||!portal.includes('assets/ils-tools.js')||!portal.includes("payExistingOrder"))throw new Error("Customer portal final-order payment handoff is missing.");
+if(!tools.includes("async function payExistingOrder")||!tools.includes("await startRazorpay("))throw new Error("Server-created quote orders do not use the existing secure QR/proof payment flow.");
+for(const tag of [...admin.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)])new vm.Script(tag[1],{filename:"admin.html inline script"});
+for(const tag of [...portal.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)])new vm.Script(tag[1],{filename:"customer-portal.html inline script"});
+if(!migration.includes("ils_matter_quote_credit_ledger")||!migration.includes("uq_ils_matter_quotes_one_accepted_per_request")||!migration.includes("ils_customer_accept_matter_quote"))throw new Error("Matter quote ledger or acceptance invariants missing.");
+console.log("PASS: Admin quote controls, customer accept/decline UI, server-created final-order payment handoff and inline JavaScript syntax.");
