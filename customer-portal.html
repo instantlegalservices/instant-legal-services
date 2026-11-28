@@ -221,11 +221,12 @@ async function loadCustomerMatterQuotes(){
    ];
    const breakdown=document.createElement("div");breakdown.className="order-meta";
    breakdown.textContent=rows.map(([label,value])=>label+": ₹"+Number(value||0).toLocaleString("en-IN",{maximumFractionDigits:2})).join(" · ");
+   const creditNote=document.createElement("div");creditNote.className="order-meta";creditNote.textContent="Any verified initial enquiry payment for this same matter is credited once against the ILS fee on acceptance. Government/statutory and professional fees are not reduced by this credit.";
    const valid=document.createElement("div");valid.className="order-meta";
    valid.textContent="Valid until "+(q.valid_until?new Date(q.valid_until).toLocaleString("en-IN"):"—");
    const terms=document.createElement("div");terms.className="order-meta";
    terms.textContent="Inclusions: "+(Array.isArray(q.inclusions)?q.inclusions.join(", "):"—")+" · Exclusions: "+(Array.isArray(q.exclusions)?q.exclusions.join(", "):"—");
-   card.append(title,scope,breakdown,valid,terms);
+   card.append(title,scope,breakdown,creditNote,valid,terms);
    if(q.cancellation_rule||q.refund_rule){const rules=document.createElement("div");rules.className="order-meta";rules.textContent="Cancellation: "+(q.cancellation_rule||"As agreed")+" · Refund: "+(q.refund_rule||"As per applicable terms");card.append(rules);}
    const actions=document.createElement("div");actions.className="crm-comms-actions";
    if(q.quote_status==="SENT"&&!isExpired){
