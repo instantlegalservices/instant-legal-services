@@ -104,6 +104,18 @@ BEGIN
   IF (SELECT count(*) FROM public.orders WHERE service_request_id=(SELECT final_service_request_id FROM public.ils_matter_quotes WHERE id=v_quote_id))<>1 THEN
     RAISE EXCEPTION 'acceptance did not create exactly one final order';
   END IF;
+  IF NOT EXISTS(
+    SELECT 1 FROM public.orders o
+    JOIN public.service_requests sr ON sr.id=o.service_request_id
+    WHERE o.id=(SELECT final_order_id FROM public.ils_matter_quotes WHERE id=v_quote_id)
+      AND o.total=1300 AND o.status='pending'
+      AND sr.client_requirement_id=1 AND sr.user_id='11111111-1111-4111-8111-111111111111'
+  ) THEN RAISE EXCEPTION 'final order amount, payment status or CRM matter link is incorrect'; END IF;
+  IF NOT EXISTS(
+    SELECT 1 FROM public.order_items oi
+    WHERE oi.order_id=(SELECT final_order_id FROM public.ils_matter_quotes WHERE id=v_quote_id)
+      AND oi.service_id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' AND oi.line_total=1300
+  ) THEN RAISE EXCEPTION 'final order item does not match the quoted service and amount'; END IF;
   IF (SELECT count(*) FROM public.ils_matter_quote_credit_ledger WHERE enquiry_order_id='dddddddd-dddd-4ddd-8ddd-dddddddddddd')<>1 THEN
     RAISE EXCEPTION 'enquiry credit was not recorded exactly once';
   END IF;
