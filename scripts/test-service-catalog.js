@@ -41,7 +41,22 @@ console.log("UNIVERSAL_INTAKE_CRM_LINKAGE=PASS");
    ].join("\n");
    await page.route(/https:\/\/(cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|unpkg\.com\/@supabase\/supabase-js@2)/,route=>route.fulfill({status:200,contentType:"application/javascript",body:stub}));
    const base=(process.env.BASE_URL||"http://127.0.0.1:4173/").replace(/\/$/,"");
-   await page.goto(base+"/catalog/"); await page.waitForTimeout(500);
+   await page.goto(base+"/catalog/"); await page.waitForTimeout(100);
+   const hubLogo=page.locator(".hub-brand img");
+   if(await hubLogo.getAttribute("src")!=="../assets/ils-logo.jpg")throw new Error("Service hub must use the existing ILS logo asset.");
+   if(await hubLogo.evaluate(img=>getComputedStyle(img).objectFit)!=="contain")throw new Error("Service hub must show the complete original logo without cropping.");
+   if(await page.locator(".primary-card").count()!==3)throw new Error("The simplified service hub must show exactly three primary customer paths.");
+   const primaryRoutes=await page.locator(".primary-card[href]").evaluateAll(links=>links.map(a=>a.getAttribute("href")));
+   for(const target of ["/services/","/business-compliance.html","/government/"]){
+    if(!primaryRoutes.some(href=>href.includes(target)))throw new Error("Primary service hub route missing: "+target);
+   }
+   const quickRoutes=await page.locator(".quick-links a[href]").evaluateAll(links=>links.map(a=>a.getAttribute("href")));
+   for(const target of ["/advocates.html","/tools.html","full.html#business-plans","full.html#individual-services","full.html#custom-plan-builder","/assistance.html"]){
+    if(!quickRoutes.some(href=>href.includes(target)))throw new Error("Secondary service hub route missing: "+target);
+   }
+   if(await page.locator(".primary-card").filter({hasText:"Legal Help"}).count()!==1||await page.locator(".primary-card").filter({hasText:"Business & Tax"}).count()!==1||await page.locator(".primary-card").filter({hasText:"Government Services"}).count()!==1)throw new Error("Primary customer paths must have clear labels.");
+   if(await page.locator(".ils-offer-card, .catalog-card, .plan-card").count()!==0)throw new Error("The simplified hub must not display the full catalogue, offer list or plans together.");
+   await page.goto(base+"/catalog/full.html"); await page.waitForTimeout(500);
    if(failures.length)throw new Error("Browser JS errors: "+failures.join("; "));
    if(await page.locator(".catalog-card").count()!==5)throw new Error("Only priced active services should render; status: "+await page.locator("#catalogStatus").innerText());
    if(await page.locator(".plan-card").count()!==6)throw new Error("All six business plan enquiry cards must render.");
@@ -76,7 +91,7 @@ console.log("UNIVERSAL_INTAKE_CRM_LINKAGE=PASS");
    if(await page.locator(".catalog-card img").count()!==5)throw new Error("Each purchasable catalogue service must have a relevant photo.");
    const renderedImages=await page.locator(".catalog-card img").evaluateAll(imgs=>({urls:imgs.map(img=>img.src),alts:imgs.map(img=>img.alt),lazy:imgs.every(img=>img.loading==="lazy"&&img.decoding==="async"),fallbacks:imgs.every(img=>Boolean(img.dataset.fallback))}));
    if(new Set(renderedImages.urls).size!==5||renderedImages.alts.some(alt=>!alt.includes("illustrative service image"))||!renderedImages.lazy||!renderedImages.fallbacks)throw new Error("Each visible service card must have a distinct, descriptive, lazy-loaded image with a fallback.");
-   const catalogueSource=fs.readFileSync("catalog/index.html","utf8");
+   const catalogueSource=fs.readFileSync("catalog/full.html","utf8");
    const imageMapBlock=catalogueSource.split("const serviceImageBySlug={")[1]?.split("};")[0]||"";
    const mappedImages=[...imageMapBlock.matchAll(/"([^"]+)":photo\("(photo-[^"]+)"\)/g)];
    if(mappedImages.length!==21||new Set(mappedImages.map(match=>match[2])).size!==21)throw new Error("All 21 Production paid-service SKUs must have their own distinct image mapping.");
