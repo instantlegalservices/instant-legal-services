@@ -702,7 +702,21 @@ async function loadMatterQuoteManager(leadId){
   }
   if(!select.options.length){const option=document.createElement("option");option.value="";option.textContent="No linked service request — a secure customer-linked request is required";select.append(option);}
   const rows=(Array.isArray(quotes)?quotes:[]).filter(q=>Number(q.client_requirement_id)===Number(leadId));
-  activeMatterQuoteDraftId=rows.find(q=>q.quote_status==="DRAFT")?.id||null;
+  const activeDraft=rows.find(q=>q.quote_status==="DRAFT")||null;
+  activeMatterQuoteDraftId=activeDraft?.id||null;
+  if(activeDraft){
+   select.value=activeDraft.source_service_request_id||select.value;
+   $("matterQuoteGovernmentFee").value=activeDraft.government_fee??0;
+   $("matterQuoteIlsFee").value=activeDraft.ils_fee??0;
+   $("matterQuoteProfessionalFee").value=activeDraft.professional_fee??0;
+   $("matterQuoteTaxAmount").value=activeDraft.tax_amount??0;
+   $("matterQuoteScope").value=activeDraft.scope_of_work||"";
+   $("matterQuoteInclusions").value=Array.isArray(activeDraft.inclusions)?activeDraft.inclusions.join("\n"):"";
+   $("matterQuoteExclusions").value=Array.isArray(activeDraft.exclusions)?activeDraft.exclusions.join("\n"):"";
+   $("matterQuoteValidUntil").value=activeDraft.valid_until?new Date(activeDraft.valid_until).toISOString().slice(0,10):"";
+   $("matterQuoteCancellation").value=activeDraft.cancellation_rule||"";
+   $("matterQuoteRefund").value=activeDraft.refund_rule||"";
+  }
   history.replaceChildren();
   if(!rows.length){history.textContent="No quotations have been created for this matter yet.";}
   else for(const q of rows){
