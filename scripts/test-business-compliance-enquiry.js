@@ -14,7 +14,7 @@ await page.route("**/assets/ils-core.js*", route =>
   route.fulfill({
     status: 200,
     contentType: "application/javascript",
-    body: "window.__submittedLead=null;window.ILS={};"
+    body: "window.__submittedLead=null;window.ILS={submitRequirement:async payload=>{window.__submittedLead=payload;}};"
   })
 );
 await page.route("**/assets/ils-payments.js*", route =>
@@ -24,7 +24,7 @@ await page.route("**/assets/ils-tools.js*", route =>
   route.fulfill({
     status: 200,
     contentType: "application/javascript",
-    body: "window.__orderCall=null;window.ILS_TOOLS={};"
+    body: "window.__orderCall=null;window.ILS_TOOLS={createOrder:async(...args)=>{window.__orderCall=args;}};"
   })
 );
 
@@ -69,8 +69,8 @@ try {
   await page.evaluate(() => {
     window.__submittedLead = null;
     window.__orderCall = null;
-    window.ILS.submitRequirement = async payload => { window.__submittedLead = payload; };
-    window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
+    // Both test doubles are installed before DOMContentLoaded so the form and
+    // payment module resolve the same deterministic global objects.
   });
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299" }).waitFor();
@@ -101,7 +101,7 @@ try {
   await page.locator("#consent").check();
   await page.evaluate(() => {
     window.__orderCall = null;
-    window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
+    // Reuse the payment test double installed before DOMContentLoaded.
   });
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299 UPI payment" }).waitFor();
