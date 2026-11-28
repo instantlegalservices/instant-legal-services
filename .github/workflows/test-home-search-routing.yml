@@ -10,6 +10,14 @@ on:
       - "scripts/test-popular-assistance.js"
       - "popular-assistance.html"
       - "business-compliance.html"
+      - "catalog/index.html"
+      - "services/**"
+      - "sitemap.xml"
+      - "scripts/test-service-seo-pages.js"
+      - "scripts/generate-service-seo-pages.js"
+      - "services/service-registry.json"
+      - "assistance.html"
+      - "scripts/test-service-catalog.js"
       - ".github/workflows/test-home-search-routing.yml"
   push:
     branches:
@@ -59,3 +67,14 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:4173/
         run: node scripts/test-popular-assistance.js
+
+      - name: Validate service SEO registry and generation coverage
+        run: node scripts/generate-service-seo-pages.js --check
+
+      - name: Run service SEO and sitemap regression
+        run: node scripts/test-service-seo-pages.js
+
+      - name: Run unified service catalogue browser regression
+        env:
+          BASE_URL: http://127.0.0.1:4173/
+        run: node scripts/test-service-catalog.js

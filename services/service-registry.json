@@ -1,0 +1,937 @@
+{
+  "version": 1,
+  "site": "https://instantlegalservices.in",
+  "services": [
+    {
+      "slug": "business-legal-review",
+      "title": "Business Legal Review | Instant Legal Services",
+      "description": "Review business contracts, policies and commercial documents with a clear scope, issue list and practical next steps.",
+      "h1": "Business Legal Review",
+      "summary": "Review business contracts, policies and commercial documents with a clear scope, issue list and practical next steps.",
+      "documents": [
+        "Complete document with schedules and annexures",
+        "Names and roles of the parties",
+        "Short explanation of the transaction and business objective",
+        "Specific clauses or risks you want reviewed",
+        "Related emails, notices or prior drafts, if relevant"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Contract and agreement review",
+            "Vendor, customer and service-provider terms",
+            "Commercial risk observations and clause-level issues",
+            "Policy, notice and business correspondence review"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Share the document type and business context",
+            "ILS checks scope, jurisdiction and document volume",
+            "Applicable professional fee and deliverables are confirmed",
+            "Review observations are shared through the agreed channel"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. A review identifies issues within the agreed scope; it cannot eliminate every commercial or legal risk.",
+            "Yes, but the review will be limited to the supplied material and context.",
+            "Request a business legal review →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "case-preparation",
+      "title": "Case Preparation Pack | Instant Legal Services",
+      "description": "Organise case facts, chronology, documents, issues and research requirements into a structured preparation pack.",
+      "h1": "Case Preparation Pack",
+      "summary": "Organise case facts, chronology, documents, issues and research requirements into a structured preparation pack.",
+      "documents": [
+        "Case number, court and next date, if available",
+        "Existing pleadings, applications and replies",
+        "Orders, notices and relevant correspondence",
+        "Evidence or records relevant to the dispute",
+        "A short factual timeline and immediate objective"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Chronology of material events",
+            "Index of supplied documents and evidence",
+            "Issue and question checklist",
+            "Hearing or consultation preparation notes, as agreed"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Submit the case type and available records",
+            "ILS checks volume, urgency and requested deliverables",
+            "Fee and preparation scope are confirmed",
+            "The structured pack is prepared for review with your advocate"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Court appearance or representation requires a separate engagement with an eligible advocate.",
+            "Start with relevant records only. Additional documents will be requested if needed.",
+            "Request case preparation →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "legal-consultation",
+      "title": "Initial Legal Consultation | Instant Legal Services",
+      "description": "Arrange an initial legal issue assessment with an appropriate independent legal professional, subject to availability and confirmed scope.",
+      "h1": "Initial Legal Consultation",
+      "summary": "Arrange an initial legal issue assessment with an appropriate independent legal professional, subject to availability and confirmed scope.",
+      "documents": [
+        "Brief summary of the issue and desired outcome",
+        "Relevant dates and location",
+        "Any notice, order, agreement or case number",
+        "Names of parties and their relationship to the matter",
+        "Urgent deadlines or upcoming hearing date, if any"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Initial discussion of the legal issue",
+            "Identification of relevant jurisdiction and urgency",
+            "Preliminary document and next-step checklist",
+            "Clarification of further professional work, if required"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Submit a short issue summary",
+            "ILS checks category, location and professional availability",
+            "Consultation format, fee and scope are confirmed",
+            "Consultation is scheduled after acceptance"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. The ₹299 initial enquiry fee, where applicable, is separate and credited against eligible same-matter ILS fees if you proceed. Consultation fees are confirmed separately.",
+            "No outcome is guaranteed. Advice depends on facts, documents and applicable law.",
+            "Request a legal consultation →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "advocate-reviewed-draft",
+      "title": "Advocate-Reviewed Draft | Instant Legal Services",
+      "description": "Have an existing draft reviewed by an advocate for clarity, legal issues and corrections within an agreed scope.",
+      "h1": "Advocate-Reviewed Draft",
+      "summary": "Have an existing draft reviewed by an advocate for clarity, legal issues and corrections within an agreed scope.",
+      "documents": [
+        "Editable draft or readable PDF",
+        "Purpose and intended recipient of the document",
+        "Relevant facts and supporting records",
+        "Jurisdiction and applicable transaction or proceeding",
+        "Any deadline for issue, filing or execution"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Review of the supplied draft",
+            "Observations on clarity, missing information and legal issues",
+            "Corrections or suggested changes within the agreed scope",
+            "Separate quote if substantial redrafting is required"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Upload or describe the draft securely through the approved channel",
+            "ILS confirms document type and review scope",
+            "Professional fee and turnaround are agreed",
+            "Review comments or revised draft are delivered as agreed"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "Not automatically. Substantial redrafting is separately scoped and quoted.",
+            "Certification, attestation or notarisation is not included unless specifically agreed and legally available.",
+            "Request advocate draft review →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "legal-document-review",
+      "title": "Legal Document Review | Instant Legal Services",
+      "description": "Understand key clauses, obligations, dates and potential issues in a supplied legal or commercial document.",
+      "h1": "Legal Document Review",
+      "summary": "Understand key clauses, obligations, dates and potential issues in a supplied legal or commercial document.",
+      "documents": [
+        "Complete document and annexures",
+        "Purpose for which the document will be used",
+        "Names and roles of the parties",
+        "Related agreement, notice or correspondence, if any",
+        "Specific concerns or clauses requiring attention"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Clause and obligation review",
+            "Key dates, payment and termination terms",
+            "Potential gaps, ambiguities and risk observations",
+            "Written summary or marked-up review, as agreed"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Identify the document type and page count",
+            "Confirm scope, jurisdiction and professional availability",
+            "Agree fee and deliverable format",
+            "Receive the review through the agreed channel"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Verification of title, records or authenticity requires a separate due-diligence scope.",
+            "No. Applicable statutory, registry and third-party charges are separate.",
+            "Request document review →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "legal-notice-drafting",
+      "title": "Legal Notice Drafting | Instant Legal Services",
+      "description": "Prepare a fact-based legal notice draft for review and issue through the appropriate channel, subject to professional scope.",
+      "h1": "Legal Notice Drafting",
+      "summary": "Prepare a fact-based legal notice draft for review and issue through the appropriate channel, subject to professional scope.",
+      "documents": [
+        "Names and correct addresses of parties",
+        "Agreement, invoice, cheque or transaction records, as applicable",
+        "Payment proof and outstanding amount calculation, if relevant",
+        "Emails, messages and earlier demands or replies",
+        "A clear chronology and desired resolution"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Review of the underlying transaction or dispute",
+            "Drafting based on supplied facts and records",
+            "Relief, response and deadline language as professionally advised",
+            "Separate review of service or dispatch requirements"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose the notice category and submit the basic facts",
+            "ILS checks urgency, jurisdiction and document sufficiency",
+            "Drafting scope and fee are confirmed",
+            "Draft is prepared and shared for review"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Court proceedings and representation are separate engagements.",
+            "The draft depends on facts and available evidence; gaps will be flagged where relevant.",
+            "Request legal notice drafting →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "property-due-diligence",
+      "title": "Property Legal Due Diligence | Instant Legal Services",
+      "description": "Review available property documents and identify title, ownership, transaction and record issues within a defined scope.",
+      "h1": "Property Legal Due Diligence",
+      "summary": "Review available property documents and identify title, ownership, transaction and record issues within a defined scope.",
+      "documents": [
+        "Property location, plot or survey details and land type",
+        "Available sale deed, title deed, allotment or lease documents",
+        "Latest revenue or municipal records, if available",
+        "Encumbrance, loan or registry search records, if available",
+        "Agreement, payment proof, possession details and existing notices"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Review of supplied title and transfer documents",
+            "Ownership and transaction-chain issue checklist",
+            "Review of available revenue or municipal records",
+            "Identification of missing records and follow-up checks"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Share property location and transaction purpose",
+            "ILS identifies relevant document and jurisdiction scope",
+            "Search requirements, professional fee and exclusions are confirmed",
+            "Review observations and missing-record checklist are delivered"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. The conclusion is limited to records and searches actually reviewed; no blanket guarantee is offered.",
+            "Only where specifically listed in the confirmed scope; official search and certified-copy fees are extra.",
+            "Request property due diligence →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "legal-research",
+      "title": "Legal Research Report | Instant Legal Services",
+      "description": "Request structured legal research on a defined question using relevant statutes, judgments and procedural sources.",
+      "h1": "Legal Research Report",
+      "summary": "Request structured legal research on a defined question using relevant statutes, judgments and procedural sources.",
+      "documents": [
+        "Exact legal question or issue",
+        "Jurisdiction, court or forum involved",
+        "Relevant facts and dates",
+        "Existing case papers or citations, if any",
+        "Purpose and deadline for the research"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Issue framing and research questions",
+            "Relevant statutory provisions and amendments",
+            "Relevant judgments and legal principles",
+            "Source list and concise findings within agreed scope"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Submit the research question and context",
+            "Scope and source coverage are confirmed",
+            "Fee and delivery format are agreed",
+            "Research report is prepared with source references"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Research is limited to the agreed issue, databases and available authoritative sources.",
+            "No. Courts decide matters on facts, law and evidence; no result is guaranteed.",
+            "Request legal research →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "digital-form-assistance",
+      "title": "Digital Form Assistance | Instant Legal Services",
+      "description": "Get non-legal assistance organising information and completing a digital form, with sensitive authentication kept on the official portal.",
+      "h1": "Digital Form Assistance",
+      "summary": "Get non-legal assistance organising information and completing a digital form, with sensitive authentication kept on the official portal.",
+      "documents": [
+        "Name of the official portal and form",
+        "Application or reference number, if already created",
+        "Relevant supporting documents required by the authority",
+        "A list of fields or steps where assistance is needed"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Form and portal navigation support",
+            "Document checklist and file-format guidance",
+            "Data-entry assistance based on information supplied",
+            "Status or acknowledgement guidance where available"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Identify the official form and task",
+            "ILS confirms what can be assisted and what must be completed by you",
+            "Applicable fee and scope are shown before work",
+            "Assistance is provided without taking over sensitive authentication"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "Never. Do not share OTPs, passwords, PINs, CVV or remote-access permissions.",
+            "No. Eligibility, acceptance, processing and decisions remain with the authority.",
+            "Request digital form assistance →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "official-route-guidance",
+      "title": "Official Route Guided Assistance | Instant Legal Services",
+      "description": "Understand the correct official portal, application steps, eligibility and document checklist while completing the process yourself.",
+      "h1": "Official Route Guided Assistance",
+      "summary": "Understand the correct official portal, application steps, eligibility and document checklist while completing the process yourself.",
+      "documents": [
+        "Name of the government service or scheme",
+        "State or department, where relevant",
+        "Application or reference number, if already available",
+        "Documents listed by the official authority"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Official portal and route identification",
+            "Step-by-step navigation summary",
+            "Eligibility and document checklist based on official information",
+            "Guidance on reference numbers and status checks"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Select the government service",
+            "ILS checks the official source and route",
+            "Guidance scope and fee are disclosed",
+            "You complete login, payment and submission on the official portal"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Guided assistance explains the route; you complete the official filing yourself.",
+            "No. Government and statutory charges are paid only through the official portal.",
+            "Get official route guidance →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "accounting-reports",
+      "title": "Accounting Reports | Instant Legal Services",
+      "description": "Unlock a printable or guided accounting report generated from the relevant ILS accounting tool result.",
+      "h1": "Accounting Reports",
+      "summary": "Unlock a printable or guided accounting report generated from the relevant ILS accounting tool result.",
+      "documents": [
+        "No separate document upload is normally needed for tool-generated reports",
+        "Keep source figures, invoices or statements available to verify your inputs",
+        "Use the relevant tool fields and reporting period accurately"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Basic printable or PDF-ready output",
+            "Guided report with calculation summary and explanatory notes",
+            "Professional-format report with assumptions and guidance",
+            "Report output based on the inputs entered in the selected tool"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Open the relevant ILS accounting tool",
+            "Enter and review the calculation inputs",
+            "Choose the report tier shown in the tool",
+            "Unlock and download the generated report"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. A generated report is not statutory audit, certification or ongoing bookkeeping.",
+            "You should review all inputs and assumptions before purchasing the output.",
+            "Open accounting tools →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "professional-tool-reports",
+      "title": "Professional Tool Reports | Instant Legal Services",
+      "description": "Unlock guided or professional-format reports from supported ILS professional tools after reviewing the entered inputs.",
+      "h1": "Professional Tool Reports",
+      "summary": "Unlock guided or professional-format reports from supported ILS professional tools after reviewing the entered inputs.",
+      "documents": [
+        "No separate upload is normally required for a report generated from the tool",
+        "Keep relevant source documents available to validate inputs",
+        "Check applicable dates, rates and assumptions in the tool"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Basic printable report",
+            "Guided report with steps and assumptions",
+            "Professional-format report with expanded explanation",
+            "Output based on the selected tool and supplied inputs"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Select the appropriate professional tool",
+            "Enter facts and figures carefully",
+            "Review the calculated result",
+            "Choose and unlock the report format"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No, unless a separate qualified professional engagement is expressly confirmed.",
+            "Users must verify inputs and applicable assumptions; outputs are informational.",
+            "Explore ILS professional tools →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "tool-report-unlock",
+      "title": "ILS Tool Report Unlocks | Instant Legal Services",
+      "description": "Unlock selected micro-reports from ILS tools at the price shown for the chosen output.",
+      "h1": "ILS Tool Report Unlocks",
+      "summary": "Unlock selected micro-reports from ILS tools at the price shown for the chosen output.",
+      "documents": [
+        "No extra document upload is normally required",
+        "Complete the selected tool inputs and review the result",
+        "Keep your source data for your own records"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Selected basic, detailed or professional micro-report output",
+            "Download or print-ready result where supported",
+            "One-time checkout for the selected report SKU"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose a supported tool",
+            "Complete the calculation",
+            "Select the report output offered by that tool",
+            "Pay the displayed one-time fee and unlock the result"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "Many tools are available to use without charge; the report output is paid only where shown.",
+            "No. These are one-time report unlocks.",
+            "Open the 208 ILS tools →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "taxation-compliance",
+      "title": "GST, Taxation & Return Compliance | Instant Legal Services",
+      "description": "Explore GST registration, returns, reconciliation, income-tax filing, notices and related tax-compliance assistance.",
+      "h1": "GST, Taxation & Return Compliance",
+      "summary": "Explore GST registration, returns, reconciliation, income-tax filing, notices and related tax-compliance assistance.",
+      "documents": [
+        "PAN and business constitution details, as applicable",
+        "GSTIN and prior return acknowledgements, if registered",
+        "Sales and purchase summaries or accounting records",
+        "Bank, salary or income records relevant to the task",
+        "Notice, demand or portal reference and due date, if any"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "GST registration, amendment and portal assistance",
+            "GST return filing and reconciliation enquiries",
+            "Income-tax return preparation and notice-response enquiries",
+            "TDS, payroll and tax-record organisation"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose the tax service and business type",
+            "Submit the period, issue and records available",
+            "ILS confirms eligibility, scope, professional fee and statutory charges",
+            "Work begins after written scope and payment terms are accepted"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Government, portal and statutory charges are separate unless expressly stated.",
+            "No. Never share passwords, OTPs, PINs or authentication codes.",
+            "Explore GST and tax assistance →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "corporate-business-registration",
+      "title": "Company, LLP & Business Registration | Instant Legal Services",
+      "description": "Explore company and LLP incorporation, business registrations, licences and ongoing corporate compliance support.",
+      "h1": "Company, LLP & Business Registration",
+      "summary": "Explore company and LLP incorporation, business registrations, licences and ongoing corporate compliance support.",
+      "documents": [
+        "Proposed business name and activity",
+        "Constitution and ownership or partner details",
+        "PAN and identity/address documents, when specifically requested",
+        "Registered office proof and owner consent, where required",
+        "Any existing registration, licence or prior filing details"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Private Limited and LLP incorporation assistance",
+            "Business and MSME registration guidance",
+            "Shop, trade and food licence assistance",
+            "MCA, ROC and recurring corporate compliance enquiries"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose the entity or registration requirement",
+            "ILS reviews basic facts and jurisdiction",
+            "Required documents, professional fee and statutory costs are confirmed",
+            "Filing or assistance begins after scope approval"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "They are separate unless the written quote expressly includes them.",
+            "No. Approval and processing are determined by the relevant authority.",
+            "Request business registration assistance →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "accounting-bookkeeping",
+      "title": "Accounting & Bookkeeping Services | Instant Legal Services",
+      "description": "Explore bookkeeping, bank reconciliation, GST data preparation, TDS and management-report support for businesses.",
+      "h1": "Accounting & Bookkeeping Services",
+      "summary": "Explore bookkeeping, bank reconciliation, GST data preparation, TDS and management-report support for businesses.",
+      "documents": [
+        "Bank statements for the agreed period",
+        "Sales and purchase invoices or summaries",
+        "Expense vouchers and payment records",
+        "Opening balances and prior books, if available",
+        "GSTIN, PAN and payroll data only as relevant to the agreed scope"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Monthly bookkeeping and ledger updates",
+            "Bank reconciliation and transaction classification",
+            "GST data preparation and reconciliation support",
+            "TDS/payroll coordination and management reports"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Share business type and monthly transaction volume",
+            "ILS assesses records, GSTIN count and reporting needs",
+            "Monthly or one-time scope and fee are confirmed",
+            "Work starts after secure document-sharing instructions are agreed"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Audit and certification require a separate eligible professional engagement.",
+            "No. Business plans are enquiry-led; no recurring charge starts without written agreement.",
+            "Request bookkeeping support →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "labour-hr-compliance",
+      "title": "Labour, HR, PF & ESI Compliance | Instant Legal Services",
+      "description": "Explore employment documentation, payroll coordination, PF/ESI and workplace compliance assistance for employers.",
+      "h1": "Labour, HR, PF & ESI Compliance",
+      "summary": "Explore employment documentation, payroll coordination, PF/ESI and workplace compliance assistance for employers.",
+      "documents": [
+        "Establishment name, address and nature of business",
+        "Employee count and broad wage structure",
+        "Existing PF/ESI or labour registration details, if any",
+        "Relevant employment contracts, notices or payroll summaries",
+        "Compliance period and issue details"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "Employment and HR document drafting enquiries",
+            "PF and ESI registration or compliance coordination",
+            "Payroll and TDS support enquiries",
+            "Workplace policy and statutory-register assistance"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Select the workforce or labour requirement",
+            "Share establishment and employee details",
+            "ILS confirms applicable law, scope and professional availability",
+            "Fee and deliverables are approved before work begins"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Requirements vary by state, establishment category, employee count and applicable law.",
+            "No. Review depends on accurate records and the agreed scope.",
+            "Request labour and HR compliance →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "professional-services-network",
+      "title": "CA, CS, HR & GST Professional Services | Instant Legal Services",
+      "description": "Connect with relevant independent CA, CS, HR and GST professionals for business, finance and compliance requirements.",
+      "h1": "CA, CS, HR & GST Professional Services",
+      "summary": "Connect with relevant independent CA, CS, HR and GST professionals for business, finance and compliance requirements.",
+      "documents": [
+        "Nature of the assignment and expected deliverable",
+        "Business constitution, location and registration details",
+        "Relevant records or notices, if available",
+        "Deadline and preferred mode of communication"
+      ],
+      "sections": [
+        {
+          "heading": "What this service can include",
+          "paragraphs": [
+            "CA support enquiries for accounts, tax and audit-related work",
+            "CS support enquiries for company law and ROC matters",
+            "HR professional support for payroll and workforce processes",
+            "GST practitioner support for registration, returns and reconciliation"
+          ]
+        },
+        {
+          "heading": "How the service works",
+          "paragraphs": [
+            "Choose the professional category and assignment",
+            "ILS checks scope and suitable network availability",
+            "Credentials, fee and engagement terms are confirmed",
+            "The professional assignment proceeds after acceptance"
+          ]
+        },
+        {
+          "heading": "Fees, scope & important information",
+          "paragraphs": [
+            "ILS confirms the exact deliverables, professional availability, applicable ILS fee and expected timeline before work begins. Government fees, court fees, stamp duty, portal charges, DSC and third-party costs are separate unless expressly included in a written quote.",
+            "Where applicable, the ₹299 initial enquiry fee is credited in full against eligible ILS professional or service charges for the same matter if you proceed. It is not a government fee and does not automatically include the full professional assignment.",
+            "No legal or government outcome is guaranteed. Legal advice, certification, audit, filing, representation or statutory sign-off is provided only by an eligible independent professional under a separately agreed engagement. Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        },
+        {
+          "heading": "Frequently asked questions",
+          "paragraphs": [
+            "No. Statutory certification is issued only by an eligible professional engaged for that purpose.",
+            "Availability and jurisdiction are confirmed for each enquiry.",
+            "Find professional assistance →"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "criminal-bail-ndps",
+      "title": "Criminal Law, Bail & NDPS Assistance | Instant Legal Services",
+      "description": "Request criminal law, bail, anticipatory bail and NDPS legal assistance through Instant Legal Services, subject to advocate availability and confirmed scope.",
+      "h1": "Criminal Law, Bail & NDPS Assistance",
+      "summary": "Services directory / Criminal law",
+      "documents": [
+        "FIR or complaint number and police station, if available",
+        "Sections mentioned in the FIR or notice",
+        "Arrest, custody or hearing status and relevant dates",
+        "Bail orders, remand papers or court notices, if available",
+        "Name of court and case number, if already filed"
+      ],
+      "sections": [
+        {
+          "heading": "Available assistance areas",
+          "paragraphs": [
+            "Criminal complaint and case assessment",
+            "Regular or anticipatory bail enquiry",
+            "NDPS matter and procedural assistance enquiry",
+            "Court-document and hearing preparation"
+          ]
+        },
+        {
+          "heading": "How it works",
+          "paragraphs": [
+            "Submit location, case stage and urgency.",
+            "ILS checks advocate availability and jurisdiction.",
+            "Advocate engagement, fee and scope are confirmed.",
+            "Documents and next steps are reviewed with the appointed advocate."
+          ]
+        },
+        {
+          "heading": "Important information",
+          "paragraphs": [
+            "No bail or case outcome is guaranteed. Courts decide applications on facts, evidence and law. For arrest, custody or imminent deadlines, contact a qualified local advocate immediately; do not wait for an online response. ILS confirms professional availability and fees before engagement. The ₹299 initial enquiry fee, where applicable, is credited against eligible same-matter ILS fees if you proceed; it is not a court or government fee.",
+            "Never share OTPs, passwords, PINs, CVV or remote-access permissions."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,11 @@
 "use strict";
 const { chromium } = require("playwright");
+const fs = require("node:fs");
+
+const assistanceSource=fs.readFileSync("assistance.html","utf8");
+if(!assistanceSource.includes('intake_source:"ils-universal-service-form"'))throw new Error("Catalogue checkout must use the database CRM-link trigger source marker.");
+const inquiryFlow=assistanceSource.split("if(isClientServiceInquiry){")[1]?.split("\n   }\n   await ILS.submitRequirement")[0]||"";
+if(!inquiryFlow||inquiryFlow.includes("ILS.submitRequirement"))throw new Error("Catalogue enquiry must create its CRM lead through the linked service-order transaction, not a duplicate standalone insert.");
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
@@ -103,8 +109,9 @@ const { chromium } = require("playwright");
     const toolsModule=await (await page.request.get(base+"/assets/ils-tools.js")).text();
     if(!toolsModule.includes("'ils-enquiry-fee-199':'ils-enquiry-fee-199'")||!toolsModule.includes("if(options.autoPay===true)"))throw new Error("Dedicated fixed-price UPI checkout is not registered for immediate form checkout.");
     const assistanceSource=await (await page.request.get(base+"/assistance.html")).text();
-    if(!assistanceSource.includes("const isClientServiceInquiry=Boolean(intakeService)")||!assistanceSource.includes("intake_source:\"ils-client-portal-service-catalogue\""))throw new Error("All client service catalogue enquiries must enter the payment checkout with the correct CRM source marker.");
-    if(!assistanceSource.includes("await ILS.submitRequirement(inquiryPayload)")||assistanceSource.indexOf("await ILS.submitRequirement(inquiryPayload)")>assistanceSource.indexOf('await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199"'))throw new Error("Client service enquiry must be saved to CRM before creating the ₹299 checkout order.");
+    if(!assistanceSource.includes("const isClientServiceInquiry=Boolean(intakeService)")||!assistanceSource.includes('intake_source:"ils-universal-service-form"'))throw new Error("All client service catalogue enquiries must enter the linked service-order checkout with the CRM trigger source marker.");
+    const clientServiceInquiryBranch=assistanceSource.split("if(isClientServiceInquiry){")[1]?.split("\n   }\n   await ILS.submitRequirement")[0]||"";
+    if(!clientServiceInquiryBranch||clientServiceInquiryBranch.includes("ILS.submitRequirement"))throw new Error("Client service enquiry must create exactly one CRM lead through the service-order trigger, not a separate pre-checkout insert.");
     if(!assistanceSource.includes('createOrder("ils-enquiry-fee-199"')||!assistanceSource.includes("Boolean(intakeService)"))throw new Error("All service slugs must use the configured initial enquiry fee checkout.");
     if(!assistanceSource.includes("₹299")||assistanceSource.includes("₹199"))throw new Error("Customer checkout must display ₹299 and must not retain ₹199 pricing copy.");
     if(!toolsModule.includes('requiresReentry:true')||toolsModule.includes('details:savedDetails'))throw new Error("Unauthenticated checkout must not persist customer intake details in browser storage.");
@@ -138,8 +145,9 @@ const { chromium } = require("playwright");
     if((await page.locator('meta[name="robots"]').getAttribute("content"))!=="noindex,follow")throw new Error("Query-driven duplicate service router must remain noindex.");
     await page.goto(base+"/business-compliance.html#business-enquiry");
     if(await page.locator("#businessEnquiryForm").count()!==0)throw new Error("Business page still contains a duplicate enquiry form.");
-    await page.locator("#universalBusinessEnquiry").click();
-    if(await page.locator("#assistForm").count()!==1)throw new Error("Business enquiry did not open the single universal form.");
+    await Promise.all([page.waitForURL(url=>{const u=new URL(url);return u.pathname.endsWith("/assistance.html")&&u.searchParams.get("service")==="business-compliance";},{timeout:10000}),page.locator("#universalBusinessEnquiry").click()]);
+    await page.locator("#assistForm").waitFor({state:"attached",timeout:10000});
+    if(await page.locator("#assistForm").count()!==1)throw new Error("Business enquiry did not open the single universal form. Current URL: "+page.url());
     await page.locator("#businessFields").waitFor({state:"visible",timeout:10000});
     if(!(await page.locator("#businessFields").isVisible()))throw new Error("Universal business-type field did not appear.");
     if((await page.locator("#serviceOption option").count())<8)throw new Error("Business service choices are missing from the universal form.");
@@ -164,7 +172,7 @@ const { chromium } = require("playwright");
     await page.locator("#assistForm button[type=submit]").click();
     await page.waitForFunction(()=>window.__ilsInquiryTest?.order!==null);
     const inquiryFlow=await page.evaluate(()=>window.__ilsInquiryTest);
-    if(!inquiryFlow.lead||inquiryFlow.lead.state!=="Uttar Pradesh"||inquiryFlow.lead.mobile!=="9876543210")throw new Error("Catalogue enquiry CRM lead payload missing or incorrect.");
+    if(inquiryFlow.lead!==null||inquiryFlow.order?.details?.intake_source!=="ils-universal-service-form"||inquiryFlow.order?.details?.name!=="CI Checkout Test"||inquiryFlow.order?.details?.mobile!=="9876543210"||inquiryFlow.order?.details?.state!=="Uttar Pradesh"||inquiryFlow.order?.details?.city!=="Bareilly")throw new Error("Catalogue enquiry must pass the complete CRM lead payload to the atomic service-order trigger without a duplicate standalone lead insert.");
     if(inquiryFlow.order?.slug!=="ils-enquiry-fee-199"||inquiryFlow.order?.details?.mode!=="client-service-inquiry")throw new Error("Catalogue enquiry did not create the initial enquiry order.");
     if(inquiryFlow.order?.options?.autoPay!==true||inquiryFlow.order?.options?.forceQr!==true||inquiryFlow.order?.options?.paymentContainerId!=="assistStatus")throw new Error("Catalogue enquiry did not launch UPI QR checkout.");
     if(!(await page.locator("#assistStatus").innerText()).includes("Preparing your ₹299"))throw new Error("Catalogue enquiry payment preparation status missing.");
