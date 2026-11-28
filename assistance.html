@@ -363,13 +363,13 @@ document.addEventListener("DOMContentLoaded",()=>{
    if(isClientServiceInquiry){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
     // Preserve the CRM lead and create the adjustable initial-enquiry payment order for every catalogue service.
-    await ILS.submitRequirement(inquiryPayload);
+    await window.ILS.submitRequirement(inquiryPayload);
     const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,business_type:businessType,...inquiryPayload,brief:finalBrief.slice(0,3000)};
     s.className="status";s.textContent="Enquiry saved. Preparing your ₹299 initial enquiry payment…";
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
    }
-   await ILS.submitRequirement(inquiryPayload);
+   await window.ILS.submitRequirement(inquiryPayload);
    s.className="status ok";s.textContent="Requirement submitted successfully. Please retain your details for follow-up.";form.reset()}catch(err){s.className="status err";s.textContent="Unable to submit right now: "+(err.message||"service unavailable")}}
  );
 });
