@@ -82,7 +82,7 @@ console.log("UNIVERSAL_INTAKE_CRM_LINKAGE=PASS");
    if(await page.locator(".catalog-card img").count()!==5)throw new Error("Each purchasable catalogue service must have a relevant photo.");
    const renderedImages=await page.locator(".catalog-card img").evaluateAll(imgs=>({urls:imgs.map(img=>img.src),alts:imgs.map(img=>img.alt),lazy:imgs.every(img=>img.loading==="lazy"&&img.decoding==="async"),fallbacks:imgs.every(img=>Boolean(img.dataset.fallback))}));
    if(new Set(renderedImages.urls).size!==5||renderedImages.alts.some(alt=>!alt.includes("illustrative service image"))||!renderedImages.lazy||!renderedImages.fallbacks)throw new Error("Each visible service card must have a distinct, descriptive, lazy-loaded image with a fallback.");
-   const catalogueSource=fs.readFileSync("catalog/index.html","utf8");
+   const catalogueSource=fs.readFileSync("catalog/full.html","utf8");
    const imageMapBlock=catalogueSource.split("const serviceImageBySlug={")[1]?.split("};")[0]||"";
    const mappedImages=[...imageMapBlock.matchAll(/"([^"]+)":photo\("(photo-[^"]+)"\)/g)];
    if(mappedImages.length!==21||new Set(mappedImages.map(match=>match[2])).size!==21)throw new Error("All 21 Production paid-service SKUs must have their own distinct image mapping.");
