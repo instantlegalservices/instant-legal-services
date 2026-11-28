@@ -10,6 +10,9 @@ for(const rpc of ["ils_admin_list_matter_quotes","ils_admin_save_matter_quote","
 for(const id of ["myMatterQuotes","matterQuotePaymentStatus"])if(!portal.includes('id="'+id+'"'))throw new Error("Customer quotation workspace element missing: "+id);
 for(const rpc of ["ils_customer_matter_quotes","ils_customer_accept_matter_quote","ils_customer_decline_matter_quote"])if(!portal.includes(rpc))throw new Error("Customer quotation RPC not wired: "+rpc);
 if(!portal.includes('assets/ils-core.js')||!portal.includes('assets/ils-tools.js')||!portal.includes("payExistingOrder"))throw new Error("Customer portal final-order payment handoff is missing.");
+if(!portal.includes("q.final_order_status")||!portal.includes("Payment verified"))throw new Error("Customer portal does not display verified final-order payment status.");
+if(!admin.includes("q.final_order_status"))throw new Error("Admin CRM quotation history does not display final-order payment status.");
+if(!migration.includes("'final_order_status'"))throw new Error("Quotation RPCs do not expose final-order payment status.");
 if(!tools.includes("async function payExistingOrder")||!tools.includes("await startRazorpay("))throw new Error("Server-created quote orders do not use the existing secure QR/proof payment flow.");
 for(const tag of [...admin.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)])new vm.Script(tag[1],{filename:"admin.html inline script"});
 for(const tag of [...portal.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)])new vm.Script(tag[1],{filename:"customer-portal.html inline script"});
