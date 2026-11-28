@@ -210,7 +210,8 @@ async function loadCustomerMatterQuotes(){
   if(!quotes.length){addEmpty(target,"No quotation has been issued for your linked matter yet.");return;}
   for(const q of quotes){
    const card=document.createElement("article");card.className="matter-card";
-   const title=document.createElement("h3");title.textContent=(q.quote_number||"ILS Quotation")+" · "+q.quote_status;
+   const isExpired=q.quote_status==="SENT"&&q.valid_until&&new Date(q.valid_until).getTime()<=Date.now();
+   const title=document.createElement("h3");title.textContent=(q.quote_number||"ILS Quotation")+" · "+(isExpired?"EXPIRED":q.quote_status);
    const scope=document.createElement("p");scope.textContent=q.scope_of_work||"Scope not available";
    const rows=[
     ["Government / statutory fee",q.government_fee],["ILS service fee",q.ils_fee],
@@ -227,7 +228,7 @@ async function loadCustomerMatterQuotes(){
    card.append(title,scope,breakdown,valid,terms);
    if(q.cancellation_rule||q.refund_rule){const rules=document.createElement("div");rules.className="order-meta";rules.textContent="Cancellation: "+(q.cancellation_rule||"As agreed")+" · Refund: "+(q.refund_rule||"As per applicable terms");card.append(rules);}
    const actions=document.createElement("div");actions.className="crm-comms-actions";
-   if(q.quote_status==="SENT"){
+   if(q.quote_status==="SENT"&&!isExpired){
     const accept=document.createElement("button");accept.type="button";accept.className="primary";accept.textContent="Accept & Continue";
     accept.onclick=()=>respondToMatterQuote(q.id,"accept",accept);
     const decline=document.createElement("button");decline.type="button";decline.className="tab";decline.textContent="Decline";
