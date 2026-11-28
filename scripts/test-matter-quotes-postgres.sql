@@ -77,7 +77,7 @@ BEGIN
   IF NOT EXISTS(SELECT 1 FROM public.ils_matter_quotes WHERE id=v_quote_id AND quote_status='SENT' AND total_before_credit=1599) THEN
     RAISE EXCEPTION 'admin quote create/send failed';
   END IF;
-  PERFORM set_config('test.quote_id',v_quote_id::text,true);
+  PERFORM set_config('test.quote_id',v_quote_id::text,false);
 END;
 $admin_create$;
 
