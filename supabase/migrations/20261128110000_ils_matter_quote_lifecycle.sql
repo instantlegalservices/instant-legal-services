@@ -281,6 +281,11 @@ begin
     and paid_request.user_id=v_user
     and o.user_id=v_user
     and o.status='paid' and s.slug='ils-enquiry-fee-199'
+    -- A paid enquiry order may be credited only once across all quotations.
+    and not exists (
+      select 1 from public.ils_matter_quote_credit_ledger used_credit
+      where used_credit.enquiry_order_id=o.id
+    )
   order by o.created_at desc limit 1;
   if found and v_quote.ils_fee>0 then
     v_credit:=least(v_enquiry_order.total,v_quote.ils_fee);
