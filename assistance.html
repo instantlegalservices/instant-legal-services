@@ -112,6 +112,7 @@ const industryParam=params.get("industry")||"";
 
  const businessPlans={"shopkeeper-starter":"Shopkeeper Starter","retailer-plus":"Retailer Plus","wholesaler-compliance":"Wholesaler Compliance","manufacturer-support":"Manufacturer Support","hospital-clinic-support":"Hospital & Clinic Support","custom-business-plan":"Custom Business Plan"};
  const selectedBusinessPlan=service==="business-compliance"?(businessPlans[planParam]||""):"";
+ const catalogueOffers={"GST Registration \u2013 Launch Offer":{code:"gst-registration-launch",displayedPrice:999,period:"one_time"},"Private Limited Company Registration \u2013 Launch Offer":{code:"private-limited-launch",displayedPrice:3999,period:"one_time"},"LLP Registration \u2013 Launch Offer":{code:"llp-registration-launch",displayedPrice:2499,period:"one_time"},"GST Return Filing \u2013 Launch Offer":{code:"gst-return-filing-launch",displayedPrice:399,period:"per_return"},"Bookkeeping \u2013 Launch Offer":{code:"bookkeeping-launch",displayedPrice:1499,period:"monthly"}};
 const serviceIntake={
  "legal-drafting":{title:"Legal Drafting Assistance",matter:"Other",brief:"I need legal drafting assistance (for example, a notice, agreement, affidavit or application). Please contact me to understand the document, facts and applicable scope."},
  "money-recovery":{title:"Money Recovery Assistance",matter:"Other",brief:"I need assistance regarding recovery of an outstanding amount. Please contact me to understand the transaction, amount, supporting documents and appropriate next steps."},
@@ -391,6 +392,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   if(!/^[0-9]{10}$/.test(mobile)){s.className="status err";s.textContent="Please enter a valid 10-digit mobile number.";return}
   try{
    const selectedOption=document.getElementById("serviceOption")?.value||"";
+   const catalogueOffer=catalogueOffers[selectedOption]||null;
    const baseBrief=document.getElementById("brief").value.trim();
    const intakeService=new URLSearchParams(location.search).get("service")||"";
    const businessType=intakeService==="business-compliance"?(document.getElementById("businessType").value||""):"";
@@ -403,14 +405,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     packageModules.length?"Selected package modules: "+packageModules.join(", "):"",
     packageEstimate!==null&&packageCycle!=="one_time"?"Indicative package estimate: ₹"+packageEstimate+(packageCycle==="annual"?" / year":" / month"):""
    ].filter(Boolean).join(" | "):"";
-   const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedBusinessPlan?"Selected business plan: "+selectedBusinessPlan+" | ":"")+(packageSummary?packageSummary+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+baseBrief;
+   const offerSummary=catalogueOffer?"Catalogue offer: "+catalogueOffer.code+" | Displayed professional fee: INR "+catalogueOffer.displayedPrice+(catalogueOffer.period==="monthly"?" / month":catalogueOffer.period==="per_return"?" / return":"")+" (quotation only; not collected at enquiry checkout) | ":"";
+   const finalBrief=(businessType?"Business type: "+businessType+" | ":"")+(selectedBusinessPlan?"Selected business plan: "+selectedBusinessPlan+" | ":"")+(packageSummary?packageSummary+" | ":"")+(selectedOption?"Selected service: "+selectedOption+" | ":"")+offerSummary+baseBrief;
    const isClientServiceInquiry=Boolean(intakeService);
    const inquiryPayload={name:document.getElementById("name").value.trim(),mobile,state:document.getElementById("state").value.trim(),city:document.getElementById("city").value.trim(),matter:document.getElementById("matter").value,brief:finalBrief};
    if(isClientServiceInquiry){
     if(!window.ILS_TOOLS?.createOrder)throw new Error("Payment module is not ready. Please try again.");
     // Preserve the CRM lead and create the adjustable initial-enquiry payment order for every catalogue service.
     await ILS.submitRequirement(inquiryPayload);
-    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,business_type:businessType,selected_business_plan:selectedBusinessPlan||null,package_billing_cycle:packageCycle||null,package_industry:packageIndustry||null,package_invoice_volume:packageInvoices||null,package_gstin_count:packageGstins||null,package_modules:packageModules,package_estimate:packageCycle!=="one_time"?packageEstimate:null,...inquiryPayload,brief:finalBrief.slice(0,3000)};
+    const details={mode:"client-service-inquiry",intake_source:"ils-client-portal-service-catalogue",intake_service:intakeService,service_option:selectedOption,catalogue_offer_code:catalogueOffer?catalogueOffer.code:null,catalogue_offer_displayed_price_inr:catalogueOffer?catalogueOffer.displayedPrice:null,catalogue_offer_period:catalogueOffer?catalogueOffer.period:null,business_type:businessType,selected_business_plan:selectedBusinessPlan||null,package_billing_cycle:packageCycle||null,package_industry:packageIndustry||null,package_invoice_volume:packageInvoices||null,package_gstin_count:packageGstins||null,package_modules:packageModules,package_estimate:packageCycle!=="one_time"?packageEstimate:null,...inquiryPayload,brief:finalBrief.slice(0,3000)};
     s.className="status";s.textContent="Enquiry saved. Preparing your ₹299 initial enquiry payment…";
     await window.ILS_TOOLS.createOrder("ils-enquiry-fee-199",details,null,null,{resumeCheckout:true,forceQr:true,autoPay:true,paymentContainerId:"assistStatus"});
     return;
