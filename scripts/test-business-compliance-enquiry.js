@@ -50,7 +50,9 @@ async function installFormDoubles() {
       ...(window.ILS || {}),
       init: async () => ({}),
       submitRequirement: async payload => {
-        window.__submittedLead = JSON.parse(JSON.stringify(payload));
+        const captured = JSON.parse(JSON.stringify(payload));
+        window.__submittedLead = captured;
+        document.documentElement.dataset.ilsTestSubmittedLead = JSON.stringify(captured);
         return { ok: true };
       }
     };
@@ -105,7 +107,10 @@ try {
   await installFormDoubles();
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299" }).waitFor();
-  const lead = await page.evaluate(() => window.__submittedLead);
+  const lead = await page.evaluate(() => {
+    const captured = window.__submittedLead || document.documentElement.dataset.ilsTestSubmittedLead;
+    return captured ? (typeof captured === "string" ? JSON.parse(captured) : captured) : null;
+  });
   assert.equal(lead.name, "Test Business Owner");
   assert.equal(lead.mobile, "9876543210");
   assert.equal(lead.state, "Uttar Pradesh", "state must be passed to the existing CRM insert");
