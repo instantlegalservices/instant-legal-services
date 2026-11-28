@@ -21,6 +21,11 @@ const fs = require("fs");
  if(!home.includes("@media(max-width:600px){.ils-home-offers")||!home.includes(".ils-home-offers-grid{display:flex;overflow-x:auto")||!home.includes(".ils-home-offer{flex:0 0 78%"))throw new Error("Homepage launch offers must remain swipeable and readable on mobile.");
  if(!home.includes(".ils-home-offers-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))"))throw new Error("Homepage desktop launch-offer grid must display five balanced cards.");
  console.log("HOMEPAGE_FIVE_LAUNCH_OFFERS_AND_RESPONSIVE_LAYOUT=PASS");
+const assistanceSource=fs.readFileSync("assistance.html","utf8");
+if(!assistanceSource.includes('intake_source:"ils-universal-service-form"'))throw new Error("Catalogue checkout must use the database CRM-link trigger source marker.");
+const inquiryFlow=assistanceSource.split("if(isClientServiceInquiry){")[1]?.split("\n   }\n   await ILS.submitRequirement")[0]||"";
+if(!inquiryFlow||inquiryFlow.includes("ILS.submitRequirement"))throw new Error("Catalogue enquiry must create its CRM lead through the linked service-order transaction, not a duplicate standalone insert.");
+console.log("UNIVERSAL_INTAKE_CRM_LINKAGE=PASS");
  try {
   for(const viewport of [{width:390,height:844,legacy:false},{width:1440,height:900,legacy:true}]){
    const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},serviceWorkers:"block",reducedMotion:"reduce"});
