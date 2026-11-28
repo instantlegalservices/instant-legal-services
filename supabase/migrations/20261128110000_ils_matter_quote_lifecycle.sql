@@ -82,10 +82,12 @@ begin
         q.government_fee,q.ils_fee,q.professional_fee,q.tax_amount,q.total_before_credit,
         q.enquiry_credit_amount,q.total_customer_payable,q.currency,q.scope_of_work,
         q.inclusions,q.exclusions,q.cancellation_rule,q.refund_rule,q.valid_until,
-        q.quote_status,q.enquiry_order_id,q.final_order_id,q.created_at,q.sent_at,q.accepted_at,
+        q.quote_status,q.enquiry_order_id,q.final_order_id,fo.status as final_order_status,
+        q.created_at,q.sent_at,q.accepted_at,
         cr.client_name,cr.mobile,cr.legal_matter
       from public.ils_matter_quotes q
       join public.client_requirements cr on cr.id=q.client_requirement_id
+      left join public.orders fo on fo.id=q.final_order_id
       order by q.created_at desc limit v_limit
     ) x
   ),'[]'::jsonb);
@@ -220,6 +222,7 @@ begin
       'currency',q.currency,'scope_of_work',q.scope_of_work,'inclusions',q.inclusions,
       'exclusions',q.exclusions,'cancellation_rule',q.cancellation_rule,'refund_rule',q.refund_rule,
       'valid_until',q.valid_until,'quote_status',q.quote_status,'final_order_id',q.final_order_id,
+      'final_order_status',(select fo.status from public.orders fo where fo.id=q.final_order_id),
       'created_at',q.created_at,'sent_at',q.sent_at,'accepted_at',q.accepted_at
     ) order by q.created_at desc)
     from public.ils_matter_quotes q
