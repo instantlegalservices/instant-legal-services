@@ -220,7 +220,7 @@ const intakeContext=await browser.newContext({viewport:{width:390,height:844},se
   await intakePage.locator('#assistForm button[type="submit"]').click();
   await intakePage.waitForFunction(()=>Boolean(window.__ilsCapture?.order));
   const captured=await intakePage.evaluate(()=>window.__ilsCapture);
-  if(!captured.lead?.brief?.includes("Business type: Retail shop")||!captured.lead.brief.includes("Selected business plan: Shopkeeper Starter")||!captured.lead.brief.includes("Selected service: GST registration / amendment"))throw new Error("CRM lead payload did not preserve selected business type, plan and service.");
+  if(captured.lead!==undefined||!captured.order.details.brief?.includes("Business type: Retail shop")||!captured.order.details.brief.includes("Selected business plan: Shopkeeper Starter")||!captured.order.details.brief.includes("Selected service: GST registration / amendment")||captured.order.details.intake_source!=="ils-universal-service-form")throw new Error("Atomic CRM lead payload did not preserve selected business type, plan, service and trigger source.");
   if(captured.order.slug!=="ils-enquiry-fee-199"||captured.order.details.selected_business_plan!=="Shopkeeper Starter"||captured.order.details.business_type!=="Retail shop"||captured.order.details.service_option!=="GST registration / amendment"||captured.order.details.intake_service!=="business-compliance")throw new Error("Existing ₹299 enquiry order did not preserve business plan metadata.");
   if(intakeErrors.length)throw new Error("Assistance intake browser errors: "+intakeErrors.join("; "));
   
