@@ -53,7 +53,9 @@ INSERT INTO public.services(id,slug,name) VALUES
  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','ils-enquiry-fee-199','ILS Initial Enquiry & Coordination');
 INSERT INTO public.service_requests(id,user_id,service_id,status,details,client_requirement_id)
 VALUES ('cccccccc-cccc-4ccc-8ccc-cccccccccccc','11111111-1111-4111-8111-111111111111',
- 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','paid','{"intake_source":"ils-universal-service-form"}',1);
+ 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','paid','{"intake_source":"ils-universal-service-form"}',1),
+ ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','11111111-1111-4111-8111-111111111111',
+ 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','pending','{"intake_source":"follow-up-service-request"}',1);
 INSERT INTO public.orders(id,order_number,user_id,service_request_id,total,status)
 VALUES ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','ILS-ENQ-001','11111111-1111-4111-8111-111111111111',
  'cccccccc-cccc-4ccc-8ccc-cccccccccccc',299,'paid');
@@ -66,7 +68,7 @@ BEGIN
   PERFORM set_config('test.user_id','22222222-2222-4222-8222-222222222222',true);
   PERFORM set_config('test.is_admin','true',true);
   v_quote:=public.ils_admin_save_matter_quote(
-    null,'cccccccc-cccc-4ccc-8ccc-cccccccccccc',100,999,500,0,
+    null,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',100,999,500,0,
     'GST registration application preparation and filing assistance',
     '["Application preparation","Document review"]'::jsonb,
     '["Government fee changes","Additional notices"]'::jsonb,
@@ -95,6 +97,10 @@ BEGIN
   END IF;
   v_again:=public.ils_customer_accept_matter_quote(v_quote_id);
   IF v_again->>'order_id'<>v_accept->>'order_id' THEN RAISE EXCEPTION 'accept retry created a duplicate order'; END IF;
+  IF v_again->>'payment_required'<>'true' THEN RAISE EXCEPTION 'idempotent retry lost pending-payment state: %',v_again; END IF;
+  IF (SELECT source_service_request_id FROM public.ils_matter_quotes WHERE id=v_quote_id)='cccccccc-cccc-4ccc-8ccc-cccccccccccc' THEN
+    RAISE EXCEPTION 'fixture must quote a different request within the same CRM matter';
+  END IF;
   IF (SELECT count(*) FROM public.orders WHERE service_request_id=(SELECT final_service_request_id FROM public.ils_matter_quotes WHERE id=v_quote_id))<>1 THEN
     RAISE EXCEPTION 'acceptance did not create exactly one final order';
   END IF;
