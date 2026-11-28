@@ -1,49 +1,93 @@
 <!doctype html>
 <html lang="en-IN">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Explore ILS Services | Legal, Business, Tax & Government Help</title>
-<meta name="description" content="Choose the right Instant Legal Services department: legal services, business and tax compliance, government portals, professionals or tools.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Explore ILS | Legal Help, Business Compliance & Government Services</title>
+<meta name="description" content="Start with what you need: legal help, business and tax compliance, or official government-service navigation from Instant Legal Services.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://instantlegalservices.in/catalog/">
-<meta property="og:type" content="website"><meta property="og:site_name" content="Instant Legal Services">
-<meta property="og:title" content="Explore ILS Services"><meta property="og:description" content="Choose one department and go directly to the help you need.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Instant Legal Services">
+<meta property="og:title" content="Explore Instant Legal Services">
+<meta property="og:description" content="Three clear starting points for legal help, business compliance and government services.">
 <link rel="stylesheet" href="../assets/ils.css">
 <style>
-body{background:#07101c;color:#f5f7fa}
-.hub{width:min(1080px,calc(100% - 32px));margin:auto;padding:34px 0 64px}
-.hub-hero{padding:clamp(24px,5vw,48px);border:1px solid rgba(255,255,255,.12);border-radius:22px;background:linear-gradient(130deg,#10243a,#0b1523)}
-.hub-kicker{color:#e4b85e;font-size:11px;font-weight:850;letter-spacing:1.3px;text-transform:uppercase}
-.hub h1{font-size:clamp(30px,5vw,46px);line-height:1.1;margin:12px 0}
-.hub-hero p{max-width:650px;color:#bdc9d5;line-height:1.65;margin:0}
-.hub-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}
-.hub-card{display:flex;gap:16px;align-items:flex-start;padding:20px;border:1px solid rgba(255,255,255,.12);border-radius:17px;background:#101d2d;color:#f5f7fa;text-decoration:none;transition:border-color .18s,transform .18s}
-.hub-card:hover{border-color:#d7a84f;transform:translateY(-2px)}
-.hub-icon{display:grid;place-items:center;flex:0 0 46px;height:46px;border-radius:13px;background:rgba(215,168,79,.12);font-size:23px}
-.hub-card h2{font-size:18px;margin:1px 0 6px}
-.hub-card p{font-size:13px;line-height:1.55;color:#b5c0ce;margin:0}
-.hub-card span{display:inline-block;margin-top:10px;color:#e7bf70;font-size:12px;font-weight:800}
-.hub-foot{margin-top:24px;padding:18px;border:1px solid rgba(255,255,255,.1);border-radius:15px;color:#bdc9d5;line-height:1.6;font-size:13px}
-.hub-foot a{color:#f1ce85;font-weight:750}
-@media(max-width:640px){.hub{width:calc(100% - 22px);padding-top:18px}.hub-grid{grid-template-columns:1fr}.hub-card{padding:16px}.hub-hero{border-radius:17px}}
+:root{--hub-bg:#07101c;--hub-panel:#101e2e;--hub-line:rgba(255,255,255,.12);--hub-text:#f5f7fa;--hub-muted:#b6c2cf;--hub-gold:#e7bd6a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 12% 0%,rgba(77,153,204,.13),transparent 32%),var(--hub-bg);color:var(--hub-text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.hub{width:min(1060px,calc(100% - 32px));margin:auto;padding:30px 0 64px}
+.hub-header{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:66px}
+.hub-brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.07em}
+.hub-brand img{width:42px;height:42px;object-fit:cover;border-radius:12px}
+.hub-home{color:var(--hub-gold);font-size:13px;font-weight:800;text-decoration:none}
+.hub-hero{padding:clamp(24px,5vw,48px);margin-top:16px;border:1px solid var(--hub-line);border-radius:24px;background:linear-gradient(130deg,#132a40,#0b1725)}
+.kicker{color:var(--hub-gold);font-size:10px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase}
+h1{font-size:clamp(32px,5vw,48px);line-height:1.08;letter-spacing:-.04em;margin:12px 0}
+.hub-hero p{max-width:670px;margin:0;color:var(--hub-muted);font-size:15px;line-height:1.7}
+.start-label{margin:28px 0 12px;color:#dbe4ec;font-size:13px;font-weight:850}
+.primary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.primary-card{min-height:245px;display:flex;flex-direction:column;padding:22px;border:1px solid var(--hub-line);border-radius:19px;background:var(--hub-panel);color:inherit;text-decoration:none;transition:transform .18s,border-color .18s,background .18s}
+.primary-card:hover{transform:translateY(-3px);border-color:rgba(231,189,106,.65);background:#14263a}
+.card-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:rgba(231,189,106,.12);font-size:24px}
+.primary-card h2{font-size:19px;line-height:1.25;margin:17px 0 8px}
+.primary-card p{margin:0;color:var(--hub-muted);font-size:13px;line-height:1.6}
+.card-link{margin-top:auto;padding-top:20px;color:var(--hub-gold);font-size:12px;font-weight:900}
+.secondary{margin-top:25px;padding:19px;border:1px solid var(--hub-line);border-radius:17px;background:rgba(255,255,255,.025)}
+.secondary h2{font-size:14px;margin:0 0 12px}
+.quick-links{display:flex;flex-wrap:wrap;gap:9px}
+.quick-links a{display:inline-flex;align-items:center;gap:7px;padding:10px 12px;border:1px solid var(--hub-line);border-radius:11px;color:#e5edf4;text-decoration:none;font-size:12px;font-weight:750}
+.quick-links a:hover{border-color:rgba(231,189,106,.55);color:var(--hub-gold)}
+.hub-note{margin-top:18px;color:#91a2b3;font-size:11px;line-height:1.6}
+@media(max-width:760px){.hub{width:calc(100% - 22px);padding-top:12px}.primary-grid{grid-template-columns:1fr}.primary-card{min-height:0;padding:18px}.card-link{padding-top:14px}.hub-hero{border-radius:18px}.hub-hero p{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.primary-card{transition:none}.primary-card:hover{transform:none}}
 </style>
 </head>
 <body>
-<header class="site-header"><div class="wrap navbar">
-<a class="brand" href="../index.html"><img class="brand-logo" src="../assets/ils-logo.jpg" alt="Instant Legal Services logo"><span class="brand-text">INSTANT <span>LEGAL SERVICES</span></span></a>
-<a href="../index.html" style="color:#f1ce85;font-weight:800;text-decoration:none">Home</a>
-</div></header>
 <main class="hub">
-<section class="hub-hero"><span class="hub-kicker">ILS Service Centre</span><h1>What do you need help with?</h1><p>Choose one department below. Each department has its own services, information and next steps. You do not need to browse everything at once.</p></section>
-<section class="hub-grid" aria-label="ILS departments">
-<a class="hub-card" href="../services/"><span class="hub-icon">⚖️</span><div><h2>Legal Services</h2><p>Consultation, drafting, notices, disputes, family, criminal and property matters.</p><span>Explore legal services →</span></div></a>
-<a class="hub-card" href="../business-compliance.html"><span class="hub-icon">📊</span><div><h2>Business &amp; Tax Compliance</h2><p>GST, income tax, company registration, bookkeeping, payroll and business compliance.</p><span>Explore business services →</span></div></a>
-<a class="hub-card" href="../government/"><span class="hub-icon">🏛️</span><div><h2>Government Services</h2><p>Find official portals, application routes, challan services and public grievance links.</p><span>Open government navigator →</span></div></a>
-<a class="hub-card" href="../advocates.html"><span class="hub-icon">👨‍⚖️</span><div><h2>Find a Professional</h2><p>Explore advocate profiles and connect with the relevant professional network.</p><span>Find a professional →</span></div></a>
-<a class="hub-card" href="../tools.html"><span class="hub-icon">🧰</span><div><h2>Tools &amp; Calculators</h2><p>Use legal, GST, tax, accounting and business tools. Open reports only when needed.</p><span>Explore tools →</span></div></a>
-<a class="hub-card" href="full.html#business-plans"><span class="hub-icon">🏢</span><div><h2>Business Support Plans</h2><p>Compare ongoing support options for shops, wholesalers, manufacturers and organisations.</p><span>View business plans →</span></div></a>
+<header class="hub-header">
+<a class="hub-brand" href="../index.html"><img src="../assets/ils-logo.jpg" alt="Instant Legal Services logo"><span>INSTANT LEGAL SERVICES</span></a>
+<a class="hub-home" href="../index.html">Home</a>
+</header>
+<section class="hub-hero" aria-labelledby="hub-title">
+<span class="kicker">Instant Legal Services · India-wide assistance</span>
+<h1 id="hub-title">What would you like help with?</h1>
+<p>Start with one of these three areas. We’ll take you to the relevant services and explain the next steps there—without making you browse everything at once.</p>
 </section>
-<div class="hub-foot">Looking for a specific service? <a href="full.html#individual-services">Browse the complete service catalogue</a>. Looking for a tailored package? <a href="full.html#custom-plan-builder">Build a custom business plan</a>. For urgent legal assistance, <a href="../assistance.html">submit your requirement</a>.</div>
+<p class="start-label">Choose the area that matches your requirement</p>
+<section class="primary-grid" aria-label="Main service areas">
+<a class="primary-card" href="../services/">
+<span class="card-icon" aria-hidden="true">⚖️</span>
+<h2>Legal Help</h2>
+<p>Advocacy and legal assistance for criminal, family, property, consumer, cheque-bounce and other legal matters.</p>
+<span class="card-link">Explore legal services <span aria-hidden="true">→</span></span>
+</a>
+<a class="primary-card" href="../business-compliance.html">
+<span class="card-icon" aria-hidden="true">📊</span>
+<h2>Business &amp; Tax</h2>
+<p>GST, income tax, registrations, returns, bookkeeping and ongoing compliance support for businesses.</p>
+<span class="card-link">Explore business services <span aria-hidden="true">→</span></span>
+</a>
+<a class="primary-card" href="../government/">
+<span class="card-icon" aria-hidden="true">🏛️</span>
+<h2>Government Services</h2>
+<p>Find official portals and application routes for public services, challans and grievance processes.</p>
+<span class="card-link">Open government navigator <span aria-hidden="true">→</span></span>
+</a>
+</section>
+<section class="secondary" aria-labelledby="quick-title">
+<h2 id="quick-title">Other useful links</h2>
+<nav class="quick-links" aria-label="Other ILS resources">
+<a href="../advocates.html">👨‍⚖️ Find a Professional</a>
+<a href="../tools.html">🧰 Tools &amp; Calculators</a>
+<a href="full.html#business-plans">🏢 Business Support Plans</a>
+<a href="full.html#individual-services">Complete Service List</a>
+<a href="full.html#custom-plan-builder">Build a Custom Plan</a>
+<a href="../assistance.html">Submit a Requirement</a>
+</nav>
+</section>
+<p class="hub-note">Instant Legal Services is an independent assistance platform, not a government department. Professional availability, service scope and applicable ILS charges are confirmed before work begins. Government and third-party charges are separate.</p>
 </main>
 <script src="../assets/pwa.js" defer></script>
-</body></html>
+</body>
+</html>
