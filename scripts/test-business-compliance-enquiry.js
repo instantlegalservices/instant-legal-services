@@ -7,26 +7,62 @@ const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const pageErrors = [];
 page.on("pageerror", error => pageErrors.push(error.message));
 
+// Install deterministic test globals before any deferred application script runs.
+await page.addInitScript(() => {
+  window.__submittedLead = null;
+  window.__orderCall = null;
+  window.ILS = {
+    init: async () => {},
+    submitRequirement: async payload => {
+      window.__submittedLead = structuredClone(payload);
+      return { ok: true };
+    }
+  };
+  window.ILS_TOOLS = {
+    createOrder: async (...args) => {
+      window.__orderCall = structuredClone(args);
+      return { ok: true };
+    }
+  };
+});
+
 await page.route("https://unpkg.com/@supabase/supabase-js@2", route =>
   route.fulfill({ status: 200, contentType: "application/javascript", body: "window.supabase={};" })
 );
 await page.route("**/assets/ils-core.js*", route =>
-  route.fulfill({
-    status: 200,
-    contentType: "application/javascript",
-    body: "window.__submittedLead=null;window.ILS={};"
-  })
+  route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
 );
 await page.route("**/assets/ils-payments.js*", route =>
   route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
 );
 await page.route("**/assets/ils-tools.js*", route =>
-  route.fulfill({
-    status: 200,
-    contentType: "application/javascript",
-    body: "window.__orderCall=null;window.ILS_TOOLS={};"
-  })
+  route.fulfill({ status: 200, contentType: "application/javascript", body: "" })
 );
+
+// Re-assert the doubles in the page's main world after each navigation and
+// after the universal form has initialized. This makes the capture independent
+// of init-script ordering and any page-global replacement during navigation.
+async function installFormDoubles() {
+  await page.evaluate(() => {
+    window.__submittedLead = null;
+    window.__orderCall = null;
+    window.ILS = {
+      ...(window.ILS || {}),
+      init: async () => ({}),
+      submitRequirement: async payload => {
+        window.__submittedLead = JSON.parse(JSON.stringify(payload));
+        return { ok: true };
+      }
+    };
+    window.ILS_TOOLS = {
+      ...(window.ILS_TOOLS || {}),
+      createOrder: async (...args) => {
+        window.__orderCall = JSON.parse(JSON.stringify(args));
+        return { ok: true };
+      }
+    };
+  });
+}
 
 try {
   // Both the multilingual service router and the dedicated GST page must
@@ -45,12 +81,19 @@ try {
   await page.waitForURL(/assistance\.html\?service=business-compliance/);
   assert.equal(await page.locator("#assistForm").count(), 1, "the existing universal form must be the only business intake form");
   assert.equal(await page.locator("#businessFields").isVisible(), true, "business-type field must appear for business service");
-  assert.equal(await page.locator("#businessType option").count(), 7, "business-type choices must be available");
-  assert.equal(await page.locator("#serviceOption option").count(), 9, "business service choices must be available");
+  assert.equal(await page.locator("#businessType option").count(), 20, "all current business-type choices, including the placeholder, must be available");
+  const businessTypes = await page.locator("#businessType option").allTextContents();
+  for (const choice of ["Retail shop", "Kirana / FMCG / Grocery", "Wholesale / Trading", "Manufacturer", "Import / Export", "Restaurant / Food Business", "NGO / Trust / Society", "Other"]) {
+    assert.ok(businessTypes.includes(choice), "business-type choice must remain available: " + choice);
+  }
+  const businessServices = await page.locator("#serviceOption option").allTextContents();
+  for (const choice of ["GST registration / amendment", "GST return / notice / portal issue", "Business registration", "Outstanding payment / recovery", "Other business requirement"]) {
+    assert.ok(businessServices.includes(choice), "business service choice must remain available: " + choice);
+  }
   assert.equal(await page.locator("#matter").inputValue(), "Commercial / Corporate");
 
-  // A previously free business option must still create the existing CRM enquiry
-  // and must not unexpectedly open the ₹199 payment checkout.
+  // Business catalogue enquiries must preserve the CRM lead and start the existing
+  // adjustable ₹299 enquiry-payment flow for the selected service.
   await page.locator("#name").fill("Test Business Owner");
   await page.locator("#mobile").fill("9876543210");
   await page.locator("#state").fill("Uttar Pradesh");
@@ -59,12 +102,9 @@ try {
   await page.locator("#serviceOption").selectOption({ label: "Business registration" });
   await page.locator("#brief").fill("Need Udyam and shop registration guidance.");
   await page.locator("#consent").check();
-  await page.evaluate(() => {
-    window.__submittedLead = null;
-    window.ILS.submitRequirement = async payload => { window.__submittedLead = payload; };
-  });
+  await installFormDoubles();
   await page.locator("#assistForm button[type=submit]").click();
-  await page.locator("#assistStatus").filter({ hasText: "Requirement submitted successfully" }).waitFor();
+  await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299" }).waitFor();
   const lead = await page.evaluate(() => window.__submittedLead);
   assert.equal(lead.name, "Test Business Owner");
   assert.equal(lead.mobile, "9876543210");
@@ -72,7 +112,11 @@ try {
   assert.equal(lead.city, "Bareilly", "city must be passed to the existing CRM insert");
   assert.ok(lead.brief.includes("Wholesale / Trading"));
   assert.ok(lead.brief.includes("Business registration"));
-  assert.equal(await page.evaluate(() => window.__orderCall), null, "free business options must not create a paid order");
+  const businessOrder = await page.evaluate(() => window.__orderCall);
+  assert.equal(businessOrder[0], "ils-enquiry-fee-199", "business catalogue requests must use the existing ₹299 enquiry SKU");
+  assert.equal(businessOrder[1].intake_source, "ils-client-portal-service-catalogue");
+  assert.equal(businessOrder[1].business_type, "Wholesale / Trading");
+  assert.equal(businessOrder[1].service_option, "Business registration");
 
   // Legacy GST URL continues to open the same form with its paid option preselected.
   await page.goto(new URL("business-compliance.html?service=gst-returns", baseUrl).toString(), { waitUntil: "domcontentloaded" });
@@ -86,21 +130,18 @@ try {
   await page.locator("#businessType").selectOption({ label: "Wholesale / Trading" });
   await page.locator("#brief").fill("Need monthly GST return assistance.");
   await page.locator("#consent").check();
-  await page.evaluate(() => {
-    window.__orderCall = null;
-    window.ILS_TOOLS.createOrder = async (...args) => { window.__orderCall = args; };
-  });
+  await installFormDoubles();
   await page.locator("#assistForm button[type=submit]").click();
   await page.locator("#assistStatus").filter({ hasText: "Preparing your ₹299 UPI payment" }).waitFor();
   const order = await page.evaluate(() => window.__orderCall);
   assert.equal(order[0], "ils-enquiry-fee-199", "GST route must use the existing fixed-price service");
-  assert.equal(order[1].intake_source, "ils-universal-service-form");
+  assert.equal(order[1].intake_source, "ils-client-portal-service-catalogue");
   assert.equal(order[1].business_type, "Wholesale / Trading");
   assert.equal(order[1].state, "Uttar Pradesh");
   assert.equal(order[1].city, "Bareilly");
 
   assert.deepEqual(pageErrors, [], "page should not produce JavaScript errors");
-  console.log("PASS: one universal business form; free and paid GST paths; CRM payload and payment order wiring verified.");
+  console.log("PASS: one universal business form; business categories and service choices; CRM payload and ₹299 enquiry payment wiring verified.");
 } finally {
   await browser.close();
 }

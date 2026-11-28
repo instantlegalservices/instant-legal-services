@@ -332,6 +332,31 @@ select,input{width:100%;background:#08111d;color:#fff;border:1px solid #34455d;b
             <div class="note" id="clientAccessMeta" style="text-align:left"></div>
           </div>
         </div>
+        <div class="crm-box" style="margin:16px 0">
+          <h3 style="margin:0 0 8px">💼 Service Quotation</h3>
+          <div class="note" style="text-align:left">Create a matter-linked quote. Government charges, ILS fees and professional fees remain itemised. The verified ₹299 enquiry payment, if any, is credited once against the ILS fee only.</div>
+          <label>Linked service request</label><select id="matterQuoteServiceRequest"><option value="">Loading linked requests…</option></select>
+          <div class="detail-grid" style="margin-top:8px">
+            <div><label>Government / statutory fee (₹)</label><input id="matterQuoteGovernmentFee" type="number" min="0" step="0.01" value="0"></div>
+            <div><label>ILS service fee (₹)</label><input id="matterQuoteIlsFee" type="number" min="0" step="0.01" value="0"></div>
+            <div><label>Professional fee (₹)</label><input id="matterQuoteProfessionalFee" type="number" min="0" step="0.01" value="0"></div>
+            <div><label>Tax amount (₹)</label><input id="matterQuoteTaxAmount" type="number" min="0" step="0.01" value="0"></div>
+          </div>
+          <label>Scope of work</label><textarea id="matterQuoteScope" rows="3" maxlength="5000" placeholder="Clearly describe the agreed work and deliverables"></textarea>
+          <div class="detail-grid">
+            <div><label>Inclusions (one per line)</label><textarea id="matterQuoteInclusions" rows="3" placeholder="Document review&#10;Application preparation"></textarea></div>
+            <div><label>Exclusions (one per line)</label><textarea id="matterQuoteExclusions" rows="3" placeholder="Additional notices&#10;Government charges beyond estimate"></textarea></div>
+            <div><label>Valid until</label><input id="matterQuoteValidUntil" type="date"></div>
+            <div><label>Cancellation terms</label><input id="matterQuoteCancellation" maxlength="1000" placeholder="Cancellation policy"></div>
+          </div>
+          <label>Refund terms</label><textarea id="matterQuoteRefund" rows="2" maxlength="1000" placeholder="Refund conditions and work already completed"></textarea>
+          <div class="crm-comms-actions">
+            <button id="saveMatterQuoteDraftBtn" class="btnx secondary" type="button">Save Draft</button>
+            <button id="sendMatterQuoteBtn" class="btnx primary" type="button">Create & Send Quote</button>
+          </div>
+          <div id="matterQuoteStatus" class="note" style="text-align:left;margin-top:8px"></div>
+          <div id="matterQuoteHistory" class="crm-progress" style="margin-top:10px">Loading quotations…</div>
+        </div>
         <div id="leadManagerError" class="msg err" style="margin-top:12px"></div>
         <div class="crm-comms">
           <div class="crm-box"><h3 style="margin:0 0 8px">💬 Client–Advocate Chat</h3><div id="adminChatThread" class="crm-chat">Loading communication…</div><textarea id="adminChatMessage" placeholder="Reply to client…" style="width:100%;min-height:70px;margin-top:8px;background:#08111d;color:#fff;border:1px solid #34455d;border-radius:8px;padding:10px"></textarea><div class="crm-comms-actions"><button id="sendAdminChatBtn" class="btnx primary" type="button">Send Reply</button><button id="refreshAdminChatBtn" class="btnx secondary" type="button">↻ Refresh Chat</button></div></div>
@@ -633,6 +658,7 @@ async function saveLead(id,button){
 // Full Client Requirements / CRM management restored.
 async function openLeadManager(id){
   const leadId=Number(id);
+  activeMatterQuoteDraftId=null;
   const lead=window.__ilsLeads?.find(x=>Number(x.id)===leadId);
   if(!lead){ msg("appMsg","Client record is not available. Refresh CRM and try again.","err"); return; }
   $("manageLeadId").value=leadId;
@@ -653,6 +679,96 @@ async function openLeadManager(id){
   $("leadManagerError").style.display="none";
   $("leadModal").classList.add("open"); $("leadModal").setAttribute("aria-hidden","false");
   loadAdminClientCommunication(leadId);
+  loadMatterQuoteManager(leadId);
+}
+
+
+let activeMatterQuoteDraftId=null;
+async function loadMatterQuoteManager(leadId){
+ const statusEl=$("matterQuoteStatus"),history=$("matterQuoteHistory"),select=$("matterQuoteServiceRequest");
+ if(!statusEl||!history||!select)return;
+ statusEl.textContent="Loading linked service requests and quotations…";
+ try{
+  const [{data:requests,error:requestError},{data:quotes,error:quoteError}]=await Promise.all([
+   sb.from("service_requests").select("id,created_at,status,details,service:services(name,slug)").eq("client_requirement_id",leadId).order("created_at",{ascending:false}).limit(30),
+   sb.rpc("ils_admin_list_matter_quotes",{p_limit:100})
+  ]);
+  if(requestError)throw requestError;if(quoteError)throw quoteError;
+  select.replaceChildren();
+  for(const request of requests||[]){
+   const option=document.createElement("option");option.value=request.id;
+   option.textContent=(request.service?.name||request.details?.intake_service||"ILS Service")+" · "+new Date(request.created_at).toLocaleDateString("en-IN")+" · "+request.status;
+   select.append(option);
+  }
+  if(!select.options.length){const option=document.createElement("option");option.value="";option.textContent="No linked service request — a secure customer-linked request is required";select.append(option);}
+  const rows=(Array.isArray(quotes)?quotes:[]).filter(q=>Number(q.client_requirement_id)===Number(leadId));
+  const activeDraft=rows.find(q=>q.quote_status==="DRAFT")||null;
+  activeMatterQuoteDraftId=activeDraft?.id||null;
+  if(!activeDraft){
+   select.value=select.options[0]?.value||"";
+   $("matterQuoteGovernmentFee").value="0";$("matterQuoteIlsFee").value="0";
+   $("matterQuoteProfessionalFee").value="0";$("matterQuoteTaxAmount").value="0";
+   $("matterQuoteScope").value="";$("matterQuoteInclusions").value="";$("matterQuoteExclusions").value="";
+   $("matterQuoteValidUntil").value="";$("matterQuoteCancellation").value="";$("matterQuoteRefund").value="";
+  }
+  if(activeDraft){
+   select.value=activeDraft.source_service_request_id||select.value;
+   $("matterQuoteGovernmentFee").value=activeDraft.government_fee??0;
+   $("matterQuoteIlsFee").value=activeDraft.ils_fee??0;
+   $("matterQuoteProfessionalFee").value=activeDraft.professional_fee??0;
+   $("matterQuoteTaxAmount").value=activeDraft.tax_amount??0;
+   $("matterQuoteScope").value=activeDraft.scope_of_work||"";
+   $("matterQuoteInclusions").value=Array.isArray(activeDraft.inclusions)?activeDraft.inclusions.join("\n"):"";
+   $("matterQuoteExclusions").value=Array.isArray(activeDraft.exclusions)?activeDraft.exclusions.join("\n"):"";
+   $("matterQuoteValidUntil").value=activeDraft.valid_until?new Date(activeDraft.valid_until).toISOString().slice(0,10):"";
+   $("matterQuoteCancellation").value=activeDraft.cancellation_rule||"";
+   $("matterQuoteRefund").value=activeDraft.refund_rule||"";
+  }
+  history.replaceChildren();
+  if(!rows.length){history.textContent="No quotations have been created for this matter yet.";}
+  else for(const q of rows){
+   const card=document.createElement("article");card.className="crm-progress-item";
+   const title=document.createElement("strong");title.textContent=q.quote_number+" · "+q.quote_status;
+   const amount=document.createElement("div");amount.textContent="Government ₹"+Number(q.government_fee).toLocaleString("en-IN")+" · ILS ₹"+Number(q.ils_fee).toLocaleString("en-IN")+" · Professional ₹"+Number(q.professional_fee).toLocaleString("en-IN")+" · Tax ₹"+Number(q.tax_amount).toLocaleString("en-IN");
+   const total=document.createElement("div");total.textContent="Total ₹"+Number(q.total_customer_payable).toLocaleString("en-IN")+" · Valid until "+new Date(q.valid_until).toLocaleDateString("en-IN");
+   const payment=document.createElement("div");payment.textContent=q.final_order_id?"Final order: "+q.final_order_id+" · Payment: "+String(q.final_order_status||"pending").toUpperCase():"Final order not created";
+   card.append(title,amount,total,payment);history.append(card);
+  }
+  statusEl.textContent=(requests||[]).length+" linked service request(s) · "+rows.length+" quotation(s).";
+ }catch(e){statusEl.textContent="Unable to load quotations: "+(e.message||"service unavailable");history.textContent="Quotation data could not be loaded.";}
+}
+async function saveMatterQuote(sendNow){
+ const leadId=Number($("manageLeadId").value),requestId=$("matterQuoteServiceRequest").value;
+ const statusEl=$("matterQuoteStatus"),btn=sendNow?$("sendMatterQuoteBtn"):$("saveMatterQuoteDraftBtn");
+ if(!leadId||!requestId){statusEl.textContent="This CRM matter has no linked service request. Create or securely link a customer enquiry first.";return;}
+ const amount=id=>{const n=Number($(id).value);if(!Number.isFinite(n)||n<0)throw new Error("Enter valid non-negative quote amounts.");return n;};
+ const scope=$("matterQuoteScope").value.trim();
+ if(!scope){statusEl.textContent="Please describe the scope of work.";return;}
+ const validDate=$("matterQuoteValidUntil").value;
+ if(!validDate){statusEl.textContent="Select a quote validity date.";return;}
+ btn.disabled=true;const old=btn.textContent;btn.textContent=sendNow?"Sending…":"Saving…";
+ try{
+  const validUntil=new Date(validDate+"T23:59:59+05:30");
+  const {data,error}=await sb.rpc("ils_admin_save_matter_quote",{
+   p_quote_id:activeMatterQuoteDraftId,p_service_request_id:requestId,
+   p_government_fee:amount("matterQuoteGovernmentFee"),p_ils_fee:amount("matterQuoteIlsFee"),
+   p_professional_fee:amount("matterQuoteProfessionalFee"),p_tax_amount:amount("matterQuoteTaxAmount"),
+   p_scope_of_work:scope,p_inclusions:$("matterQuoteInclusions").value.split("\n").map(x=>x.trim()).filter(Boolean),
+   p_exclusions:$("matterQuoteExclusions").value.split("\n").map(x=>x.trim()).filter(Boolean),
+   p_valid_until:validUntil.toISOString(),p_cancellation_rule:$("matterQuoteCancellation").value.trim()||null,
+   p_refund_rule:$("matterQuoteRefund").value.trim()||null
+  });
+  if(error||!data?.ok)throw new Error(error?.message||data?.message||"Quote could not be saved.");
+  activeMatterQuoteDraftId=data.quote_id;
+  if(sendNow){
+   const sent=await sb.rpc("ils_admin_send_matter_quote",{p_quote_id:data.quote_id});
+   if(sent.error||!sent.data?.ok)throw new Error(sent.error?.message||sent.data?.message||"Draft saved but could not be sent.");
+   activeMatterQuoteDraftId=null;
+   statusEl.textContent="Quote "+data.quote_number+" sent to the customer's Client Portal.";
+  }else statusEl.textContent="Draft "+data.quote_number+" saved. Review and use Create & Send Quote when ready.";
+  await loadMatterQuoteManager(leadId);
+ }catch(e){statusEl.textContent=e.message||"Unable to save quote.";}
+ finally{btn.disabled=false;btn.textContent=old;}
 }
 
 function buildClientAccessLink(token){
@@ -1800,6 +1916,8 @@ $("generateClientAccessBtn").addEventListener("click",generateClientAccess);
 $("copyClientAccessBtn").addEventListener("click",copyClientAccessLink);
 $("manageRelease").addEventListener("change",()=>$("manageReleaseStatus").textContent=$("manageRelease").checked?"Contact is RELEASED for this client.":"Contact is currently LOCKED.");
 $("leadModal").addEventListener("click",e=>{if(e.target.id==="leadModal")closeLeadManager();});
+$("saveMatterQuoteDraftBtn").addEventListener("click",()=>saveMatterQuote(false));
+$("sendMatterQuoteBtn").addEventListener("click",()=>saveMatterQuote(true));
 $("sendAdminChatBtn").addEventListener("click",sendAdminClientMessage);
 $("refreshAdminChatBtn").addEventListener("click",()=>loadAdminClientCommunication($("manageLeadId").value));
 $("addAdminProgressBtn").addEventListener("click",addAdminWorkProgress);

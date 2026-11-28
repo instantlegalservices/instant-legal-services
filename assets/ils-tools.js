@@ -249,6 +249,20 @@ window.ILS_TOOLS = (() => {
     }
   }
 
+async function payExistingOrder(data,options={}){
+  if(!data?.order_id||!Number.isFinite(Number(data.amount))||Number(data.amount)<0){
+    throw new Error('A valid server-created order is required before payment.');
+  }
+  await startRazorpay({
+    order_id:data.order_id,
+    order_number:data.order_number||'',
+    amount:Number(data.amount),
+    currency:data.currency||'INR',
+    service_name:data.service_name||'ILS Quoted Service',
+    status:data.status||'pending'
+  },typeof options.onPaid==='function'?options.onPaid:null,options.forceQr!==false,options.paymentContainerId||'toolStatus');
+}
+
 // Temporary production payment mode: use the existing ILS UPI QR/proof flow for all paid tool orders.
 // Keep the Razorpay implementation intact so it can be re-enabled later by changing this flag.
 const QR_ONLY_PAYMENT_MODE = true;
@@ -2489,6 +2503,7 @@ Previous orders"></textarea>
   return {
     open,
     createOrder,
+    payExistingOrder,
     consumeProfessionalToolUse
   };
 })();

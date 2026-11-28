@@ -1,0 +1,54 @@
+name: ILS Matter Quotation Lifecycle Test
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261128110000_ils_matter_quote_lifecycle.sql"
+      - "scripts/test-matter-quotes-postgres.sql"
+      - "scripts/test-matter-quote-ui.js"
+      - "admin.html"
+      - "customer-portal.html"
+      - "assets/ils-tools.js"
+      - ".github/workflows/test-matter-quotes.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/20261128110000_ils_matter_quote_lifecycle.sql"
+      - "scripts/test-matter-quotes-postgres.sql"
+      - "scripts/test-matter-quote-ui.js"
+      - "admin.html"
+      - "customer-portal.html"
+      - "assets/ils-tools.js"
+      - ".github/workflows/test-matter-quotes.yml"
+
+jobs:
+  matter-quote-lifecycle:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ils_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ils_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Verify Admin CRM, customer portal and final-order payment handoff
+        run: node scripts/test-matter-quote-ui.js
+      - name: Execute matter quotation lifecycle on disposable PostgreSQL 16
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -d ils_test -v ON_ERROR_STOP=1 -f scripts/test-matter-quotes-postgres.sql
