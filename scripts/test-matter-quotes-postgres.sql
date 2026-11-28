@@ -138,6 +138,45 @@ BEGIN
 END;
 $second_quote_no_reuse$;
 
+DO $second_quote$
+DECLARE v_quote jsonb; v_quote_id uuid;
+BEGIN
+  PERFORM set_config('test.user_id','22222222-2222-4222-8222-222222222222',true);
+  PERFORM set_config('test.is_admin','true',true);
+  v_quote:=public.ils_admin_save_matter_quote(
+    null,'cccccccc-cccc-4ccc-8ccc-cccccccccccc',100,1200,500,0,
+    'Revised GST registration scope for credit-reuse guard',
+    '["Application preparation"]'::jsonb,'["Additional notices"]'::jsonb,
+    now()+interval '7 days',null,null
+  );
+  v_quote_id:=(v_quote->>'quote_id')::uuid;
+  PERFORM public.ils_admin_send_matter_quote(v_quote_id);
+  PERFORM set_config('test.quote_id_2',v_quote_id::text,false);
+END;
+$second_quote$;
+
+DO $credit_reuse_guard$
+DECLARE v_quote_id uuid;
+BEGIN
+  PERFORM set_config('test.user_id','11111111-1111-4111-8111-111111111111',true);
+  PERFORM set_config('test.is_admin','false',true);
+  v_quote_id:=current_setting('test.quote_id_2')::uuid;
+  BEGIN
+    PERFORM public.ils_customer_accept_matter_quote(v_quote_id);
+    RAISE EXCEPTION 'same paid enquiry credit was reused for a second quote';
+  EXCEPTION WHEN unique_violation THEN
+    NULL;
+  END;
+  IF (SELECT count(*) FROM public.ils_matter_quote_credit_ledger
+      WHERE enquiry_order_id='dddddddd-dddd-4ddd-8ddd-dddddddddddd')<>1 THEN
+    RAISE EXCEPTION 'one-time credit ledger was changed by rejected reuse attempt';
+  END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.ils_matter_quotes WHERE id=v_quote_id AND quote_status='SENT') THEN
+    RAISE EXCEPTION 'failed second acceptance must leave the quote unaccepted';
+  END IF;
+END;
+$credit_reuse_guard$;
+
 DO $security$
 BEGIN
   IF has_table_privilege('authenticated','public.ils_matter_quotes','SELECT')
