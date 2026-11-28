@@ -58,9 +58,11 @@ VALUES ('cccccccc-cccc-4ccc-8ccc-cccccccccccc','11111111-1111-4111-8111-11111111
  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','pending','{"intake_source":"follow-up-service-request"}',1);
 INSERT INTO public.orders(id,order_number,user_id,service_request_id,total,status)
 VALUES ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','ILS-ENQ-001','11111111-1111-4111-8111-111111111111',
- 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',299,'paid');
+ 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',599,'paid');
 INSERT INTO public.order_items(order_id,service_id,quantity,unit_price,line_total)
-VALUES ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',1,299,299);
+VALUES
+ ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',1,299,299),
+ ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',1,300,300);
 
 DO $admin_create$
 DECLARE v_quote jsonb; v_quote_id uuid;
@@ -118,6 +120,9 @@ BEGIN
   ) THEN RAISE EXCEPTION 'final order item does not match the quoted service and amount'; END IF;
   IF (SELECT count(*) FROM public.ils_matter_quote_credit_ledger WHERE enquiry_order_id='dddddddd-dddd-4ddd-8ddd-dddddddddddd')<>1 THEN
     RAISE EXCEPTION 'enquiry credit was not recorded exactly once';
+  END IF;
+  IF (SELECT amount FROM public.ils_matter_quote_credit_ledger WHERE enquiry_order_id='dddddddd-dddd-4ddd-8ddd-dddddddddddd')<>299 THEN
+    RAISE EXCEPTION 'credit must use the ₹299 enquiry line item, not the full multi-item order total';
   END IF;
 END;
 $customer_accept$;
