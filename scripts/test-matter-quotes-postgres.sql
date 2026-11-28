@@ -110,6 +110,34 @@ BEGIN
 END;
 $customer_accept$;
 
+-- A second quote for the same CRM matter may proceed, but cannot reuse the
+-- already-consumed ₹299 enquiry payment.
+DO $second_quote_no_reuse$
+DECLARE v_quote jsonb; v_quote_id uuid; v_accept jsonb;
+BEGIN
+  PERFORM set_config('test.user_id','22222222-2222-4222-8222-222222222222',true);
+  PERFORM set_config('test.is_admin','true',true);
+  v_quote:=public.ils_admin_save_matter_quote(
+    null,'cccccccc-cccc-4ccc-8ccc-cccccccccccc',100,999,500,0,
+    'Additional GST notice-response assistance',
+    '["Notice review"]'::jsonb,'["Court fees"]'::jsonb,
+    now()+interval '7 days',null,null
+  );
+  v_quote_id:=(v_quote->>'quote_id')::uuid;
+  PERFORM public.ils_admin_send_matter_quote(v_quote_id);
+  PERFORM set_config('test.user_id','11111111-1111-4111-8111-111111111111',true);
+  PERFORM set_config('test.is_admin','false',true);
+  v_accept:=public.ils_customer_accept_matter_quote(v_quote_id);
+  IF (v_accept->>'credit_applied')::numeric<>0 OR (v_accept->>'amount')::numeric<>1599 THEN
+    RAISE EXCEPTION 'same-matter enquiry payment was reused across quotations: %',v_accept;
+  END IF;
+  IF (SELECT count(*) FROM public.ils_matter_quote_credit_ledger
+      WHERE enquiry_order_id='dddddddd-dddd-4ddd-8ddd-dddddddddddd')<>1 THEN
+    RAISE EXCEPTION 'enquiry credit ledger must remain one-time per paid order';
+  END IF;
+END;
+$second_quote_no_reuse$;
+
 DO $security$
 BEGIN
   IF has_table_privilege('authenticated','public.ils_matter_quotes','SELECT')
@@ -127,4 +155,4 @@ BEGIN
 END;
 $security$;
 
-\echo PASS: quote create/send, customer ownership, same-matter one-time ₹299 credit, final order idempotency and direct-table access controls.
+\echo PASS: quote create/send, customer ownership, same-matter one-time ₹299 credit, no credit reuse across quotations, final order idempotency and direct-table access controls.
